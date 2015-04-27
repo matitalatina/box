@@ -12,4 +12,5 @@ object Main extends App {
   val handler = system.actorOf(Props[MainServiceActor], name = "main-service")
 
   IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8080)
+  
 }

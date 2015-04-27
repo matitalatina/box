@@ -1,47 +1,48 @@
 package ch.wsl.rest.domain
 
-import scala.slick.driver.PostgresDriver.simple._
-import scala.slick.direct._
+import scala.collection.immutable.ListMap
+
 
 case class JSONSchema(
   `type`:String,
   title:Option[String] = None,
-  properties: Option[Map[String,JSONSchema]] = None,
+  properties: Option[ListMap[String,JSONSchema]] = None,
   required: Option[List[String]] = None,
-  enum: Option[List[String]] = None
+  enum: Option[List[String]] = None,
+  order: Option[Int] = None
 )
 
 
-object JSONSchema extends ProductionDB {
-  
-  val pgColumns = TableQuery[PgColumns]
-  
+object JSONSchema {
+    
   def of(table:String):JSONSchema = {
     
-    val columns = db withSession { implicit s =>
-      pgColumns
-        .filter(e => e.table_name === table && e.table_schema === "public")
-        .sortBy(_.ordinal_position)
-        .list
-    }
+    val schema = new PgSchema(table)
+    
+    val map = ListMap(properties(schema.columns): _*)
     
     
     JSONSchema(
         `type` = "object",
         title = Some(table),
-        properties = Some(properties(columns)),
-        required = Some(columns.filter(_.is_nullable == "NO").map(_.column_name))
+        properties = Some(map),
+        required = Some(schema.columns.filter(_.is_nullable == "NO").map(_.column_name))
     )
   }
   
-  def properties(columns:List[PgColumn]):Map[String,JSONSchema] = {
+  def keysOf(table:String):List[String] = new PgSchema(table).pk
+  
+  
+  def properties(columns:List[PgColumn]):List[(String,JSONSchema)] = {
     
-    {for{
+    val cols = {for{
       c <- columns
     } yield {
-      c.column_name -> JSONSchema(typesMapping(c.data_type),Some(c.column_name))
-    }}.toMap
+      c.column_name -> JSONSchema(typesMapping(c.data_type),Some(c.column_name),order=Some(c.ordinal_position))
+    }}.toList
     
+    
+    cols
   }
   
   val typesMapping =  Map(

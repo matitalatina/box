@@ -2,15 +2,24 @@ package ch.wsl.rest.domain
 
 import scala.slick.jdbc.JdbcBackend.Database
 
-trait DBConfig {
-  def db: Database
-}
 
 import scala.slick.driver.PostgresDriver
 
-trait ProductionDB extends DBConfig {
-  val db = Database.forURL("jdbc:postgresql:incendi",
+
+import com.typesafe.config._
+import net.ceedubs.ficus.Ficus._
+
+
+trait DBConfig {
+  val profile = scala.slick.driver.PostgresDriver
+}
+
+object DBConfig {
+  
+  val dbConf: Config = ConfigFactory.load().as[Config]("db")
+  
+  def db = Database.forURL(dbConf.as[String]("url"),
                            driver="org.postgresql.Driver",
-                           user="tree",
-                           password="tree")
+                           user=dbConf.as[String]("user"),
+                           password=dbConf.as[String]("password"))
 }

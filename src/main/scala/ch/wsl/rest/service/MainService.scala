@@ -5,12 +5,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Promise
 import scala.language.postfixOps
 import akka.actor.Actor
-import ch.wsl.rest.domain.ProductionDB
+import net.liftweb.json.DefaultFormats
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 import spray.http.MediaTypes.{ `text/html` }
-import org.json4s._
-import org.json4s.native.JsonMethods._
-import org.json4s.native.Serialization.{ read, write }
-import spray.httpx.Json4sSupport
+import spray.httpx.LiftJsonSupport
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling.Unmarshaller
 import spray.routing.Route
@@ -19,23 +18,37 @@ import spray.routing.HttpService
 import spray.routing.authentication.BasicAuth
 import spray.routing.authentication.UserPass
 import spray.routing.authentication.UserPassAuthenticator
-import spray.routing.authentication.UserPassAuthenticator
 import spray.routing.directives.AuthMagnet.fromContextAuthenticator
 import spray.routing.directives.FieldDefMagnet.apply
+import spray.routing.RejectionHandler
 import ch.wsl.rest.domain.DBConfig
 import ch.wsl.rest.domain.JSONSchema
-import ch.wsl.model.Tables
+import ch.wsl.rest.domain.JSONForm
+import ch.wsl.rest.domain.JSONQuery
+import ch.wsl.model._
 import scala.slick.driver.PostgresDriver.simple._
+import ch.wsl.rest.domain.JSONField
+import ch.wsl.rest.domain.UglyDBFilters
 
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class MainServiceActor extends Actor with MainService with ProductionDB {
+class MainServiceActor extends Actor with MainService  {
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
   def actorRefFactory = context
 
+  
+  implicit val myRejectionHandler = RejectionHandler {
+    case t => {
+      println(t)
+      complete("Something went wrong here")
+    }
+    case _ => complete("Something went wrong here")
+  }
+
+  
   // this actor only runs our route, but you could add
   // other things here, like request stream processing
   // or timeout handling
@@ -44,15 +57,24 @@ class MainServiceActor extends Actor with MainService with ProductionDB {
 
 
 
-object Json4sProtocol extends Json4sSupport {
-  implicit def json4sFormats: Formats = DefaultFormats
-}
 
 
 
-// this trait defines our service behavior independently from the service actor
-trait MainService extends HttpService { this:DBConfig =>
+
+
+/**
+ *  this trait defines our service behavior independently from the service actor
+ */
+trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   
+  
+  object JsonProtocol extends LiftJsonSupport {
+    implicit def liftJsonFormats = DefaultFormats
+  
+  //object JsonProtocol extends LiftJsonSupport {
+  //  implicit def json4sFormats: Formats = DefaultFormats
+    
+  }
   
   //TODO Extend UserProfile class depending on project requirements
   case class UserProfile(name: String)
@@ -76,10 +98,15 @@ trait MainService extends HttpService { this:DBConfig =>
       }).future
   }
 
-  def modelRoute[M](name:String, table:TableQuery[_ <: Table[M]])(implicit mar:Marshaller[M], unmar: Unmarshaller[M]):Route = { 
+  var models = Set[String]()
+
+
+  def modelRoute[T <: Table[M],M](name:String, table:TableUtils[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M]):Route = { 
     
+    models = Set(name) ++ models
     
-    import Json4sProtocol._
+    import JsonProtocol._
+    import ch.wsl.rest.domain.DBConfig._
     
     
     pathPrefix(name) {
@@ -89,26 +116,80 @@ trait MainService extends HttpService { this:DBConfig =>
               } ~ 
               post {
                 entity(as[M]) { e =>
-                  val result = db withSession { implicit s => table.update(e) }
+                  val result = db withSession { implicit s => table.tq.insert(e) }
                   complete(e)
                 }
               }
             } ~
-            path("describe") {
+            path("schema") {
               get {
                 complete{ JSONSchema.of(name) }
               }
             } ~
+            path("form") {
+              get {
+                complete{ JSONForm.of(name) }
+              }
+            } ~
+            path("keys") {
+              get {
+                complete{ JSONSchema.keysOf(name) }
+              }
+            } ~
+            path("count") {
+                get { ctx =>
+
+                  val result = db withSession { implicit s => table.tq.length.run }
+                  ctx.complete{ JObject(List(JField("count",JInt(result)))) }
+                }
+            } ~
+            path("list") {
+                post {
+                  entity(as[JSONQuery]) { query =>
+                    val result = db withSession { implicit s =>
+
+                        
+                      
+                        val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table.tq){case ((field,jsFilter),query) =>
+                          query.filter(table.filter(field, equality, jsFilter.value))
+                        }
+                        
+                        val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
+                          query.sortBy{ x =>
+                            val c = table.columns(field)(x)
+                            dir match {
+                              case "asc" => c.asc
+                              case "desc" => c.desc
+                            }
+                          }
+                        }
+                        
+                        qSorted
+                        .drop((query.page - 1) * query.count)
+                        .take(query.count)
+                        .list
+                    }
+                    complete(result)
+                  }
+                }
+            } ~
             pathEnd{
               get { ctx =>
                 ctx.complete {
-                  val result: List[M] = db withSession { implicit s => table.list }
+                  val result: List[M] = db withSession { implicit s => table.tq.take(50).list }
+                  println()
                   result
                 }
               } ~
               post { 
                 entity(as[M]) { e =>
-                  val result = db withSession { implicit s => table.insert(e) }
+                  val result = db withSession { implicit s => table.tq.insert(e) }
+                  complete(e)
+                }
+              } ~ 
+              put {
+                entity(as[M]) { e =>
+                  val result = db withSession { implicit s => table.find(e).update(e) }
                   complete(e)
                 }
               }
@@ -130,16 +211,54 @@ trait MainService extends HttpService { this:DBConfig =>
   
   val s4Route = {
     
-      import Json4sProtocol._
+      import JsonProtocol._
+
     
+    
+
+
+    val test = DBConfig.db withSession { implicit s =>
+
+      Fire.tq.filter(_.locality === "test")
+
+
+    }
+
+    println(test)
 
     
       pathEnd {
         index
       } ~
-      authenticate(BasicAuth(CustomUserPassAuthenticator, "person-security-realm")) { userProfile =>
-        modelRoute[Tables.CantonRow]("canton", Tables.Canton) 
-      } 
+      cors{
+        options {
+           complete(spray.http.StatusCodes.OK)
+        } ~
+        authenticate(BasicAuth(CustomUserPassAuthenticator, "person-security-realm")) { userProfile =>
+          modelRoute[Canton,CantonRow]("canton",Canton) ~
+          modelRoute[CatCause,CatCauseRow]("cat_cause", CatCause) ~
+          modelRoute[CatCauseBafu,CatCauseBafuRow]("cat_cause_bafu", CatCauseBafu) ~
+          modelRoute[Days,DaysRow]("days", Days) ~
+          modelRoute[Fire,FireRow]("fire",Fire)  ~
+          modelRoute[ValAttribute,ValAttributeRow]("val_attribute",ValAttribute)  ~
+          modelRoute[ValBafuForestType,ValBafuForestTypeRow]("val_bafu_forest_type",ValBafuForestType) ~
+          modelRoute[ValCause,ValCauseRow]("val_cause",ValCause)  ~
+          modelRoute[ValCauseReliability,ValCauseReliabilityRow]("val_cause_reliability",ValCauseReliability)  ~
+          modelRoute[ValCoordReliability,ValCoordReliabilityRow]("val_coord_reliability",ValCoordReliability)  ~
+          modelRoute[ValDamage,ValDamageRow]("val_damage",ValDamage)  ~
+          modelRoute[ValDateReliability,ValDateReliabilityRow]("val_date_reliability",ValDateReliability)  ~
+          modelRoute[ValDefinition,ValDefinitionRow]("val_definition",ValDefinition)  ~
+          modelRoute[ValExposition,ValExpositionRow]("val_exposition",ValExposition)  ~
+          modelRoute[ValLayerAbundance,ValLayerAbundanceRow]("val_layer_abundance",ValLayerAbundance)  ~
+          modelRoute[ValMonth,ValMonthRow]("val_month",ValMonth)  ~
+          modelRoute[ValSite,ValSiteRow]("val_site",ValSite)  ~
+          path("models") {
+            get{
+              complete(models)
+            }
+          }
+        }
+      }
     
   }
 
