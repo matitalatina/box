@@ -67,7 +67,6 @@ class MainServiceActor extends Actor with MainService  {
  */
 trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   
-  
   object JsonProtocol extends LiftJsonSupport {
     implicit def liftJsonFormats = DefaultFormats
   
@@ -102,6 +101,8 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
 
 
   def modelRoute[T <: Table[M],M](name:String, table:TableUtils[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M]):Route = { 
+    
+    case class JSONResult(count:Int,data:List[M])
     
     models = Set(name) ++ models
     
@@ -146,12 +147,13 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
             path("list") {
                 post {
                   entity(as[JSONQuery]) { query =>
-                    val result = db withSession { implicit s =>
+                    val (result,count) = db withSession { implicit s =>
 
                         
                       
                         val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table.tq){case ((field,jsFilter),query) =>
-                          query.filter(table.filter(field, equality, jsFilter.value))
+                          println(jsFilter)
+                          query.filter(table.filter(field, operator(jsFilter.operator.getOrElse("=")), jsFilter.value))
                         }
                         
                         val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
@@ -164,12 +166,17 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
                           }
                         }
                         
-                        qSorted
+                        (qSorted
                         .drop((query.page - 1) * query.count)
                         .take(query.count)
-                        .list
+                        .list,
+                        qSorted.length.run)
+                        
+                        
                     }
-                    complete(result)
+                    
+                    
+                    complete(JSONResult(count,result))
                   }
                 }
             } ~

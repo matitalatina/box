@@ -47,7 +47,7 @@ object JSONForm {
           val title = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse("en")
           
           Some(JSONField(
-              "uiselect",
+              typesMapping(field.data_type),
               key = Some(field.column_name),
               placeholder = Some(fk.referencingTable + " Lookup"),
               options = Some(
