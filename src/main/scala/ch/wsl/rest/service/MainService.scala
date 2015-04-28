@@ -29,6 +29,7 @@ import ch.wsl.model._
 import scala.slick.driver.PostgresDriver.simple._
 import ch.wsl.rest.domain.JSONField
 import ch.wsl.rest.domain.UglyDBFilters
+import ch.wsl.rest.domain.DBFilters
 
 
 // we don't implement our route structure directly in the service actor because
@@ -113,7 +114,11 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
     pathPrefix(name) {
             path(IntNumber) { i=>
               get {
-                complete{ "test:" + i  }
+                val pk = JSONSchema.keysOf(name).head
+                val result = db withSession { implicit s =>
+                  table.tq.filter(table.filter(pk, super.== , i.toString)).firstOption
+                }
+                complete{ result }
               } ~ 
               post {
                 entity(as[M]) { e =>
@@ -259,6 +264,7 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
           modelRoute[ValLayerAbundance,ValLayerAbundanceRow]("val_layer_abundance",ValLayerAbundance)  ~
           modelRoute[ValMonth,ValMonthRow]("val_month",ValMonth)  ~
           modelRoute[ValSite,ValSiteRow]("val_site",ValSite)  ~
+          modelRoute[SysForm,SysFormRow]("sys_form",SysForm)  ~
           path("models") {
             get{
               complete(models)
