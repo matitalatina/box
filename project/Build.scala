@@ -127,7 +127,7 @@ object stagedBuild extends Build {
   
   // shared sbt config between main project and codegen project
   val sharedSettings = Project.defaultSettings ++ Seq(
-    scalaVersion := "2.11.4",
+    scalaVersion := "2.11.6",
     libraryDependencies ++= List(
       "com.typesafe.slick" %% "slick" % "2.1.0",
       "org.slf4j" % "slf4j-nop" % "1.6.4",

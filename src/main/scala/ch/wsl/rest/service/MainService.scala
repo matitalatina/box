@@ -120,9 +120,9 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
                 }
                 complete{ result }
               } ~ 
-              post {
+              put {
                 entity(as[M]) { e =>
-                  val result = db withSession { implicit s => table.tq.insert(e) }
+                  val result = db withSession { implicit s => table.find(e).update(e) }
                   complete(e)
                 }
               }

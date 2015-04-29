@@ -4,6 +4,7 @@ package ch.wsl.codegen
 import slick.{model => m}
 import scala.slick.jdbc.meta.createModel
 import scala.slick.driver.PostgresDriver
+import PostgresDriver.simple._
 import Config._
 
 /**
@@ -12,6 +13,9 @@ import Config._
  */
 object CustomizedCodeGenerator{
   def main(args: Array[String]) = {
+    
+    
+    
     codegen.writeToFile(
           "scala.slick.driver.PostgresDriver",
           args(0),
@@ -26,7 +30,14 @@ object CustomizedCodeGenerator{
 
   
   val model = db.withSession{ implicit session =>
+    
+    if(!PostgresDriver.getTables.list.exists(_.name.name == "sys_form")) {
+      val sysForms = TableQuery[SysForm]
+      sysForms.ddl.create
+    }
+    
     val tables = PostgresDriver.getTables.list.filter(t => t.name.schema.exists(_ == "public"))
+    
     
     
     
