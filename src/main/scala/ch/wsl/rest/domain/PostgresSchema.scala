@@ -7,6 +7,7 @@ import PostgresDriver.simple._
 case class PgColumn(
   column_name:String,
   is_nullable:String,
+  is_updatable:String,
   data_type:String,
   character_maximum_length:Option[Int],
   numeric_precision:Option[Int],
@@ -20,6 +21,7 @@ class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema
 
   def column_name = column[String]("column_name")
   def is_nullable = column[String]("is_nullable")
+  def is_updatable = column[String]("is_updatable")
   def data_type = column[String]("data_type")
   def character_maximum_length = column[Option[Int]]("character_maximum_length")
   def numeric_precision = column[Option[Int]]("numeric_precision")
@@ -28,7 +30,7 @@ class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema
   def table_schema = column[String]("table_schema")
   def ordinal_position = column[Int]("ordinal_position")
     
-  def * = (column_name, is_nullable, data_type, character_maximum_length, numeric_precision, numeric_scale, table_name, table_schema, ordinal_position) <> (PgColumn.tupled, PgColumn.unapply)
+  def * = (column_name, is_nullable, is_updatable, data_type, character_maximum_length, numeric_precision, numeric_scale, table_name, table_schema, ordinal_position) <> (PgColumn.tupled, PgColumn.unapply)
 }
 
 case class PgConstraint(

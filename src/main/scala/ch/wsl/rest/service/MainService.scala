@@ -30,6 +30,7 @@ import scala.slick.driver.PostgresDriver.simple._
 import ch.wsl.rest.domain.JSONField
 import ch.wsl.rest.domain.UglyDBFilters
 import ch.wsl.rest.domain.DBFilters
+import ch.wsl.rest.domain.DBFilters
 
 
 // we don't implement our route structure directly in the service actor because
@@ -55,10 +56,6 @@ class MainServiceActor extends Actor with MainService  {
   // or timeout handling
   def receive = runRoute(s4Route)
 }
-
-
-
-
 
 
 
@@ -101,7 +98,7 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   var models = Set[String]()
 
 
-  def modelRoute[T <: Table[M],M](name:String, table:TableUtils[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M]):Route = { 
+  def modelRoute[T <: Table[M],M](name:String, table:WriteTable[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M]):Route = { 
     
     case class JSONResult(count:Int,data:List[M])
     
@@ -125,7 +122,14 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
                   val result = db withSession { implicit s => table.find(e).update(e) }
                   complete(e)
                 }
+              } ~
+              post {
+                entity(as[M]) { e =>
+                  val result = db withSession { implicit s => table.tq.insert(e) }
+                  complete(e)
+                }
               }
+              
             } ~
             path("schema") {
               get {
@@ -209,6 +213,89 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
         } 
   }
   
+  
+  def viewRoute[T <: Table[M],M](name:String, table:TableUtils[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M]):Route = { 
+    
+    case class JSONResult(count:Int,data:List[M])
+    
+    models = Set(name) ++ models
+    
+    import JsonProtocol._
+    import ch.wsl.rest.domain.DBConfig._
+    
+    
+    pathPrefix(name) {
+            path("schema") {
+              get {
+                complete{ JSONSchema.of(name) }
+              }
+            } ~
+            path("form") {
+              get {
+                complete{ JSONForm.of(name) }
+              }
+            } ~
+            path("keys") {
+              get {
+                complete{ JSONSchema.keysOf(name) }
+              }
+            } ~
+            path("count") {
+                get { ctx =>
+
+                  val result = db withSession { implicit s => table.tq.length.run }
+                  ctx.complete{ JObject(List(JField("count",JInt(result)))) }
+                }
+            } ~
+            path("list") {
+                post {
+                  entity(as[JSONQuery]) { query =>
+                    val (result,count) = db withSession { implicit s =>
+
+                        
+                      
+                        val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table.tq){case ((field,jsFilter),query) =>
+                          println(jsFilter)
+                          query.filter(table.filter(field, operator(jsFilter.operator.getOrElse("=")), jsFilter.value))
+                        }
+                        
+                        val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
+                          query.sortBy{ x =>
+                            val c = table.columns(field)(x)
+                            dir match {
+                              case "asc" => c.asc
+                              case "desc" => c.desc
+                            }
+                          }
+                        }
+                        
+                        (qSorted
+                        .drop((query.page - 1) * query.count)
+                        .take(query.count)
+                        .list,
+                        qSorted.length.run)
+                        
+                        
+                    }
+                    
+                    
+                    complete(JSONResult(count,result))
+                  }
+                }
+            } ~
+            pathEnd{
+              get { ctx =>
+                ctx.complete {
+                  val result: List[M] = db withSession { implicit s => table.tq.take(50).list }
+                  println()
+                  result
+                }
+              }
+            }
+        } 
+  }
+  
+  
   val index = get { ctx =>
           respondWithMediaType(`text/html`) {  // XML is marshalled to `text/xml` by default, so we simply override here
             complete {
@@ -265,6 +352,7 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
           modelRoute[ValMonth,ValMonthRow]("val_month",ValMonth)  ~
           modelRoute[ValSite,ValSiteRow]("val_site",ValSite)  ~
           modelRoute[SysForm,SysFormRow]("sys_form",SysForm)  ~
+          viewRoute[VRegionMunicipality,VRegionMunicipalityRow]("v_region_municipality",VRegionMunicipality)  ~
           path("models") {
             get{
               complete(models)

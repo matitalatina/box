@@ -73,7 +73,38 @@ package ${pkg}
   */
 abstract class TableUtils[T <: Table[M], M](val tq:TableQuery[T]) {
 
-  /**Saves a model to the table.
+
+  def columns:Map[String,T => scala.slick.driver.PostgresDriver.simple.Column[_]]
+  
+  def filter(field:String,op:(scala.slick.driver.PostgresDriver.simple.Column[_],Any) => scala.slick.driver.PostgresDriver.simple.Column[Option[Boolean]],v:Any)(x:T) = {        
+          val c = columns(field)(x)
+          op(c,v)
+  }
+
+
+  /** Returns the table length (number of rows) */
+  def count(implicit s:Session) = tq.length.run
+
+  /** Calculates the number of pages according to a page size*/
+  def pages(size:Int)(implicit s:Session) = (count / size.toDouble).ceil.toInt
+
+}
+
+trait PrimaryKey[T <: Table[M], M] extends TableUtils[T,M] {
+  /** Checks if the specified model exists in the table */
+  def exists(model: M)(implicit s:Session):Boolean = find(model).exists.run
+        
+  /** Returns the query result (like a recordset), according to a specified model */
+  def find(model: M):Query[T,M, Seq]
+  
+  /** Returns the first model as an Option, according to a specified model*/
+  def get(model: M)(implicit s:Session):Option[M] = this.find(model).firstOption
+  
+}
+
+trait WriteTable[T <: Table[M], M] extends PrimaryKey[T,M] {
+  
+   /**Saves a model to the table.
    * 
    * It first check if it already exists in the table, and accordingly uses 
    * an insert or an update statement.
@@ -90,28 +121,6 @@ abstract class TableUtils[T <: Table[M], M](val tq:TableQuery[T]) {
     }
   }
   
-  /** Checks if the specified model exists in the table */
-  def exists(model: M)(implicit s:Session):Boolean = find(model).exists.run
-        
-  /** Returns the query result (like a recordset), according to a specified model */
-  def find(model: M):Query[T,M, Seq]
-
-  def columns:Map[String,T => scala.slick.driver.PostgresDriver.simple.Column[_]]
-  
-  def filter(field:String,op:(scala.slick.driver.PostgresDriver.simple.Column[_],Any) => scala.slick.driver.PostgresDriver.simple.Column[Option[Boolean]],v:Any)(x:T) = {        
-          val c = columns(field)(x)
-          op(c,v)
-  }
-
-  /** Returns the first model as an Option, according to a specified model*/
-  def get(model: M)(implicit s:Session):Option[M] = this.find(model).firstOption
-
-  /** Returns the table length (number of rows) */
-  def count(implicit s:Session) = tq.length.run
-
-  /** Calculates the number of pages according to a page size*/
-  def pages(size:Int)(implicit s:Session) = (count / size.toDouble).ceil.toInt
-
 }
   
   ${indent(code)}
@@ -174,8 +183,16 @@ abstract class TableUtils[T <: Table[M], M](val tq:TableQuery[T]) {
     }
     type TableValue     =     TableValueDef
     def  TableValue     = new TableValue{
-      override def code = if(pks.size == 0) "" else s"""
+      override def code = if(pks.size == 0) s"""
 object $name extends TableUtils[$name, ${name}Row] (TableQuery[$name]) {
+  
+    def columns = Map(
+      """ + columnsByName.map(_._1).map(c =>  "\""+ c + "\" -> { (x:"+ name + ") => x." + c + " }" ).mkString(",\n") + """
+    )
+
+}         
+        """ else s"""
+object $name extends TableUtils[$name, ${name}Row] (TableQuery[$name]) with WriteTable[$name, ${name}Row] {
   
     def find(model:${name}Row) = tq.filter(table => """+ pks.map(x=> " table."+x.name+" === model."+x.name+" ").mkString("&&") + s""")
 

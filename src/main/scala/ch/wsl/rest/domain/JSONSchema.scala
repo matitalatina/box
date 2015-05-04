@@ -8,6 +8,7 @@ case class JSONSchema(
   title:Option[String] = None,
   properties: Option[ListMap[String,JSONSchema]] = None,
   required: Option[List[String]] = None,
+  readonly: Option[Boolean] = None,
   enum: Option[List[String]] = None,
   order: Option[Int] = None
 )
@@ -21,11 +22,13 @@ object JSONSchema {
     
     val map = ListMap(properties(schema.columns): _*)
     
+    println(schema.columns)
     
     JSONSchema(
         `type` = "object",
         title = Some(table),
         properties = Some(map),
+        readonly = Some(schema.columns.forall { x => x.is_updatable == "NO" }),
         required = Some(schema.columns.filter(_.is_nullable == "NO").map(_.column_name))
     )
   }
@@ -38,7 +41,7 @@ object JSONSchema {
     val cols = {for{
       c <- columns
     } yield {
-      c.column_name -> JSONSchema(typesMapping(c.data_type),Some(c.column_name),order=Some(c.ordinal_position))
+      c.column_name -> JSONSchema(typesMapping(c.data_type),Some(c.column_name),order=Some(c.ordinal_position),readonly=Some(c.is_updatable == "NO"))
     }}.toList
     
     
@@ -47,18 +50,19 @@ object JSONSchema {
   
   val typesMapping =  Map(
       "integer" -> "number",
-      "character varying" -> "string",
+      "character varying" -> "text",
+      "character" -> "text",
       "smallint" -> "number",
       "bigint" -> "number",
       "double precision" -> "number",
-      "timestamp without time zone" -> "string",
-      "date" -> "string",
+      "timestamp without time zone" -> "text",
+      "date" -> "text",
       "real" -> "number",
-      "boolean" -> "boolean",
-      "bytea" -> "string",
+      "boolean" -> "checkbox",
+      "bytea" -> "text",
       "numeric" -> "number",
-      "text" -> "string",
-      "USER-DEFINED" -> "string"
+      "text" -> "text",
+      "USER-DEFINED" -> "text"
 
   )
   

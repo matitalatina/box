@@ -47,7 +47,7 @@ object JSONForm {
           val title = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse("en")
           
           Some(JSONField(
-              typesMapping(field.data_type),
+              JSONSchema.typesMapping(field.data_type),
               key = Some(field.column_name),
               placeholder = Some(fk.referencingTable + " Lookup"),
               options = Some(
@@ -56,29 +56,14 @@ object JSONForm {
           ))
         }
       }
-      case _ => Some(JSONField(typesMapping(field.data_type),key = Some(field.column_name)))
+      case _ => Some(JSONField(JSONSchema.typesMapping(field.data_type),key = Some(field.column_name)))
     }
     
     schema.columns.flatMap(field2form)
     
   }
   
-  val typesMapping =  Map(
-      "integer" -> "number",
-      "character varying" -> "text",
-      "smallint" -> "number",
-      "bigint" -> "number",
-      "double precision" -> "number",
-      "timestamp without time zone" -> "text",
-      "date" -> "text",
-      "real" -> "number",
-      "boolean" -> "checkbox",
-      "bytea" -> "text",
-      "numeric" -> "number",
-      "text" -> "text",
-      "USER-DEFINED" -> "text"
-
-  )
+  
   
   
   
