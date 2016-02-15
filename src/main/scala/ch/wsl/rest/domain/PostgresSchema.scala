@@ -1,7 +1,11 @@
 package ch.wsl.rest.domain
 
-import scala.slick.driver.PostgresDriver
-import PostgresDriver.simple._
+import slick.driver.PostgresDriver
+import PostgresDriver.api._
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 
 case class PgColumn(
@@ -106,46 +110,52 @@ class PgSchema(table:String, db:Database) {
   val pgContraintsUsage = TableQuery[PgConstraintUsages]
   val pgKeyUsage = TableQuery[PgKeyUsages]
   
-  case class ForeignKey(keys:List[String], referencingKeys:List[String], referencingTable:String, contraintName:String)
-  
-  lazy val columns = db withSession { implicit s =>
-      pgColumns
-        .filter(e => e.table_name === table && e.table_schema === "public")
-        .sortBy(_.ordinal_position)
-        .list
+  case class ForeignKey(keys:Seq[String], referencingKeys:Seq[String], referencingTable:String, contraintName:String)
+
+  private val columnsQuery:Rep[Seq[PgColumns#TableElementType]] = pgColumns
+    .filter(e => e.table_name === table && e.table_schema === "public")
+    .sortBy(_.ordinal_position)
+
+
+  lazy val columns:Future[Seq[PgColumn]] = db.run{
+      columnsQuery.result
   }
-  
-  lazy val pk = db withSession{ implicit s =>
-      val q = for{
-        constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === PRIMARYKEY
-        usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
-      } yield usage.column_name
-      println(q.selectStatement)
-      q.list
+
+  private val pkQ:Rep[Seq[String]] = for{
+    constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === PRIMARYKEY
+    usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
+  } yield usage.column_name
+
+  lazy val pk:Future[Seq[String]] = db.run{
+    pkQ.result
   }
-  
-  lazy val fk = db withSession { implicit s =>
-    val q = for{
-      constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === FOREIGNKEY
-      constraintBind <- pgConstraintsReference if constraint.constraint_name === constraintBind.constraint_name
-      referencingContraint <- pgConstraints if referencingContraint.constraint_name === constraintBind.referencing_constraint_name
-    } yield (constraintBind,referencingContraint)
-    q.list.map{ case(c,ref)=> 
-      
-      
-      val q2 = for{
-        usageRef <- pgContraintsUsage if usageRef.constraint_name === c.constraint_name && usageRef.table_name === ref.table_name
-        usage <- pgKeyUsage if usage.constraint_name === c.constraint_name && usage.table_name === table  
-      } yield (usage.column_name,usageRef.column_name)  
-      
-      val keys = q2.list
-      
-      ForeignKey(keys.map(_._1),keys.map(_._2),ref.table_name, c.constraint_name)
-      
+
+  private val fkQ1:Rep[Seq[(PgConstraintReferences#TableElementType,PgConstraints#TableElementType)]] = for{
+    constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === FOREIGNKEY
+    constraintBind <- pgConstraintsReference if constraint.constraint_name === constraintBind.constraint_name
+    referencingContraint <- pgConstraints if referencingContraint.constraint_name === constraintBind.referencing_constraint_name
+  } yield (constraintBind,referencingContraint)
+
+  private def fkQ2(c:PgConstraintReferences#TableElementType,ref:PgConstraints#TableElementType):Rep[Seq[(String,String)]] = for{
+    usageRef <- pgContraintsUsage if usageRef.constraint_name === c.constraint_name && usageRef.table_name === ref.table_name
+    usage <- pgKeyUsage if usage.constraint_name === c.constraint_name && usage.table_name === table
+  } yield (usage.column_name,usageRef.column_name)
+
+
+
+  lazy val fk:Future[Seq[ForeignKey]] =  {
+
+    db.run(fkQ1.result).flatMap { references =>
+      Future.sequence(references.map { case (c, ref) =>
+          db.run(fkQ2(c,ref).result).map{ keys =>
+            ForeignKey(keys.map(_._1),keys.map(_._2),ref.table_name, c.constraint_name)
+          }
+      })
     }
+
   }
   
-  def findFk(field:String) = fk.find(_.keys.exists(_ == field))
+  def findFk(field:String):Future[Option[ForeignKey]] = fk.map(_.find(_.keys.exists(_ == field)))
   
 }
 

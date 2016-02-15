@@ -92,7 +92,7 @@ object stagedBuild extends Build {
         "io.spray"                 %% "spray-testkit"    % "1.3.3",
         "com.typesafe.akka"        %% "akka-actor"       % "2.3.9",
         "org.specs2"               %% "specs2"           % "2.3.11"    % "test",
-        "com.github.tminglei"      %% "slick-pg"         % "0.8.2",
+        //"com.github.tminglei"      %% "slick-pg"         % "0.8.2",
         "junit"                    %  "junit"            % "4.8.1"     % "test",
         "ch.qos.logback"           %  "logback-classic"  % "1.1.1",
         "org.scalatest"            %  "scalatest_2.11"   % "2.1.5",
@@ -120,16 +120,16 @@ object stagedBuild extends Build {
     base=file("codegen"),
     settings = sharedSettings ++ Seq(
       libraryDependencies ++= List(
-        "com.typesafe.slick" %% "slick-codegen" % "2.1.0"
+        "com.typesafe.slick" %% "slick-codegen" % "3.1.1"
       )
     )
   )
   
   // shared sbt config between main project and codegen project
   val sharedSettings = Project.defaultSettings ++ Seq(
-    scalaVersion := "2.11.6",
+    scalaVersion := "2.11.7",
     libraryDependencies ++= List(
-      "com.typesafe.slick" %% "slick" % "2.1.0",
+      "com.typesafe.slick" %% "slick" % "3.1.1",
       "org.slf4j" % "slf4j-nop" % "1.6.4",
       "postgresql"               %  "postgresql"       % "9.1-901.jdbc4"
 

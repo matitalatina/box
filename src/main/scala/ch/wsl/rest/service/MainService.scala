@@ -5,7 +5,7 @@ import com.typesafe.config.{ConfigFactory, Config}
 import slick.model.Table
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Promise
+import scala.concurrent._
 import scala.language.postfixOps
 import akka.actor.Actor
 import net.liftweb.json.DefaultFormats
@@ -27,13 +27,13 @@ import spray.routing.RejectionHandler
 import ch.wsl.rest.domain.JSONSchema
 import ch.wsl.rest.domain.JSONForm
 import ch.wsl.rest.domain.JSONQuery
-import ch.wsl.model._
+import ch.wsl.model.Tables._
 
 import ch.wsl.rest.domain.JSONField
 import ch.wsl.rest.domain.UglyDBFilters
 import ch.wsl.rest.domain.DBFilters
 
-import scala.slick.driver.PostgresDriver.simple._
+import slick.driver.PostgresDriver.api._
 
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
@@ -79,7 +79,7 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   //  implicit def json4sFormats: Formats = DefaultFormats
     
   }
-  
+
   //TODO Extend UserProfile class depending on project requirements
   case class UserProfile(name: String, db: Database)
 
@@ -118,37 +118,41 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   var models = Set[String]()
 
 
-  def modelRoute[T <: scala.slick.driver.PostgresDriver.simple.Table[M],M](name:String, table:WriteTable[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
-    
+  def modelRoute[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
+
     case class JSONResult(count:Int,data:List[M])
-    
+
     models = Set(name) ++ models
-    
+
     import JsonProtocol._
 
-    
+
     pathPrefix(name) {
             path(IntNumber) { i=>
               get {
-                val pk = JSONSchema.keysOf(name,db).head
-                val result = db withSession { implicit s =>
-                  table.tq.filter(table.filter(pk, super.== , i.toString)).firstOption
+                val pk:Future[Seq[String]] = JSONSchema.keysOf(name,db)
+                def pkFilter():Rep[Seq[T#TableElementType]] = table.take(1)  //.filter(_.primaryKeys.flatMap(_.columns).find(_.toString() == pk).get == i.toString)
+
+                val result = db.run{
+                  pkFilter().result
                 }
-                complete{ result }
-              } ~ 
+
+                complete{result}
+
+              } ~
               put {
                 entity(as[M]) { e =>
-                  val result = db withSession { implicit s => table.find(e).update(e) }
-                  complete(e)
+                  val result = db.run{ table.insertOrUpdate(e) }.map(_ => e)
+                  complete(result) //result should be in the same future as e
                 }
               } ~
               post {
                 entity(as[M]) { e =>
-                  val result = db withSession { implicit s => table.tq.insert(e) }
-                  complete(e)
+                  val result = db.run{ table.forceInsert(e) }.map(_ => e)
+                  complete(result)
                 }
               }
-              
+
             } ~
             path("schema") {
               get {
@@ -168,80 +172,82 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
             path("count") {
                 get { ctx =>
 
-                  val result = db withSession { implicit s => table.tq.length.run }
-                  ctx.complete{ JObject(List(JField("count",JInt(result)))) }
-                }
-            } ~
-            path("list") {
-                post {
-                  entity(as[JSONQuery]) { query =>
-                    val (result,count) = db withSession { implicit s =>
-
-                        
-                      
-                        val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table.tq){case ((field,jsFilter),query) =>
-                          println(jsFilter)
-                          query.filter(table.filter(field, operator(jsFilter.operator.getOrElse("=")), jsFilter.value))
-                        }
-                        
-                        val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
-                          query.sortBy{ x =>
-                            val c = table.columns(field)(x)
-                            dir match {
-                              case "asc" => c.asc
-                              case "desc" => c.desc
-                            }
-                          }
-                        }
-                        
-                        (qSorted
-                        .drop((query.page - 1) * query.count)
-                        .take(query.count)
-                        .list,
-                        qSorted.length.run)
-                        
-                        
-                    }
-                    
-                    
-                    complete(JSONResult(count,result))
+                  db.run{table.length.result}.map{ result =>
+                    ctx.complete{ JObject(List(JField("count",JInt(result)))) }
                   }
+
                 }
             } ~
+//            path("list") {
+//                post {
+//                  entity(as[JSONQuery]) { query =>
+//                    val (result,count) = db withSession { implicit s =>
+//
+//
+//
+//                        val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table.tq){case ((field,jsFilter),query) =>
+//                          println(jsFilter)
+//                          query.filter(table.filter(field, operator(jsFilter.operator.getOrElse("=")), jsFilter.value))
+//                        }
+//
+//                        val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
+//                          query.sortBy{ x =>
+//                            val c = table.columns(field)(x)
+//                            dir match {
+//                              case "asc" => c.asc
+//                              case "desc" => c.desc
+//                            }
+//                          }
+//                        }
+//
+//                        (qSorted
+//                        .drop((query.page - 1) * query.count)
+//                        .take(query.count)
+//                        .list,
+//                        qSorted.length.run)
+//
+//
+//                    }
+//
+//
+//                    complete(JSONResult(count,result))
+//                  }
+//                }
+//            } ~
             pathEnd{
               get { ctx =>
                 ctx.complete {
-                  val result: List[M] = db withSession { implicit s => table.tq.take(50).list }
-                  println()
+                  val q:Rep[Seq[T#TableElementType]] = table.take(50)
+                  val result: Future[Seq[M]] = db.run{ q.result }
                   result
                 }
               } ~
-              post { 
+              post {
                 entity(as[M]) { e =>
-                  val result = db withSession { implicit s => table.tq.insert(e) }
-                  complete(e)
+                  val result = db.run { table.forceInsert(e) }.map(_ => e)
+                  complete(result)
                 }
-              } ~ 
+              } ~
               put {
                 entity(as[M]) { e =>
-                  val result = db withSession { implicit s => table.find(e).update(e) }
-                  complete(e)
+                  val result = db.run { table.insertOrUpdate(e) }.map(_ => e)
+                  complete(result)
                 }
               }
             }
-        } 
+        }
   }
-  
-  
-  def viewRoute[T <: scala.slick.driver.PostgresDriver.simple.Table[M],M](name:String, table:TableUtils[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
-    
+
+
+  def viewRoute[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
+
     case class JSONResult(count:Int,data:List[M])
-    
+
     models = Set(name) ++ models
-    
+
     import JsonProtocol._
 
-    
+
     pathPrefix(name) {
             path("schema") {
               get {
@@ -261,58 +267,61 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
             path("count") {
                 get { ctx =>
 
-                  val result = db withSession { implicit s => table.tq.length.run }
-                  ctx.complete{ JObject(List(JField("count",JInt(result)))) }
-                }
-            } ~
-            path("list") {
-                post {
-                  entity(as[JSONQuery]) { query =>
-                    val (result,count) = db withSession { implicit s =>
-
-                        
-                      
-                        val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table.tq){case ((field,jsFilter),query) =>
-                          println(jsFilter)
-                          query.filter(table.filter(field, operator(jsFilter.operator.getOrElse("=")), jsFilter.value))
-                        }
-                        
-                        val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
-                          query.sortBy{ x =>
-                            val c = table.columns(field)(x)
-                            dir match {
-                              case "asc" => c.asc
-                              case "desc" => c.desc
-                            }
-                          }
-                        }
-                        
-                        (qSorted
-                        .drop((query.page - 1) * query.count)
-                        .take(query.count)
-                        .list,
-                        qSorted.length.run)
-                        
-                        
-                    }
-                    
-                    
-                    complete(JSONResult(count,result))
+                  val result = db.run { table.length.result }.map{r =>
+                    JObject(List(JField("count",JInt(r))))
                   }
+                  ctx.complete{ result }
                 }
             } ~
+//            path("list") {
+//                post {
+//                  entity(as[JSONQuery]) { query =>
+//                    val (result,count) = db withSession { implicit s =>
+//
+//
+//
+//                        val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table.tq){case ((field,jsFilter),query) =>
+//                          println(jsFilter)
+//                          query.filter(table.filter(field, operator(jsFilter.operator.getOrElse("=")), jsFilter.value))
+//                        }
+//
+//                        val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
+//                          query.sortBy{ x =>
+//                            val c = table.columns(field)(x)
+//                            dir match {
+//                              case "asc" => c.asc
+//                              case "desc" => c.desc
+//                            }
+//                          }
+//                        }
+//
+//                        (qSorted
+//                        .drop((query.page - 1) * query.count)
+//                        .take(query.count)
+//                        .list,
+//                        qSorted.length.run)
+//
+//
+//                    }
+//
+//
+//                    complete(JSONResult(count,result))
+//                  }
+//                }
+//            } ~
             pathEnd{
               get { ctx =>
                 ctx.complete {
-                  val result: List[M] = db withSession { implicit s => table.tq.take(50).list }
-                  println()
+                  val q:Rep[Seq[T#TableElementType]] = table.take(50)
+                  val result: Future[Seq[M]] = db.run{ q.result }
                   result
                 }
+
               }
             }
-        } 
+        }
   }
-  
+
   
   val index = get { ctx =>
           respondWithMediaType(`text/html`) {  // XML is marshalled to `text/xml` by default, so we simply override here
@@ -371,7 +380,7 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
           modelRoute[ValMonth,ValMonthRow]("val_month",ValMonth)  ~
           modelRoute[ValSite,ValSiteRow]("val_site",ValSite)  ~
           modelRoute[SysForm,SysFormRow]("sys_form",SysForm)  ~
-          viewRoute[VRegionMunicipality,VRegionMunicipalityRow]("v_region_municipality",VRegionMunicipality)  ~
+          //viewRoute[VRegionMunicipality,VRegionMunicipalityRow]("v_region_municipality",VRegionMunicipality)  ~
           path("models") {
             get{
               complete(models)

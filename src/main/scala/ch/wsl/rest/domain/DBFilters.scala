@@ -1,15 +1,16 @@
 package ch.wsl.rest.domain
 
-import scala.slick.driver.PostgresDriver.simple._
+import slick.driver.PostgresDriver
+import slick.driver.PostgresDriver.api._
 
 trait DBFilters {
-  def ==(c:Column[_],v:Any):Column[Option[Boolean]] 
-  def not(c:Column[_],v:Any):Column[Option[Boolean]]
-  def >(c:Column[_],v:Any):Column[Option[Boolean]]
-  def <(c:Column[_],v:Any):Column[Option[Boolean]]
-  def like(c:Column[_],v:Any):Column[Option[Boolean]] 
+  def ==(c:Rep[_],v:Any):Rep[Option[Boolean]]
+  def not(c:Rep[_],v:Any):Rep[Option[Boolean]]
+  def >(c:Rep[_],v:Any):Rep[Option[Boolean]]
+  def <(c:Rep[_],v:Any):Rep[Option[Boolean]]
+  def like(c:Rep[_],v:Any):Rep[Option[Boolean]]
   
-  def operator(op:String)(c:Column[_],v:Any) ={
+  def operator(op:String)(c:Rep[_],v:Any) ={
     
     println("operator: " + op)
     
@@ -25,123 +26,126 @@ trait DBFilters {
 }
 
 trait UglyDBFilters extends DBFilters {
-  def ==(c:Column[_],v:Any):Column[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
-      
-    
-      c.tpe.classTag.toString match {
-          case "Short" => c.asInstanceOf[Column[Short]] === v.asInstanceOf[String].toShort
-          case "Int" => c.asInstanceOf[Column[Int]] === v.asInstanceOf[String].toInt
-          case "java.lang.String" => c.asInstanceOf[Column[String]] === v.asInstanceOf[String]
-          case "Boolean" => c.asInstanceOf[Column[Boolean]] === v.asInstanceOf[String].toBoolean
+
+
+  def ==(c:Rep[_],v:Any):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
+
+
+      c.toNode.nodeType.classTag.toString match {
+          case "Short" => c.asInstanceOf[Rep[Short]] === v.asInstanceOf[String].toShort
+          case "Int" => c.asInstanceOf[Rep[Int]] === v.asInstanceOf[String].toInt
+          case "java.lang.String" => c.asInstanceOf[Rep[String]] === v.asInstanceOf[String]
+          case "Boolean" => c.asInstanceOf[Rep[Boolean]] === v.asInstanceOf[String].toBoolean
           case "scala.Option" => {
-            c.tpe.children.headOption.map(_.classTag.toString) match {
-              case Some("Short") => c.asInstanceOf[Column[Option[Short]]] === v.asInstanceOf[String].toShort
-              case Some("Int") => c.asInstanceOf[Column[Option[Int]]] === v.asInstanceOf[String].toInt
-              case Some("java.lang.String") => c.asInstanceOf[Column[Option[String]]] === v.asInstanceOf[String]
-              case Some("Boolean") => c.asInstanceOf[Column[Option[Boolean]]] === v.asInstanceOf[String].toBoolean
+            c.toNode.children.headOption.map(_.nodeType.classTag.toString) match {
+              case Some("Short") => c.asInstanceOf[Rep[Option[Short]]] === v.asInstanceOf[String].toShort
+              case Some("Int") => c.asInstanceOf[Rep[Option[Int]]] === v.asInstanceOf[String].toInt
+              case Some("java.lang.String") => c.asInstanceOf[Rep[Option[String]]] === v.asInstanceOf[String]
+              case Some("Boolean") => c.asInstanceOf[Rep[Option[Boolean]]] === v.asInstanceOf[String].toBoolean
               case _ => {
-                println("Type mapping for: " + c.tpe.children.headOption.map(_.classTag.toString) + " not found") 
+                println("Type mapping for: " + c.toNode.children.headOption.map(_.nodeType.classTag.toString) + " not found")
                 None
               }
             }
           }
           case _ => {
-            println("Type mapping for: " + c.tpe.classTag + " not found") 
+            println("Type mapping for: " + c.toNode.nodeType.classTag + " not found")
             None
           }
       }
    }
-  
-  def not(c:Column[_],v:Any):Column[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
-      
-    
-      c.tpe.classTag.toString match {
-          case "Short" => c.asInstanceOf[Column[Short]] =!= v.asInstanceOf[String].toShort
-          case "Int" => c.asInstanceOf[Column[Int]] =!= v.asInstanceOf[String].toInt
-          case "java.lang.String" => c.asInstanceOf[Column[String]] =!= v.asInstanceOf[String]
-          case "Boolean" => c.asInstanceOf[Column[Boolean]] =!= v.asInstanceOf[String].toBoolean
+
+  def not(c:Rep[_],v:Any):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
+
+
+    c.toNode.nodeType.classTag.toString match {
+          case "Short" => c.asInstanceOf[Rep[Short]] =!= v.asInstanceOf[String].toShort
+          case "Int" => c.asInstanceOf[Rep[Int]] =!= v.asInstanceOf[String].toInt
+          case "java.lang.String" => c.asInstanceOf[Rep[String]] =!= v.asInstanceOf[String]
+          case "Boolean" => c.asInstanceOf[Rep[Boolean]] =!= v.asInstanceOf[String].toBoolean
           case "scala.Option" => {
-            c.tpe.children.headOption.map(_.classTag.toString) match {
-              case Some("Short") => c.asInstanceOf[Column[Option[Short]]] =!= v.asInstanceOf[String].toShort
-              case Some("Int") => c.asInstanceOf[Column[Option[Int]]] =!= v.asInstanceOf[String].toInt
-              case Some("java.lang.String") => c.asInstanceOf[Column[Option[String]]] =!= v.asInstanceOf[String]
-              case Some("Boolean") => c.asInstanceOf[Column[Option[Boolean]]] =!= v.asInstanceOf[String].toBoolean
+            c.toNode.children.headOption.map(_.nodeType.classTag.toString) match {
+              case Some("Short") => c.asInstanceOf[Rep[Option[Short]]] =!= v.asInstanceOf[String].toShort
+              case Some("Int") => c.asInstanceOf[Rep[Option[Int]]] =!= v.asInstanceOf[String].toInt
+              case Some("java.lang.String") => c.asInstanceOf[Rep[Option[String]]] =!= v.asInstanceOf[String]
+              case Some("Boolean") => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.asInstanceOf[String].toBoolean
               case _ => {
-                println("Type mapping for: " + c.tpe.children.headOption.map(_.classTag.toString) + " not found") 
+                println("Type mapping for: " + c.toNode.children.headOption.map(_.nodeType.classTag.toString) + " not found")
                 None
               }
             }
           }
           case _ => {
-            println("Type mapping for: " + c.tpe.classTag + " not found") 
+            println("Type mapping for: " + c.toNode.nodeType.classTag + " not found")
             None
           }
       }
    }
-  
-  def >(c:Column[_],v:Any):Column[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
-      
-    
-      c.tpe.classTag.toString match {
-          case "Short" => c.asInstanceOf[Column[Short]] > v.asInstanceOf[String].toShort
-          case "Int" => c.asInstanceOf[Column[Int]] > v.asInstanceOf[String].toInt
+
+  def >(c:Rep[_],v:Any):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
+
+
+      c.toNode.nodeType.classTag.toString match {
+          case "Short" => c.asInstanceOf[Rep[Short]] > v.asInstanceOf[String].toShort
+          case "Int" => c.asInstanceOf[Rep[Int]] > v.asInstanceOf[String].toInt
           case "scala.Option" => {
-            c.tpe.children.headOption.map(_.classTag.toString) match {
-              case Some("Short") => c.asInstanceOf[Column[Option[Short]]] > v.asInstanceOf[String].toShort
-              case Some("Int") => c.asInstanceOf[Column[Option[Int]]] > v.asInstanceOf[String].toInt
+            c.toNode.children.headOption.map(_.nodeType.classTag.toString) match {
+              case Some("Short") => c.asInstanceOf[Rep[Option[Short]]] > v.asInstanceOf[String].toShort
+              case Some("Int") => c.asInstanceOf[Rep[Option[Int]]] > v.asInstanceOf[String].toInt
               case _ => {
-                println("Type mapping for: " + c.tpe.children.headOption.map(_.classTag.toString) + " not found") 
+                println("Type mapping for: " + c.toNode.children.headOption.map(_.nodeType.classTag.toString) + " not found")
                 None
               }
             }
           }
           case _ => {
-            println("Type mapping for: " + c.tpe.classTag + " not found") 
+            println("Type mapping for: " + c.toNode.nodeType.classTag + " not found")
             None
           }
       }
    }
-  
-  def <(c:Column[_],v:Any):Column[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
-      
-    
-      c.tpe.classTag.toString match {
-          case "Short" => c.asInstanceOf[Column[Short]] < v.asInstanceOf[String].toShort
-          case "Int" => c.asInstanceOf[Column[Int]] < v.asInstanceOf[String].toInt
+
+  def <(c:Rep[_],v:Any):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
+
+
+      c.toNode.nodeType.classTag.toString match {
+          case "Short" => c.asInstanceOf[Rep[Short]] < v.asInstanceOf[String].toShort
+          case "Int" => c.asInstanceOf[Rep[Int]] < v.asInstanceOf[String].toInt
           case "scala.Option" => {
-            c.tpe.children.headOption.map(_.classTag.toString) match {
-              case Some("Short") => c.asInstanceOf[Column[Option[Short]]] < v.asInstanceOf[String].toShort
-              case Some("Int") => c.asInstanceOf[Column[Option[Int]]] < v.asInstanceOf[String].toInt
+            c.toNode.children.headOption.map(_.nodeType.classTag.toString) match {
+              case Some("Short") => c.asInstanceOf[Rep[Option[Short]]] < v.asInstanceOf[String].toShort
+              case Some("Int") => c.asInstanceOf[Rep[Option[Int]]] < v.asInstanceOf[String].toInt
               case _ => {
-                println("Type mapping for: " + c.tpe.children.headOption.map(_.classTag.toString) + " not found") 
+                println("Type mapping for: " + c.toNode.children.headOption.map(_.nodeType.classTag.toString) + " not found")
                 None
               }
             }
           }
           case _ => {
-            println("Type mapping for: " + c.tpe.classTag + " not found") 
+            println("Type mapping for: " + c.toNode.nodeType.classTag + " not found")
             None
           }
       }
    }
-  
-  def like(c:Column[_],v:Any):Column[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
-      
-      c.tpe.classTag.toString match {
-          case "java.lang.String" => c.asInstanceOf[Column[String]] like v.asInstanceOf[String]
+
+  def like(c:Rep[_],v:Any):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
+
+      c.toNode.nodeType.classTag.toString match {
+          case "java.lang.String" => c.asInstanceOf[Rep[String]] like v.asInstanceOf[String]
           case "scala.Option" => {
-            c.tpe.children.headOption.map(_.classTag.toString) match {
-              case Some("java.lang.String") => c.asInstanceOf[Column[Option[String]]] like v.asInstanceOf[String]
+            c.toNode.children.headOption.map(_.nodeType.classTag.toString) match {
+              case Some("java.lang.String") => c.asInstanceOf[Rep[Option[String]]] like v.asInstanceOf[String]
               case _ => {
-                println("Type mapping for: " + c.tpe.children.headOption.map(_.classTag.toString) + " not found") 
+                println("Type mapping for: " + c.toNode.children.headOption.map(_.nodeType.classTag.toString) + " not found")
                 None
               }
             }
           }
           case _ => {
-            println("Type mapping for: " + c.tpe.classTag + " not found") 
+            println("Type mapping for: " + c.toNode.nodeType.classTag + " not found")
             None
           }
       }
    }
+
 }
