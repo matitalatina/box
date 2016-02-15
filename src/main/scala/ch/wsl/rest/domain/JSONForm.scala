@@ -29,9 +29,9 @@ object JSONForm {
   
   val tableFieldTitles: Config = ConfigFactory.load().as[Config]("rest.lookup.labels")
   
-  def of(table:String):JSONForm = {
+  def of(table:String,db:scala.slick.driver.PostgresDriver.simple.Database):JSONForm = {
     
-    val schema = new PgSchema(table)
+    val schema = new PgSchema(table,db)
     
     println(schema.fk)
     

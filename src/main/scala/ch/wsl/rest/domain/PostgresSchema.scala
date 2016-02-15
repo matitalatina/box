@@ -95,10 +95,8 @@ class PgKeyUsages(tag: Tag) extends Table[PgKeyUsage](tag,  Some("information_sc
   def * = (constraint_name, table_name, column_name) <> (PgKeyUsage.tupled, PgKeyUsage.unapply)
 }
 
-class PgSchema(table:String) {
-  
-  import DBConfig._
-  
+class PgSchema(table:String, db:Database) {
+
   private val FOREIGNKEY = "FOREIGN KEY"
   private val PRIMARYKEY = "PRIMARY KEY"
   

@@ -16,9 +16,9 @@ case class JSONSchema(
 
 object JSONSchema {
     
-  def of(table:String):JSONSchema = {
+  def of(table:String,db:scala.slick.driver.PostgresDriver.simple.Database):JSONSchema = {
     
-    val schema = new PgSchema(table)
+    val schema = new PgSchema(table,db)
     
     val map = ListMap(properties(schema.columns): _*)
     
@@ -33,7 +33,7 @@ object JSONSchema {
     )
   }
   
-  def keysOf(table:String):List[String] = new PgSchema(table).pk
+  def keysOf(table:String,db:scala.slick.driver.PostgresDriver.simple.Database):List[String] = new PgSchema(table,db).pk
   
   
   def properties(columns:List[PgColumn]):List[(String,JSONSchema)] = {

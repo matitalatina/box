@@ -5,7 +5,7 @@ object Config{
   val initScripts = Seq()//Seq("drop-tables.sql","create-tables.sql","populate-tables.sql")
   val url = "jdbc:postgresql:incendi"//;INIT="+initScripts.map("runscript from 'src/sql/"+_+"'").mkString("\\;")
   val jdbcDriver =  "org.postgresql.Driver"
-  val slickProfile = scala.slick.driver.PostgresDriver
-  val user = "postgres"
-  val password = "postgres"
+  val slickProfile = slick.driver.PostgresDriver
+  val user = "andreaminetti"
+  val password = ""
 }

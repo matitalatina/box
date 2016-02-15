@@ -1,6 +1,9 @@
 package ch.wsl.rest.service
 
 import java.io.FileOutputStream
+import com.typesafe.config.{ConfigFactory, Config}
+import slick.model.Table
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Promise
 import scala.language.postfixOps
@@ -21,17 +24,21 @@ import spray.routing.authentication.UserPassAuthenticator
 import spray.routing.directives.AuthMagnet.fromContextAuthenticator
 import spray.routing.directives.FieldDefMagnet.apply
 import spray.routing.RejectionHandler
-import ch.wsl.rest.domain.DBConfig
 import ch.wsl.rest.domain.JSONSchema
 import ch.wsl.rest.domain.JSONForm
 import ch.wsl.rest.domain.JSONQuery
 import ch.wsl.model._
-import scala.slick.driver.PostgresDriver.simple._
+
 import ch.wsl.rest.domain.JSONField
 import ch.wsl.rest.domain.UglyDBFilters
 import ch.wsl.rest.domain.DBFilters
-import ch.wsl.rest.domain.DBFilters
 
+import scala.slick.driver.PostgresDriver.simple._
+
+import com.typesafe.config._
+import net.ceedubs.ficus.Ficus._
+
+import scala.util.Try
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
@@ -74,15 +81,28 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   }
   
   //TODO Extend UserProfile class depending on project requirements
-  case class UserProfile(name: String)
+  case class UserProfile(name: String, db: Database)
 
   def getUserProfile(name: String, password: String): Option[UserProfile] = {
     //TODO Here you should check if this is a valid user on your system and return his profile
-    //I'm just creating one a fake one for now on the assumption that only 'bob' exits
-    if (name == "bob" && password == "123")
-      Some(UserProfile(s"$name"))
-    else
-      None
+
+    val dbConf: Config = ConfigFactory.load().as[Config]("db")
+
+    println("Connecting to DB with " + name )
+
+
+    val db:Database = Database.forURL(dbConf.as[String]("url"),
+      driver="org.postgresql.Driver",
+      user=name,
+      password=password)
+
+      Try {
+        //check if login data are valid
+        db.createSession().close()
+      }.toOption.map{ _ =>
+        UserProfile(name,db)
+      }
+
   }
 
   object CustomUserPassAuthenticator extends UserPassAuthenticator[UserProfile] {
@@ -98,20 +118,19 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   var models = Set[String]()
 
 
-  def modelRoute[T <: Table[M],M](name:String, table:WriteTable[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M]):Route = { 
+  def modelRoute[T <: scala.slick.driver.PostgresDriver.simple.Table[M],M](name:String, table:WriteTable[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
     
     case class JSONResult(count:Int,data:List[M])
     
     models = Set(name) ++ models
     
     import JsonProtocol._
-    import ch.wsl.rest.domain.DBConfig._
-    
+
     
     pathPrefix(name) {
             path(IntNumber) { i=>
               get {
-                val pk = JSONSchema.keysOf(name).head
+                val pk = JSONSchema.keysOf(name,db).head
                 val result = db withSession { implicit s =>
                   table.tq.filter(table.filter(pk, super.== , i.toString)).firstOption
                 }
@@ -133,17 +152,17 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
             } ~
             path("schema") {
               get {
-                complete{ JSONSchema.of(name) }
+                complete{ JSONSchema.of(name,db) }
               }
             } ~
             path("form") {
               get {
-                complete{ JSONForm.of(name) }
+                complete{ JSONForm.of(name,db) }
               }
             } ~
             path("keys") {
               get {
-                complete{ JSONSchema.keysOf(name) }
+                complete{ JSONSchema.keysOf(name,db) }
               }
             } ~
             path("count") {
@@ -214,30 +233,29 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   }
   
   
-  def viewRoute[T <: Table[M],M](name:String, table:TableUtils[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M]):Route = { 
+  def viewRoute[T <: scala.slick.driver.PostgresDriver.simple.Table[M],M](name:String, table:TableUtils[T,M])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
     
     case class JSONResult(count:Int,data:List[M])
     
     models = Set(name) ++ models
     
     import JsonProtocol._
-    import ch.wsl.rest.domain.DBConfig._
-    
+
     
     pathPrefix(name) {
             path("schema") {
               get {
-                complete{ JSONSchema.of(name) }
+                complete{ JSONSchema.of(name,db) }
               }
             } ~
             path("form") {
               get {
-                complete{ JSONForm.of(name) }
+                complete{ JSONForm.of(name,db) }
               }
             } ~
             path("keys") {
               get {
-                complete{ JSONSchema.keysOf(name) }
+                complete{ JSONSchema.keysOf(name,db) }
               }
             } ~
             path("count") {
@@ -316,14 +334,14 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
     
 
 
-    val test = DBConfig.db withSession { implicit s =>
-
-      Fire.tq.filter(_.locality === "test")
-
-
-    }
-
-    println(test)
+//    val test = db withSession { implicit s =>
+//
+//      Fire.tq.filter(_.locality === "test")
+//
+//
+//    }
+//
+//    println(test)
 
     
       pathEnd {
@@ -334,6 +352,7 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
            complete(spray.http.StatusCodes.OK)
         } ~
         authenticate(BasicAuth(CustomUserPassAuthenticator, "person-security-realm")) { userProfile =>
+          implicit val db = userProfile.db
           modelRoute[Canton,CantonRow]("canton",Canton) ~
           modelRoute[CatCause,CatCauseRow]("cat_cause", CatCause) ~
           modelRoute[CatCauseBafu,CatCauseBafuRow]("cat_cause_bafu", CatCauseBafu) ~

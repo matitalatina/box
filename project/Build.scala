@@ -120,7 +120,7 @@ object stagedBuild extends Build {
     base=file("codegen"),
     settings = sharedSettings ++ Seq(
       libraryDependencies ++= List(
-        "com.typesafe.slick" %% "slick-codegen" % "2.1.0-RC3"
+        "com.typesafe.slick" %% "slick-codegen" % "2.1.0"
       )
     )
   )
@@ -132,7 +132,8 @@ object stagedBuild extends Build {
       "com.typesafe.slick" %% "slick" % "2.1.0",
       "org.slf4j" % "slf4j-nop" % "1.6.4",
       "postgresql"               %  "postgresql"       % "9.1-901.jdbc4"
-    )
+
+  )
   )
 
   // code generation task that calls the customized code generator
