@@ -37,6 +37,68 @@ object CustomizedCodeGenerator {
     val codegen = new slick.codegen.SourceCodeGenerator(model) {
 
 
+
+      // override table generator
+      override def Table = new Table(_){
+        // disable entity class generation and mapping
+        override def EntityType = new EntityType{
+          override def code = {
+            val args = columns.map(c=>
+              c.default.map( v =>
+                s"${c.name}: ${c.exposedType} = $v"
+              ).getOrElse(
+                  s"${c.name}: ${c.exposedType}"
+                )
+            ).mkString(", ")
+
+              val prns = (parents.take(1).map(" extends "+_) ++ parents.drop(1).map(" with "+_)).mkString("")
+              val result = s"""case class $name($args)$prns"""
+
+              if(model.columns.size < 22) {
+                result
+              } else {
+                result + s"""
+    object ${TableClass.elementType}{
+      def factoryHList(hlist:HList) = {
+        val x = hlist.toList
+        ${TableClass.elementType}("""+columns.zipWithIndex.map(x => "x("+x._2+").asInstanceOf["+x._1.actualType+"]").mkString(",")+s""");
+      }
+
+      def toHList(e:${TableClass.elementType}) = {
+        Option(( """+columns.map(c => "e."+ c.rawName + " :: ").mkString("")+s""" HNil))
+      }
+    }
+                 """
+              }
+
+          }
+        }
+
+
+
+        override def factory = if(model.columns.size < 22 ) {
+          super.factory
+        } else {
+
+          s"${TableClass.elementType}.factoryHList"
+
+        }
+
+        override def extractor = if(model.columns.size < 22 ) {
+          super.extractor
+        } else {
+          s"${TableClass.elementType}.toHList"
+        }
+
+        override def mappingEnabled = true;
+
+        override def TableClass = new TableClassDef {
+          override def optionEnabled = columns.size < 22 && mappingEnabled && columns.exists(c => !c.model.nullable)
+        }
+
+
+      }
+
     }
 
 
@@ -54,11 +116,6 @@ object CustomizedCodeGenerator {
 
       println("Exit")
 
-
-//
-//    slick.codegen.SourceCodeGenerator.main(
-//      Array("slick.driver.PostgresDriver", "org.postgresql.Driver", "jdbc:postgresql:incendi", args(0), "ch.wsl.model", "andreaminetti", "")
-//    )
 
   }
 
