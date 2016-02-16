@@ -35,6 +35,8 @@ import ch.wsl.rest.domain.DBFilters
 
 import slick.driver.PostgresDriver.api._
 
+import ch.wsl.rest.domain.EnhancedTable._
+
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 
@@ -118,6 +120,9 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
   var models = Set[String]()
 
 
+
+
+
   def modelRoute[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
 
     case class JSONResult(count:Int,data:List[M])
@@ -127,15 +132,17 @@ trait MainService extends HttpService with CORSSupport with UglyDBFilters {
     import JsonProtocol._
 
 
+
     pathPrefix(name) {
             path(IntNumber) { i=>
               get {
-                val pk:Future[Seq[String]] = JSONSchema.keysOf(name,db)
-                def pkFilter():Rep[Seq[T#TableElementType]] = table.take(1)  //.filter(_.primaryKeys.flatMap(_.columns).find(_.toString() == pk).get == i.toString)
 
-                val result = db.run{
-                  pkFilter().result
-                }
+                def fil(pk:String):Rep[Seq[T#TableElementType]] =  table.filter(x => ==(x.col(pk),i)).take(1)
+
+                val result = for{
+                  pks <- JSONSchema.keysOf(name,db)
+                  result <- db.run{ fil(pks.head).result }
+                } yield result.head
 
                 complete{result}
 
