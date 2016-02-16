@@ -29,6 +29,7 @@ case class JSONFieldHTTPOption(url:String)
 
 object JSONForm {
 
+  import StringHelper._
   
   val tableFieldTitles: Config = ConfigFactory.load().as[Config]("rest.lookup.labels")
   
@@ -60,7 +61,7 @@ object JSONForm {
             ))
           }
         }
-        case _ => Some(JSONField(JSONSchema.typesMapping(field.data_type), key = Some(field.column_name)))
+        case _ => Some(JSONField(JSONSchema.typesMapping(field.data_type), key = Some(field.column_name.slickfy)))
       }
     }
 

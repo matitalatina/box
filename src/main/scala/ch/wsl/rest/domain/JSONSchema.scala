@@ -17,7 +17,9 @@ case class JSONSchema(
 
 
 object JSONSchema {
-    
+
+  import StringHelper._
+
   def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[JSONSchema] = {
     
     val schema = new PgSchema(table,db)
@@ -42,7 +44,8 @@ object JSONSchema {
   }
 
 
-  def keysOf(table:String,db:slick.driver.PostgresDriver.api.Database):Future[Seq[String]] = new PgSchema(table,db).pk
+
+  def keysOf(table:String,db:slick.driver.PostgresDriver.api.Database):Future[Seq[String]] = new PgSchema(table,db).pk.map(_.map(_.slickfy))
   
   
   def properties(columns:Seq[PgColumn]):Seq[(String,JSONSchema)] = {
@@ -50,7 +53,7 @@ object JSONSchema {
     val cols = {for{
       c <- columns
     } yield {
-      c.column_name -> JSONSchema(typesMapping(c.data_type),Some(c.column_name),order=Some(c.ordinal_position),readonly=Some(c.is_updatable == "NO"))
+      c.column_name.slickfy -> JSONSchema(typesMapping(c.data_type),Some(c.column_name),order=Some(c.ordinal_position),readonly=Some(c.is_updatable == "NO"))
     }}.toList
     
     
