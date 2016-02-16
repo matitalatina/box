@@ -31,8 +31,14 @@ object JSONForm {
 
   import StringHelper._
   
-  val tableFieldTitles: Config = ConfigFactory.load().as[Config]("rest.lookup.labels")
-  
+  def tableFieldTitles: Config = {
+    val config = ConfigFactory.load()
+    println("CONFIG")
+    println(config)
+
+    config.as[Config]("rest.lookup.labels")
+  }
+
   def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[Seq[JSONField]] = {
 
     val schema = new PgSchema(table, db)

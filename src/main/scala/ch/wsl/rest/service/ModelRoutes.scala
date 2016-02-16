@@ -1,12 +1,14 @@
 package ch.wsl.rest.service
 
 import ch.wsl.rest.domain.{UglyDBFilters, JSONQuery, JSONForm, JSONSchema}
-import net.liftweb.json.JsonAST._
+import org.json4s.JsonAST._
 import slick.lifted.ColumnOrdered
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling._
 import spray.routing.PathMatchers.IntNumber
 import spray.routing._
+
+import ch.wsl.model.tables._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -18,16 +20,19 @@ import ch.wsl.rest.domain.EnhancedTable._
 /**
  * Created by andreaminetti on 16/02/16.
  */
+object ModelHelpers{
+  case class JSONResult[M](count:Int,data:List[M])
+}
+
+
 trait ModelRoutes extends HttpService with UglyDBFilters {
 
   var models = Set[String]()
 
 
-
-
   def model[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
 
-    case class JSONResult(count:Int,data:Seq[M])
+
 
     models = Set(name) ++ models
 
@@ -42,7 +47,7 @@ trait ModelRoutes extends HttpService with UglyDBFilters {
       } yield result.head
     }
 
-    def find(query:JSONQuery):Future[JSONResult] = {
+    def find(query:JSONQuery):Future[ModelHelpers.JSONResult[M]] = {
       val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case ((field,jsFilter),query) =>
         println(jsFilter)
         query.filter(x => operator(jsFilter.operator.getOrElse("="))(x.col(field),jsFilter.value))
@@ -63,7 +68,7 @@ trait ModelRoutes extends HttpService with UglyDBFilters {
       for {
         result <- db.run { qPaged.result }
         count <- db.run{ qSorted.length.result }
-      } yield JSONResult(count,result)
+      } yield ModelHelpers.JSONResult(count,result.toList) // to list because json4s does't like generics types for serialization
     }
 
 

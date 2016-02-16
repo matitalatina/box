@@ -1,7 +1,5 @@
 package ch.wsl.rest.domain
 
-import net.liftweb.json.JsonAST.JObject
-
 /**
  * Created by andreaminetti on 24/04/15.
  */

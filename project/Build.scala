@@ -97,8 +97,8 @@ object stagedBuild extends Build {
         "ch.qos.logback"           %  "logback-classic"  % "1.1.1",
         "org.scalatest"            %  "scalatest_2.11"   % "2.1.5",
         "org.seleniumhq.selenium"  %  "selenium-java"    % "2.28.0" % "test",
-        //"org.json4s"               %% "json4s-native"    % "3.2.11"
-        "net.liftweb"              %% "lift-json"        % "2.6.2",
+        "org.json4s"               %% "json4s-native"    % "3.3.0",
+        //"net.liftweb"              %% "lift-json"        % "2.6.2",
         "net.ceedubs"              %% "ficus"             % "1.1.2"
       ),
       unmanagedResourceDirectories in Compile <++= baseDirectory { base =>

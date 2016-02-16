@@ -1,7 +1,7 @@
 package ch.wsl.rest.service
 
 import ch.wsl.rest.domain.{JSONForm, JSONSchema}
-import net.liftweb.json._
+import org.json4s.JsonAST._
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling._
 import spray.routing._
