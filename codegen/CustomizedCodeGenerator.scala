@@ -34,7 +34,31 @@ object CustomizedCodeGenerator {
 
 
 
-    val codegen = new slick.codegen.SourceCodeGenerator(model) {
+    trait MyOutputHelper extends slick.codegen.OutputHelpers {
+      override def packageCode(profile: String, pkg: String, container: String, parentType: Option[String]) : String= {
+        s"""
+package ${pkg}
+// AUTO-GENERATED Slick data model
+/** Stand-alone Slick data model for immediate use */
+
+  import slick.driver.PostgresDriver.api._
+  import slick.model.ForeignKeyAction
+  import slick.collection.heterogeneous._
+  import slick.collection.heterogeneous.syntax._
+
+package object tables {
+
+
+      val profile = slick.driver.PostgresDriver
+
+          ${indent(code)}
+}
+      """.trim()
+      }
+    }
+
+    val codegen = new slick.codegen.SourceCodeGenerator(model) with MyOutputHelper {
+
 
 
 

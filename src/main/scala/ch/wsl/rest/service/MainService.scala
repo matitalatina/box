@@ -12,7 +12,7 @@ import spray.routing.{Route, HttpService, RejectionHandler}
 import spray.routing.authentication.BasicAuth
 import spray.routing.directives.AuthMagnet.fromContextAuthenticator
 
-import ch.wsl.model.Tables._
+import ch.wsl.model.tables._
 
 
 
