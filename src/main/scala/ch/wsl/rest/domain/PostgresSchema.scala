@@ -1,5 +1,6 @@
 package ch.wsl.rest.domain
 
+import ch.wsl.rest.service.Auth
 import slick.driver.PostgresDriver
 import PostgresDriver.api._
 
@@ -126,8 +127,10 @@ class PgSchema(table:String, db:Database) {
     usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
   } yield usage.column_name
 
-  lazy val pk:Future[Seq[String]] = db.run{
-    pkQ.result
+  def pk:Future[Seq[String]] = Auth.adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
+    val action = pkQ.result
+    println(action.statements)
+    action
   }
 
   private val fkQ1:Rep[Seq[(PgConstraintReferences#TableElementType,PgConstraints#TableElementType)]] = for{

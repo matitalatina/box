@@ -18,10 +18,18 @@ object Auth {
   //TODO Extend UserProfile class depending on project requirements
   case class UserProfile(name: String, db: Database)
 
+
+  val dbConf: Config = ConfigFactory.load().as[Config]("db")
+
+  def adminDB = Database.forURL(dbConf.as[String]("url"),
+    driver="org.postgresql.Driver",
+    user=dbConf.as[String]("user"),
+    password=dbConf.as[String]("password"))
+
   def getUserProfile(name: String, password: String): Option[UserProfile] = {
     //TODO Here you should check if this is a valid user on your system and return his profile
 
-    val dbConf: Config = ConfigFactory.load().as[Config]("db")
+
 
     println("Connecting to DB with " + name )
 

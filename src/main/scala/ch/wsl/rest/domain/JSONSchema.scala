@@ -1,5 +1,7 @@
 package ch.wsl.rest.domain
 
+import ch.wsl.rest.service.Auth
+
 import scala.collection.immutable.ListMap
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,7 +47,12 @@ object JSONSchema {
 
 
 
-  def keysOf(table:String,db:slick.driver.PostgresDriver.api.Database):Future[Seq[String]] = new PgSchema(table,db).pk.map(_.map(_.slickfy))
+  def keysOf(table:String):Future[Seq[String]] = {
+    new PgSchema(table,Auth.adminDB).pk.map { pks =>
+      pks.map(_.slickfy)
+    }
+
+  }
   
   
   def properties(columns:Seq[PgColumn]):Seq[(String,JSONSchema)] = {
@@ -62,19 +69,19 @@ object JSONSchema {
   
   val typesMapping =  Map(
       "integer" -> "number",
-      "character varying" -> "text",
-      "character" -> "text",
+      "character varying" -> "string",
+      "character" -> "string",
       "smallint" -> "number",
       "bigint" -> "number",
       "double precision" -> "number",
-      "timestamp without time zone" -> "text",
-      "date" -> "text",
+      "timestamp without time zone" -> "string",
+      "date" -> "string",
       "real" -> "number",
       "boolean" -> "checkbox",
-      "bytea" -> "text",
+      "bytea" -> "string",
       "numeric" -> "number",
-      "text" -> "text",
-      "USER-DEFINED" -> "text"
+      "text" -> "string",
+      "USER-DEFINED" -> "string"
 
   )
   

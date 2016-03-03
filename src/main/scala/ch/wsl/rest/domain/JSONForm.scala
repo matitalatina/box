@@ -12,7 +12,7 @@ case class TitleMap(value:String,name:String)
 
 case class JSONField(
   `type`:String,
-  key:Option[String] = None,
+  key:String,
   title:Option[String] = None,
   titleMap:Option[List[TitleMap]] = None,
   options:Option[JSONFieldOptions] = None,
@@ -59,7 +59,7 @@ object JSONForm {
 
             Some(JSONField(
               JSONSchema.typesMapping(field.data_type),
-              key = Some(field.column_name),
+              key = field.column_name.slickfy,
               placeholder = Some(fk.referencingTable + " Lookup"),
               options = Some(
                 JSONFieldOptions(JSONFieldHTTPOption("http://localhost:8080/" + fk.referencingTable), JSONFieldMap(fk.referencingKeys.head, title))
@@ -67,7 +67,7 @@ object JSONForm {
             ))
           }
         }
-        case _ => Some(JSONField(JSONSchema.typesMapping(field.data_type), key = Some(field.column_name.slickfy)))
+        case _ => Some(JSONField(JSONSchema.typesMapping(field.data_type), key = field.column_name.slickfy))
       }
     }
 

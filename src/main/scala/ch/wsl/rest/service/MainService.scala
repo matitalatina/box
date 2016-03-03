@@ -8,7 +8,7 @@ import scala.concurrent._
 import akka.actor.Actor
 import spray.http.MediaTypes.{ `text/html` }
 import spray.routing.Directive.pimpApply
-import spray.routing.{Route, HttpService, RejectionHandler}
+import spray.routing.{MethodRejection, Route, HttpService, RejectionHandler}
 import spray.routing.authentication.BasicAuth
 import spray.routing.directives.AuthMagnet.fromContextAuthenticator
 
@@ -28,7 +28,6 @@ class MainServiceActor extends Actor with MainService  {
   implicit val myRejectionHandler = RejectionHandler {
     case t => {
       println(t)
-
       complete("Something went wrong here: " + t)
     }
     case _ => complete("Something went wrong here")

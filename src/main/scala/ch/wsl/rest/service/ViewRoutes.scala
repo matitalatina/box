@@ -44,7 +44,7 @@ trait ViewRoutes extends HttpService {
         } ~
         path("keys") {
           get {
-            complete{ JSONSchema.keysOf(name,db) }
+            complete{ JSONSchema.keysOf(name) }
           }
         } ~
         path("count") {

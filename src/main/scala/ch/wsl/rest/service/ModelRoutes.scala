@@ -38,12 +38,16 @@ trait ModelRoutes extends HttpService with UglyDBFilters {
 
     import JsonProtocol._
 
-    def getById(i:Int):Future[T#TableElementType] = {
+    def getById(i:Long):Future[T#TableElementType] = {
       def fil(pk:String):Rep[Seq[T#TableElementType]] =  table.filter(x => super.==(x.col(pk),i)).take(1)
 
       for{
-        pks <- JSONSchema.keysOf(name,db)
-        result <- db.run{ fil(pks.head).result }
+        pks <- JSONSchema.keysOf(name)
+        result <- db.run{
+          val action = fil(pks.head).result
+          println(action.statements)
+          action
+        }
       } yield result.head
     }
 
@@ -55,7 +59,7 @@ trait ModelRoutes extends HttpService with UglyDBFilters {
 
       val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
         query.sortBy{ x =>
-          val c:slick.driver.PostgresDriver.api.Rep[_] = x.col(field)
+          val c:slick.driver.PostgresDriver.api.Rep[_] = x.col(field).rep
           dir match {
             case "asc" => ColumnOrdered(c,new slick.ast.Ordering)
             case "desc" => ColumnOrdered(c,new slick.ast.Ordering(direction=slick.ast.Ordering.Desc))
@@ -73,7 +77,7 @@ trait ModelRoutes extends HttpService with UglyDBFilters {
 
 
     pathPrefix(name) {
-      path(IntNumber) { i=>
+      path(LongNumber) { i=>
         get {
           complete{getById(i)}
         } ~
@@ -82,14 +86,7 @@ trait ModelRoutes extends HttpService with UglyDBFilters {
               val result = db.run{ table.insertOrUpdate(e) }.map(_ => e)
               complete(result) //result should be in the same future as e
             }
-          } ~
-          post {
-            entity(as[M]) { e =>
-              val result = db.run{ table.forceInsert(e) }.map(_ => e)
-              complete(result)
-            }
           }
-
       } ~
         path("schema") {
           get {
@@ -103,7 +100,7 @@ trait ModelRoutes extends HttpService with UglyDBFilters {
         } ~
         path("keys") {
           get {
-            complete{ JSONSchema.keysOf(name,db) }
+            complete{ JSONSchema.keysOf(name) }
           }
         } ~
         path("count") {
@@ -134,15 +131,10 @@ trait ModelRoutes extends HttpService with UglyDBFilters {
                 val result = db.run { table.forceInsert(e) }.map(_ => e)
                 complete(result)
               }
-            } ~
-            put {
-              entity(as[M]) { e =>
-                val result = db.run { table.insertOrUpdate(e) }.map(_ => e)
-                complete(result)
-              }
             }
         }
     }
   }
 
 }
+
