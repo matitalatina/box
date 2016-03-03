@@ -97,6 +97,8 @@ package object tables {
 
       val profile = slick.driver.PostgresDriver
 
+      import profile._
+
           ${indent(code)}
 }
       """.trim()
@@ -142,6 +144,12 @@ package object tables {
 
       // override table generator
       override def Table = new Table(_){
+
+        //disable plain override mapping, with hlist produces compile time problem with non-primitives types
+        override def PlainSqlMapper = new PlainSqlMapperDef {
+          override def code = ""
+        }
+
         // disable entity class generation and mapping
         override def EntityType = new EntityType{
           override def code = {
@@ -156,17 +164,20 @@ package object tables {
               val prns = (parents.take(1).map(" extends "+_) ++ parents.drop(1).map(" with "+_)).mkString("")
               val result = s"""case class $name($args)$prns"""
 
-              if(model.columns.size < 22) {
+              if(model.columns.size <= 22) {
                 result
               } else {
                 result + s"""
     object ${TableClass.elementType}{
-      def factoryHList(hlist:HList) = {
+
+      type ${TableClass.elementType}HList = ${columns.map(_.exposedType).mkString(" :: ")} :: HNil
+
+      def factoryHList(hlist:${TableClass.elementType}HList):${TableClass.elementType} = {
         val x = hlist.toList
         ${TableClass.elementType}("""+columns.zipWithIndex.map(x => "x("+x._2+").asInstanceOf["+x._1.actualType+"]").mkString(",")+s""");
       }
 
-      def toHList(e:${TableClass.elementType}) = {
+      def toHList(e:${TableClass.elementType}):Option[${TableClass.elementType}HList] = {
         Option(( """+columns.map(c => "e."+ c.name + " :: ").mkString("")+s""" HNil))
       }
     }
@@ -178,7 +189,7 @@ package object tables {
 
 
 
-        override def factory = if(model.columns.size < 22 ) {
+        override def factory = if(model.columns.size <= 22 ) {
           super.factory
         } else {
 
@@ -186,7 +197,7 @@ package object tables {
 
         }
 
-        override def extractor = if(model.columns.size < 22 ) {
+        override def extractor = if(model.columns.size <= 22 ) {
           super.extractor
         } else {
           s"${TableClass.elementType}.toHList"
@@ -195,7 +206,7 @@ package object tables {
         override def mappingEnabled = true;
 
         override def TableClass = new TableClassDef {
-          override def optionEnabled = columns.size < 22 && mappingEnabled && columns.exists(c => !c.model.nullable)
+          override def optionEnabled = columns.size <= 22 && mappingEnabled && columns.exists(c => !c.model.nullable)
         }
 
 

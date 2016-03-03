@@ -47,31 +47,33 @@ object JSONForm {
 
     var constraints = List[String]()
 
-    def field2form(field: PgColumn): Future[Option[JSONField]] = schema.findFk(field.column_name).map {
+    def field2form(field: PgColumn): Future[JSONField] = schema.findFk(field.column_name).map {
       _ match {
         case Some(fk) => {
           if (constraints.contains(fk.contraintName)) {
-            None
+            println("error: " + fk.contraintName)
+            println(field.column_name)
+            JSONField(JSONSchema.typesMapping(field.data_type), key = field.column_name.slickfy)
           } else {
             constraints = fk.contraintName :: constraints
 
             val title = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse("en")
 
-            Some(JSONField(
+            JSONField(
               JSONSchema.typesMapping(field.data_type),
               key = field.column_name.slickfy,
               placeholder = Some(fk.referencingTable + " Lookup"),
               options = Some(
                 JSONFieldOptions(JSONFieldHTTPOption("http://localhost:8080/" + fk.referencingTable), JSONFieldMap(fk.referencingKeys.head, title))
               )
-            ))
+            )
           }
         }
-        case _ => Some(JSONField(JSONSchema.typesMapping(field.data_type), key = field.column_name.slickfy))
+        case _ => JSONField(JSONSchema.typesMapping(field.data_type), key = field.column_name.slickfy)
       }
     }
 
-    schema.columns.flatMap{ c => Future.sequence(c.map(field2form))}.map(_.flatten)
+    schema.columns.flatMap{ c => Future.sequence(c.map(field2form))}
 
 
   }
