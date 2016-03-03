@@ -1,6 +1,6 @@
 package ch.wsl.rest.service
 
-import ch.wsl.rest.domain.{JSONForm, JSONSchema}
+import ch.wsl.rest.domain.{JSONQuery, JSONForm, JSONSchema}
 import org.json4s.JsonAST._
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling._
@@ -24,12 +24,12 @@ trait ViewRoutes extends HttpService {
 
   def view[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
 
-    case class JSONResult(count:Int,data:List[M])
-
     views = Set(name) ++ views
 
     import JsonProtocol._
 
+    val utils = new ModelUtils[T,M](name,table)
+    import utils._
 
     pathPrefix(name) {
       path("schema") {
@@ -56,42 +56,14 @@ trait ViewRoutes extends HttpService {
             ctx.complete{ result }
           }
         } ~
-        //            path("list") {
-        //                post {
-        //                  entity(as[JSONQuery]) { query =>
-        //                    val (result,count) = db withSession { implicit s =>
-        //
-        //
-        //
-        //                        val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table.tq){case ((field,jsFilter),query) =>
-        //                          println(jsFilter)
-        //                          query.filter(table.filter(field, operator(jsFilter.operator.getOrElse("=")), jsFilter.value))
-        //                        }
-        //
-        //                        val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
-        //                          query.sortBy{ x =>
-        //                            val c = table.columns(field)(x)
-        //                            dir match {
-        //                              case "asc" => c.asc
-        //                              case "desc" => c.desc
-        //                            }
-        //                          }
-        //                        }
-        //
-        //                        (qSorted
-        //                        .drop((query.page - 1) * query.count)
-        //                        .take(query.count)
-        //                        .list,
-        //                        qSorted.length.run)
-        //
-        //
-        //                    }
-        //
-        //
-        //                    complete(JSONResult(count,result))
-        //                  }
-        //                }
-        //            } ~
+        path("list") {
+          post {
+            entity(as[JSONQuery]) { query =>
+              println("list")
+              complete(find(query))
+            }
+          }
+        } ~
         pathEnd{
           get { ctx =>
             ctx.complete {

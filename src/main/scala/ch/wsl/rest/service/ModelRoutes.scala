@@ -1,6 +1,6 @@
 package ch.wsl.rest.service
 
-import ch.wsl.rest.domain.{UglyDBFilters, JSONQuery, JSONForm, JSONSchema}
+import ch.wsl.rest.domain._
 import org.json4s.JsonAST._
 import slick.lifted.ColumnOrdered
 import spray.httpx.marshalling.Marshaller
@@ -20,60 +20,62 @@ import ch.wsl.rest.domain.EnhancedTable._
 /**
  * Created by andreaminetti on 16/02/16.
  */
-object ModelHelpers{
-  case class JSONResult[M](count:Int,data:List[M])
+
+
+
+
+class ModelUtils[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T]) extends UglyDBFilters {
+  def find(query:JSONQuery)(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Future[JSONResult[M]] = {
+    val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case ((field,jsFilter),query) =>
+      println(jsFilter)
+      query.filter(x => operator(jsFilter.operator.getOrElse("="))(x.col(field),jsFilter.value))
+    }
+
+    val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
+      query.sortBy{ x =>
+        val c:slick.driver.PostgresDriver.api.Rep[_] = x.col(field).rep
+        dir match {
+          case "asc" => ColumnOrdered(c,new slick.ast.Ordering)
+          case "desc" => ColumnOrdered(c,new slick.ast.Ordering(direction=slick.ast.Ordering.Desc))
+        }
+      }
+    }
+
+    val qPaged:Rep[Seq[T#TableElementType]] = qSorted.drop((query.page - 1) * query.count).take(query.count)
+
+    for {
+      result <- db.run { qPaged.result }
+      count <- db.run{ qSorted.length.result }
+    } yield JSONResult(count,result.toList) // to list because json4s does't like generics types for serialization
+  }
+
+  def getById(i:Long)(implicit db:Database):Future[T#TableElementType] = {
+    def fil(pk:String):Rep[Seq[T#TableElementType]] =  table.filter(x => super.==(x.col(pk),i)).take(1)
+
+    for{
+      pks <- JSONSchema.keysOf(name)
+      result <- db.run{
+        val action = fil(pks.head).result
+        println(action.statements)
+        action
+      }
+    } yield result.head
+  }
+
 }
 
 
-trait ModelRoutes extends HttpService with UglyDBFilters {
+trait ModelRoutes extends HttpService {
 
   var models = Set[String]()
 
-
   def model[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
-
-
 
     models = Set(name) ++ models
 
+    val utils = new ModelUtils[T,M](name,table)
+    import utils._
     import JsonProtocol._
-
-    def getById(i:Long):Future[T#TableElementType] = {
-      def fil(pk:String):Rep[Seq[T#TableElementType]] =  table.filter(x => super.==(x.col(pk),i)).take(1)
-
-      for{
-        pks <- JSONSchema.keysOf(name)
-        result <- db.run{
-          val action = fil(pks.head).result
-          println(action.statements)
-          action
-        }
-      } yield result.head
-    }
-
-    def find(query:JSONQuery):Future[ModelHelpers.JSONResult[M]] = {
-      val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case ((field,jsFilter),query) =>
-        println(jsFilter)
-        query.filter(x => operator(jsFilter.operator.getOrElse("="))(x.col(field),jsFilter.value))
-      }
-
-      val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
-        query.sortBy{ x =>
-          val c:slick.driver.PostgresDriver.api.Rep[_] = x.col(field).rep
-          dir match {
-            case "asc" => ColumnOrdered(c,new slick.ast.Ordering)
-            case "desc" => ColumnOrdered(c,new slick.ast.Ordering(direction=slick.ast.Ordering.Desc))
-          }
-        }
-      }
-
-      val qPaged:Rep[Seq[T#TableElementType]] = qSorted.drop((query.page - 1) * query.count).take(query.count)
-
-      for {
-        result <- db.run { qPaged.result }
-        count <- db.run{ qSorted.length.result }
-      } yield ModelHelpers.JSONResult(count,result.toList) // to list because json4s does't like generics types for serialization
-    }
 
 
     pathPrefix(name) {

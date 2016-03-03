@@ -46,7 +46,7 @@ class MainServiceActor extends Actor with MainService  {
 /**
  *  this trait defines our service behavior independently from the service actor
  */
-trait MainService extends HttpService with CORSSupport with ModelRoutes {
+trait MainService extends HttpService with CORSSupport with ModelRoutes with ViewRoutes {
   
 
 
@@ -57,7 +57,7 @@ trait MainService extends HttpService with CORSSupport with ModelRoutes {
             complete {
               <html>
                 <body>
-                  <h1>The <b>S4</b> - <i>Slick Spray Scala Stack</i> is running :-)</h1>
+                  <h1>Backend is running :-)</h1>
                 </body>
               </html>
             }
@@ -78,28 +78,12 @@ trait MainService extends HttpService with CORSSupport with ModelRoutes {
         } ~
         authenticate(BasicAuth(CustomUserPassAuthenticator, "person-security-realm")) { userProfile =>
             implicit val db = userProfile.db
-            model[Canton,CantonRow]("canton",Canton) ~
-            model[CatCause,CatCauseRow]("cat_cause", CatCause) ~
-            model[CatCauseBafu,CatCauseBafuRow]("cat_cause_bafu", CatCauseBafu) ~
-            model[Days,DaysRow]("days", Days) ~
-            model[Fire,FireRow]("fire",Fire)  ~
-            model[ValAttribute,ValAttributeRow]("val_attribute",ValAttribute)  ~
-            model[ValBafuForestType,ValBafuForestTypeRow]("val_bafu_forest_type",ValBafuForestType) ~
-            model[ValCause,ValCauseRow]("val_cause",ValCause)  ~
-            model[ValCauseReliability,ValCauseReliabilityRow]("val_cause_reliability",ValCauseReliability)  ~
-            model[ValCoordReliability,ValCoordReliabilityRow]("val_coord_reliability",ValCoordReliability)  ~
-            model[ValDamage,ValDamageRow]("val_damage",ValDamage)  ~
-            model[ValDateReliability,ValDateReliabilityRow]("val_date_reliability",ValDateReliability)  ~
-            model[ValDefinition,ValDefinitionRow]("val_definition",ValDefinition)  ~
-            model[ValExposition,ValExpositionRow]("val_exposition",ValExposition)  ~
-            model[ValLayerAbundance,ValLayerAbundanceRow]("val_layer_abundance",ValLayerAbundance)  ~
-            model[ValMonth,ValMonthRow]("val_month",ValMonth)  ~
-            model[ValSite,ValSiteRow]("val_site",ValSite)  ~
-            model[SysForm,SysFormRow]("sys_form",SysForm)  ~
-          //viewRoute[VRegionMunicipality,VRegionMunicipalityRow]("v_region_municipality",VRegionMunicipality)  ~
+            model[Trait,TraitRow]("trait",Trait) ~
+            model[Taxon,TaxonRow]("taxon", Taxon) ~
+            view[VCode,VCodeRow]("v_code",VCode) ~
           path("models") {
             get{
-              complete(models)
+              complete(models ++ views)
             }
           }
         }
