@@ -79,6 +79,7 @@ object stagedBuild extends Build {
     val outputDir = (dir / "slick").getPath // place generated files in sbt's managed sources folder
     toError(r.run("ch.wsl.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log))
     val fname = outputDir + "/ch/wsl/model/Tables.scala"
-    Seq(file(fname))
+    val rname = outputDir + "/ch/wsl/rest/service/GeneratedRoutes.scala"
+    Seq(file(fname),file(rname))
   }
 }

@@ -46,7 +46,7 @@ class MainServiceActor extends Actor with MainService  {
 /**
  *  this trait defines our service behavior independently from the service actor
  */
-trait MainService extends HttpService with CORSSupport with ModelRoutes with ViewRoutes {
+trait MainService extends HttpService with CORSSupport with ModelRoutes with ViewRoutes with GeneratedRoutes {
   
 
 
@@ -78,9 +78,7 @@ trait MainService extends HttpService with CORSSupport with ModelRoutes with Vie
         } ~
         authenticate(BasicAuth(CustomUserPassAuthenticator, "person-security-realm")) { userProfile =>
             implicit val db = userProfile.db
-            model[Trait,TraitRow]("trait",Trait) ~
-            model[Taxon,TaxonRow]("taxon", Taxon) ~
-            view[VCode,VCodeRow]("v_code",VCode) ~
+          generatedRoutes() ~
           path("models") {
             get{
               complete(models ++ views)

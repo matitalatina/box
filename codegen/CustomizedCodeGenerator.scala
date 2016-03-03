@@ -2,6 +2,7 @@
 package ch.wsl.codegen
 
 import net.ceedubs.ficus.Ficus._
+import slick.codegen.OutputHelpers
 
 import slick.jdbc.meta.MTable
 import slick.model.Model
@@ -45,6 +46,37 @@ object CustomizedCodeGenerator {
     }, 200 seconds)
 
 
+    val gen = codegen(model)
+
+    println("codegen created")
+    println(gen)
+
+    gen.writeToFile(
+      "slick.driver.PostgresDriver",
+      args(0),
+      "ch.wsl.model",
+      "Tables",
+      "Tables.scala"
+    )
+
+
+    val routeGen = gen.RoutesGenerator(views,tables)
+
+    routeGen.writeToFile(
+      args(0),
+      "ch.wsl.rest.service",
+      "GeneratedRoutes",
+      "GeneratedRoutes.scala",
+      "ch.wsl.model.tables"
+    )
+
+
+    println("Exit")
+
+
+  }
+
+
 
 
 
@@ -71,17 +103,48 @@ package object tables {
       }
     }
 
-    val codegen = new slick.codegen.SourceCodeGenerator(model) with MyOutputHelper {
+    def codegen(model:Model) = new slick.codegen.SourceCodeGenerator(model) with MyOutputHelper {
 
+      tables.head.EntityType.name
 
+      case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String]) {
+        def singleRoute(method:String,model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
+          s"""$method[${table.TableClass.name},${table.EntityType.name}]("${table.model.name.table}",${table.TableClass.name})"""
+        }
 
+        def composeRoutes():String = {
+          (
+            tableList.flatMap(t => singleRoute("model",t)) ++
+            viewList.flatMap(v => singleRoute("view",v))
+          ).mkString(" ~ \n")
+        }
+
+        def generate(pkg:String,name:String,modelPackages:String):String =
+          s"""package ${pkg}
+             |
+             |import spray.routing._
+             |import $modelPackages._
+             |
+             |trait $name extends HttpService with ModelRoutes with ViewRoutes {
+             |  def generatedRoutes()(implicit db:slick.driver.PostgresDriver.api.Database):Route = {
+             |
+             |    import JsonProtocol._
+             |
+             |    ${composeRoutes()}
+             |  }
+             |}
+           """.stripMargin
+
+          def writeToFile(folder:String, pkg:String, name:String, fileName:String,modelPackages:String) =
+            writeStringToFile(generate(pkg,name,modelPackages),folder,pkg,fileName)
+
+      }
 
       // override table generator
       override def Table = new Table(_){
         // disable entity class generation and mapping
         override def EntityType = new EntityType{
           override def code = {
-
             val args = columns.map(c=>
               c.default.map( v =>
                 s"${c.name}: ${c.exposedType} = $v"
@@ -141,22 +204,9 @@ package object tables {
     }
 
 
-    println("codegen created")
-    println(codegen)
-
-    codegen.writeToFile(
-      "slick.driver.PostgresDriver",
-      args(0),
-      "ch.wsl.model",
-      "Tables",
-      "Tables.scala"
-    )
 
 
-      println("Exit")
 
-
-  }
 
 
 
