@@ -34,16 +34,16 @@ trait UglyDBFilters extends DBFilters {
       val c:Rep[_] = col.rep
 
       col.`type` match {
-          case "Short" => c.asInstanceOf[Rep[Short]] === v.asInstanceOf[String].toShort
-          case "Int" | "java.lang.Integer" => c.asInstanceOf[Rep[Int]] === v.asInstanceOf[String].toInt
-          case "Long" => c.asInstanceOf[Rep[Long]] === v.asInstanceOf[String].toLong
-          case "java.lang.String" => c.asInstanceOf[Rep[String]] === v.asInstanceOf[String]
-          case "Boolean" => c.asInstanceOf[Rep[Boolean]] === v.asInstanceOf[String].toBoolean
-          case "scala.Option[Short]" =>  c.asInstanceOf[Rep[Option[Short]]] === v.asInstanceOf[String].toShort
-          case "scala.Option[Int]" | "scala.Option[java.lang.Integer]" => c.asInstanceOf[Rep[Option[Int]]] === v.asInstanceOf[String].toInt
-          case "scala.Option[Long]" => c.asInstanceOf[Rep[Option[Long]]] === v.asInstanceOf[String].toLong
+          case "scala.Short" => c.asInstanceOf[Rep[Short]] === v.asInstanceOf[String].toShort
+          case "scala.Int" | "java.lang.Integer" => c.asInstanceOf[Rep[Int]] === v.asInstanceOf[String].toInt
+          case "scala.Long" => c.asInstanceOf[Rep[Long]] === v.asInstanceOf[String].toLong
+          case "String" => c.asInstanceOf[Rep[String]] === v.asInstanceOf[String]
+          case "scala.Boolean" => c.asInstanceOf[Rep[Boolean]] === v.asInstanceOf[String].toBoolean
+          case "scala.Option[scala.Short]" =>  c.asInstanceOf[Rep[Option[Short]]] === v.asInstanceOf[String].toShort
+          case "scala.Option[scala.Int]" | "scala.Option[java.lang.Integer]" => c.asInstanceOf[Rep[Option[Int]]] === v.asInstanceOf[String].toInt
+          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] === v.asInstanceOf[String].toLong
           case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] === v.asInstanceOf[String]
-          case "scala.Option[Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] === v.asInstanceOf[String].toBoolean
+          case "scala.Option[scala.Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] === v.asInstanceOf[String].toBoolean
           case _ => {
                 println("Type mapping for: " + col.`type`+ " not found")
                 None
@@ -57,14 +57,16 @@ trait UglyDBFilters extends DBFilters {
     val c:Rep[_] = col.rep
 
     col.`type` match {
-          case "Short" => c.asInstanceOf[Rep[Short]] =!= v.asInstanceOf[String].toShort
-          case "Int" => c.asInstanceOf[Rep[Int]] =!= v.asInstanceOf[String].toInt
-          case "java.lang.String" => c.asInstanceOf[Rep[String]] =!= v.asInstanceOf[String]
-          case "Boolean" => c.asInstanceOf[Rep[Boolean]] =!= v.asInstanceOf[String].toBoolean
-          case "scala.Option[Short]" => c.asInstanceOf[Rep[Option[Short]]] =!= v.asInstanceOf[String].toShort
-          case "scala.Option[Int]" => c.asInstanceOf[Rep[Option[Int]]] =!= v.asInstanceOf[String].toInt
+          case "scala.Short" => c.asInstanceOf[Rep[Short]] =!= v.asInstanceOf[String].toShort
+          case "scala.Int" => c.asInstanceOf[Rep[Int]] =!= v.asInstanceOf[String].toInt
+          case "scala.Long" => c.asInstanceOf[Rep[Long]] =!= v.asInstanceOf[String].toLong
+          case "String" => c.asInstanceOf[Rep[String]] =!= v.asInstanceOf[String]
+          case "scala.Boolean" => c.asInstanceOf[Rep[Boolean]] =!= v.asInstanceOf[String].toBoolean
+          case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] =!= v.asInstanceOf[String].toShort
+          case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] =!= v.asInstanceOf[String].toInt
+          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] =!= v.asInstanceOf[String].toLong
           case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] =!= v.asInstanceOf[String]
-          case "scala.Option[Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.asInstanceOf[String].toBoolean
+          case "scala.Option[scala.Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.asInstanceOf[String].toBoolean
           case _ => {
             println("Type mapping for: " + col.`type` + " not found")
             None
@@ -78,10 +80,12 @@ trait UglyDBFilters extends DBFilters {
     val c:Rep[_] = col.rep
 
     col.`type` match {
-          case "Short" => c.asInstanceOf[Rep[Short]] > v.asInstanceOf[String].toShort
-          case "Int" => c.asInstanceOf[Rep[Int]] > v.asInstanceOf[String].toInt
-          case "scala.Option[Short]" => c.asInstanceOf[Rep[Option[Short]]] > v.asInstanceOf[String].toShort
-          case "scala.Option[Int]" => c.asInstanceOf[Rep[Option[Int]]] > v.asInstanceOf[String].toInt
+          case "scala.Short" => c.asInstanceOf[Rep[Short]] > v.asInstanceOf[String].toShort
+          case "scala.Int" => c.asInstanceOf[Rep[Int]] > v.asInstanceOf[String].toInt
+          case "scala.Long" => c.asInstanceOf[Rep[Long]] > v.asInstanceOf[String].toLong
+          case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] > v.asInstanceOf[String].toShort
+          case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] > v.asInstanceOf[String].toInt
+          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] > v.asInstanceOf[String].toLong
           case _ => {
               println("Type mapping for: " + col.`type` + " not found")
               None
@@ -98,10 +102,12 @@ trait UglyDBFilters extends DBFilters {
     val c:Rep[_] = col.rep
 
     col.`type` match {
-          case "Short" => c.asInstanceOf[Rep[Short]] < v.asInstanceOf[String].toShort
-          case "Int" => c.asInstanceOf[Rep[Int]] < v.asInstanceOf[String].toInt
-          case "scala.Option[Short]" => c.asInstanceOf[Rep[Option[Short]]] < v.asInstanceOf[String].toShort
-          case "scala.Option[Int]" => c.asInstanceOf[Rep[Option[Int]]] < v.asInstanceOf[String].toInt
+          case "scala.Short" => c.asInstanceOf[Rep[Short]] < v.asInstanceOf[String].toShort
+          case "scala.Int" => c.asInstanceOf[Rep[Int]] < v.asInstanceOf[String].toInt
+          case "scala.Long" => c.asInstanceOf[Rep[Long]] < v.asInstanceOf[String].toLong
+          case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] < v.asInstanceOf[String].toShort
+          case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] < v.asInstanceOf[String].toInt
+          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] < v.asInstanceOf[String].toLong
           case _ => {
             println("Type mapping for: " + col.`type` + " not found")
             None
@@ -114,8 +120,8 @@ trait UglyDBFilters extends DBFilters {
     val c:Rep[_] = col.rep
 
     col.`type` match {
-          case "java.lang.String" => c.asInstanceOf[Rep[String]] like v.asInstanceOf[String]
-          case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] === v.asInstanceOf[String]
+          case "String" => c.asInstanceOf[Rep[String]] like v.asInstanceOf[String]
+          case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] like v.asInstanceOf[String]
           case _ => {
             println("Type mapping for: " + col.`type` + " not found")
             None
