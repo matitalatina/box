@@ -3,7 +3,8 @@ package ch.wsl.rest.service
 import com.typesafe.config.{ConfigFactory, Config}
 import spray.routing.authentication._
 
-import scala.concurrent.Promise
+import scala.concurrent.{Await, Promise}
+import scala.concurrent.duration._
 import scala.util.Try
 import slick.driver.PostgresDriver.api._
 
@@ -33,18 +34,24 @@ object Auth {
 
     println("Connecting to DB with " + name )
 
-
-    val db:Database = Database.forURL(dbConf.as[String]("url"),
-      driver="org.postgresql.Driver",
-      user=name,
-      password=password)
-
-    Try {
+    val result = Try {
+      val db:Database = Database.forURL(dbConf.as[String]("url"),
+        driver="org.postgresql.Driver",
+        user=name,
+        password=password)
       //check if login data are valid
-      db.createSession().close()
-    }.toOption.map{ _ =>
+      //def select:DBIO[Int] =
+      Await.result(db.run{
+        sql"""select 1""".as[Int]
+      },1 second)
+      db
+    }.toOption.map{ db =>
       UserProfile(name,db)
     }
+
+    println(result)
+
+    result
 
   }
 

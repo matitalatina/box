@@ -46,7 +46,10 @@ object stagedBuild extends Build {
       ),
       slick <<= slickCodeGenTask, // register manual sbt command
       sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, remove for only manual use
-      resourceDirectory in Compile := baseDirectory.value / "resources"
+      resourceDirectory in Compile := baseDirectory.value / "resources",
+      scalacOptions in Test ++= Seq("-Yrangepos"),
+      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")//,
+      //resourceDirectory in Test := baseDirectory.value / "src" / "test" / "resources"
     )
   ).dependsOn( codegenProject )
   /** codegen project containing the customized code generator */
@@ -66,7 +69,6 @@ object stagedBuild extends Build {
     scalaVersion := "2.11.7",
     libraryDependencies ++= List(
       "com.typesafe.slick" %% "slick" % "3.1.1",
-      "org.slf4j" % "slf4j-nop" % "1.6.4",
       "postgresql"               %  "postgresql"       % "9.1-901.jdbc4",
       "net.ceedubs"              %% "ficus"             % "1.1.2"
 

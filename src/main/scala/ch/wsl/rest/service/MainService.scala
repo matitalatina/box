@@ -37,7 +37,7 @@ class MainServiceActor extends Actor with MainService  {
   // this actor only runs our route, but you could add
   // other things here, like request stream processing
   // or timeout handling
-  def receive = runRoute(s4Route)
+  def receive = runRoute(route)
 }
 
 
@@ -52,25 +52,27 @@ trait MainService extends HttpService with CORSSupport with ModelRoutes with Vie
 
   
   
-  val index = get { ctx =>
+  val index =
           respondWithMediaType(`text/html`) {  // XML is marshalled to `text/xml` by default, so we simply override here
             complete {
               <html>
                 <body>
-                  <h1>Backend is running :-)</h1>
+                  <h1>Postgres REST is running</h1>
                 </body>
               </html>
             }
           }
-        }
+
   
-  val s4Route:Route = {
+  val route:Route = {
     
       import JsonProtocol._
 
     
-      pathEnd {
-        index
+      get {
+        path("") {
+          index
+        }
       } ~
       cors{
         options {
