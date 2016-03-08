@@ -24,17 +24,18 @@ object JSONSchema {
 
   def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[JSONSchema] = {
 
+    println("Getting JSONSchema of:" + table)
+
     val schema = new PgSchema(table,db)
     
     val map = schema.columns.map{ c => ListMap(properties(c): _*) }
 
-    println(schema.columns)
+    println("columns")
 
     for{
       m <- map
       c <- schema.columns
     } yield {
-
       JSONSchema(
         `type` = "object",
         title = Some(table),

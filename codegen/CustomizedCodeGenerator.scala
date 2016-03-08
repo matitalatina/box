@@ -34,22 +34,50 @@ object CustomizedCodeGenerator {
     val tables:Seq[String] = dbConf.as[Seq[String]]("generator.tables")
     val views:Seq[String] = dbConf.as[Seq[String]]("generator.views")
 
+    val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes")
+
     val tablesAndViews = tables ++ views
 
     val enabledModels = Await.result(db.run{
       MTable.getTables(None, None, None, Some(Seq("TABLE", "VIEW")))
     }, 200 seconds)
-      .filter(t => tablesAndViews.contains(t.name.name))
+      .filter { t =>
+        if(excludes.exists(e => t.name.name.startsWith(e))) {
+          false
+        } else if(tablesAndViews.contains("*")) {
+          true
+        } else {
+          tablesAndViews.contains(t.name.name)
+        }
+      }
+
+
+    //println(enabledModels.map(_.name.name))
 
     val model = Await.result(db.run{
       PostgresDriver.createModelBuilder(enabledModels,true).buildModel
     }, 200 seconds)
 
+    val allColumns = model.tables.flatMap(_.columns.map(_.name))
+
+//    model.tables.foreach{ t =>
+//      val dup = t.columns.map(_.name).diff(t.columns.map(_.name).distinct).distinct
+//      if(dup.size > 0) {
+//        println(t.name.table)
+//        println(dup)
+//        println("")
+//        println("")
+//        println(t.columns.filter(_.name == dup.head))
+//        println("")
+//        println("")
+//      }
+//    }
+
 
     val gen = codegen(model)
 
-    println("codegen created")
-    println(gen)
+//    println("codegen created")
+//    println(gen)
 
     gen.writeToFile(
       "slick.driver.PostgresDriver",
@@ -60,7 +88,11 @@ object CustomizedCodeGenerator {
     )
 
 
-    val routeGen = gen.RoutesGenerator(views,tables)
+
+
+    val calculatedViews = enabledModels.filter(_.tableType == "VIEW").map(_.name.name)
+    val calculatedTables= enabledModels.filter(_.tableType == "TABLE").map(_.name.name)
+    val routeGen = gen.RoutesGenerator(calculatedViews,calculatedTables)
 
     routeGen.writeToFile(
       args(0),
@@ -139,6 +171,37 @@ package object tables {
 
           def writeToFile(folder:String, pkg:String, name:String, fileName:String,modelPackages:String) =
             writeStringToFile(generate(pkg,name,modelPackages),folder,pkg,fileName)
+
+      }
+
+
+      override def tableName = (dbName: String) => toCamelCase(dbName)
+      /** Maps database table name to entity case class name
+ *
+        *@group Basic customization overrides */
+      override def entityName = (dbName: String) => toCamelCase(dbName)+"Row"
+
+      /**
+        * Capitalizes the first (16 bit) character of each word separated by one or more '_'. Lower cases all other characters.
+        * Removes one '_' from each sequence of one or more subsequent '_' (to avoid collision).
+        * (Warning: Not unicode-safe, uses String#apply)
+        */
+      final def toCamelCase(str:String): String = {
+
+        val result = str.toLowerCase
+          .split("_")
+          .map{ case "" => "_" case s => s } // avoid possible collisions caused by multiple '_'
+          .map(_.capitalize)
+          .mkString("")
+
+        val resultWithUnderscore = if(str.endsWith("_")) {
+          result + "_"
+        } else {
+          result
+        }
+
+
+        resultWithUnderscore
 
       }
 

@@ -1,8 +1,10 @@
 package ch.wsl.rest.domain
 
 import ch.wsl.rest.service.Auth
+import com.typesafe.config.{ConfigFactory, Config}
 import slick.driver.PostgresDriver
 import PostgresDriver.api._
+import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -113,8 +115,10 @@ class PgSchema(table:String, db:Database) {
   
   case class ForeignKey(keys:Seq[String], referencingKeys:Seq[String], referencingTable:String, contraintName:String)
 
+  val dbConf: Config = ConfigFactory.load().as[Config]("db")
+
   private val columnsQuery:Rep[Seq[PgColumns#TableElementType]] = pgColumns
-    .filter(e => e.table_name === table && e.table_schema === "public")
+    .filter(e => e.table_name === table && e.table_schema === dbConf.as[String]("schema"))
     .sortBy(_.ordinal_position)
 
 
