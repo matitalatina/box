@@ -35,7 +35,7 @@ trait UglyDBFilters extends DBFilters {
 
       col.`type` match {
           case "scala.Short" => c.asInstanceOf[Rep[Short]] === v.asInstanceOf[String].toShort
-          case "scala.Int" | "java.lang.Integer" => c.asInstanceOf[Rep[Int]] === v.asInstanceOf[String].toInt
+          case "scala.Int" | "java.lang.Integer" | "Int" => c.asInstanceOf[Rep[Int]] === v.asInstanceOf[String].toInt
           case "scala.Long" => c.asInstanceOf[Rep[Long]] === v.asInstanceOf[String].toLong
           case "String" => c.asInstanceOf[Rep[String]] === v.asInstanceOf[String]
           case "scala.Boolean" => c.asInstanceOf[Rep[Boolean]] === v.asInstanceOf[String].toBoolean
@@ -58,7 +58,7 @@ trait UglyDBFilters extends DBFilters {
 
     col.`type` match {
           case "scala.Short" => c.asInstanceOf[Rep[Short]] =!= v.asInstanceOf[String].toShort
-          case "scala.Int" => c.asInstanceOf[Rep[Int]] =!= v.asInstanceOf[String].toInt
+          case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] =!= v.asInstanceOf[String].toInt
           case "scala.Long" => c.asInstanceOf[Rep[Long]] =!= v.asInstanceOf[String].toLong
           case "String" => c.asInstanceOf[Rep[String]] =!= v.asInstanceOf[String]
           case "scala.Boolean" => c.asInstanceOf[Rep[Boolean]] =!= v.asInstanceOf[String].toBoolean
@@ -81,7 +81,7 @@ trait UglyDBFilters extends DBFilters {
 
     col.`type` match {
           case "scala.Short" => c.asInstanceOf[Rep[Short]] > v.asInstanceOf[String].toShort
-          case "scala.Int" => c.asInstanceOf[Rep[Int]] > v.asInstanceOf[String].toInt
+          case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] > v.asInstanceOf[String].toInt
           case "scala.Long" => c.asInstanceOf[Rep[Long]] > v.asInstanceOf[String].toLong
           case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] > v.asInstanceOf[String].toShort
           case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] > v.asInstanceOf[String].toInt
@@ -103,7 +103,7 @@ trait UglyDBFilters extends DBFilters {
 
     col.`type` match {
           case "scala.Short" => c.asInstanceOf[Rep[Short]] < v.asInstanceOf[String].toShort
-          case "scala.Int" => c.asInstanceOf[Rep[Int]] < v.asInstanceOf[String].toInt
+          case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] < v.asInstanceOf[String].toInt
           case "scala.Long" => c.asInstanceOf[Rep[Long]] < v.asInstanceOf[String].toLong
           case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] < v.asInstanceOf[String].toShort
           case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] < v.asInstanceOf[String].toInt

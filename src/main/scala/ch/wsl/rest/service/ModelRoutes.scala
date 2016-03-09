@@ -3,6 +3,7 @@ package ch.wsl.rest.service
 import ch.wsl.rest.domain._
 import org.json4s.JsonAST._
 import slick.lifted.ColumnOrdered
+import spray.http.StatusCodes
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling._
 import spray.routing.PathMatchers.IntNumber
@@ -16,6 +17,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import slick.driver.PostgresDriver.api._
 
 import ch.wsl.rest.domain.EnhancedTable._
+
+import scala.util.{Failure, Success}
 
 /**
  * Created by andreaminetti on 16/02/16.
@@ -62,6 +65,23 @@ class ModelUtils[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, t
     } yield result.head
   }
 
+  def deleteById(i:Long)(implicit db:Database):Future[Int] = {
+    println("Deleting " + i)
+    def fil(pk:String) =  {
+      println("Deleting " + pk + "=" + i)
+      table.filter(x => super.==(x.col(pk),i))
+    }
+
+    for{
+      pks <- JSONSchema.keysOf(name)
+      result <- db.run{
+        val action = fil(pks.head).delete
+        println(action.statements)
+        action
+      }
+    } yield result
+  }
+
 }
 
 
@@ -81,60 +101,69 @@ trait ModelRoutes extends HttpService {
     pathPrefix(name) {
       path(LongNumber) { i=>
         get {
-          complete{getById(i)}
-        } ~
-          put {
-            entity(as[M]) { e =>
-              val result = db.run{ table.insertOrUpdate(e) }.map(_ => e)
-              complete(result) //result should be in the same future as e
-            }
-          }
-      } ~
-        path("schema") {
-          get {
-            complete{ JSONSchema.of(name,db) }
+          onComplete(getById(i)) {
+            case Success(entity) => complete(entity)
+            case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
           }
         } ~
-        path("form") {
-          get {
-            complete{ JSONForm.of(name,db) }
+        put {
+          entity(as[M]) { e =>
+            val result = db.run{ table.insertOrUpdate(e) }.map(_ => e)
+            complete(result) //result should be in the same future as e
           }
         } ~
-        path("keys") {
-          get {
-            complete{ JSONSchema.keysOf(name) }
+        delete {
+          onComplete(deleteById(i)) {
+            case Success(affectedRow) => complete(JSONCount(affectedRow))
+            case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
           }
-        } ~
-        path("count") {
-          get { ctx =>
-            db.run{table.length.result}.map{ result =>
-              ctx.complete{ JObject(List(JField("count",JInt(result)))) }
-            }
-          }
-        } ~
-        path("list") {
-          post {
-            entity(as[JSONQuery]) { query =>
-              println("list")
-              complete(find(query))
-            }
-          }
-        } ~
-        pathEnd{
-          get { ctx =>
-            ctx.complete {
-              val q:Rep[Seq[T#TableElementType]] = table.take(50)
-              val result: Future[Seq[M]] = db.run{ q.result }
-              result
-            }
-          } ~
-            post {
-              entity(as[M]) { e =>
-                val result = db.run { table.forceInsert(e) }.map(_ => e)
-                complete(result)
-              }
-            }
         }
+      } ~
+      path("schema") {
+        get {
+          complete{ JSONSchema.of(name,db) }
+        }
+      } ~
+      path("form") {
+        get {
+          complete{ JSONForm.of(name,db) }
+        }
+      } ~
+      path("keys") {
+        get {
+          complete{ JSONSchema.keysOf(name) }
+        }
+      } ~
+      path("count") {
+        get { ctx =>
+          db.run{table.length.result}.map{ result =>
+            ctx.complete{ JObject(List(JField("count",JInt(result)))) }
+          }
+        }
+      } ~
+      path("list") {
+        post {
+          entity(as[JSONQuery]) { query =>
+            println("list")
+            complete(find(query))
+          }
+        }
+      } ~
+      pathEnd{
+        get {
+          val result:Future[Seq[T#TableElementType]] = db.run{table.take(50).result}
+          onComplete(result) {
+            case Success(results) => complete(results)
+            case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
+          }
+        } ~
+        post {
+          entity(as[M]) { e =>
+            val result = db.run { table.forceInsert(e) }.map(_ => e)
+            complete(result)
+          }
+        }
+      }
     }
   }
 

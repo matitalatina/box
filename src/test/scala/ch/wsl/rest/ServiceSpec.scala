@@ -1,8 +1,14 @@
 package ch.wsl.rest
 
+import akka.actor.ActorSystem
+import ch.wsl.rest.domain.{JSONCount, JSONResult}
+import org.specs2.time.NoTimeConversions
+import spray.testkit._
+import concurrent.duration._
+import akka.testkit._
 import ch.wsl.rest.service.{JsonProtocol, MainService}
 import org.junit.runner.RunWith
-import org.specs2.Specification
+import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import spray.http.{ContentType, HttpEntity, BasicHttpCredentials}
 import spray.http.HttpHeaders.Authorization
@@ -18,46 +24,62 @@ import org.json4s.native.Serialization.{read, write}
 import ch.wsl.model.tablesTestDB._
 
 @RunWith(classOf[JUnitRunner])
-class ServiceSpec extends Specification with Specs2RouteTest with MainService {
+class ServiceSpec extends Specification with Specs2RouteTest with MainService with NoTimeConversions {
+  // Set sequential execution
+  sequential
+
   def actorRefFactory = system
 
-  def is = {
-    var string2NR = () // shadow implicit conversion from Spray Directives trait
-    sequential ^
-      p ^
-      "Postgres REST Specification" ^
-      p ^
-      "The server should" ^
-      "Respond with greeting on root path" ! serverRunning ^
-      p ^
-      "Check authentication negatives" ^
-      "Require authentication - No username and password" ! requireAuthentication ^
-      "Fail authentication - Wrong username or password" ! failAuthentication ^
-      p ^
-      "Check authentication positive" ^
-      "Require authentication - Correct username and password" ! okAuthentication ^
-      p ^
-      "For A table json objects" ^
-      "Return an empty list if there are no entities" ! getEmptyAList ^
-      "Check the json is a valid A entity" ! checkA ^
-      "Create a new entity" ! createA ^
-      "Return a non-empty list if there some entities" ! getNonEmptyAList ^
-      "Read existing" ! todo ^
-      "Update existing" ! todo ^
-      "Delete existing" ! todo ^
-      "Handle missing fields" ! todo ^
-      "Handle invalid fields" ! todo ^
-      "Return error if the entity does not exist" ! todo ^
-      end
-  }
+  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(20).second.dilated(system))
 
-  def serverRunning = Get("/") ~> route ~> check {
-    responseAs[String] must contain("REST")
-  }
 
   import JsonProtocol._
 
-  val jsonA = """{ "id": 1,
+
+  val withAuth = addHeader(Authorization(BasicHttpCredentials("andreaminetti", "")))
+
+
+  "The service" should {
+
+    "Respond with greeting on root path" in {
+      Get("/") ~> route ~> check {
+        response.toString must contain("REST")
+      }
+    }
+
+  }
+
+  "Check authentication negatives" should {
+
+    "Require authentication - No username and password" in {
+      Get("/a") ~> route ~> check {
+        handled must beFalse
+      }
+    }
+
+    "Fail authentication - Wrong username or password" in {
+      Get("/a") ~> addHeader(Authorization(BasicHttpCredentials("boob", "111123"))) ~> route ~> check {
+        handled must beFalse
+      }
+    }
+  }
+
+  "Check authentication positive" in {
+    "Require authentication - Correct username and password"  in {
+      Get("/a") ~> withAuth ~> route ~> check {
+        println(response.toString)
+        handled must beTrue
+      }
+    }
+  }
+
+
+  "A table json objects" should {
+
+    sequential
+
+    //preparation
+    val jsonA = """{ "id": 1,
       "string1": "a",
       "string2": "b",
       "short": 1,
@@ -69,63 +91,59 @@ class ServiceSpec extends Specification with Specs2RouteTest with MainService {
 
 
 
-  val expectedA = ARow(
-    id = 1,
-    string1 = Some("a"),
-    string2 = Some("b"),
-    short = Some(1),
-    integer = Some(2),
-    double = Some(3),
-    double2 = Some(4),
-    long = Some(5)
-  )
+    val expectedA = ARow(
+      id = 1,
+      string1 = Some("a"),
+      string2 = Some("b"),
+      short = Some(1),
+      integer = Some(2),
+      double = Some(3),
+      double2 = Some(4),
+      long = Some(5)
+    )
 
-  def checkA = {
-    read[ARow](jsonA)
-    ok
-  }
-
-  val withAuth = addHeader(Authorization(BasicHttpCredentials("andreaminetti", "")))
-
-  def getEmptyAList = {
-    Get("/a") ~> withAuth ~> route ~> check {
-      responseAs[List[ARow]] === List()
-      ok
+    "check A validity" in {
+      read[ARow](jsonA).id === 1
     }
+
+    "be empty" in {
+      Get("/a") ~> withAuth ~> route ~> check {
+        responseAs[List[ARow]].isEmpty
+      }
+    }
+
+    "create a new row" in {
+      Post("/a", parse(jsonA)) ~> withAuth ~> route ~> check {
+        println(response.toString)
+        handled must beTrue
+      }
+    }
+
+    "not be empty" in {
+      Get("/a") ~> withAuth ~> route ~> check {
+        responseAs[List[ARow]].length > 0
+      }
+    }
+
+    "return correct row" in {
+      Get("/a/"+expectedA.id) ~> withAuth ~> route ~> check {
+        responseAs[ARow] === expectedA
+      }
+    }
+
+    "delete row" in {
+      Delete("/a/"+expectedA.id) ~> withAuth ~> route ~> check {
+        handled must beTrue
+        responseAs[JSONCount].count === 1
+      }
+    }
+
+    "be empty at the end" in {
+      Get("/a") ~> withAuth ~> route ~> check {
+        responseAs[List[ARow]].isEmpty
+      }
+    }
+
   }
 
-  def getNonEmptyAList = {
-    Get("/a") ~> withAuth ~> route ~> check {
-      responseAs[List[ARow]].length > 0
-      ok
-    }
-  }
-
-  def createA = {
-    Post("/a", parse(jsonA)) ~> withAuth ~> route ~> check {
-      println(response.toString)
-      ok
-    }
-  }
-
-  def failAuthentication = {
-    Get("/a") ~> addHeader(Authorization(BasicHttpCredentials("boob", "111123"))) ~> route ~> check {
-      handled must beFalse
-    //  rejection must beAnInstanceOf[AuthenticationFailedRejection]
-    }
-  }
-
-  def requireAuthentication = {
-    Get("/a") ~> route ~> check {
-      handled must beFalse
-    //  rejection must beAnInstanceOf[AuthenticationFailedRejection]
-    }
-  }
-
-  def okAuthentication = {
-    Get("/a") ~> withAuth ~> route ~> check {
-      handled must beTrue
-      //  rejection must beAnInstanceOf[AuthenticationFailedRejection]
-    }
-  }
 }
