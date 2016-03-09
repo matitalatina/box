@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class JSONSchema(
   `type`:String,
   title:Option[String] = None,
-  properties: Option[ListMap[String,JSONSchema]] = None,
+  properties: Option[Map[String,JSONSchema]] = None,
   required: Option[Seq[String]] = None,
   readonly: Option[Boolean] = None,
   enum: Option[Seq[String]] = None,

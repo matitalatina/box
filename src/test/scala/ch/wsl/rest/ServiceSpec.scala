@@ -1,7 +1,7 @@
 package ch.wsl.rest
 
 import akka.actor.ActorSystem
-import ch.wsl.rest.domain.{JSONCount, JSONResult}
+import ch.wsl.rest.domain._
 import org.specs2.time.NoTimeConversions
 import spray.testkit._
 import concurrent.duration._
@@ -102,6 +102,9 @@ class ServiceSpec extends Specification with Specs2RouteTest with MainService wi
       long = Some(5)
     )
 
+    val expectedAmod = expectedA.copy(double = Some(6))
+    val jsonAmod = jsonA.replaceAll("3","6")
+
     "check A validity" in {
       read[ARow](jsonA).id === 1
     }
@@ -131,6 +134,30 @@ class ServiceSpec extends Specification with Specs2RouteTest with MainService wi
       }
     }
 
+    "update a row" in {
+      Put("/a/"+expectedA.id,parse(jsonAmod)) ~> withAuth ~> route ~> check {
+        handled must beTrue
+      }
+    }
+
+    "return updated row" in {
+      Get("/a/"+expectedA.id) ~> withAuth ~> route ~> check {
+        responseAs[ARow] === expectedAmod
+      }
+    }
+
+    "count rows" in {
+      Get("/a/count") ~> withAuth ~> route ~> check {
+        responseAs[JSONCount].count === 1
+      }
+    }
+
+    "list rows" in {
+      Post("/a/list",JSONQuery(10,1,Map(),Map())) ~> withAuth ~> route ~> check {
+        responseAs[JSONResult[ARow]].count === 1
+      }
+    }
+
     "delete row" in {
       Delete("/a/"+expectedA.id) ~> withAuth ~> route ~> check {
         handled must beTrue
@@ -143,6 +170,48 @@ class ServiceSpec extends Specification with Specs2RouteTest with MainService wi
         responseAs[List[ARow]].isEmpty
       }
     }
+
+  }
+
+  "UI Definition JSON" should {
+
+    "list a keys" in {
+      Get("/a/keys") ~> withAuth ~> route ~> check {
+        responseAs[Seq[String]] === Seq("id")
+      }
+    }
+
+
+    "create a valid JSONSchema for a table" in {
+      Get("/a/schema") ~> withAuth ~> route ~> check {
+        val schema = responseAs[JSONSchema]
+        schema.title === Some("a")
+        schema.`type` === "object"
+        schema.properties.toList.flatMap(_.map(x => (x._1,x._2.`type`))).diff(
+          List(
+            ("id","number"),
+            ("string1","string"),
+            ("string2","string"),
+            ("short","number"),
+            ("integer","number"),
+            ("double","number"),
+            ("double2","number"),
+            ("long","number")
+          )
+        ).isEmpty
+      }
+    }
+
+    "create a valid default UI form json" in {
+      Get("/a/form") ~> withAuth ~> route ~> check {
+        val form = responseAs[List[JSONField]]
+        form.map(_.key) === List("id","string1","string2","short","integer","double","double2","long")
+      }
+    }
+
+    "save a form definition for table a" in todo
+
+    "get a custom form definition for table a" in todo
 
   }
 
