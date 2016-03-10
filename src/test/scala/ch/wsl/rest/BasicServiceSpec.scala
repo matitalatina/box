@@ -24,7 +24,7 @@ import org.json4s.native.Serialization.{read, write}
 import ch.wsl.model.tablesTestDB._
 
 @RunWith(classOf[JUnitRunner])
-class ServiceSpec extends Specification with Specs2RouteTest with MainService with NoTimeConversions {
+class BasicServiceSpec extends Specification with Specs2RouteTest with MainService with NoTimeConversions {
   // Set sequential execution
   sequential
 
