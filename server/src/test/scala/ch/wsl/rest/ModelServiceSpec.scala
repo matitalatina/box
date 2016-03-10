@@ -1,5 +1,6 @@
 package ch.wsl.rest
 
+import ch.wsl.jsonmodels.{JSONSchema, JSONCount, JSONResult, JSONQuery}
 import ch.wsl.rest.domain._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner

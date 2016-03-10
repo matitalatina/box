@@ -1,4 +1,4 @@
-package ch.wsl.rest.domain
+package ch.wsl.jsonmodels
 
 /**
   * Created by andreaminetti on 03/03/16.

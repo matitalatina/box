@@ -1,24 +1,15 @@
 package ch.wsl.rest.domain
 
+import ch.wsl.jsonmodels.JSONSchema
 import ch.wsl.rest.service.Auth
 
-import scala.collection.immutable.ListMap
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
-case class JSONSchema(
-  `type`:String,
-  title:Option[String] = None,
-  properties: Option[Map[String,JSONSchema]] = None,
-  required: Option[Seq[String]] = None,
-  readonly: Option[Boolean] = None,
-  enum: Option[Seq[String]] = None,
-  order: Option[Int] = None
-)
-
-
-object JSONSchema {
+/**
+  * Created by andreaminetti on 10/03/16.
+  */
+object JSONSchemas {
 
   import StringHelper._
 
@@ -27,8 +18,8 @@ object JSONSchema {
     println("Getting JSONSchema of:" + table)
 
     val schema = new PgSchema(table,db)
-    
-    val map = schema.columns.map{ c => ListMap(properties(c): _*) }
+
+    val map = schema.columns.map{ c => Map(properties(c): _*) }
 
     println("columns")
 
@@ -54,36 +45,36 @@ object JSONSchema {
     }
 
   }
-  
-  
+
+
   def properties(columns:Seq[PgColumn]):Seq[(String,JSONSchema)] = {
-    
+
     val cols = {for{
       c <- columns
     } yield {
       c.column_name.slickfy -> JSONSchema(typesMapping(c.data_type),Some(c.column_name.slickfy),order=Some(c.ordinal_position),readonly=Some(c.is_updatable == "NO"))
     }}.toList
-    
-    
+
+
     cols
   }
-  
+
   val typesMapping =  Map(
-      "integer" -> "number",
-      "character varying" -> "string",
-      "character" -> "string",
-      "smallint" -> "number",
-      "bigint" -> "number",
-      "double precision" -> "number",
-      "timestamp without time zone" -> "string",
-      "date" -> "string",
-      "real" -> "number",
-      "boolean" -> "checkbox",
-      "bytea" -> "string",
-      "numeric" -> "number",
-      "text" -> "string",
-      "USER-DEFINED" -> "string"
+    "integer" -> "number",
+    "character varying" -> "string",
+    "character" -> "string",
+    "smallint" -> "number",
+    "bigint" -> "number",
+    "double precision" -> "number",
+    "timestamp without time zone" -> "string",
+    "date" -> "string",
+    "real" -> "number",
+    "boolean" -> "checkbox",
+    "bytea" -> "string",
+    "numeric" -> "number",
+    "text" -> "string",
+    "USER-DEFINED" -> "string"
 
   )
-  
+
 }

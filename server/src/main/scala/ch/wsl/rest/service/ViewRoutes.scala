@@ -1,6 +1,7 @@
 package ch.wsl.rest.service
 
-import ch.wsl.rest.domain.{JSONQuery, JSONForm, JSONSchema}
+import ch.wsl.jsonmodels.{JSONQuery}
+import ch.wsl.rest.domain.{JSONSchemas, JSONForm}
 import org.json4s.JsonAST._
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling._
@@ -31,10 +32,10 @@ trait ViewRoutes extends HttpService {
     val utils = new ModelUtils[T,M](name,table)
     import utils._
 
-    pathPrefix(name) {
+    path(name) {
       path("schema") {
         get {
-          complete{ JSONSchema.of(name,db) }
+          complete{ JSONSchemas.of(name,db) }
         }
       } ~
         path("form") {
@@ -44,7 +45,7 @@ trait ViewRoutes extends HttpService {
         } ~
         path("keys") {
           get {
-            complete{ JSONSchema.keysOf(name) }
+            complete{ JSONSchemas.keysOf(name) }
           }
         } ~
         path("count") {

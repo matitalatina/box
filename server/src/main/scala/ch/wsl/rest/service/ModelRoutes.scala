@@ -1,5 +1,6 @@
 package ch.wsl.rest.service
 
+import ch.wsl.jsonmodels.{JSONCount, JSONResult, JSONQuery}
 import ch.wsl.rest.domain._
 import org.json4s.JsonAST._
 import slick.lifted.ColumnOrdered
@@ -56,7 +57,7 @@ class ModelUtils[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, t
     def fil(pk:String):Rep[Seq[T#TableElementType]] =  table.filter(x => super.==(x.col(pk),i)).take(1)
 
     for{
-      pks <- JSONSchema.keysOf(name)
+      pks <- JSONSchemas.keysOf(name)
       result <- db.run{
         val action = fil(pks.head).result
         println(action.statements)
@@ -73,7 +74,7 @@ class ModelUtils[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, t
     }
 
     for{
-      pks <- JSONSchema.keysOf(name)
+      pks <- JSONSchemas.keysOf(name)
       result <- db.run{
         val action = fil(pks.head).delete
         println(action.statements)
@@ -121,7 +122,7 @@ trait ModelRoutes extends HttpService {
       } ~
       path("schema") {
         get {
-          complete{ JSONSchema.of(name,db) }
+          complete{ JSONSchemas.of(name,db) }
         }
       } ~
       path("form") {
@@ -131,7 +132,7 @@ trait ModelRoutes extends HttpService {
       } ~
       path("keys") {
         get {
-          complete{ JSONSchema.keysOf(name) }
+          complete{ JSONSchemas.keysOf(name) }
         }
       } ~
       path("count") {

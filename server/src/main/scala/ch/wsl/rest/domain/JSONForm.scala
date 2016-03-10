@@ -3,28 +3,10 @@ package ch.wsl.rest.domain
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 
+import ch.wsl.jsonmodels._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
-
-case class TitleMap(value:String,name:String)
-
-case class JSONField(
-  `type`:String,
-  key:String,
-  title:Option[String] = None,
-  titleMap:Option[List[TitleMap]] = None,
-  options:Option[JSONFieldOptions] = None,
-  placeholder:Option[String] = None
-)
-
-case class JSONFieldOptions(async:JSONFieldHTTPOption, map:JSONFieldMap)
-
-case class JSONFieldMap(valueProperty:String,textProperty:String)
-
-case class JSONFieldHTTPOption(url:String)
-
 
 
 object JSONForm {
@@ -53,15 +35,16 @@ object JSONForm {
           if (constraints.contains(fk.contraintName)) {
             println("error: " + fk.contraintName)
             println(field.column_name)
-            JSONField(JSONSchema.typesMapping(field.data_type), key = field.column_name.slickfy)
+            JSONField(JSONSchemas.typesMapping(field.data_type),table = table, key = field.column_name.slickfy)
           } else {
             constraints = fk.contraintName :: constraints
 
             val title = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse("en")
 
             JSONField(
-              JSONSchema.typesMapping(field.data_type),
+              JSONSchemas.typesMapping(field.data_type),
               key = field.column_name.slickfy,
+              table = table,
               placeholder = Some(fk.referencingTable + " Lookup"),
               options = Some(
                 JSONFieldOptions(JSONFieldHTTPOption("http://localhost:8080/" + fk.referencingTable), JSONFieldMap(fk.referencingKeys.head, title))
@@ -69,7 +52,7 @@ object JSONForm {
             )
           }
         }
-        case _ => JSONField(JSONSchema.typesMapping(field.data_type), key = field.column_name.slickfy)
+        case _ => JSONField(JSONSchemas.typesMapping(field.data_type),table = table, key = field.column_name.slickfy)
       }
     }
 

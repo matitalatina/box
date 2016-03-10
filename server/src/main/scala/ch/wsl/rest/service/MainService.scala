@@ -1,6 +1,7 @@
 package ch.wsl.rest.service
 
 
+import ch.wsl.rest.domain.Forms
 import ch.wsl.rest.service.Auth.CustomUserPassAuthenticator
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -84,6 +85,18 @@ trait MainService extends HttpService with CORSSupport with ModelRoutes with Vie
           path("models") {
             get{
               complete(models ++ views)
+            }
+          } ~
+          pathPrefix("form") {
+            path(Segment) { name =>
+              get {
+                complete(Forms(name))
+              }
+            } ~
+            pathEnd {
+              get {
+                complete(Forms.list)
+              }
             }
           }
         }

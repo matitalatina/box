@@ -2,78 +2,80 @@
 import sbt._
 import Keys._
 import Tests._
+import org.scalajs.sbtplugin.ScalaJSPlugin
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import sbt.Project.projectToRef
 
-/** 
- *  This is a slightly more advanced sbt setup using two projects.
- *  The first one, "codegen" a customized version of Slick's
- *  code-generator. The second one "main" depends on "codegen", which means
- *  it is compiled after "codegen". "main" uses the customized
- *  code-generator from project "codegen" as a sourceGenerator, which is run
- *  to generate Slick code, before the code in project "main" is compiled.
- */
+
 object stagedBuild extends Build {
-  /** main project containing main source code depending on slick and codegen project */
-  lazy val mainProject = Project(
-    id="main",
-    base=file("."),
-    settings = sharedSettings ++ Seq(
-      javaOptions in run += "-Xmx2G",
-      organization := "ch.wsl",
-      name := "postgres-restify",
-      //scalaOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-feature"),
-      libraryDependencies ++= List(
-        "io.spray"                 %% "spray-can"        % "1.3.3",
-        "io.spray"                 %% "spray-routing"    % "1.3.3",
-        "io.spray"                 %% "spray-testkit"    % "1.3.3",
-        "com.typesafe.akka"        %% "akka-actor"       % "2.3.9",
-        "org.specs2"               %% "specs2"           % "2.3.11"    % "test",
-        //"com.github.tminglei"      %% "slick-pg"         % "0.8.2",
-        "junit"                    %  "junit"            % "4.8.1"     % "test",
-        "ch.qos.logback"           %  "logback-classic"  % "1.1.1",
-        "org.scalatest"            %  "scalatest_2.11"   % "2.1.5",
-        "org.seleniumhq.selenium"  %  "selenium-java"    % "2.28.0" % "test",
-        "org.json4s"               %% "json4s-native"    % "3.3.0"
 
-      ),
-      unmanagedResourceDirectories in Compile <++= baseDirectory { base =>
-        Seq( base / "src/main/webapp" )
-      },
-      resolvers ++= Seq(
-        "sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/",
-        "sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
-        "typesafe repo" at "http://repo.typesafe.com/typesafe/releases/",
-        "spray repo" at "http://repo.spray.io/"
-      ),
+  lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
+    .settings(
+      scalaVersion := Settings.versions.scala,
+      libraryDependencies ++= Settings.sharedJVMJSDependencies.value
+    )
+
+  lazy val sharedJVM = shared.jvm.settings(name := "sharedJVM")
+
+  lazy val sharedJS = shared.js.settings(name := "sharedJS")
+
+  // use eliding to drop some debug code in the production build
+  lazy val elideOptions = settingKey[Seq[String]]("Set limit for elidable functions")
+
+  lazy val server = (project in file("server"))
+    .settings(
+      name := "server",
+      version := Settings.version,
+      scalaVersion := Settings.versions.scala,
+      scalacOptions ++= Settings.scalacOptionsServer,
+      libraryDependencies ++= Settings.jvmDependencies.value,
+      resolvers += Resolver.jcenterRepo,
       slick <<= slickCodeGenTask, // register manual sbt command
       sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, remove for only manual use
-      resourceDirectory in Compile := baseDirectory.value / "resources",
-      scalacOptions in Test ++= Seq("-Yrangepos"),
-      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")//,
-      //resourceDirectory in Test := baseDirectory.value / "src" / "test" / "resources"
+      resourceDirectory in Compile := baseDirectory.value / "../resources",
+      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
     )
-  ).dependsOn( codegenProject )
-  /** codegen project containing the customized code generator */
-  lazy val codegenProject = Project(
-    id="codegen",
-    base=file("codegen"),
-    settings = sharedSettings ++ Seq(
-      libraryDependencies ++= List(
-        "com.typesafe.slick" %% "slick-codegen" % "3.1.1"
-      ),
-      resourceDirectory in Compile := baseDirectory.value / "../resources"
-    )
-  )
-  
-  // shared sbt config between main project and codegen project
-  val sharedSettings = Project.defaultSettings ++ Seq(
-    scalaVersion := "2.11.7",
-    libraryDependencies ++= List(
-      "com.typesafe.slick" %% "slick" % "3.1.1",
-      "postgresql"               %  "postgresql"       % "9.1-901.jdbc4",
-      "net.ceedubs"              %% "ficus"             % "1.1.2"
+    .aggregate(clients.map(projectToRef): _*)
+    .dependsOn(sharedJVM)
+    .dependsOn(codegenProject)
 
+
+  lazy val client: Project = (project in file("client"))
+    .settings(
+      name := "client",
+      version := Settings.version,
+      scalaVersion := Settings.versions.scala,
+      scalacOptions ++= Settings.scalacOptions,
+      libraryDependencies ++= Settings.scalajsDependencies.value,
+      // by default we do development build, no eliding
+      elideOptions := Seq(),
+      scalacOptions ++= elideOptions.value,
+      jsDependencies ++= Settings.jsDependencies.value,
+      // RuntimeDOM is needed for tests
+      jsDependencies += RuntimeDOM % "test",
+      // yes, we want to package JS dependencies
+      skip in packageJSDependencies := false,
+      // use Scala.js provided launcher code to start the client app
+      persistLauncher := true,
+      persistLauncher in Test := false,
+      // use uTest framework for tests
+      testFrameworks += new TestFramework("utest.runner.Framework")
     )
+    .enablePlugins(ScalaJSPlugin)
+    .dependsOn(sharedJS)
+
+  // Client projects (just one in this case)
+  lazy val clients = Seq(client)
+
+  /** codegen project containing the customized code generator */
+  lazy val codegenProject = (project in file("codegen")).settings(
+      name := "codegen",
+      scalaVersion := Settings.versions.scala,
+      libraryDependencies ++= Settings.codegenDependecies.value,
+      resolvers += Resolver.jcenterRepo,
+      resourceDirectory in Compile := baseDirectory.value / "../resources"
   )
+
 
   // code generation task that calls the customized code generator
   lazy val slick = TaskKey[Seq[File]]("gen-tables")
