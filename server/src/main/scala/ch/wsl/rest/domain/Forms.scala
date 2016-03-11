@@ -1,5 +1,7 @@
 package ch.wsl.rest.domain
 
+import ch.wsl.jsonmodels.JSONField
+
 /**
   * Created by andreaminetti on 10/03/16.
   */

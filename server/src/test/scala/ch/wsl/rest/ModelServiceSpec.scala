@@ -1,6 +1,6 @@
 package ch.wsl.rest
 
-import ch.wsl.jsonmodels.{JSONSchema, JSONCount, JSONResult, JSONQuery}
+import ch.wsl.jsonmodels._
 import ch.wsl.rest.domain._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -134,7 +134,7 @@ class ModelServiceSpec extends BaseSpec {
         val schema = responseAs[JSONSchema]
         schema.title === Some("a")
         schema.`type` === "object"
-        schema.properties.toList.flatMap(_.map(x => (x._1,x._2.`type`))).diff(
+        schema.properties.toList.map(x => (x._1,x._2.`type`)).diff(
           List(
             ("id","number"),
             ("string1","string"),
