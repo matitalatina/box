@@ -31,7 +31,6 @@ class MainServiceActor extends Actor with MainService  {
       println(t)
       complete("Something went wrong here: " + t)
     }
-    case _ => complete("Something went wrong here")
   }
 
   

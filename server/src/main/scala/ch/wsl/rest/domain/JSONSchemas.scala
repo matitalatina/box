@@ -1,6 +1,6 @@
 package ch.wsl.rest.domain
 
-import ch.wsl.jsonmodels.JSONSchema
+import ch.wsl.jsonmodels.{JSONSchemaL2, JSONSchema}
 import ch.wsl.rest.service.Auth
 
 import scala.concurrent.Future
@@ -19,7 +19,7 @@ object JSONSchemas {
 
     val schema = new PgSchema(table,db)
 
-    val map = schema.columns.map{ c => Map(properties(c): _*) }
+    val map:Future[Map[String,JSONSchemaL2]] = schema.columns.map{ c => Map(properties(c): _*) }
 
     println("columns")
 
@@ -30,7 +30,7 @@ object JSONSchemas {
       JSONSchema(
         `type` = "object",
         title = Some(table),
-        properties = Some(m),
+        properties = m,
         readonly = Some(c.forall { x => x.is_updatable == "NO" }),
         required = Some(c.filter(_.is_nullable == "NO").map(_.column_name.slickfy))
       )
@@ -47,12 +47,12 @@ object JSONSchemas {
   }
 
 
-  def properties(columns:Seq[PgColumn]):Seq[(String,JSONSchema)] = {
+  def properties(columns:Seq[PgColumn]):Seq[(String,JSONSchemaL2)] = {
 
     val cols = {for{
       c <- columns
     } yield {
-      c.column_name.slickfy -> JSONSchema(typesMapping(c.data_type),Some(c.column_name.slickfy),order=Some(c.ordinal_position),readonly=Some(c.is_updatable == "NO"))
+      c.column_name.slickfy -> JSONSchemaL2(typesMapping(c.data_type),Some(c.column_name.slickfy),order=Some(c.ordinal_position),readonly=Some(c.is_updatable == "NO"))
     }}.toList
 
 
@@ -74,7 +74,6 @@ object JSONSchemas {
     "numeric" -> "number",
     "text" -> "string",
     "USER-DEFINED" -> "string"
-
   )
 
 }

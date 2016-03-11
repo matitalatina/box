@@ -1,8 +1,8 @@
-package ch.wsl.jsonmodels
+package postgresweb.models
 
 /**
- * Created by andreaminetti on 24/04/15.
- */
+  * Created by andreaminetti on 23/02/16.
+  */
 case class JSONQuery(
                       count:Int,
                       page:Int,

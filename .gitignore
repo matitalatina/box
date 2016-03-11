@@ -40,3 +40,7 @@ src_managed/
 test-output/
 *.iml
 /bin/
+
+#project
+js/*
+.sass-cache

@@ -12,7 +12,6 @@ case class Col(rep:Rep[_],`type`:String)
  */
 object EnhancedTable {
 
-
   implicit class EnTable[T](t: Table[_]) {
 
 

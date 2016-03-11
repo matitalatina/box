@@ -14,12 +14,14 @@ object Settings {
 
 
   val scalacOptions = Seq(
-
+    "-feature",
+    "-language:postfixOps"
   )
 
   /** Options for the scala compiler */
   val scalacOptionsServer = scalacOptions ++ Seq(
-    "-Yrangepos"
+    "-Yrangepos",
+    "-language:existentials"
   )
 
 

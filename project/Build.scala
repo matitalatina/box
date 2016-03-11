@@ -1,4 +1,5 @@
 
+import com.typesafe.sbt.web.SbtWeb
 import sbt._
 import Keys._
 import Tests._
@@ -59,9 +60,21 @@ object stagedBuild extends Build {
       persistLauncher := true,
       persistLauncher in Test := false,
       // use uTest framework for tests
-      testFrameworks += new TestFramework("utest.runner.Framework")
+      testFrameworks += new TestFramework("utest.runner.Framework"),
+      requiresDOM := true,
+      // Compile tests to JS using fast-optimisation
+      scalaJSStage in Test := FastOptStage,
+      fullClasspath in Test ~= { _.filter(_.data.exists) },
+      // copy  javascript files to js folder,that are generated using fastOptJS/fullOptJS
+      crossTarget in (Compile, fullOptJS) := file("js"),
+      crossTarget in (Compile, fastOptJS) := file("js"),
+      crossTarget in (Compile, packageJSDependencies) := file("js"),
+      crossTarget in (Compile, packageScalaJSLauncher) := file("js"),
+      crossTarget in (Compile, packageMinifiedJSDependencies) := file("js"),
+      artifactPath in (Compile, fastOptJS) := ((crossTarget in (Compile, fastOptJS)).value / ((moduleName in fastOptJS).value + "-opt.js"))
     )
     .enablePlugins(ScalaJSPlugin)
+    .enablePlugins(SbtWeb)
     .dependsOn(sharedJS)
 
   // Client projects (just one in this case)
