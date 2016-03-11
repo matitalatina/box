@@ -40,6 +40,7 @@ class MainServiceActor extends Actor with MainService  {
   // other things here, like request stream processing
   // or timeout handling
   def receive = runRoute(route)
+
 }
 
 
@@ -49,49 +50,37 @@ class MainServiceActor extends Actor with MainService  {
  *  this trait defines our service behavior independently from the service actor
  */
 trait MainService extends HttpService with CORSSupport with ModelRoutes with ViewRoutes with GeneratedRoutes {
-  
 
 
-  
-  
-  val index =
-          respondWithMediaType(`text/html`) {  // XML is marshalled to `text/xml` by default, so we simply override here
-            complete {
-              <html>
-                <body>
-                  <h1>Postgres REST is running</h1>
-                </body>
-              </html>
-            }
-          }
 
-  
+  val clientFiles: Route =
+    path("") {
+      get {
+        getFromFile("index.html")
+      }
+    } ~
+    pathPrefix("js") {
+      path(Segment) { file =>
+        getFromFile("js/"+file)
+      }
+    } ~
+    pathPrefix("css") {
+      path(Segment) { file =>
+        getFromFile("client/target/web/sass/main/" + file)
+      }
+    } ~
+    pathPrefix("lib") {
+      path(Segment) { file =>
+        getFromFile("client/target/scala-2.11/classes/" + file)
+      }
+    }
+
   val route:Route = {
     
       import JsonProtocol._
 
-    
 
-      path("") {
-        get {
-          getFromFile("index.html")
-        }
-      } ~
-      pathPrefix("js") {
-        path(Segment) { file =>
-            getFromFile("js/"+file)
-        }
-      } ~
-      pathPrefix("css") {
-        path(Segment) { file =>
-          getFromFile("client/target/web/sass/main/" + file)
-        }
-      } ~
-      pathPrefix("lib") {
-        path(Segment) { file =>
-          getFromFile("client/target/scala-2.11/classes/" + file)
-        }
-      } ~
+      clientFiles ~
       pathPrefix("api" / "v1") {
         cors {
           options {

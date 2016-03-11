@@ -34,9 +34,7 @@ object stagedBuild extends Build {
       slick <<= slickCodeGenTask, // register manual sbt command
       sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, remove for only manual use
       resourceDirectory in Compile := baseDirectory.value / "../resources",
-      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html"),
-      connectInput in run := true,
-      fork in run := true
+      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
     )
     .aggregate(clients.map(projectToRef): _*)
     .dependsOn(sharedJVM)
