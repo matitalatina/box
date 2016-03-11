@@ -3,6 +3,7 @@ package ch.wsl.rest.service
 
 import ch.wsl.rest.domain.Forms
 import ch.wsl.rest.service.Auth.CustomUserPassAuthenticator
+import spray.http.StatusCodes
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
@@ -27,9 +28,10 @@ class MainServiceActor extends Actor with MainService  {
 
   
   implicit val myRejectionHandler = RejectionHandler {
+    case Nil ⇒ complete(StatusCodes.NotFound, "The requested resource could not be found.")
     case t => {
       println(t)
-      complete("Something went wrong here: " + t)
+      complete(StatusCodes.BadRequest,"Something went wrong here: " + t)
     }
   }
 
@@ -69,32 +71,48 @@ trait MainService extends HttpService with CORSSupport with ModelRoutes with Vie
       import JsonProtocol._
 
     
-      get {
-        path("") {
-          index
+
+      path("") {
+        getFromFile("index.html")
+      } ~
+      pathPrefix("js") {
+        path(Segment) { file =>
+            getFromFile("js/"+file)
         }
       } ~
-      cors{
-        options {
-           complete(spray.http.StatusCodes.OK)
-        } ~
-        authenticate(BasicAuth(CustomUserPassAuthenticator, "person-security-realm")) { userProfile =>
-            implicit val db = userProfile.db
-          generatedRoutes() ~
-          path("models") {
-            get{
-              complete(models ++ views)
-            }
+      pathPrefix("css") {
+        path(Segment) { file =>
+          getFromFile("client/target/web/sass/main/" + file)
+        }
+      } ~
+      pathPrefix("lib") {
+        path(Segment) { file =>
+          getFromFile("client/target/scala-2.11/classes/" + file)
+        }
+      } ~
+      path("api" / "v1") {  
+        cors {
+          options {
+            complete(spray.http.StatusCodes.OK)
           } ~
-          pathPrefix("form") {
-            path(Segment) { name =>
+          authenticate(BasicAuth(CustomUserPassAuthenticator, "person-security-realm")) { userProfile =>
+            implicit val db = userProfile.db
+            generatedRoutes() ~
+            path("models") {
               get {
-                complete(Forms(name))
+                complete(models ++ views)
               }
             } ~
-            pathEnd {
-              get {
-                complete(Forms.list)
+            pathPrefix("form") {
+              path(Segment) { name =>
+                get {
+                  complete(Forms(name))
+                }
+              } ~
+              pathEnd {
+                get {
+                  complete(Forms.list)
+                }
               }
             }
           }
