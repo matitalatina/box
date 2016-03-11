@@ -73,7 +73,9 @@ trait MainService extends HttpService with CORSSupport with ModelRoutes with Vie
     
 
       path("") {
-        getFromFile("index.html")
+        get {
+          getFromFile("index.html")
+        }
       } ~
       pathPrefix("js") {
         path(Segment) { file =>
@@ -90,7 +92,7 @@ trait MainService extends HttpService with CORSSupport with ModelRoutes with Vie
           getFromFile("client/target/scala-2.11/classes/" + file)
         }
       } ~
-      path("api" / "v1") {  
+      pathPrefix("api" / "v1") {
         cors {
           options {
             complete(spray.http.StatusCodes.OK)

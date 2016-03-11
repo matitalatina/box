@@ -16,7 +16,7 @@ class BasicServiceSpec extends BaseSpec {
 
     "Respond with greeting on root path" in {
       Get("/") ~> route ~> check {
-        response.toString must contain("REST")
+        response.toString must contain("Postgres-rest-UI")
       }
     }
 
@@ -25,13 +25,13 @@ class BasicServiceSpec extends BaseSpec {
   "Check authentication negatives" should {
 
     "Require authentication - No username and password" in {
-      Get("/a") ~> route ~> check {
+      Get(endpoint + "/a") ~> route ~> check {
         handled must beFalse
       }
     }
 
     "Fail authentication - Wrong username or password" in {
-      Get("/a") ~> addHeader(Authorization(BasicHttpCredentials("boob", "111123"))) ~> route ~> check {
+      Get(endpoint + "/a") ~> addHeader(Authorization(BasicHttpCredentials("boob", "111123"))) ~> route ~> check {
         handled must beFalse
       }
     }
@@ -39,7 +39,7 @@ class BasicServiceSpec extends BaseSpec {
 
   "Check authentication positive" in {
     "Require authentication - Correct username and password"  in {
-      Get("/a") ~> withAuth ~> route ~> check {
+      get(endpoint + "/a") {
         println(response.toString)
         handled must beTrue
       }

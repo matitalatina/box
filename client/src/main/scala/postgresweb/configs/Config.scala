@@ -11,7 +11,7 @@ object Config {
 
   def basicAuthToken(username: String, password: String):String = "Basic " + (username + ":" + password).getBytes.toBase64
 
-  val endpoint = "http://localhost:8080/"
+  val endpoint = "http://localhost:8080/api/v1/"
 
   val auth =  ("Authorization" -> basicAuthToken("andreaminetti",""))
 

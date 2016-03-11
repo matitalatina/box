@@ -34,7 +34,9 @@ object stagedBuild extends Build {
       slick <<= slickCodeGenTask, // register manual sbt command
       sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, remove for only manual use
       resourceDirectory in Compile := baseDirectory.value / "../resources",
-      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
+      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html"),
+      connectInput in run := true,
+      fork in run := true
     )
     .aggregate(clients.map(projectToRef): _*)
     .dependsOn(sharedJVM)
@@ -76,6 +78,7 @@ object stagedBuild extends Build {
     .enablePlugins(ScalaJSPlugin)
     .enablePlugins(SbtWeb)
     .dependsOn(sharedJS)
+
 
   // Client projects (just one in this case)
   lazy val clients = Seq(client)

@@ -57,63 +57,63 @@ class ModelServiceSpec extends BaseSpec {
     }
 
     "be empty" in {
-      Get("/a") ~> withAuth ~> route ~> check {
+      get(endpoint+"/a") {
         responseAs[List[ARow]].isEmpty
       }
     }
 
     "create a new row" in {
-      Post("/a", parse(jsonA)) ~> withAuth ~> route ~> check {
+      post(endpoint + "/a", parse(jsonA)) {
         println(response.toString)
         handled must beTrue
       }
     }
 
     "not be empty" in {
-      Get("/a") ~> withAuth ~> route ~> check {
+      get(endpoint+"/a") {
         responseAs[List[ARow]].length > 0
       }
     }
 
     "return correct row" in {
-      Get("/a/"+expectedA.id) ~> withAuth ~> route ~> check {
+      get(endpoint+"/a/"+expectedA.id) {
         responseAs[ARow] === expectedA
       }
     }
 
     "update a row" in {
-      Put("/a/"+expectedA.id,parse(jsonAmod)) ~> withAuth ~> route ~> check {
+      put(endpoint + "/a/"+expectedA.id,parse(jsonAmod)) {
         handled must beTrue
       }
     }
 
     "return updated row" in {
-      Get("/a/"+expectedA.id) ~> withAuth ~> route ~> check {
+      get(endpoint+"/a/"+expectedA.id) {
         responseAs[ARow] === expectedAmod
       }
     }
 
     "count rows" in {
-      Get("/a/count") ~> withAuth ~> route ~> check {
+      get(endpoint+"/a/count") {
         responseAs[JSONCount].count === 1
       }
     }
 
     "list rows" in {
-      Post("/a/list",JSONQuery(10,1,Map(),Map())) ~> withAuth ~> route ~> check {
+      post(endpoint + "/a/list",JSONQuery(10,1,Map(),Map()))  {
         responseAs[JSONResult[ARow]].count === 1
       }
     }
 
     "delete row" in {
-      Delete("/a/"+expectedA.id) ~> withAuth ~> route ~> check {
+      delete(endpoint + "/a/"+expectedA.id) {
         handled must beTrue
         responseAs[JSONCount].count === 1
       }
     }
 
     "be empty at the end" in {
-      Get("/a") ~> withAuth ~> route ~> check {
+      get(endpoint+"/a") {
         responseAs[List[ARow]].isEmpty
       }
     }
@@ -123,14 +123,14 @@ class ModelServiceSpec extends BaseSpec {
   "UI Definition JSON" should {
 
     "list a keys" in {
-      Get("/a/keys") ~> withAuth ~> route ~> check {
+      get(endpoint+"/a/keys")  {
         responseAs[Seq[String]] === Seq("id")
       }
     }
 
 
     "create a valid JSONSchema for a table" in {
-      Get("/a/schema") ~> withAuth ~> route ~> check {
+      get(endpoint+"/a/schema")  {
         val schema = responseAs[JSONSchema]
         schema.title === Some("a")
         schema.`type` === "object"
@@ -150,7 +150,7 @@ class ModelServiceSpec extends BaseSpec {
     }
 
     "create a valid default UI form json" in {
-      Get("/a/form") ~> withAuth ~> route ~> check {
+      get(endpoint+"/a/form")   {
         val form = responseAs[List[JSONField]]
         form.map(_.key) === List("id","string1","string2","short","integer","double","double2","long")
       }
