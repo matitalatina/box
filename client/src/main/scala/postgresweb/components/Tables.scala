@@ -3,6 +3,7 @@ package postgresweb.components
 import ch.wsl.jsonmodels.{JSONQuery, JSONQueryFilter, Table}
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
+import postgresweb.controllers.Controller
 import postgresweb.css.CommonStyles
 import postgresweb.services.{GlobalState, ModelClient}
 
@@ -36,7 +37,7 @@ object Tables{
   }
 }
 
-case class Tables(model:String) {
+case class Tables(model:String, controller: Controller) {
 
 
 

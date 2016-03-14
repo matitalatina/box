@@ -3,9 +3,10 @@ package postgresweb.components.navigation
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
+import postgresweb.controllers.Controller
 import postgresweb.css.CommonStyles
+import postgresweb.routes.{AppRouter, Container}
 import postgresweb.services.ModelClient
-import postgresweb.{AppRouter, Container}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.{Any, UndefOr}
@@ -22,7 +23,7 @@ object LeftNav {
 
   }
 
-  case class Props(title: String, ctrl: RouterCtl[Container])
+  case class Props(title: String, ctrl: Controller)
 
   case class State(elements: Vector[String])
 
@@ -39,7 +40,7 @@ object LeftNav {
       <.div(Style.nav,
         <.span(CommonStyles.title,p.title),
         <.nav(CommonStyles.navigation,
-          s.elements.map(e => <.a(CommonStyles.navigationLink, e, p.ctrl setOnClick AppRouter.Table(e)))
+          s.elements.map(e => <.a(CommonStyles.navigationLink, e, p.ctrl.routeController setOnClick AppRouter.Table(e)))
         )
       )
   }

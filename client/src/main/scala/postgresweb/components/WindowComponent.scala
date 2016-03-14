@@ -3,8 +3,8 @@ package postgresweb.components
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
-import postgresweb.Container
 import postgresweb.components.navigation.{TopNav, LeftNav}
+import postgresweb.controllers.Controller
 import postgresweb.css.CommonStyles
 
 import scala.scalajs.js
@@ -22,13 +22,13 @@ object WindowComponent {
   val component = ReactComponentB[Props]("ItemsPage")
     .render_P { P =>
       <.div(CommonStyles.layout,
-        TopNav(TopNav.Props(P.menu,P.selectedFormContainer,P.ctrl)),
-        LeftNav(LeftNav.Props("Tables",P.ctrl)),
+        TopNav(TopNav.Props(P.controller)),
+        LeftNav(LeftNav.Props("Tables",P.controller)),
         <.main(Style.content,
           <.div(Style.pageContent,
             <.div(CommonStyles.row,
               <.div(CommonStyles.fullWidth,
-                P.selectedFormContainer.render()
+                P.controller.render()
               )
             )
           )
@@ -37,7 +37,7 @@ object WindowComponent {
     }
     .build
 
-  case class Props(menu:Vector[() => Container], selectedFormContainer: Container, ctrl : RouterCtl[Container])
+  case class Props(controller: Controller)
 
   def apply(props : Props,ref: js.UndefOr[String] = "", key: js.Any = {}) = component.set(key, ref)(props)
 
