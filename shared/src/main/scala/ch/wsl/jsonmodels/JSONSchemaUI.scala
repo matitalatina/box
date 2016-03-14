@@ -1,4 +1,4 @@
-package postgresweb.models
+package ch.wsl.jsonmodels
 
 /**
   * Created by andreaminetti on 29/02/16.

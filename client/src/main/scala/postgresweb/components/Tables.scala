@@ -1,17 +1,13 @@
-package postgresweb.components.items
+package postgresweb.components
 
-
-import japgolly.scalajs.react._
+import ch.wsl.jsonmodels.{JSONQuery, JSONQueryFilter, Table}
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 import postgresweb.css.CommonStyles
-import postgresweb.models.{JSONQueryFilter, Table, JSONSchema, JSONQuery}
 import postgresweb.services.{GlobalState, ModelClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
-
 import scalacss.Defaults._
 import scalacss.ScalaCssReact._
 

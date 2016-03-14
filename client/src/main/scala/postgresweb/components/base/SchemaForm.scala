@@ -1,11 +1,11 @@
 package postgresweb.components.base
 
+import ch.wsl.jsonmodels.JSONSchemaUI
 import io.circe.scalajs._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import postgresweb.components.base.form.Input
 import postgresweb.css.CommonStyles
-import postgresweb.models.{JSONSchemaUI, JSONSchema}
 
 import scala.scalajs.js
 import scala.scalajs.js.{Any, UndefOr}

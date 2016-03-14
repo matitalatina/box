@@ -1,6 +1,6 @@
 package postgresweb.css
 
-import postgresweb.components.items.Tables
+import postgresweb.components.Tables
 
 import scalacss.ScalaCssReact._
 import scalacss.mutable.GlobalRegistry

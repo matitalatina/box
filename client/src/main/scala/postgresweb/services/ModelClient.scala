@@ -1,5 +1,6 @@
 package postgresweb.services
 
+import ch.wsl.jsonmodels._
 import io.circe._
 import io.circe.syntax._
 import io.circe._

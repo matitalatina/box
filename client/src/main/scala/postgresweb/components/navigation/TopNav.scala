@@ -1,11 +1,11 @@
-package postgresweb.components
+package postgresweb.components.navigation
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.Reusability
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
+import postgresweb.Container
 import postgresweb.css.CommonStyles
-import postgresweb.routes.FormContainer
 
 import scala.scalajs.js
 import scalacss.Defaults._
@@ -31,15 +31,15 @@ object TopNav {
 
 
   //Definisco le proprieta' del componente
-  case class Props(menus:Vector[() => FormContainer], selectedPage: FormContainer, ctrl: RouterCtl[FormContainer])
+  case class Props(menus:Vector[() => Container], selectedPage: Container, ctrl: RouterCtl[Container])
 
 
   //Definisco quando il componente deve essere aggiornato
-  implicit val currentPageReuse = Reusability.by_==[FormContainer]
+  implicit val currentPageReuse = Reusability.by_==[Container]
   implicit val propsReuse = Reusability.by((_: Props).selectedPage)
 
 
-  def menuClick(form:() => FormContainer, ctrl:RouterCtl[FormContainer]) = for{
+  def menuClick(form:() => Container, ctrl:RouterCtl[Container]) = for{
     _ <- Callback.log("menuClick")
     cb <- ctrl.set(form())
   } yield cb

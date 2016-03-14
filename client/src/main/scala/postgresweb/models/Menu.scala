@@ -1,5 +1,5 @@
 package postgresweb.models
 
-import postgresweb.routes.AppRouter.AppPage
+import postgresweb.Container
 
-case class Menu(name: String, route: AppPage)
+case class Menu(name: String, route: Container)

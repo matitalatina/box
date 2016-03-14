@@ -1,4 +1,4 @@
-package postgresweb.components.items
+package postgresweb.components
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._

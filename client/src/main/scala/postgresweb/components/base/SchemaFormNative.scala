@@ -1,12 +1,12 @@
 package postgresweb.components.base
 
+import ch.wsl.jsonmodels.JSONSchemaUI
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 import io.circe.scalajs._
 import japgolly.scalajs.react.{React, ReactComponentU_, ReactElement, ReactNode}
-import postgresweb.models.{JSONSchemaUI, JSONSchema}
 
 import scala.scalajs._
 
