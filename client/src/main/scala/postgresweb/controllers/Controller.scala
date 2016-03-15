@@ -1,8 +1,13 @@
 package postgresweb.controllers
 
-import japgolly.scalajs.react.ReactElement
+
+import ch.wsl.jsonmodels.{JSONQuery, JSONSchemaUI, Table}
+import japgolly.scalajs.react.{Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl
 import postgresweb.routes.Container
+
+import scala.concurrent.Future
+import scala.scalajs.js
 
 /**
   * Created by andreaminetti on 14/03/16.
@@ -20,13 +25,33 @@ trait Controller {
 
   def menu:Vector[Container] = Vector()
 
+  def menuClick(container:Container):Callback = {
+    setContainer(container)
+    routeController.set(container)
+  }
+
   def render():ReactElement = container.component
 
 }
 
 trait CRUDController extends Controller {
-  private var _model:String = null
 
-  def setModel(m:String) = _model = m
-  def model = _model
+  protected var filter:JSONQuery = JSONQuery.baseFilter
+  protected var id:String = ""
+
+  protected def load(jq: JSONQuery):Future[Table]
+
+  def table:Future[Table] = load(filter)
+  def schemaAsString:Future[String]
+  def uiSchema:Future[JSONSchemaUI]
+  def get(id:String): Future[js.Any]
+  def get: Future[js.Any]
+
+  def selectId(id:String) = this.id = id
+  def setQuery(jsonQuery: JSONQuery) = filter = jsonQuery
+  def query:JSONQuery = filter
+
+  def onInsert(data:js.Any):Callback
+  def onUpdate(data:js.Any):Callback
+
 }

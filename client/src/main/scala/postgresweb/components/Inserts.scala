@@ -4,32 +4,30 @@ import ch.wsl.jsonmodels.JSONSchemaUI
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 import postgresweb.components.base.{SchemaForm, SchemaFormState}
+import postgresweb.controllers.CRUDController
 import postgresweb.css.CommonStyles
 import postgresweb.services.ModelClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-case class Inserts(model:String) {
+case class Inserts(controller:CRUDController) {
 
 
   case class State(schema:String, ui:JSONSchemaUI)
 
-  class Backend(scope:BackendScope[Unit,State],onSubmitCallback:Callback) {
+  class Backend(scope:BackendScope[Unit,State]) {
 
-    val client = ModelClient(model)
 
     for{
-      schema <- client.schema
-      form <- client.form
+      schema <- controller.schemaAsString
+      form <- controller.uiSchema
     } yield {
-      scope.modState(_.copy(schema = schema, ui = JSONSchemaUI.fromJSONFields(form))).runNow()
+      scope.modState(_.copy(schema = schema, ui = form)).runNow()
     }
 
     def onSubmit(s:SchemaFormState):Unit = {
-      scala.scalajs.js.Dynamic.global.console.log(s.formData)
-      client.insert(s.formData)
-      onSubmitCallback.runNow()
+      controller.onInsert(s.formData).runNow()
     }
 
     def render(s:State) = {
@@ -42,11 +40,11 @@ case class Inserts(model:String) {
 
 
 
-  def component(onSubmitCallback:Callback) = ReactComponentB[Unit]("ItemsInfo")
+  val component = ReactComponentB[Unit]("ItemsInfo")
     .initialState(State("{}",JSONSchemaUI.empty))
-    .backend(s => new Backend(s,onSubmitCallback))
+    .backend(s => new Backend(s))
     .renderBackend
     .buildU
 
-  def apply(onSubmitCallback:Callback) = component(onSubmitCallback)()
+  def apply() = component()
 }

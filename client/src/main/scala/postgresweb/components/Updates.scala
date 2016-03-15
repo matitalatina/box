@@ -4,37 +4,33 @@ import ch.wsl.jsonmodels.JSONSchemaUI
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 import postgresweb.components.base.{SchemaForm, SchemaFormState}
+import postgresweb.controllers.CRUDController
 import postgresweb.css.CommonStyles
-import postgresweb.services.{GlobalState, ModelClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.JSON
 
 
-case class Updates(model:String) {
+case class Updates(controller:CRUDController) {
 
   case class State(schema:String, ui:JSONSchemaUI, value: Option[js.Any] = None)
 
   class Backend(scope:BackendScope[Unit,State]) {
 
 
-
-    val client = ModelClient(model)
-
     for{
-      schema <- client.schema
-      form <- client.form
-      value <- client.get(GlobalState.selectedId.getOrElse(""))
+      schema <- controller.schemaAsString
+      form <- controller.uiSchema
+      value <- controller.get
     } yield {
-      scope.modState(_.copy(schema = schema, ui = JSONSchemaUI.fromJSONFields(form), value = Some(value))).runNow()
+      scope.modState(_.copy(schema = schema, ui=form, value = Some(value))).runNow()
     }
 
 
 
     def onSubmit(s:SchemaFormState):Unit = {
-      scala.scalajs.js.Dynamic.global.console.log(s.formData)
-      client.update(GlobalState.selectedId.getOrElse(""),JSON.stringify(s.formData))
+      controller.onUpdate(s.formData)
     }
 
 

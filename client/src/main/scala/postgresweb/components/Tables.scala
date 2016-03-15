@@ -3,9 +3,9 @@ package postgresweb.components
 import ch.wsl.jsonmodels.{JSONQuery, JSONQueryFilter, Table}
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
-import postgresweb.controllers.Controller
+import postgresweb.controllers.{CRUDController, Controller}
 import postgresweb.css.CommonStyles
-import postgresweb.services.{GlobalState, ModelClient}
+import postgresweb.services.ModelClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -37,29 +37,26 @@ object Tables{
   }
 }
 
-case class Tables(model:String, controller: Controller) {
+case class Tables(controller: CRUDController) {
 
 
 
 
-  case class State(table:Table,page:Int,selectedRow:Vector[(String,String)],query:JSONQuery)
+  case class State(table:Table,page:Int,selectedRow:Vector[(String,String)])
 
   class Backend(scope:BackendScope[Unit,State]) {
 
 
 
-    val client = ModelClient(model)
 
-    def load(jq: JSONQuery):Future[Table] = {
-      println("load")
-      client.Helpers.filter2table(jq).map { table =>
-          println("laoded")
-          scope.modState(_.copy(table = table)).runNow()
-          table
+    def load():Callback = Callback.future{
+      controller.table.map{ table =>
+          scope.modState(_.copy(table = table))
       }
     }
 
-    load(JSONQuery.baseFilter)
+    load().runNow()
+
 
 
     /**
@@ -71,11 +68,8 @@ case class Tables(model:String, controller: Controller) {
       * @return A callback that do the action
       */
     def selectRow(headers: Vector[String], row: Vector[String]):Callback = {
-      GlobalState.selectedId = row.headOption
-      for{
-        _ <- Callback.log("Selected row: " + row)
-        result <- scope.modState(_.copy(selectedRow = headers.zip(row)))
-      } yield result
+      controller.selectId(row.headOption.getOrElse("")) //TODO fix id get
+      scope.modState(_.copy(selectedRow = headers.zip(row)))
     }
 
     /**
@@ -103,40 +97,39 @@ case class Tables(model:String, controller: Controller) {
       }
     }
 
-    def refresh() = for{
-      state <- scope.state
-      table <- {
-        println("refresh:" + state.query)
-        Callback(load(state.query))
-      }
-    } yield table
+    //def refresh() = Callback.future(controller.table)
+
 
     def modOperator(s:State, field:String)(e: ReactEventI):Callback = {
       val operator = e.target.value
       println(operator)
-      val value = s.query.filter.lift(field).map(_.value).getOrElse("")
-      val newFilter = s.query.filter + (field -> JSONQueryFilter(value,Some(operator)))
-      val newQuery = s.query.copy(filter = newFilter)
-      scope.modState(_.copy(query = newQuery)) >>
-        Callback.log("State operator for " + field + "changed") >>
-        Callback(load(newQuery))
+      val value = controller.query.filter.lift(field).map(_.value).getOrElse("")
+      val newFilter = controller.query.filter + (field -> JSONQueryFilter(value,Some(operator)))
+      val newQuery = controller.query.copy(filter = newFilter)
+      controller.setQuery(newQuery)
+
+      Callback.log("State operator for " + field + "changed") >>
+      CallbackTo(controller.table)
+
     }
 
     def modFilter(s:State, field:String)(e: ReactEventI):Callback = {
       val value = e.target.value
-      val operator:Option[String] = s.query.filter.lift(field).flatMap(_.operator)
+      val operator:Option[String] = controller.query.filter.lift(field).flatMap(_.operator)
       val newFilter = if(value.size > 0) {
-        s.query.filter + (field -> JSONQueryFilter(value,operator))
+        controller.query.filter + (field -> JSONQueryFilter(value,operator))
       } else {
         println("Remove filter to field" + field)
-        s.query.filter - field
+        controller.query.filter - field
       }
-      val newQuery = s.query.copy(filter = newFilter)
+      val newQuery = controller.query.copy(filter = newFilter)
 
       println(newQuery)
-      scope.modState(_.copy(query = newQuery)) >>
-        Callback.log("State filter for " + field + "changed") >>
-        Callback(load(newQuery))
+
+      controller.setQuery(newQuery)
+
+      Callback.log("State filter for " + field + "changed") >>
+        CallbackTo(controller.table)
     }
 
 
@@ -183,7 +176,7 @@ case class Tables(model:String, controller: Controller) {
 
 
   val component = ReactComponentB[Unit]("ItemsInfo")
-    .initialState(State(Table.empty,1,Vector(),JSONQuery.baseFilter))
+    .initialState(State(Table.empty,1,Vector()))
     .renderBackend[Backend]
     .buildU
 
