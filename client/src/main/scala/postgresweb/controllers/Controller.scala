@@ -5,7 +5,6 @@ import ch.wsl.jsonmodels.{JSONQuery, JSONSchemaUI, Table}
 import japgolly.scalajs.react.{Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl
 import postgresweb.models.Menu
-import postgresweb.routes.{Containers, Container}
 
 import scala.concurrent.Future
 import scala.scalajs.js

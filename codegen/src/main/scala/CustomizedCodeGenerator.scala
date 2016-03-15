@@ -38,43 +38,58 @@ object CustomizedCodeGenerator {
 
     val tablesAndViews = tables ++ views
 
-    val enabledModels = Await.result(db.run{
-      MTable.getTables(None, None, None, Some(Seq("TABLE", "VIEW")))
+    val enabledTables = Await.result(db.run{
+      MTable.getTables(None, None, None, Some(Seq("TABLE")))
     }, 200 seconds)
       .filter { t =>
-        if(excludes.exists(e => t.name.name.startsWith(e))) {
+        if(excludes.exists(e => t.name.name == e)) {
           false
-        } else if(tablesAndViews.contains("*")) {
+        } else if(tables.contains("*")) {
           true
         } else {
-          tablesAndViews.contains(t.name.name)
+          tables.contains(t.name.name)
         }
       }
 
+    val enabledViews = Await.result(db.run{
+      MTable.getTables(None, None, None, Some(Seq("VIEW")))
+    }, 200 seconds)
+      .filter { t =>
+        if(excludes.exists(e => t.name.name == e)) {
+          false
+        } else if(views.contains("*")) {
+          true
+        } else {
+          views.contains(t.name.name)
+        }
+      }
+
+    val enabledModels = enabledTables ++ enabledViews
 
     //println(enabledModels.map(_.name.name))
 
-    val model = Await.result(db.run{
+    val dbModel = Await.result(db.run{
       PostgresDriver.createModelBuilder(enabledModels,true).buildModel
     }, 200 seconds)
 
-    val allColumns = model.tables.flatMap(_.columns.map(_.name))
 
-//    model.tables.foreach{ t =>
-//      val dup = t.columns.map(_.name).diff(t.columns.map(_.name).distinct).distinct
-//      if(dup.size > 0) {
-//        println(t.name.table)
-//        println(dup)
-//        println("")
-//        println("")
-//        println(t.columns.filter(_.name == dup.head))
-//        println("")
-//        println("")
-//      }
-//    }
+    val allColumns = dbModel.tables.flatMap(_.columns.map(_.name))
+
+    dbModel.tables.foreach{ t =>
+      val dup = t.columns.map(_.name).diff(t.columns.map(_.name).distinct).distinct
+      if(dup.size > 0) {
+        println(t.name.table)
+        println(dup)
+        println("")
+        println("")
+        println(t.columns.filter(_.name == dup.head))
+        println("")
+        println("")
+      }
+    }
 
 
-    val gen = codegen(model)
+    val gen = codegen(dbModel)
 
 //    println("codegen created")
 //    println(gen)
@@ -159,7 +174,7 @@ package object tables {
              |import spray.routing._
              |import $modelPackages._
              |
-             |trait $name extends HttpService with ModelRoutes with ViewRoutes {
+             |trait $name extends HttpService with RouteTable with RouteView {
              |  def generatedRoutes()(implicit db:slick.driver.PostgresDriver.api.Database):Route = {
              |
              |    import JsonProtocol._
@@ -186,7 +201,7 @@ package object tables {
         * Removes one '_' from each sequence of one or more subsequent '_' (to avoid collision).
         * (Warning: Not unicode-safe, uses String#apply)
         */
-      final def toCamelCase(str:String): String = {
+      def toCamelCase(str:String): String = {
 
         val result = str.toLowerCase
           .split("_")

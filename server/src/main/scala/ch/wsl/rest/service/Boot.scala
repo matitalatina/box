@@ -10,14 +10,14 @@ import net.ceedubs.ficus.Ficus._
 
 
 
-object Main extends App {
+object Boot extends App {
 
 
 
   implicit val system = ActorSystem()
 
   // the handler actor replies to incoming HttpRequests
-  val handler = system.actorOf(Props[MainServiceActor], name = "main-service")
+  val handler = system.actorOf(Props[MainService], name = "main-service")
 
   val conf: Config = ConfigFactory.load().as[Config]("serve")
   val host = conf.as[String]("host")

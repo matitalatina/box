@@ -14,7 +14,7 @@ import org.json4s.native.Serialization.{read, write}
 import ch.wsl.model.tablesTestDB._
 
 @RunWith(classOf[JUnitRunner])
-class ModelServiceSpec extends BaseSpec {
+class RouteTableServiceSpec extends BaseSpec {
 
 
   import ch.wsl.rest.service.JsonProtocol._

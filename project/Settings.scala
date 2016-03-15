@@ -26,6 +26,7 @@ object Settings {
 
 
 
+
   /** Declare global dependency versions here to avoid mismatches in multi part dependencies */
   object versions {
 
@@ -51,10 +52,10 @@ object Settings {
     val circe = "0.3.0"
 
     //database
-    val postgres = "9.1-901.jdbc4"
+    val postgres = "9.4.1208"
     val slick = "3.1.1"
 
-    //fontend
+    //frontend
     val scalaJSReact = "0.10.4"
     val scalaCss = "0.3.1"
 
@@ -73,7 +74,7 @@ object Settings {
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(
     "com.typesafe.slick"       %% "slick"           % versions.slick,
-    "postgresql"               %  "postgresql"      % versions.postgres,
+    "org.postgresql"           %  "postgresql"      % versions.postgres,
     "com.iheart"               %% "ficus"           % versions.ficus
   ))
 

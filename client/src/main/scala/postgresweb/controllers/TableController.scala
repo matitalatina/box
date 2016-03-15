@@ -3,7 +3,6 @@ package postgresweb.controllers
 import ch.wsl.jsonmodels.{JSONQuery, Table, JSONSchemaUI}
 import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
 import postgresweb.models.Menu
-import postgresweb.routes.{Containers, Container}
 import postgresweb.services.ModelClient
 import scala.concurrent.ExecutionContext.Implicits.global
 

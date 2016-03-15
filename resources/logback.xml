@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <logger name="scala.slick" level="WARN" />
+    <logger name="scala.slick" level="DEBUG" />
     
     <root level="WARN">
         <appender-ref ref="CONSOLE"/>

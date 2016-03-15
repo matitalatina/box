@@ -1,32 +1,22 @@
 package ch.wsl.rest.service
 
 
-import ch.wsl.rest.domain.Forms
-import ch.wsl.rest.service.Auth.CustomUserPassAuthenticator
 import spray.http.StatusCodes
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent._
 import akka.actor.Actor
-import spray.http.MediaTypes.{ `text/html` }
-import spray.routing.Directive.pimpApply
-import spray.routing.{MethodRejection, Route, HttpService, RejectionHandler}
-import spray.routing.authentication.BasicAuth
-import spray.routing.directives.AuthMagnet.fromContextAuthenticator
+import spray.routing.{HttpService, RejectionHandler}
 
-import ch.wsl.model.tables._
 
 
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class MainServiceActor extends Actor with MainService  {
+class MainService extends Actor with HttpService with RouteRoot  {
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
   def actorRefFactory = context
 
-  
+  // Handle HTTP errors, like page not found, etc.
   implicit val myRejectionHandler = RejectionHandler {
     case Nil ⇒ complete(StatusCodes.NotFound, "The requested resource could not be found.")
     case t => {
@@ -41,76 +31,7 @@ class MainServiceActor extends Actor with MainService  {
   // or timeout handling
   def receive = runRoute(route)
 
-}
 
-
-
-
-/**
- *  this trait defines our service behavior independently from the service actor
- */
-trait MainService extends HttpService with CORSSupport with ModelRoutes with ViewRoutes with GeneratedRoutes {
-
-
-
-  val clientFiles: Route =
-    path("") {
-      get {
-        getFromFile("index.html")
-      }
-    } ~
-    pathPrefix("js") {
-      path(Segment) { file =>
-        getFromFile("js/"+file)
-      }
-    } ~
-    pathPrefix("css") {
-      path(Segment) { file =>
-        getFromFile("client/target/web/sass/main/" + file)
-      }
-    } ~
-    pathPrefix("lib") {
-      path(Segment) { file =>
-        getFromFile("client/target/scala-2.11/classes/" + file)
-      }
-    }
-
-  val route:Route = {
-    
-      import JsonProtocol._
-
-
-      clientFiles ~
-      pathPrefix("api" / "v1") {
-        cors {
-          options {
-            complete(spray.http.StatusCodes.OK)
-          } ~
-          authenticate(BasicAuth(CustomUserPassAuthenticator, "person-security-realm")) { userProfile =>
-            implicit val db = userProfile.db
-            generatedRoutes() ~
-            path("models") {
-              get {
-                complete(models ++ views)
-              }
-            } ~
-            pathPrefix("form") {
-              path(Segment) { name =>
-                get {
-                  complete(Forms(name))
-                }
-              } ~
-              pathEnd {
-                get {
-                  complete(Forms.list)
-                }
-              }
-            }
-          }
-        }
-      }
-    
-  }
 
 
 }

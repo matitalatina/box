@@ -6,7 +6,8 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import postgresweb.components.base.formBuilder.FormBuilderComponent
 import postgresweb.components._
-import postgresweb.controllers.{Controller, TableController}
+import postgresweb.controllers.Containers.Home
+import postgresweb.controllers.{Container, Controller, TableController}
 import postgresweb.models.Menu
 
 
@@ -21,8 +22,7 @@ object AppRouter {
 
   }
 
-  case object Home extends Container("Home","home",HomePage())
-  case object FormBuilder extends Container("FormBuilder","none",FormBuilderComponent())
+
 
 
 

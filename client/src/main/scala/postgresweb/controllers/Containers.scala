@@ -1,10 +1,11 @@
-package postgresweb.routes
+package postgresweb.controllers
 
 import japgolly.scalajs.react.ReactComponentU
 import japgolly.scalajs.react.extra.router.RouterConfigDsl
-import postgresweb.components.{Updates, Inserts, Tables}
-import postgresweb.controllers.CRUDController
+import postgresweb.components.base.formBuilder.FormBuilderComponent
+import postgresweb.components.{HomePage, Inserts, Tables, Updates}
 import postgresweb.models.Menu
+import postgresweb.routes.RoutesUtils
 
 /**
   * Created by andreaminetti on 15/03/16.
@@ -41,8 +42,15 @@ class Containers(controller:CRUDController) {
 
 }
 
+object Containers{
 
-abstract class Container(val title: String,
+  case object Home extends Container("Home","home",HomePage())
+  case object FormBuilder extends Container("FormBuilder","none",FormBuilderComponent())
+
+}
+
+
+sealed abstract class Container(val title: String,
                                 val model:String,
                                 val component:ReactComponentU[_,_,_,_]
                                )

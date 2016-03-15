@@ -1,9 +1,9 @@
+import ch.wsl.jsonmodels.JSONField
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 import org.scalatest.{FlatSpec, Matchers}
-import postgresweb.models.JSONField
 
 
 /**

@@ -5,7 +5,7 @@ import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
 import postgresweb.controllers.Controller
 import postgresweb.css.CommonStyles
-import postgresweb.routes.{AppRouter, Container}
+import postgresweb.routes.AppRouter
 import postgresweb.services.ModelClient
 
 import scala.concurrent.ExecutionContext.Implicits.global

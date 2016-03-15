@@ -1,7 +1,7 @@
 package ch.wsl.rest
 
 import akka.actor.ActorSystem
-import ch.wsl.rest.service.MainService
+import ch.wsl.rest.service.{RouteRoot, MainService}
 import org.specs2.mutable.Specification
 import org.specs2.time.NoTimeConversions
 import spray.http.BasicHttpCredentials
@@ -16,7 +16,7 @@ import scala.concurrent.duration.DurationInt
 /**
   * Created by andreaminetti on 10/03/16.
   */
-trait BaseSpec extends Specification with Specs2RouteTest with MainService with NoTimeConversions{
+trait BaseSpec extends Specification with Specs2RouteTest with RouteRoot with NoTimeConversions{
 
   sequential
 

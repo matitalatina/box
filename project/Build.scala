@@ -8,7 +8,7 @@ import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Project.projectToRef
 
 
-object stagedBuild extends Build {
+object Build extends sbt.Build {
 
   lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
     .settings(
@@ -66,11 +66,11 @@ object stagedBuild extends Build {
       scalaJSStage in Test := FastOptStage,
       fullClasspath in Test ~= { _.filter(_.data.exists) },
       // copy  javascript files to js folder,that are generated using fastOptJS/fullOptJS
-      crossTarget in (Compile, fullOptJS) := file("js"),
-      crossTarget in (Compile, fastOptJS) := file("js"),
-      crossTarget in (Compile, packageJSDependencies) := file("js"),
-      crossTarget in (Compile, packageScalaJSLauncher) := file("js"),
-      crossTarget in (Compile, packageMinifiedJSDependencies) := file("js"),
+//      crossTarget in (Compile, fullOptJS) := file("js"),
+//      crossTarget in (Compile, fastOptJS) := file("js"),
+//      crossTarget in (Compile, packageJSDependencies) := file("js"),
+//      crossTarget in (Compile, packageScalaJSLauncher) := file("js"),
+//      crossTarget in (Compile, packageMinifiedJSDependencies) := file("js"),
       artifactPath in (Compile, fastOptJS) := ((crossTarget in (Compile, fastOptJS)).value / ((moduleName in fastOptJS).value + "-opt.js"))
     )
     .enablePlugins(ScalaJSPlugin)

@@ -3,7 +3,7 @@ package ch.wsl.rest.service
 import com.typesafe.config.{ConfigFactory, Config}
 import spray.routing.authentication._
 
-import scala.concurrent.{Await, Promise}
+import scala.concurrent.{Future, Await, Promise}
 import scala.concurrent.duration._
 import scala.util.Try
 import slick.driver.PostgresDriver.api._
@@ -16,53 +16,68 @@ import net.ceedubs.ficus.Ficus._
  */
 object Auth {
 
-  //TODO Extend UserProfile class depending on project requirements
-  case class UserProfile(name: String, db: Database)
 
 
   val dbConf: Config = ConfigFactory.load().as[Config]("db")
+  val dbPath = dbConf.as[String]("url")
 
-  def adminDB = Database.forURL(dbConf.as[String]("url"),
+  /**
+    * Admin DB connection, useful for quering the information Schema
+    * @return
+    */
+  def adminDB = Database.forURL(dbPath,
     driver="org.postgresql.Driver",
     user=dbConf.as[String]("user"),
     password=dbConf.as[String]("password"))
 
+
+  case class UserProfile(name: String, db: Database)
+
+  /**
+    * check if this is a valid user on your system and return his profile,
+    * that include his username and the connection to the DB
+    */
   def getUserProfile(name: String, password: String): Option[UserProfile] = {
-    //TODO Here you should check if this is a valid user on your system and return his profile
 
 
-
-    println("Connecting to DB with " + name )
+    println(s"Connecting to DB $dbPath with $name")
 
     val result = Try {
+
       val db:Database = Database.forURL(dbConf.as[String]("url"),
         driver="org.postgresql.Driver",
         user=name,
         password=password)
-      //check if login data are valid
-      //def select:DBIO[Int] =
+
       Await.result(db.run{
         sql"""select 1""".as[Int]
       },1 second)
+
       db
+
     }.toOption.map{ db =>
       UserProfile(name,db)
     }
 
     println(result)
 
+
     result
 
   }
 
+  /**
+    * #Custom Authenticator
+    *
+    * It authenticate the users against PostgresSQL roles
+    *
+    */
   object CustomUserPassAuthenticator extends UserPassAuthenticator[UserProfile] {
-    def apply(userPass: Option[UserPass]) = Promise.successful(
+    def apply(userPass: Option[UserPass]) =
       userPass match {
-        case Some(UserPass(user, pass)) => {
-          getUserProfile(user, pass)
-        }
-        case _ => None
-      }).future
+        case Some(UserPass(user, pass)) =>  Future.successful(getUserProfile(user, pass))
+        case _ => Future.successful(None)
+      }
   }
 
 }

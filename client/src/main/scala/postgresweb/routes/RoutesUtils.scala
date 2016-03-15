@@ -4,7 +4,7 @@ import japgolly.scalajs.react.ReactComponentU
 import japgolly.scalajs.react.extra.router.{RouterCtl, RouterConfigDsl}
 import japgolly.scalajs.react.extra.router.StaticDsl.{Route, RouteB}
 import postgresweb.components.WindowComponent
-import postgresweb.controllers.Controller
+import postgresweb.controllers.{Container, Controller}
 
 /**
   * Created by andreaminetti on 14/03/16.

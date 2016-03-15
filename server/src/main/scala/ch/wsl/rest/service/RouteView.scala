@@ -1,25 +1,20 @@
 package ch.wsl.rest.service
 
-import ch.wsl.jsonmodels.{JSONQuery}
-import ch.wsl.rest.domain.{JSONSchemas, JSONForm}
+import ch.wsl.jsonmodels.JSONQuery
+import ch.wsl.rest.domain.{JSONForm, JSONSchemas}
 import org.json4s.JsonAST._
+import slick.driver.PostgresDriver.api._
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling._
 import spray.routing._
 
-
-
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import slick.driver.PostgresDriver.api._
-
-import ch.wsl.rest.domain.EnhancedTable._
+import scala.concurrent.Future
 
 /**
  * Created by andreaminetti on 16/02/16.
  */
-trait ViewRoutes extends HttpService {
+trait RouteView extends HttpService {
 
   var views = Set[String]()
 
@@ -29,8 +24,7 @@ trait ViewRoutes extends HttpService {
 
     import JsonProtocol._
 
-    val utils = new ModelUtils[T,M](name,table)
-    import utils._
+    val utils = new RouteHelper[T,M](name,table)
 
     path(name) {
       path("schema") {
@@ -61,7 +55,7 @@ trait ViewRoutes extends HttpService {
           post {
             entity(as[JSONQuery]) { query =>
               println("list")
-              complete(find(query))
+              complete(utils.find(query))
             }
           }
         } ~
