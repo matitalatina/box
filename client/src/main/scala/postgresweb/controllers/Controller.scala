@@ -45,7 +45,7 @@ trait CRUDController extends Controller {
 
   val containers = new Containers(this)
 
-  protected var filter:JSONQuery = JSONQuery.baseFilter
+  protected var filter:JSONQuery = JSONQuery.baseQuery
   protected var id:String = "none"
 
   protected def load(jq: JSONQuery):Future[Table]

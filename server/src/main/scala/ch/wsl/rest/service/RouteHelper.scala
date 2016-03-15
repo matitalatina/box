@@ -18,15 +18,15 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, 
   import ch.wsl.rest.domain.EnhancedTable._ //import col select
 
   def find(query:JSONQuery)(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Future[JSONResult[M]] = {
-    val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case ((field,jsFilter),query) =>
+    val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) =>
       println(jsFilter)
-      query.filter(x => operator(jsFilter.operator.getOrElse("="))(x.col(field),jsFilter.value))
+      query.filter(x => operator(jsFilter.operator.getOrElse("="))(x.col(jsFilter.column),jsFilter.value))
     }
 
-    val qSorted = query.sorting.foldRight[Query[T,M,Seq]](qFiltered){case ((field,dir),query) =>
+    val qSorted = query.sort.foldRight[Query[T,M,Seq]](qFiltered){case (sort,query) =>
       query.sortBy{ x =>
-        val c:slick.driver.PostgresDriver.api.Rep[_] = x.col(field).rep
-        dir match {
+        val c:slick.driver.PostgresDriver.api.Rep[_] = x.col(sort.column).rep
+        sort.order.toLowerCase() match {
           case "asc" => ColumnOrdered(c,new slick.ast.Ordering)
           case "desc" => ColumnOrdered(c,new slick.ast.Ordering(direction=slick.ast.Ordering.Desc))
         }

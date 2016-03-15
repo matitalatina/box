@@ -3,7 +3,10 @@ package ch.wsl.rest.service
 import spray.routing._
 
 /**
-  * Created by andreaminetti on 15/03/16.
+  *
+  * Simple route to serve UI-client files
+  * Statically serves files
+  *
   */
 trait RouteUI extends HttpService{
 

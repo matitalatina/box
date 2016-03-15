@@ -23,7 +23,7 @@ object JSONForm {
 
   def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[Seq[JSONField]] = {
 
-    val schema = new PgSchema(table, db)
+    val schema = new PgInformationSchema(table, db)
 
     println(schema.fk)
 

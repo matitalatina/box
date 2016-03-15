@@ -12,8 +12,6 @@ import net.ceedubs.ficus.Ficus._
 
 object Boot extends App {
 
-
-
   implicit val system = ActorSystem()
 
   // the handler actor replies to incoming HttpRequests

@@ -100,7 +100,7 @@ class RouteTableServiceSpec extends BaseSpec {
     }
 
     "list rows" in {
-      post(endpoint + "/a/list",JSONQuery(10,1,Map(),Map()))  {
+      post(endpoint + "/a/list",JSONQuery.baseQuery)  {
         responseAs[JSONResult[ARow]].count === 1
       }
     }

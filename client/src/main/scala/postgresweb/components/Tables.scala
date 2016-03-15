@@ -103,8 +103,8 @@ case class Tables(controller: CRUDController) {
     def modOperator(s:State, field:String)(e: ReactEventI):Callback = {
       val operator = e.target.value
       println(operator)
-      val value = controller.query.filter.lift(field).map(_.value).getOrElse("")
-      val newFilter = controller.query.filter + (field -> JSONQueryFilter(value,Some(operator)))
+      val value = controller.query.filter.find(_.column == field).map(_.value).getOrElse("")
+      val newFilter =  JSONQueryFilter(field,Some(operator),value) :: controller.query.filter
       val newQuery = controller.query.copy(filter = newFilter)
       controller.setQuery(newQuery)
 
@@ -115,12 +115,12 @@ case class Tables(controller: CRUDController) {
 
     def modFilter(s:State, field:String)(e: ReactEventI):Callback = {
       val value = e.target.value
-      val operator:Option[String] = controller.query.filter.lift(field).flatMap(_.operator)
+      val operator:Option[String] = controller.query.filter.find(_.column == field).flatMap(_.operator)
       val newFilter = if(value.size > 0) {
-        controller.query.filter + (field -> JSONQueryFilter(value,operator))
+        JSONQueryFilter(field,operator,value) :: controller.query.filter
       } else {
         println("Remove filter to field" + field)
-        controller.query.filter - field
+        controller.query.filter.filterNot(_.column == field)
       }
       val newQuery = controller.query.copy(filter = newFilter)
 
