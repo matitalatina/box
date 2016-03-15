@@ -4,7 +4,8 @@ package postgresweb.controllers
 import ch.wsl.jsonmodels.{JSONQuery, JSONSchemaUI, Table}
 import japgolly.scalajs.react.{Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl
-import postgresweb.routes.Container
+import postgresweb.models.Menu
+import postgresweb.routes.{Containers, Container}
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -15,20 +16,27 @@ import scala.scalajs.js
 trait Controller {
 
   private var _container:Container = null
-  private var _routeController:RouterCtl[Container] = null
+  private var routeController:RouterCtl[Container] = null
 
-  def setRouteController(r:RouterCtl[Container]) = _routeController = r
-  def routeController = _routeController
+  def setRouteController(r:RouterCtl[Container]) = routeController = r
+  //private def routeController = _routeController
 
   def setContainer(c: Container): Unit = _container = c
   def container = _container
 
-  def menu:Vector[Container] = Vector()
+  protected def routingMessage = s"Routing to ${container.title} with model ${container.model}"
 
-  def menuClick(container:Container):Callback = {
-    setContainer(container)
-    routeController.set(container)
+  def routeTo(c:Container):Callback = {
+    setContainer(c)
+    Callback.log(routingMessage) >>
+    routeController.set(c)
   }
+
+  def menu:Vector[Menu] = Vector()
+
+  def menuClick(m:Menu):Callback
+
+  def entityClick(e:String):Callback
 
   def render():ReactElement = container.component
 
@@ -36,8 +44,10 @@ trait Controller {
 
 trait CRUDController extends Controller {
 
+  val containers = new Containers(this)
+
   protected var filter:JSONQuery = JSONQuery.baseFilter
-  protected var id:String = ""
+  protected var id:String = "none"
 
   protected def load(jq: JSONQuery):Future[Table]
 
@@ -53,5 +63,16 @@ trait CRUDController extends Controller {
 
   def onInsert(data:js.Any):Callback
   def onUpdate(data:js.Any):Callback
+
+  override def menuClick(m:Menu):Callback = routeTo(m.route(container.model,id))
+
+  override def routingMessage = super.routingMessage + s" and id: $id"
+
+  override def menu:Vector[Menu] = containers.menu
+
+  override def entityClick(e: String): Callback = {
+    val table = containers.Table(e) //default table
+    routeTo(table)
+  }
 
 }

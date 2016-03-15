@@ -2,7 +2,8 @@ package postgresweb.controllers
 
 import ch.wsl.jsonmodels.{JSONQuery, Table, JSONSchemaUI}
 import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
-import postgresweb.routes.Container
+import postgresweb.models.Menu
+import postgresweb.routes.{Containers, Container}
 import postgresweb.services.ModelClient
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -14,6 +15,8 @@ import scala.scalajs.js
   * Created by andreaminetti on 14/03/16.
   */
 class TableController extends CRUDController{
+
+
 
   def client = ModelClient(container.model)
 
@@ -30,5 +33,6 @@ class TableController extends CRUDController{
   override def onUpdate(data: js.Any): Callback = CallbackTo(client.update(id,data))
 
   override def onInsert(data: js.Any): Callback = CallbackTo(client.insert(data))
+
 
 }

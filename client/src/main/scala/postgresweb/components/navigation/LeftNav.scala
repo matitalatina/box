@@ -40,7 +40,7 @@ object LeftNav {
       <.div(Style.nav,
         <.span(CommonStyles.title,p.title),
         <.nav(CommonStyles.navigation,
-          s.elements.map(e => <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.menuClick(AppRouter.Table(e))))
+          s.elements.map(e => <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.entityClick(e)))
         )
       )
   }
