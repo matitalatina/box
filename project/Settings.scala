@@ -1,6 +1,10 @@
 import sbt._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
+
+//scalaJs version is setinto the plugin.sbt file
+
+
 /**
   * Application settings. Configure the build for your application here.
   * You normally don't have to touch the actual build definition after this.
