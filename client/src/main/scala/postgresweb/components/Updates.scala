@@ -1,6 +1,6 @@
 package postgresweb.components
 
-import ch.wsl.jsonmodels.JSONSchemaUI
+import ch.wsl.model.shared.JSONSchemaUI
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 import postgresweb.components.base.{SchemaForm, SchemaFormState}

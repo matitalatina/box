@@ -1,12 +1,12 @@
 package postgresweb.components
 
-import ch.wsl.jsonmodels.JSONSchemaUI
+import ch.wsl.model.shared.JSONSchemaUI
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 import postgresweb.components.base.{SchemaForm, SchemaFormState}
 import postgresweb.controllers.CRUDController
 import postgresweb.css.CommonStyles
-import postgresweb.services.ModelClient
+import postgresweb.services.TableClient$
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

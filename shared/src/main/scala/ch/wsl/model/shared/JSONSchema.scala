@@ -1,4 +1,8 @@
-package ch.wsl.jsonmodels
+package ch.wsl.model.shared
+
+/**
+  * Created by andreaminetti on 16/03/16.
+  */
 
 case class JSONSchema(
                        `type`:String,
@@ -32,6 +36,7 @@ case class JSONSchemaL3(
                          enum: Option[Seq[String]] = None,
                          order: Option[Int] = None
                        )
+
 
 object JSONSchema{
   def empty = JSONSchema("object")

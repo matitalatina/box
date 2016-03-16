@@ -1,4 +1,4 @@
-package ch.wsl.rest.domain
+package ch.wsl.rest.logic
 
 import slick.driver.PostgresDriver
 import slick.driver.PostgresDriver.api._
@@ -15,7 +15,7 @@ trait DBFilters {
     println("operator: " + op)
     
     op match{
-      case "="     => ==(c, v)
+      case "="      => ==(c, v)
       case "not"    => not(c, v)
       case ">"      => >(c, v)
       case "<"      => <(c, v)

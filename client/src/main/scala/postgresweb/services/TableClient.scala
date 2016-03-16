@@ -1,6 +1,7 @@
 package postgresweb.services
 
 import ch.wsl.jsonmodels._
+import ch.wsl.model.shared.{Table, JSONCount, JSONField}
 import io.circe._
 import io.circe.syntax._
 import io.circe._
@@ -8,7 +9,7 @@ import io.circe.generic.auto._
 import io.circe.parser._
 
 import postgresweb.configs.Path
-import postgresweb.models._
+import postgresweb.model._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -18,7 +19,7 @@ import scala.scalajs.js.JSON
 /**
   * Created by andreaminetti on 23/02/16.
   */
-class ModelClient(model:String) {
+class TableClient(model:String) {
 
   val paths = Path.forModel(model)
 
@@ -70,8 +71,8 @@ class ModelClient(model:String) {
 
 }
 
-object ModelClient{
-  def apply(model:String) = new ModelClient(model)
+object TableClient{
+  def apply(model:String) = new TableClient(model)
 
   def models() = HttpClient.get[Vector[String]](Path.models)
 

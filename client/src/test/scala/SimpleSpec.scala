@@ -1,4 +1,4 @@
-import ch.wsl.jsonmodels.JSONField
+import ch.wsl.model.shared.JSONField
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._

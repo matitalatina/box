@@ -1,9 +1,10 @@
 package postgresweb.controllers
 
-import ch.wsl.jsonmodels.{JSONQuery, Table, JSONSchemaUI}
+import ch.wsl.jsonmodels.JSONQuery
+import ch.wsl.model.shared.{Table, JSONSchemaUI}
 import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
-import postgresweb.models.Menu
-import postgresweb.services.ModelClient
+import postgresweb.model.Menu
+import postgresweb.services.TableClient$
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
@@ -17,7 +18,7 @@ class TableController extends CRUDController{
 
 
 
-  def client = ModelClient(container.model)
+  def client = TableClient(container.model)
 
   override def load(jq: JSONQuery): Future[Table] = client.Helpers.filter2table(jq)
 

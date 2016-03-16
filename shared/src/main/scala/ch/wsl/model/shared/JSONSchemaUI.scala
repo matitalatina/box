@@ -1,4 +1,4 @@
-package ch.wsl.jsonmodels
+package ch.wsl.model.shared
 
 /**
   * Created by andreaminetti on 29/02/16.

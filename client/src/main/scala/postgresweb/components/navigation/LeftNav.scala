@@ -6,7 +6,7 @@ import japgolly.scalajs.react.vdom.prefix_<^._
 import postgresweb.controllers.Controller
 import postgresweb.css.CommonStyles
 import postgresweb.routes.AppRouter
-import postgresweb.services.ModelClient
+import postgresweb.services.TableClient$
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js.{Any, UndefOr}
@@ -30,7 +30,7 @@ object LeftNav {
   class Backend(scope:BackendScope[Props,State]) {
 
 
-    ModelClient.models().foreach { models =>
+    TableClient.models().foreach { models =>
       scope.modState(_.copy(elements = models.sorted)).runNow()
     }
 

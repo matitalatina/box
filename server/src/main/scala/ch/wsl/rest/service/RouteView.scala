@@ -1,7 +1,7 @@
 package ch.wsl.rest.service
 
-import ch.wsl.jsonmodels.JSONQuery
-import ch.wsl.rest.domain.{JSONForm, JSONSchemas}
+import ch.wsl.model.shared.JSONQuery
+import ch.wsl.rest.logic.{RouteHelper, JSONForm, JSONSchemas}
 import org.json4s.JsonAST._
 import slick.driver.PostgresDriver.api._
 import spray.httpx.marshalling.Marshaller
@@ -24,7 +24,7 @@ trait RouteView extends HttpService {
 
     import JsonProtocol._
 
-    val utils = new RouteHelper[T,M](name,table)
+    val helper = new RouteHelper[T,M](name,table)
 
     path(name) {
       path("schema") {
@@ -55,7 +55,7 @@ trait RouteView extends HttpService {
           post {
             entity(as[JSONQuery]) { query =>
               println("list")
-              complete(utils.find(query))
+              complete(helper.find(query))
             }
           }
         } ~

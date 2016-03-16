@@ -1,6 +1,6 @@
-package ch.wsl.rest.domain
+package ch.wsl.rest.logic
 
-import ch.wsl.jsonmodels.{JSONSchemaL2, JSONSchema}
+import ch.wsl.model.shared.{JSONSchemaL2, JSONSchema}
 import ch.wsl.rest.service.Auth
 
 import scala.concurrent.Future

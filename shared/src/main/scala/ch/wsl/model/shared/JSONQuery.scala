@@ -1,13 +1,13 @@
-package ch.wsl.jsonmodels
+package ch.wsl.model.shared
 
 /**
- * Created by andreaminetti on 24/04/15.
- *
- * @param count how many rows
- * @param page page n of count rows
- * @param sort sort results by JSONSort object
- * @param filter result by JSONQueryFilter object
- */
+  * Created by andreaminetti on 24/04/15.
+  *
+  * @param count how many rows
+  * @param page page n of count rows
+  * @param sort sort results by JSONSort object
+  * @param filter result by JSONQueryFilter object
+  */
 case class JSONQuery(
                       count:Int,
                       page:Int,
@@ -30,6 +30,9 @@ case class JSONQueryFilter(column:String, operator:Option[String], value:String)
   */
 case class JSONSort(column:String,order:String)
 
+/**
+  * Created by andreaminetti on 16/03/16.
+  */
 object JSONQuery{
   /**
     * Generic query

@@ -8,7 +8,7 @@ import postgresweb.components.base.formBuilder.FormBuilderComponent
 import postgresweb.components._
 import postgresweb.controllers.Containers.Home
 import postgresweb.controllers.{Container, Controller, TableController}
-import postgresweb.models.Menu
+import postgresweb.model.Menu
 
 
 object AppRouter {

@@ -1,7 +1,7 @@
 package ch.wsl.rest
 
-import ch.wsl.jsonmodels._
-import ch.wsl.rest.domain._
+import ch.wsl.model.shared._
+import ch.wsl.rest.logic._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 

@@ -1,6 +1,6 @@
 package postgresweb.components.base
 
-import ch.wsl.jsonmodels.JSONSchemaUI
+import ch.wsl.model.shared.JSONSchemaUI
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._

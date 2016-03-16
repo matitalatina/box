@@ -1,9 +1,8 @@
-package ch.wsl.rest.domain
+package ch.wsl.rest.logic
 
+import ch.wsl.model.shared.{JSONFieldOptions, JSONFieldMap, JSONFieldHTTPOption, JSONField}
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
-
-import ch.wsl.jsonmodels._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global

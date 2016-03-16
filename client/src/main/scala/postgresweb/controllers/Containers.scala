@@ -4,7 +4,7 @@ import japgolly.scalajs.react.ReactComponentU
 import japgolly.scalajs.react.extra.router.RouterConfigDsl
 import postgresweb.components.base.formBuilder.FormBuilderComponent
 import postgresweb.components.{HomePage, Inserts, Tables, Updates}
-import postgresweb.models.Menu
+import postgresweb.model.Menu
 import postgresweb.routes.RoutesUtils
 
 /**

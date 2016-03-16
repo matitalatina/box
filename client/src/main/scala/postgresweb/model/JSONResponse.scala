@@ -1,4 +1,4 @@
-package postgresweb.models
+package postgresweb.model
 
 import io.circe.Json
 

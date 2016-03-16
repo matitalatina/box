@@ -1,4 +1,4 @@
-package ch.wsl.rest.domain
+package ch.wsl.rest.logic
 
 /**
  * Created by andreaminetti on 16/02/16.

@@ -1,4 +1,4 @@
-package ch.wsl.rest.domain
+package ch.wsl.rest.logic
 
 import ch.wsl.rest.service.Auth
 import com.typesafe.config.{ConfigFactory, Config}

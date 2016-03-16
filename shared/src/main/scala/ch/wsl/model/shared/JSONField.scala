@@ -1,10 +1,8 @@
-package ch.wsl.jsonmodels
+package ch.wsl.model.shared
 
 /**
-  * Created by andreaminetti on 10/03/16.
+  * Created by andreaminetti on 16/03/16.
   */
-case class TitleMap(value:String,name:String)
-
 case class JSONField(
                       `type`:String,
                       table: String,
@@ -16,8 +14,10 @@ case class JSONField(
                       widget: Option[String] = None
                     )
 
+case class TitleMap(value:String,name:String)
+
 case class JSONFieldOptions(async:JSONFieldHTTPOption, map:JSONFieldMap)
 
-case class JSONFieldMap(valueProperty:String,textProperty:String)
-
 case class JSONFieldHTTPOption(url:String)
+
+case class JSONFieldMap(valueProperty:String, textProperty:String)
