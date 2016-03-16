@@ -1,7 +1,6 @@
 package postgresweb.services
 
-import ch.wsl.jsonmodels._
-import ch.wsl.model.shared.{Table, JSONCount, JSONField}
+import ch.wsl.model.shared._
 import io.circe._
 import io.circe.syntax._
 import io.circe._

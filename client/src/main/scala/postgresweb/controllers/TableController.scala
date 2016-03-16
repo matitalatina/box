@@ -1,10 +1,9 @@
 package postgresweb.controllers
 
-import ch.wsl.jsonmodels.JSONQuery
-import ch.wsl.model.shared.{Table, JSONSchemaUI}
+import ch.wsl.model.shared._
 import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
 import postgresweb.model.Menu
-import postgresweb.services.TableClient$
+import postgresweb.services.TableClient
 import scala.concurrent.ExecutionContext.Implicits.global
 
 

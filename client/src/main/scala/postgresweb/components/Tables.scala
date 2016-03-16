@@ -1,7 +1,6 @@
 package postgresweb.components
 
-import ch.wsl.jsonmodels.{JSONQuery, JSONQueryFilter}
-import ch.wsl.model.shared.Table
+import ch.wsl.model.shared._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 import postgresweb.controllers.{CRUDController, Controller}

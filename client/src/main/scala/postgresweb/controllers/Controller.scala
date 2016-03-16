@@ -1,8 +1,7 @@
 package postgresweb.controllers
 
 
-import ch.wsl.jsonmodels.JSONQuery
-import ch.wsl.model.shared.{Table, JSONSchemaUI}
+import ch.wsl.model.shared._
 import japgolly.scalajs.react.{Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl
 import postgresweb.model.Menu
