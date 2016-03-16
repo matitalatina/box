@@ -1,5 +1,8 @@
 
-import com.typesafe.sbt.web.SbtWeb
+//uncomment to enable SASS compiled
+//import com.typesafe.sbt.web.SbtWeb
+
+
 import sbt._
 import Keys._
 import Tests._
@@ -74,7 +77,7 @@ object Build extends sbt.Build {
       artifactPath in (Compile, fastOptJS) := ((crossTarget in (Compile, fastOptJS)).value / ((moduleName in fastOptJS).value + "-opt.js"))
     )
     .enablePlugins(ScalaJSPlugin)
-    .enablePlugins(SbtWeb)
+    //.enablePlugins(SbtWeb) uncomment to enable SASS
     .dependsOn(sharedJS)
 
 
