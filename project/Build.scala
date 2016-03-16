@@ -1,8 +1,7 @@
 
-//uncomment to enable SASS compiled
+//uncomment to enable SASS
 //import com.typesafe.sbt.web.SbtWeb
-
-
+import org.scalajs.sbtplugin.cross.CrossProject
 import sbt._
 import Keys._
 import Tests._
@@ -13,20 +12,17 @@ import sbt.Project.projectToRef
 
 object Build extends sbt.Build {
 
-  lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
-    .settings(
-      scalaVersion := Settings.versions.scala,
-      libraryDependencies ++= Settings.sharedJVMJSDependencies.value
-    )
 
-  lazy val sharedJVM = shared.jvm.settings(name := "sharedJVM")
+  /** codegen project containing the customized code generator */
+  lazy val codegen: Project  = (project in file("codegen")).settings(
+    name := "codegen",
+    scalaVersion := Settings.versions.scala,
+    libraryDependencies ++= Settings.codegenDependecies.value,
+    resolvers += Resolver.jcenterRepo,
+    resourceDirectory in Compile := baseDirectory.value / "../resources"
+  )
 
-  lazy val sharedJS = shared.js.settings(name := "sharedJS")
-
-  // use eliding to drop some debug code in the production build
-  lazy val elideOptions = settingKey[Seq[String]]("Set limit for elidable functions")
-
-  lazy val server = (project in file("server"))
+  lazy val server: Project  = (project in file("server"))
     .settings(
       name := "server",
       version := Settings.version,
@@ -41,8 +37,7 @@ object Build extends sbt.Build {
     )
     .aggregate(clients.map(projectToRef): _*)
     .dependsOn(sharedJVM)
-    .dependsOn(codegenProject)
-
+    .dependsOn(codegen)
 
   lazy val client: Project = (project in file("client"))
     .settings(
@@ -51,9 +46,6 @@ object Build extends sbt.Build {
       scalaVersion := Settings.versions.scala,
       scalacOptions ++= Settings.scalacOptions,
       libraryDependencies ++= Settings.scalajsDependencies.value,
-      // by default we do development build, no eliding
-      elideOptions := Seq(),
-      scalacOptions ++= elideOptions.value,
       jsDependencies ++= Settings.jsDependencies.value,
       // RuntimeDOM is needed for tests
       jsDependencies += RuntimeDOM % "test",
@@ -68,12 +60,6 @@ object Build extends sbt.Build {
       // Compile tests to JS using fast-optimisation
       scalaJSStage in Test := FastOptStage,
       fullClasspath in Test ~= { _.filter(_.data.exists) },
-      // copy  javascript files to js folder,that are generated using fastOptJS/fullOptJS
-//      crossTarget in (Compile, fullOptJS) := file("js"),
-//      crossTarget in (Compile, fastOptJS) := file("js"),
-//      crossTarget in (Compile, packageJSDependencies) := file("js"),
-//      crossTarget in (Compile, packageScalaJSLauncher) := file("js"),
-//      crossTarget in (Compile, packageMinifiedJSDependencies) := file("js"),
       artifactPath in (Compile, fastOptJS) := ((crossTarget in (Compile, fastOptJS)).value / ((moduleName in fastOptJS).value + "-opt.js"))
     )
     .enablePlugins(ScalaJSPlugin)
@@ -84,15 +70,18 @@ object Build extends sbt.Build {
   // Client projects (just one in this case)
   lazy val clients = Seq(client)
 
-  /** codegen project containing the customized code generator */
-  lazy val codegenProject = (project in file("codegen")).settings(
-      name := "codegen",
-      scalaVersion := Settings.versions.scala,
-      libraryDependencies ++= Settings.codegenDependecies.value,
-      resolvers += Resolver.jcenterRepo,
-      resourceDirectory in Compile := baseDirectory.value / "../resources"
-  )
 
+  //CrossProject is a Project compiled with both java and javascript
+  lazy val shared: CrossProject = (crossProject.crossType(CrossType.Pure) in file("shared"))
+    .settings(
+      name := "shared",
+      scalaVersion := Settings.versions.scala,
+      libraryDependencies ++= Settings.sharedJVMJSDependencies.value
+    )
+
+  lazy val sharedJVM: Project = shared.jvm.settings(name := "sharedJVM")
+
+  lazy val sharedJS: Project = shared.js.settings(name := "sharedJS")
 
   // code generation task that calls the customized code generator
   lazy val slick = TaskKey[Seq[File]]("gen-tables")
