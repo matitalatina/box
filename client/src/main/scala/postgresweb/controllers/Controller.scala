@@ -2,8 +2,10 @@ package postgresweb.controllers
 
 
 import ch.wsl.model.shared._
+import japgolly.scalajs.react.vdom.ReactTagOf
 import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl
+import org.scalajs.dom.html.Anchor
 import postgresweb.model.Menu
 
 import scala.concurrent.Future
@@ -15,7 +17,7 @@ import scala.scalajs.js
 trait Controller {
 
   private var _container:Container = null
-  private var routeController:RouterCtl[Container] = null
+  protected var routeController:RouterCtl[Container] = null
 
   def setRouteController(r:RouterCtl[Container]) = routeController = r
   //private def routeController = _routeController
@@ -27,17 +29,17 @@ trait Controller {
 
   protected def routingMessage = s"Routing to ${container.title} with model ${container.model}"
 
-  def routeTo(c:Container):Callback = {
-    setContainer(c)
-    Callback.log(routingMessage) >>
-    routeController.set(c)
-  }
+//  def routeTo(c:Container):Callback = {
+//    setContainer(c)
+//    Callback.log(routingMessage) >>
+//    routeController.set(c)
+//  }
 
   def topMenu:Vector[Menu] = Vector()
 
-  def topMenuClick(m:Menu):Callback
+  def topMenuLink(m:Menu): ReactTagOf[Anchor]
 
-  def leftMenuClick(e:String):Callback
+  def leftMenuLink(e:String):ReactTagOf[Anchor]
 
   def leftMenu:Future[Vector[String]]
   def leftMenuTitle:String
@@ -68,15 +70,13 @@ trait CRUDController extends Controller {
   def onInsert(data:js.Any):Callback
   def onUpdate(data:js.Any):Callback
 
-  override def topMenuClick(m:Menu):Callback = routeTo(m.route(container.model,id))
+  override def topMenuLink(m:Menu): ReactTagOf[Anchor] = routeController.link(m.route(container.model,id))
 
   override def routingMessage = super.routingMessage + s" and id: $id"
 
   override def topMenu:Vector[Menu] = containers.menu
 
-  override def leftMenuClick(e: String): Callback = {
-    val table = containers.Table(e) //default table
-    routeTo(table)
-  }
+  def leftMenuLink(e:String):ReactTagOf[Anchor] = routeController.link(containers.Table(e))
+
 
 }

@@ -18,7 +18,7 @@ class CRUDContainers(controller:CRUDController) {
   case class Update(override val model:String,id:String) extends Container("Update",model,Updates(controller)())
 
 
-  case object CRUDHome extends Container("Home","none",CRUDHomes(CRUDHomes.Props(controller)))
+  case object CRUDHome extends Container("Home","none",CRUDHomes(controller)())
 
   val menu:Vector[Menu] =
     Vector(

@@ -44,7 +44,7 @@ object LeftNav {
       <.div(Style.nav,
         <.span(CommonStyles.title, p.ctrl.leftMenuTitle),
         <.nav(CommonStyles.navigation,
-          s.elements.map(e => <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.leftMenuClick(e)))
+          s.elements.map(e => p.ctrl.leftMenuLink(e)(CommonStyles.navigationLink, e))
         )
       )
     }

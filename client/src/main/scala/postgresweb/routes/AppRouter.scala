@@ -1,9 +1,10 @@
 package postgresweb.routes
 
-import japgolly.scalajs.react.{Callback, ReactComponentB, ReactComponentU}
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.StaticDsl.{DynamicRouteB, RouteB}
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.prefix_<^._
+import org.scalajs.dom.html.Anchor
 import postgresweb.components.base.formBuilder.FormBuilderComponent
 import postgresweb.components._
 import postgresweb.controllers.{Containers, Container, Controller, TableController}
@@ -25,11 +26,12 @@ object AppRouter {
 
     override def leftMenuTitle: String = "Main"
 
-    override def leftMenuClick(e: String): Callback = e match {
-      case "Tables" => routeTo(tableController.homeContainer)
-      case _ => routeTo(homeContainer)
+    override def topMenuLink(m: Menu): vdom.ReactTagOf[Anchor] = routeController.link(homeContainer)
+
+    override def leftMenuLink(e: String): vdom.ReactTagOf[Anchor] = e match {
+      case "Tables" => routeController.link(tableController.homeContainer)
+      case _ => routeController.link(homeContainer)
     }
-    override def topMenuClick(m:Menu): Callback = routeTo(Containers.Home)
 
     override def homeContainer: Container = Containers.Home
   }

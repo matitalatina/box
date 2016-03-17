@@ -17,28 +17,26 @@ import scala.scalajs.js._
 /**
   * Created by andreaminetti on 17/03/16.
   */
-object CRUDHomes {
+case class CRUDHomes(ctrl: Controller) {
 
 
-  case class Props(ctrl: Controller)
 
   case class State(elements: Vector[String])
 
-  class Backend(scope:BackendScope[Props,State]) {
+  class Backend(scope:BackendScope[Unit,State]) {
 
 
-    scope.props.map{ _.ctrl.leftMenu.foreach { models =>
+    ctrl.leftMenu.foreach { models =>
       scope.modState(_.copy(elements = models.sorted)).runNow()
     }
-    }.runNow()
 
-    def render(p:Props,s:State) =
+    def render(s:State) =
       <.div(
-        <.h1(p.ctrl.leftMenuTitle),
+        <.h1(ctrl.leftMenuTitle),
         <.ul(
           s.elements.map { e =>
             <.li(
-              <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.leftMenuClick(e))
+              ctrl.leftMenuLink(e)(CommonStyles.navigationLink, e)
             )
           }
         )
@@ -46,12 +44,12 @@ object CRUDHomes {
   }
 
 
-  val component = ReactComponentB[Props]("CRUDHome")
+  val component = ReactComponentB[Unit]("CRUDHome")
     .initialState(State(Vector()))
     .renderBackend[Backend]
-    .build
+    .buildU
 
 
-  def apply(props: Props, ref: UndefOr[String] = "", key: Any = {}) = component.set(key, ref)(props)
+  def apply() = component()
 
 }

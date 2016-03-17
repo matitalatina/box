@@ -52,7 +52,7 @@ object TopNav {
           <.div(CommonStyles.title, "PostgresRest UI")
         ),
         <.div(Style.tabs,
-          P.controller.topMenu.map(item => <.a(Style.tab(item == P.controller.container), item.name, ^.onClick --> P.controller.topMenuClick(item)))
+          P.controller.topMenu.map(item => P.controller.topMenuLink(item)(Style.tab(item == P.controller.container), item.name))
         )
       )
     }
