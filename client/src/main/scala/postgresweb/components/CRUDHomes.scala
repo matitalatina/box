@@ -36,7 +36,7 @@ case class CRUDHomes(ctrl: Controller) {
         <.ul(
           s.elements.map { e =>
             <.li(
-              ctrl.leftMenuLink(e)(CommonStyles.navigationLink, e)
+              <.a(CommonStyles.navigationLink, e, ^.onClick --> ctrl.leftMenuClick(e))
             )
           }
         )

@@ -17,7 +17,7 @@ import scala.scalajs.js
 trait Controller {
 
   private var _container:Container = null
-  protected var routeController:RouterCtl[Container] = null
+  private var routeController:RouterCtl[Container] = null
 
   def setRouteController(r:RouterCtl[Container]) = routeController = r
   //private def routeController = _routeController
@@ -29,17 +29,17 @@ trait Controller {
 
   protected def routingMessage = s"Routing to ${container.title} with model ${container.model}"
 
-//  def routeTo(c:Container):Callback = {
-//    setContainer(c)
-//    Callback.log(routingMessage) >>
-//    routeController.set(c)
-//  }
+  def routeTo(c:Container):Callback = {
+    setContainer(c)
+    Callback.log(routingMessage) >>
+    routeController.set(c)
+  }
 
   def topMenu:Vector[Menu] = Vector()
 
-  def topMenuLink(m:Menu): ReactTagOf[Anchor]
+  def topMenuClick(m:Menu):Callback
 
-  def leftMenuLink(e:String):ReactTagOf[Anchor]
+  def leftMenuClick(e: String): Callback
 
   def leftMenu:Future[Vector[String]]
   def leftMenuTitle:String
@@ -70,13 +70,15 @@ trait CRUDController extends Controller {
   def onInsert(data:js.Any):Callback
   def onUpdate(data:js.Any):Callback
 
-  override def topMenuLink(m:Menu): ReactTagOf[Anchor] = routeController.link(m.route(container.model,id))
+  override def topMenuClick(m:Menu):Callback = routeTo(m.route(container.model,id))
 
   override def routingMessage = super.routingMessage + s" and id: $id"
 
   override def topMenu:Vector[Menu] = containers.menu
 
-  def leftMenuLink(e:String):ReactTagOf[Anchor] = routeController.link(containers.Table(e))
-
+  override def leftMenuClick(e: String): Callback = {
+    val table = containers.Table(e) //default table
+    routeTo(table)
+  }
 
 }
