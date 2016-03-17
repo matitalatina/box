@@ -30,8 +30,10 @@ case class Updates(controller:CRUDController) {
 
 
     def onSubmit(s:SchemaFormState):Unit = {
-      controller.onUpdate(s.formData)
-    }
+      Callback.log("Updating") >>
+      controller.onUpdate(s.formData) >>
+      controller.routeTo(controller.listContainer)
+    }.runNow()
 
 
 

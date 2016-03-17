@@ -55,6 +55,8 @@ trait CRUDController extends Controller {
   protected var filter:JSONQuery = JSONQuery.baseQuery
   protected var id:String = "none"
 
+  def listContainer:Container = containers.Table(container.model)
+
   protected def load(jq: JSONQuery):Future[Table]
 
   def table:Future[Table] = load(filter)

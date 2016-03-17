@@ -27,8 +27,10 @@ case class Inserts(controller:CRUDController) {
     }
 
     def onSubmit(s:SchemaFormState):Unit = {
-      controller.onInsert(s.formData).runNow()
-    }
+      Callback.log("Updating") >>
+      controller.onInsert(s.formData) >>
+      controller.routeTo(controller.listContainer)
+    }.runNow()
 
     def render(s:State) = {
       <.div(CommonStyles.row,
