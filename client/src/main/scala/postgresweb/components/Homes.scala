@@ -17,7 +17,7 @@ import scala.scalajs.js._
 /**
   * Created by andreaminetti on 17/03/16.
   */
-case class CRUDHomes(ctrl: Controller) {
+case class Homes(ctrl: Controller) {
 
 
 

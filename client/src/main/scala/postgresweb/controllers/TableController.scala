@@ -35,6 +35,4 @@ class TableController extends CRUDController{
 
   override def leftMenuTitle: String = "Tables"
 
-  override def homeContainer:Container = containers.CRUDHome
-
 }

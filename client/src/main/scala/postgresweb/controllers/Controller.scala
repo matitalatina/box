@@ -25,7 +25,7 @@ trait Controller {
   def setContainer(c: Container): Unit = _container = c
   def container = _container
 
-  def homeContainer:Container
+  def homeContainer: Container = Containers.Home(this)
 
   protected def routingMessage = s"Routing to ${container.title} with model ${container.model}"
 

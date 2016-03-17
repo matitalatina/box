@@ -18,7 +18,7 @@ class CRUDContainers(controller:CRUDController) {
   case class Update(override val model:String,id:String) extends Container("Update",model,Updates(controller)())
 
 
-  case object CRUDHome extends Container("Home","none",CRUDHomes(controller)())
+  val home = Containers.Home(controller)
 
   val menu:Vector[Menu] =
     Vector(
@@ -35,9 +35,8 @@ class CRUDContainers(controller:CRUDController) {
     val insert = dynamicRouteCT[Insert](( string("^[a-z0-9_-]+") / "insert").caseClass[Insert])
     val update = dynamicRouteCT[Update](( string("^[a-z0-9_-]+") / "update" / string("(.+)$")).caseClass[Update])
 
-
     (
-      staticRoute("",CRUDHome) ~> renderR(r => RoutesUtils.renderController(controller,CRUDHome)(r))
+      staticRoute("",home) ~> renderR(r => RoutesUtils.renderController(controller,home)(r))
     | table ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
     | insert ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
     | update ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
@@ -48,9 +47,10 @@ class CRUDContainers(controller:CRUDController) {
 
 object Containers{
 
-  case object Home extends Container("Home","home",HomePage())
+  //case object Home extends Container("Home","home",HomePage())
   case object FormBuilder extends Container("FormBuilder","none",FormBuilderComponent())
 
+  case class Home(controller:Controller) extends Container("Home","none",Homes(controller)())
 
 
 }

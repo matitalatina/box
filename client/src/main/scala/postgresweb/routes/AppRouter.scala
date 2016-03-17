@@ -29,9 +29,8 @@ object AppRouter {
       case "Tables" => routeTo(tableController.homeContainer)
       case _ => routeTo(homeContainer)
     }
-    override def topMenuClick(m:Menu): Callback = routeTo(Containers.Home)
+    override def topMenuClick(m:Menu): Callback = routeTo(homeContainer)
 
-    override def homeContainer: Container = Containers.Home
   }
 
 
@@ -42,9 +41,9 @@ object AppRouter {
       import dsl._
 
       ( trimSlashes
-      | staticRoute("",Containers.Home) ~> renderR(RoutesUtils.renderController(homeController,Containers.Home))
+      | staticRoute("",homeController.homeContainer) ~> renderR(RoutesUtils.renderController(homeController,homeController.homeContainer))
       | tableController.containers.routes.prefixPath_/("#tables")
-      ).notFound(redirectToPage(Containers.Home)(Redirect.Replace))
+      ).notFound(redirectToPage(homeController.homeContainer)(Redirect.Replace))
       .renderWith(layout)
 
 
