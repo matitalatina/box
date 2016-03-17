@@ -3,19 +3,22 @@ package postgresweb.controllers
 import japgolly.scalajs.react.ReactComponentU
 import japgolly.scalajs.react.extra.router.RouterConfigDsl
 import postgresweb.components.base.formBuilder.FormBuilderComponent
-import postgresweb.components.{HomePage, Inserts, Tables, Updates}
+import postgresweb.components._
 import postgresweb.model.Menu
 import postgresweb.routes.RoutesUtils
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class Containers(controller:CRUDController) {
+class CRUDContainers(controller:CRUDController) {
 
   //case class Export(override val model:String) extends Container("Export","export",model, () => Item2Data())
   case class Table(override val model:String) extends Container("Table",model,Tables(controller)())
   case class Insert(override val model:String) extends Container("Insert",model,Inserts(controller)())
   case class Update(override val model:String,id:String) extends Container("Update",model,Updates(controller)())
+
+
+  case object CRUDHome extends Container("Home","none",CRUDHomes(CRUDHomes.Props(controller)))
 
   val menu:Vector[Menu] =
     Vector(
@@ -34,7 +37,8 @@ class Containers(controller:CRUDController) {
 
 
     (
-      table ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
+      staticRoute("",CRUDHome) ~> renderR(r => RoutesUtils.renderController(controller,CRUDHome)(r))
+    | table ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
     | insert ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
     | update ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
     )
@@ -46,6 +50,8 @@ object Containers{
 
   case object Home extends Container("Home","home",HomePage())
   case object FormBuilder extends Container("FormBuilder","none",FormBuilderComponent())
+
+
 
 }
 

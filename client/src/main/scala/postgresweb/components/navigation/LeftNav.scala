@@ -1,6 +1,7 @@
 package postgresweb.components.navigation
 
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.Reusability
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
 import postgresweb.controllers.Controller
@@ -9,6 +10,7 @@ import postgresweb.routes.AppRouter
 import postgresweb.services.TableClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.scalajs.js.{Any, UndefOr}
 import scalacss.Defaults._
 import scalacss.ScalaCssReact._
@@ -23,31 +25,34 @@ object LeftNav {
 
   }
 
-  case class Props(title: String, ctrl: Controller)
+  case class Props(ctrl: Controller)
 
-  case class State(elements: Vector[String])
+  case class State(elements: Vector[String], title:String)
 
   class Backend(scope:BackendScope[Props,State]) {
 
 
-    TableClient.models().foreach { models =>
-      scope.modState(_.copy(elements = models.sorted)).runNow()
-    }
 
-    def click(table:String)(e:ReactEventI):Callback = Callback.log(table)
+    def render(p:Props,s:State) = {
 
-    def render(p:Props,s:State) =
+      if(s.title != p.ctrl.leftMenuTitle) {
+        p.ctrl.leftMenu.foreach { models =>
+          scope.modState(_.copy(elements = models.sorted, title = p.ctrl.leftMenuTitle)).runNow()
+        }
+      }
+
       <.div(Style.nav,
-        <.span(CommonStyles.title,p.title),
+        <.span(CommonStyles.title, p.ctrl.leftMenuTitle),
         <.nav(CommonStyles.navigation,
-          s.elements.map(e => <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.entityClick(e)))
+          s.elements.map(e => <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.leftMenuClick(e)))
         )
       )
+    }
   }
 
 
   val component = ReactComponentB[Props]("LeftNav")
-    .initialState(State(Vector()))
+    .initialState(State(Vector(),""))
     .renderBackend[Backend]
     .build
 

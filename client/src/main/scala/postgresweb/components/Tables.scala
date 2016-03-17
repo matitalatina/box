@@ -5,7 +5,6 @@ import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 import postgresweb.controllers.{CRUDController, Controller}
 import postgresweb.css.CommonStyles
-import postgresweb.services.TableClient$
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

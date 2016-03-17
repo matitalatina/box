@@ -6,9 +6,11 @@ import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import postgresweb.components.base.formBuilder.FormBuilderComponent
 import postgresweb.components._
-import postgresweb.controllers.Containers.Home
-import postgresweb.controllers.{Container, Controller, TableController}
+import postgresweb.controllers.{Containers, Container, Controller, TableController}
 import postgresweb.model.Menu
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 object AppRouter {
@@ -17,9 +19,19 @@ object AppRouter {
   val tableController = new TableController
   val homeController = new Controller {
 
-    override def entityClick(e: String): Callback = routeTo(Home)
-    override def menuClick(m:Menu): Callback = routeTo(Home)
+    override def leftMenu: Future[Vector[String]] = Future{
+      Vector("Tables")
+    }
 
+    override def leftMenuTitle: String = "Main"
+
+    override def leftMenuClick(e: String): Callback = e match {
+      case "Tables" => routeTo(tableController.homeContainer)
+      case _ => routeTo(homeContainer)
+    }
+    override def topMenuClick(m:Menu): Callback = routeTo(Containers.Home)
+
+    override def homeContainer: Container = Containers.Home
   }
 
 
@@ -30,9 +42,9 @@ object AppRouter {
       import dsl._
 
       ( trimSlashes
-      | staticRoute("",Home) ~> renderR(RoutesUtils.renderController(homeController,Home))
+      | staticRoute("",Containers.Home) ~> renderR(RoutesUtils.renderController(homeController,Containers.Home))
       | tableController.containers.routes.prefixPath_/("#tables")
-      ).notFound(redirectToPage(Home)(Redirect.Replace))
+      ).notFound(redirectToPage(Containers.Home)(Redirect.Replace))
       .renderWith(layout)
 
 

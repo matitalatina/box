@@ -23,7 +23,7 @@ object WindowComponent {
     .render_P { P =>
       <.div(CommonStyles.layout,
         TopNav(TopNav.Props(P.controller)),
-        LeftNav(LeftNav.Props("Tables",P.controller)),
+        LeftNav(LeftNav.Props(P.controller)),
         <.main(Style.content,
           <.div(Style.pageContent,
             <.div(CommonStyles.row,

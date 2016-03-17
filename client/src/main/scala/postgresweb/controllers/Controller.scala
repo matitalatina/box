@@ -2,7 +2,7 @@ package postgresweb.controllers
 
 
 import ch.wsl.model.shared._
-import japgolly.scalajs.react.{Callback, ReactElement}
+import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl
 import postgresweb.model.Menu
 
@@ -23,6 +23,8 @@ trait Controller {
   def setContainer(c: Container): Unit = _container = c
   def container = _container
 
+  def homeContainer:Container
+
   protected def routingMessage = s"Routing to ${container.title} with model ${container.model}"
 
   def routeTo(c:Container):Callback = {
@@ -31,11 +33,14 @@ trait Controller {
     routeController.set(c)
   }
 
-  def menu:Vector[Menu] = Vector()
+  def topMenu:Vector[Menu] = Vector()
 
-  def menuClick(m:Menu):Callback
+  def topMenuClick(m:Menu):Callback
 
-  def entityClick(e:String):Callback
+  def leftMenuClick(e:String):Callback
+
+  def leftMenu:Future[Vector[String]]
+  def leftMenuTitle:String
 
   def render():ReactElement = container.component
 
@@ -43,7 +48,7 @@ trait Controller {
 
 trait CRUDController extends Controller {
 
-  val containers = new Containers(this)
+  val containers = new CRUDContainers(this)
 
   protected var filter:JSONQuery = JSONQuery.baseQuery
   protected var id:String = "none"
@@ -63,13 +68,13 @@ trait CRUDController extends Controller {
   def onInsert(data:js.Any):Callback
   def onUpdate(data:js.Any):Callback
 
-  override def menuClick(m:Menu):Callback = routeTo(m.route(container.model,id))
+  override def topMenuClick(m:Menu):Callback = routeTo(m.route(container.model,id))
 
   override def routingMessage = super.routingMessage + s" and id: $id"
 
-  override def menu:Vector[Menu] = containers.menu
+  override def topMenu:Vector[Menu] = containers.menu
 
-  override def entityClick(e: String): Callback = {
+  override def leftMenuClick(e: String): Callback = {
     val table = containers.Table(e) //default table
     routeTo(table)
   }

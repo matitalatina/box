@@ -15,9 +15,7 @@ import scala.scalajs.js
   */
 class TableController extends CRUDController{
 
-
-
-  def client = TableClient(container.model)
+  private def client = TableClient(container.model)
 
   override def load(jq: JSONQuery): Future[Table] = client.Helpers.filter2table(jq)
 
@@ -33,5 +31,10 @@ class TableController extends CRUDController{
 
   override def onInsert(data: js.Any): Callback = CallbackTo(client.insert(data))
 
+  override def leftMenu: Future[Vector[String]] = TableClient.models()
+
+  override def leftMenuTitle: String = "Tables"
+
+  override def homeContainer:Container = containers.CRUDHome
 
 }
