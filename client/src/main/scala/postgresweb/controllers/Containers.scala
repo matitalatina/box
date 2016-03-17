@@ -10,6 +10,24 @@ import postgresweb.routes.RoutesUtils
 /**
   * Created by andreaminetti on 15/03/16.
   */
+
+
+sealed abstract class Container(val title: String,
+                                val model:String,
+                                val component:ReactComponentU[_,_,_,_]
+                               )
+
+object Containers{
+
+  //case object Home extends Container("Home","home",HomePage())
+  case object FormBuilder extends Container("FormBuilder","none",FormBuilderComponent())
+
+  case class Home(controller:Controller) extends Container("Home","none",Homes(controller)())
+
+
+}
+
+
 class CRUDContainers(controller:CRUDController) {
 
   //case class Export(override val model:String) extends Container("Export","export",model, () => Item2Data())
@@ -44,20 +62,4 @@ class CRUDContainers(controller:CRUDController) {
   }
 
 }
-
-object Containers{
-
-  //case object Home extends Container("Home","home",HomePage())
-  case object FormBuilder extends Container("FormBuilder","none",FormBuilderComponent())
-
-  case class Home(controller:Controller) extends Container("Home","none",Homes(controller)())
-
-
-}
-
-
-sealed abstract class Container(val title: String,
-                                val model:String,
-                                val component:ReactComponentU[_,_,_,_]
-                               )
 

@@ -5,7 +5,6 @@ package postgresweb.configs
   */
 object Path {
 
-
   val models = Config.endpoint + "models"
 
   def forModel(model:String) = new PathBuilder(model)

@@ -13,6 +13,7 @@ object ReactApp extends JSApp {
   @JSExport
   override def main(): Unit = {
     AppCSS.load
+    //loads all the routes
     AppRouter.router().render(dom.document.body)
   }
 

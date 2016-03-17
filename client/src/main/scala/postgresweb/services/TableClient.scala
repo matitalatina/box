@@ -22,15 +22,15 @@ class TableClient(model:String) {
 
   val paths = Path.forModel(model)
 
-  def list(jsonQuery: JSONQuery) = HttpClient.postJson[JSONResponse](paths.list,jsonQuery.asJson.noSpaces)
-  def schema = HttpClient.getString(paths.schema)
-  def form = HttpClient.get[Vector[JSONField]](paths.form)
-  def keys = HttpClient.get[Vector[String]](paths.keys)
-  def count = HttpClient.get[JSONCount](paths.count)
-  def get(i:String) = HttpClient.getJs(paths.get(i))
-  def update(i:String,data:js.Any) = HttpClient.putJson[String](paths.update(i),JSON.stringify(data))
-  def insert(data:js.Any) = HttpClient.postJson[String](paths.insert,JSON.stringify(data))
-  def firsts = HttpClient.get[JSONResponse](paths.firsts)
+  def list(jsonQuery: JSONQuery) = AuthenticatedHttpClient.postJson[JSONResponse](paths.list,jsonQuery.asJson.noSpaces)
+  def schema = AuthenticatedHttpClient.getString(paths.schema)
+  def form = AuthenticatedHttpClient.get[Vector[JSONField]](paths.form)
+  def keys = AuthenticatedHttpClient.get[Vector[String]](paths.keys)
+  def count = AuthenticatedHttpClient.get[JSONCount](paths.count)
+  def get(i:String) = AuthenticatedHttpClient.getJs(paths.get(i))
+  def update(i:String,data:js.Any) = AuthenticatedHttpClient.putJson[String](paths.update(i),JSON.stringify(data))
+  def insert(data:js.Any) = AuthenticatedHttpClient.postJson[String](paths.insert,JSON.stringify(data))
+  def firsts = AuthenticatedHttpClient.get[JSONResponse](paths.firsts)
 
   object Helpers {
 
@@ -73,6 +73,6 @@ class TableClient(model:String) {
 object TableClient{
   def apply(model:String) = new TableClient(model)
 
-  def models() = HttpClient.get[Vector[String]](Path.models)
+  def models() = AuthenticatedHttpClient.get[Vector[String]](Path.models)
 
 }

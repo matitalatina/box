@@ -12,13 +12,10 @@ import scala.scalajs.js
 /**
   * Created by andreaminetti on 23/02/16.
   */
-object HttpClient {
 
-  def postJson[T](url:String, data:String)(implicit d:Decoder[T]):Future[T] =
-    Ajax.post(url, data,headers = Map(Config.auth, "Content-Type" -> "application/json")).map(xhr => decode[T](xhr.responseText).toOption.get)
-
-  def putJson[T](url:String, data:String)(implicit d:Decoder[T]):Future[T] =
-    Ajax.put(url, data,headers = Map(Config.auth, "Content-Type" -> "application/json")).map(xhr => decode[T](xhr.responseText).toOption.get)
+//to execute http requests (in this case to the server to gete data or JSONSchema or JSONForms)
+//injects authentication and/or specify content type
+object AuthenticatedHttpClient {
 
   def get[T](url:String)(implicit d:Decoder[T]):Future[T] = Ajax.get(url,headers = Map(Config.auth)).map{xhr =>
     decode[T](xhr.responseText).toOption.get
@@ -32,5 +29,11 @@ object HttpClient {
     js.JSON.parse(xhr.responseText)
   }
 
+
+  def postJson[T](url:String, data:String)(implicit d:Decoder[T]):Future[T] =
+    Ajax.post(url, data,headers = Map(Config.auth, "Content-Type" -> "application/json")).map(xhr => decode[T](xhr.responseText).toOption.get)
+
+  def putJson[T](url:String, data:String)(implicit d:Decoder[T]):Future[T] =
+    Ajax.put(url, data,headers = Map(Config.auth, "Content-Type" -> "application/json")).map(xhr => decode[T](xhr.responseText).toOption.get)
 
 }
