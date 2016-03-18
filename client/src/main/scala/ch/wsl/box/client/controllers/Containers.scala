@@ -4,6 +4,7 @@ import ch.wsl.box.client.components.base.formBuilder.FormBuilderComponent
 import ch.wsl.box.client.components.{Updates, Homes, Inserts, Tables}
 import ch.wsl.box.client.model.Menu
 import ch.wsl.box.client.routes.RoutesUtils
+import ch.wsl.box.model.shared.JSONKeys
 import japgolly.scalajs.react.ReactComponentU
 import japgolly.scalajs.react.extra.router.RouterConfigDsl
 
@@ -33,7 +34,9 @@ class CRUDContainers(controller:CRUDController) {
   //case class Export(override val model:String) extends Container("Export","export",model, () => Item2Data())
   case class Table(override val model:String) extends Container("Table",model,Tables(controller)())
   case class Insert(override val model:String) extends Container("Insert",model,Inserts(controller)())
-  case class Update(override val model:String,id:String) extends Container("Update",model,Updates(controller)())
+  case class Update(override val model:String,id:String) extends Container("Update",model,Updates(controller)()) {
+    controller.selectId(JSONKeys.fromString(id))
+  }
 
 
   val home = Containers.Home(controller)
@@ -42,7 +45,7 @@ class CRUDContainers(controller:CRUDController) {
     Vector(
       Menu("Table",(m,_) => Table(m)),
       Menu("Insert",(m,_) => Insert(m)),
-      Menu("Update",(m,i) => Update(m,i))
+      Menu("Update",(m,i) => Update(m,i.asString))
     )
 
   val routes = RouterConfigDsl[Container].buildRule { dsl =>

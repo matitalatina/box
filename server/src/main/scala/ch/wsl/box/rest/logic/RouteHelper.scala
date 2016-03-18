@@ -1,7 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.model.shared.JSONQuery
-import ch.wsl.box.model.shared.JSONResult
+import ch.wsl.box.model.shared.{JSONKey, JSONKeys, JSONQuery, JSONResult}
 import slick.driver.PostgresDriver.api._
 import slick.lifted.{ColumnOrdered, Query, Rep, TableQuery}
 import spray.httpx.marshalling.Marshaller
@@ -41,30 +40,29 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, 
     } yield JSONResult(count,result.toList) // to list because json4s does't like generics types for serialization
   }
 
-  def getById(i:Long)(implicit db:Database):Future[T#TableElementType] = {
-    def fil(pk:String):Rep[Seq[T#TableElementType]] =  table.filter(x => super.==(x.col(pk),i)).take(1)
+  private def filter(i:JSONKeys):Query[T, M, Seq]  = {
+    def fil(t: Query[T,M,Seq],key: JSONKey):Query[T,M,Seq] =  t.filter(x => super.==(x.col(key.key),key.value))
+
+    i.keys.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) => fil(query,jsFilter)}
+  }
+
+
+  def getById(i:JSONKeys)(implicit db:Database):Future[T#TableElementType] = {
 
     for{
-      pks <- JSONSchemas.keysOf(name)
       result <- db.run{
-        val action = fil(pks.head).result
+        val action = filter(i).take(1).result
         println(action.statements)
         action
       }
     } yield result.head
   }
 
-  def deleteById(i:Long)(implicit db:Database):Future[Int] = {
-    println("Deleting " + i)
-    def fil(pk:String) =  {
-      println("Deleting " + pk + "=" + i)
-      table.filter(x => super.==(x.col(pk),i))
-    }
+  def deleteById(i:JSONKeys)(implicit db:Database):Future[Int] = {
 
     for{
-      pks <- JSONSchemas.keysOf(name)
       result <- db.run{
-        val action = fil(pks.head).delete
+        val action = filter(i).delete
         println(action.statements)
         action
       }

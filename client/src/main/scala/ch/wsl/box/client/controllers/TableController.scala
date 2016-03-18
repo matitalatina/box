@@ -18,7 +18,7 @@ class TableController extends CRUDController{
 
   override def load(jq: JSONQuery): Future[Table] = client.Helpers.filter2table(jq)
 
-  override def get(id: String): Future[js.Any] = client.get(id)
+  override def get(id: JSONKeys): Future[js.Any] = client.get(id)
 
   override def schemaAsString: Future[String] = client.schema
 

@@ -25,8 +25,8 @@ class TableClient(model:String) {
   def form = AuthenticatedHttpClient.get[Vector[JSONField]](paths.form)
   def keys = AuthenticatedHttpClient.get[Vector[String]](paths.keys)
   def count = AuthenticatedHttpClient.get[JSONCount](paths.count)
-  def get(i:String) = AuthenticatedHttpClient.getJs(paths.get(i))
-  def update(i:String,data:js.Any) = AuthenticatedHttpClient.putJson[String](paths.update(i),JSON.stringify(data))
+  def get(i:JSONKeys) = AuthenticatedHttpClient.getJs(paths.get(i.asString))
+  def update(i:JSONKeys,data:js.Any) = AuthenticatedHttpClient.putJson[String](paths.update(i.asString),JSON.stringify(data))
   def insert(data:js.Any) = AuthenticatedHttpClient.postJson[String](paths.insert,JSON.stringify(data))
   def firsts = AuthenticatedHttpClient.get[JSONResponse](paths.firsts)
 
@@ -49,6 +49,7 @@ class TableClient(model:String) {
       for {
         f <- form
         schema <- schema
+        keys <- keys
         result <- list(filter)
       } yield {
 
@@ -58,10 +59,13 @@ class TableClient(model:String) {
         val rows =
           result.data.map { row =>
             f.map { field =>
-              valueForKey(field.key,row)
+              field.key -> valueForKey(field.key,row)
             }
           }
-        Table(headers,rows,jsonSchema)
+
+        val jsonModel = JSONModel(jsonSchema,f.toSeq,keys.toSeq)
+
+        Table(headers,rows,jsonModel)
       }
     }
   }

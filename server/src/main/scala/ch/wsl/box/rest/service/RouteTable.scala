@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.service
 
-import ch.wsl.box.model.shared.{JSONQuery, JSONCount}
+import ch.wsl.box.model.shared.{JSONKeys, JSONQuery, JSONCount}
 import ch.wsl.box.rest.logic._
 import org.json4s.JsonAST._
 import slick.driver.PostgresDriver.api._
@@ -30,24 +30,28 @@ trait RouteTable extends HttpService {
 
 
     pathPrefix(name) {
-      path(LongNumber) { i=>
-        get {
-          onComplete(utils.getById(i)) {
-            case Success(entity) => complete(entity)
-            case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
-          }
-        } ~
-        put {
-          entity(as[M]) { e =>
-            val result = db.run{ table.insertOrUpdate(e) }.map(_ => e)
-            complete(result) //result should be in the same future as e
-          }
-        } ~
-        delete {
-          onComplete(utils.deleteById(i)) {
-            case Success(affectedRow) => complete(JSONCount(affectedRow))
-            case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
-          }
+      pathPrefix("id") {
+        path(Segment) { id =>
+          get {
+            onComplete(utils.getById(JSONKeys.fromString(id))) {
+              case Success(entity) => complete(entity)
+              case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
+            }
+          } ~
+            put {
+              entity(as[M]) { e =>
+                val result = db.run {
+                  table.insertOrUpdate(e)
+                }.map(_ => e)
+                complete(result) //result should be in the same future as e
+              }
+            } ~
+            delete {
+              onComplete(utils.deleteById(JSONKeys.fromString(id))) {
+                case Success(affectedRow) => complete(JSONCount(affectedRow))
+                case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
+              }
+            }
         }
       } ~
       path("schema") {

@@ -61,13 +61,13 @@ case class Tables(controller: CRUDController) {
       * When a row is selected set the global state with the id of the selected row
       * and set the component state
       *
-      * @param headers table headers
+      * @param table table
       * @param row selected row
       * @return A callback that do the action
       */
-    def selectRow(headers: Vector[String], row: Vector[String]):Callback = {
-      controller.selectId(row.headOption.getOrElse("")) //TODO fix id get
-      scope.modState(_.copy(selectedRow = headers.zip(row)))
+    def selectRow(table: Table, row: Vector[(String,String)]):Callback = {
+      controller.selectId(table.model.keyOf(row)) //TODO fix id get
+      scope.modState(_.copy(selectedRow = row))
     }
 
     /**
@@ -146,20 +146,20 @@ case class Tables(controller: CRUDController) {
               <.tbody(
                 <.tr(
                   S.table.headers.map(title => <.td(Style.td,
-                    <.input(Style.input,^.onChange ==> modFilter(S,title)), //TODO should not be the title here but the key
+                    <.input(Style.input,^.onChange ==> modFilter(S,title))  , //TODO should not be the title here but the key
                     <.span(Style.select,
                       <.select(
                         ^.onChange ==> modOperator(S,title), //TODO should not be the title here but the key
-                        filterOption(S.table.schema.typeOfTitle(title))
+                        filterOption(S.table.model.schema.typeOfTitle(title))
                       )
                     )
                   ))
                 ),
                 S.table.rows.map{row =>
-                  <.tr( Style.selected(row == S.selectedRow.map(_._2)),
-                    ^.onClick --> selectRow(S.table.headers,row),
-                    row.map{ cell =>
-                      <.td(Style.td,cell.toString)
+                  <.tr( Style.selected(row == S.selectedRow),
+                    ^.onClick --> selectRow(S.table,row),
+                    row.map{ case (id,cell) =>
+                      <.td(Style.td,cell)
                     }
                   )
                 }

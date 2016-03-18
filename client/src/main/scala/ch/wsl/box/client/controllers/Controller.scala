@@ -1,7 +1,7 @@
 package ch.wsl.box.client.controllers
 
 import ch.wsl.box.client.model.Menu
-import ch.wsl.box.model.shared.{JSONSchemaUI, Table, JSONQuery}
+import ch.wsl.box.model.shared.{JSONKeys, JSONSchemaUI, Table, JSONQuery}
 import japgolly.scalajs.react.vdom.ReactTagOf
 import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl
@@ -54,7 +54,7 @@ trait CRUDController extends Controller {
   val containers = new CRUDContainers(this)
 
   protected var filter:JSONQuery = JSONQuery.baseQuery
-  protected var id:String = "none"
+  protected var id:JSONKeys = JSONKeys.empty
 
   def listContainer:Container = containers.Table(container.model)
 
@@ -63,10 +63,13 @@ trait CRUDController extends Controller {
   def table:Future[Table] = load(filter)
   def schemaAsString:Future[String]
   def uiSchema:Future[JSONSchemaUI]
-  def get(id:String): Future[js.Any]
+  def get(id:JSONKeys): Future[js.Any]
   def get: Future[js.Any]
 
-  def selectId(id:String) = this.id = id
+  def selectId(id:JSONKeys) = {
+    println("Selected id: " + id)
+    this.id = id
+  }
   def setQuery(jsonQuery: JSONQuery) = filter = jsonQuery
   def query:JSONQuery = filter
 
