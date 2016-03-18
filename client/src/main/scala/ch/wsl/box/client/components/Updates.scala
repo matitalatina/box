@@ -1,7 +1,7 @@
 package ch.wsl.box.client.components
 
 import ch.wsl.box.client.components.base.{SchemaFormState, SchemaForm}
-import ch.wsl.model.shared.JSONSchemaUI
+import ch.wsl.box.model.shared.JSONSchemaUI
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 import ch.wsl.box.client.components.base.SchemaFormState

@@ -1,6 +1,6 @@
 package ch.wsl.rest.logic
 
-import ch.wsl.model.shared.JSONField
+import ch.wsl.box.model.shared.JSONField
 
 /**
   * Created by andreaminetti on 10/03/16.

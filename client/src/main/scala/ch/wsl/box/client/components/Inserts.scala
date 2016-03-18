@@ -3,7 +3,7 @@ package ch.wsl.box.client.components
 import ch.wsl.box.client.components.base.{SchemaForm, SchemaFormState}
 import ch.wsl.box.client.controllers.CRUDController
 import ch.wsl.box.client.css.CommonStyles
-import ch.wsl.model.shared.JSONSchemaUI
+import ch.wsl.box.model.shared.JSONSchemaUI
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 

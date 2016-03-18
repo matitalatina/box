@@ -1,7 +1,7 @@
 package ch.wsl.box.client.controllers
 
 import ch.wsl.box.client.model.Menu
-import ch.wsl.model.shared._
+import ch.wsl.box.model.shared.{JSONSchemaUI, Table, JSONQuery}
 import japgolly.scalajs.react.vdom.ReactTagOf
 import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl

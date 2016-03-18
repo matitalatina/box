@@ -1,7 +1,7 @@
 package ch.wsl.box.client.components.base
 
 import ch.wsl.box.client.css.CommonStyles
-import ch.wsl.model.shared.JSONSchemaUI
+import ch.wsl.box.model.shared.JSONSchemaUI
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
 

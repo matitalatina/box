@@ -1,4 +1,4 @@
-package ch.wsl.model.shared
+package ch.wsl.box.model.shared
 
 /**
   * Created by andreaminetti on 24/04/15.
@@ -17,6 +17,7 @@ case class JSONQuery(
 
 /**
   * Apply operator to column/value
+  *
   * @param column
   * @param operator
   * @param value
@@ -25,6 +26,7 @@ case class JSONQueryFilter(column:String, operator:Option[String], value:String)
 
 /**
   * Sort data by column
+  *
   * @param column
   * @param order valid values are asc/desc
   */

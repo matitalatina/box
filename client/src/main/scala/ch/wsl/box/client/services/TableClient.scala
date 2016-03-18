@@ -2,7 +2,7 @@ package ch.wsl.box.client.services
 
 import ch.wsl.box.client.configs.Path
 import ch.wsl.box.client.model.JSONResponse
-import ch.wsl.model.shared._
+import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._

@@ -1,6 +1,6 @@
 package ch.wsl.rest
 
-import ch.wsl.model.shared.JSONField
+import ch.wsl.box.model.shared.JSONField
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 

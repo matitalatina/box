@@ -1,4 +1,4 @@
-package ch.wsl.model.shared
+package ch.wsl.box.model.shared
 
 /**
   * Created by andreaminetti on 03/03/16.

@@ -2,7 +2,7 @@ package ch.wsl.box.client.components
 
 import ch.wsl.box.client.controllers.CRUDController
 import ch.wsl.box.client.css.CommonStyles
-import ch.wsl.model.shared._
+import ch.wsl.box.model.shared._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{ReactComponentB, _}
 

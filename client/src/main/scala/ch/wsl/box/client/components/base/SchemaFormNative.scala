@@ -1,6 +1,6 @@
 package ch.wsl.box.client.components.base
 
-import ch.wsl.model.shared.JSONSchemaUI
+import ch.wsl.box.model.shared.JSONSchemaUI
 import io.circe.scalajs._
 import japgolly.scalajs.react.{React, ReactComponentU_, ReactNode}
 import io.circe._

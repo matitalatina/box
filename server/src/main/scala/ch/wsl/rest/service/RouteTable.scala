@@ -1,7 +1,6 @@
 package ch.wsl.rest.service
 
-import ch.wsl.model.shared.JSONQuery
-import ch.wsl.model.shared.JSONCount
+import ch.wsl.box.model.shared.{JSONQuery, JSONCount}
 import ch.wsl.rest.logic._
 import org.json4s.JsonAST._
 import slick.driver.PostgresDriver.api._

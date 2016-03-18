@@ -1,6 +1,6 @@
 package ch.wsl.rest.logic
 
-import ch.wsl.model.shared.{JSONFieldOptions, JSONFieldMap, JSONFieldHTTPOption, JSONField}
+import ch.wsl.box.model.shared.{JSONFieldMap, JSONFieldHTTPOption, JSONFieldOptions, JSONField}
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 

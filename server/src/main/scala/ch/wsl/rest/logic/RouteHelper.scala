@@ -1,7 +1,7 @@
 package ch.wsl.rest.logic
 
-import ch.wsl.model.shared.JSONQuery
-import ch.wsl.model.shared.JSONResult
+import ch.wsl.box.model.shared.JSONQuery
+import ch.wsl.box.model.shared.JSONResult
 import slick.driver.PostgresDriver.api._
 import slick.lifted.{ColumnOrdered, Query, Rep, TableQuery}
 import spray.httpx.marshalling.Marshaller

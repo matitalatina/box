@@ -1,7 +1,8 @@
 package ch.wsl.box.client.controllers
 
 import ch.wsl.box.client.services.TableClient
-import ch.wsl.model.shared._
+import ch.wsl.box.model.shared.{Table, JSONQuery}
+import ch.wsl.box.model.shared._
 import japgolly.scalajs.react.{Callback, CallbackTo}
 
 import scala.concurrent.ExecutionContext.Implicits.global

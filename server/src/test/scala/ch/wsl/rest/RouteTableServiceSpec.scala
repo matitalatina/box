@@ -1,6 +1,6 @@
 package ch.wsl.rest
 
-import ch.wsl.model.shared._
+import ch.wsl.box.model.shared._
 import ch.wsl.rest.logic._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
