@@ -1,4 +1,4 @@
-package ch.wsl.rest.logic
+package ch.wsl.box.rest.logic
 
 import slick.lifted.{AbstractTable, TableQuery}
 import scala.reflect.runtime.universe._

@@ -1,4 +1,4 @@
-package ch.wsl.rest.service
+package ch.wsl.box.rest.service
 
 //https://gist.github.com/joseraya/176821d856b43b1cfe19
 

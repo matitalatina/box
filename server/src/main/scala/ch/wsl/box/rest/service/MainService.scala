@@ -1,5 +1,4 @@
-package ch.wsl.rest.service
-
+package ch.wsl.box.rest.service
 
 import spray.http.StatusCodes
 import akka.actor.Actor

@@ -1,4 +1,4 @@
-package ch.wsl.rest
+package ch.wsl.box.rest
 
 import akka.actor.ActorSystem
 import ch.wsl.rest.service.{RouteRoot, MainService}

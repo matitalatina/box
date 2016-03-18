@@ -1,6 +1,5 @@
-package ch.wsl.rest.logic
+package ch.wsl.box.rest.logic
 
-import slick.driver.PostgresDriver
 import slick.driver.PostgresDriver.api._
 
 trait DBFilters {

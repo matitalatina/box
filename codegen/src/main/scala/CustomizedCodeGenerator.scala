@@ -1,5 +1,4 @@
-
-package ch.wsl.codegen
+package ch.wsl.box.codegen
 
 import net.ceedubs.ficus.Ficus._
 import slick.codegen.OutputHelpers
@@ -97,7 +96,7 @@ object CustomizedCodeGenerator {
     gen.writeToFile(
       "slick.driver.PostgresDriver",
       args(0),
-      "ch.wsl.model",
+      "ch.wsl.box.model",
       "Tables",
       "Tables.scala"
     )
@@ -111,10 +110,10 @@ object CustomizedCodeGenerator {
 
     routeGen.writeToFile(
       args(0),
-      "ch.wsl.rest.service",
+      "ch.wsl.box.rest.service",
       "GeneratedRoutes",
       "GeneratedRoutes.scala",
-      "ch.wsl.model.tables"
+      "ch.wsl.box.model.tables"
     )
 
 

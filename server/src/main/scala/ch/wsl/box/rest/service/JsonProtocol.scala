@@ -1,8 +1,8 @@
-package ch.wsl.rest.service
+package ch.wsl.box.rest.service
 
 import org.json4s.{Formats, DefaultFormats}
 import spray.httpx.{Json4sSupport, LiftJsonSupport}
-import ch.wsl.model.tables._
+import ch.wsl.box.model.tables._
 
 
 /**

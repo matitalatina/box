@@ -1,13 +1,6 @@
-package ch.wsl.rest.logic
+package ch.wsl.box.rest.logic
 
-import ch.wsl.rest.service.Auth
-import com.typesafe.config.{ConfigFactory, Config}
-import slick.driver.PostgresDriver
-import PostgresDriver.api._
-import net.ceedubs.ficus.Ficus._
-
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import slick.driver.PostgresDriver.api._
 
 
 

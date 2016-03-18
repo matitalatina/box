@@ -1,7 +1,7 @@
-package ch.wsl.rest.service
+package ch.wsl.box.rest.service
 
-import ch.wsl.rest.logic.Forms
-import ch.wsl.rest.service.Auth.CustomUserPassAuthenticator
+import ch.wsl.box.rest.logic.Forms
+import Auth.CustomUserPassAuthenticator
 import spray.routing.PathMatchers.Segment
 import spray.routing._
 import spray.routing.authentication.BasicAuth

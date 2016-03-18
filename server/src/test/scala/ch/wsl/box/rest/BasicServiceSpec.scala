@@ -1,5 +1,4 @@
-package ch.wsl.rest
-
+package ch.wsl.box.rest
 
 import ch.wsl.rest.service.{JsonProtocol, MainService}
 import org.junit.runner.RunWith

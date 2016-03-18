@@ -87,9 +87,9 @@ object Build extends sbt.Build {
   lazy val slick = TaskKey[Seq[File]]("gen-tables")
   lazy val slickCodeGenTask = (sourceManaged, dependencyClasspath in Compile, runner in Compile, streams) map { (dir, cp, r, s) =>
     val outputDir = (dir / "slick").getPath // place generated files in sbt's managed sources folder
-    toError(r.run("ch.wsl.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log))
-    val fname = outputDir + "/ch/wsl/model/Tables.scala"
-    val rname = outputDir + "/ch/wsl/rest/service/GeneratedRoutes.scala"
+    toError(r.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log))
+    val fname = outputDir + "/ch/wsl/box/model/Tables.scala"
+    val rname = outputDir + "/ch/wsl/box/rest/service/GeneratedRoutes.scala"
     Seq(file(fname),file(rname))
   }
 }

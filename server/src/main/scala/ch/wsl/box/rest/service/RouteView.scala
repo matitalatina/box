@@ -1,7 +1,7 @@
-package ch.wsl.rest.service
+package ch.wsl.box.rest.service
 
 import ch.wsl.box.model.shared.JSONQuery
-import ch.wsl.rest.logic.{RouteHelper, JSONForm, JSONSchemas}
+import ch.wsl.box.rest.logic.{RouteHelper, JSONForm, JSONSchemas}
 import org.json4s.JsonAST._
 import slick.driver.PostgresDriver.api._
 import spray.httpx.marshalling.Marshaller

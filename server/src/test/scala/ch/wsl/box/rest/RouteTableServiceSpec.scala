@@ -1,4 +1,4 @@
-package ch.wsl.rest
+package ch.wsl.box.rest
 
 import ch.wsl.box.model.shared._
 import ch.wsl.rest.logic._

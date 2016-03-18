@@ -1,4 +1,4 @@
-package ch.wsl.rest.logic
+package ch.wsl.box.rest.logic
 
 import ch.wsl.box.model.shared.JSONQuery
 import ch.wsl.box.model.shared.JSONResult
@@ -15,7 +15,7 @@ import scala.concurrent.Future
   */
 class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T]) extends UglyDBFilters {
 
-  import ch.wsl.rest.logic.EnhancedTable._ //import col select
+  import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
   def find(query:JSONQuery)(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Future[JSONResult[M]] = {
     val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) =>

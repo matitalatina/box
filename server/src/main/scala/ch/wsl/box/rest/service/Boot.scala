@@ -1,12 +1,11 @@
-package ch.wsl.rest.service
+package ch.wsl.box.rest.service
 
 import akka.actor.{ActorSystem, Props}
 import akka.io.IO
-import ch.qos.logback.classic.Logger
-import com.typesafe.config.{ConfigFactory, Config}
+import com.typesafe.config.{Config, ConfigFactory}
+import net.ceedubs.ficus.Ficus._
 import org.slf4j.LoggerFactory
 import spray.can.Http
-import net.ceedubs.ficus.Ficus._
 
 
 

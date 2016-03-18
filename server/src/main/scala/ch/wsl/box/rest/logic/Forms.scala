@@ -1,4 +1,4 @@
-package ch.wsl.rest.logic
+package ch.wsl.box.rest.logic
 
 import ch.wsl.box.model.shared.JSONField
 
