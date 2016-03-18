@@ -27,14 +27,14 @@ case class Inserts(controller:CRUDController) {
     }
 
     def onSubmit(s:SchemaFormState):Unit = {
-      Callback.log("Updating") >>
+      Callback.log("Inserting") >>
       controller.onInsert(s.formData) >>
       controller.routeTo(controller.listContainer)
     }.runNow()
 
     def render(s:State) = {
       <.div(CommonStyles.row,
-        <.div(CommonStyles.fullWidth,SchemaForm(SchemaForm.Props(s.schema,s.ui,onSubmit)))
+        <.div(CommonStyles.fullWidth,SchemaForm(SchemaForm.Props(s.schema, s.ui,onSubmit)))
       )
     }
 
