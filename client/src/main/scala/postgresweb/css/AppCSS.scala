@@ -1,6 +1,6 @@
 package postgresweb.css
 
-import postgresweb.components.Tables
+import postgresweb.components.{WindowComponent, Tables}
 
 import scalacss.ScalaCssReact._
 import scalacss.mutable.GlobalRegistry
@@ -12,6 +12,7 @@ object AppCSS {
     GlobalRegistry.register(
       GlobalStyle,
       Tables.Style,
+      WindowComponent.Style,
       CommonStyles
     )
     GlobalRegistry.onRegistration(_.addToDocument())

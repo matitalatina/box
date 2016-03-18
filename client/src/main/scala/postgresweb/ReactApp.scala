@@ -13,7 +13,7 @@ object ReactApp extends JSApp {
   @JSExport
   override def main(): Unit = {
     AppCSS.load
-    AppRouter.router().render(dom.document.body)
+    AppRouter.router().render(dom.document.getElementById("box-app"))
   }
 
 }

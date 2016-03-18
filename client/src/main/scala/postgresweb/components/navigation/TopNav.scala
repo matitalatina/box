@@ -47,6 +47,9 @@ object TopNav {
   //inizializzazione del componente
   val component = ReactComponentB[Props]("TopNav")
     .render_P { P =>
+
+      println(P.controller.topMenu.map(_.name))
+
       <.header( Style.header,
         <.div( Style.row,
           <.div(CommonStyles.title, "PostgresRest UI")
@@ -56,10 +59,12 @@ object TopNav {
         )
       )
     }
-    .configure(Reusability.shouldComponentUpdate)
     .build
 
-  def apply(props: Props, ref: js.UndefOr[String] = "", key: js.Any = {}) = component.set(key, ref)(props)
+  def apply(props: Props, ref: js.UndefOr[String] = "", key: js.Any = {}) = {
+    println("Creating topnav")
+    component.set(key, ref)(props)
+  }
 
 }
 

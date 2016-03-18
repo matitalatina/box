@@ -5,6 +5,7 @@ import ch.wsl.model.shared._
 import japgolly.scalajs.react.vdom.ReactTagOf
 import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
 import japgolly.scalajs.react.extra.router.RouterCtl
+import org.scalajs.dom
 import org.scalajs.dom.html.Anchor
 import postgresweb.model.Menu
 
@@ -34,6 +35,7 @@ trait Controller {
     Callback.log(routingMessage) >>
     routeController.set(c)
   }
+
 
   def topMenu:Vector[Menu] = Vector()
 

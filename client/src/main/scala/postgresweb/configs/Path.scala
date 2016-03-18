@@ -8,9 +8,9 @@ object Path {
 
   val models = Config.endpoint + "models"
 
-  def forModel(model:String) = new PathBuilder(model)
+  def forModel(model:String) = new ModelPathBuilder(model)
 
-  case class PathBuilder(model:String) {
+  case class ModelPathBuilder(model:String) {
     def list = Config.endpoint + model + "/list"
     def schema = Config.endpoint + model + "/schema"
     def form = Config.endpoint + model + "/form"
@@ -20,6 +20,12 @@ object Path {
     def update(i:String) = Config.endpoint + model + "/" + i
     def insert = Config.endpoint + model
     def firsts = Config.endpoint + model
+  }
+
+  def forForms(model:String) = ???
+
+  case class FormPathBuilder(model:String) {
+    def list = Config.endpoint + "forms/" + model
   }
 
 }

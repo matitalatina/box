@@ -14,6 +14,12 @@ object CommonStyles extends StyleSheet.Inline {
 
   val layout:TagMod = style(addClassNames("mdl-layout","mdl-js-layout","mdl-layout--fixed-drawer","mdl-layout--fixed-header","mdl-layout--fixed-tabs"))
 
+  val layoutCenter:TagMod = style(
+    addClassNames("mdl-layout","mdl-js-layout","mdl-color--grey-100"),
+    alignItems.center,
+    justifyContent.center
+  )
+
   val spacer:TagMod = style(addClassNames("mdl-layout-spacer"))
   val navigation:TagMod = style(addClassNames("mdl-navigation"))
   val navigationLink:TagMod = style(addClassNames("mdl-navigation__link"))
@@ -34,5 +40,11 @@ object CommonStyles extends StyleSheet.Inline {
   val card:TagMod = style(addClassNames("mdl-card","mdl-shadow--2dp"))
 
   val scroll:TagMod = style(overflow.auto)
+
+  val button:TagMod = style(
+    addClassNames("mdl-button","mdl-js-button","mdl-button--raised","mdl-button--colored")
+  )
+
+  val action:TagMod = style(addClassNames("mdl-card__actions","mdl-card--border"))
 
 }

@@ -19,19 +19,6 @@ object SchemaForm {
 
 
 
-  object Style extends StyleSheet.Inline{
-
-    import dsl._
-
-    val button = style(
-      addClassNames("mdl-button","mdl-js-button","mdl-button--raised","mdl-button--colored")
-    )
-
-    val action = style(addClassNames("mdl-card__actions","mdl-card--border"))
-
-
-  }
-
   case class Props(schema:String, ui:JSONSchemaUI, onSubmit: SchemaFormState => Unit, formData:Option[js.Any] = None)
 
 
@@ -39,8 +26,8 @@ object SchemaForm {
     .render_P { P =>
       <.div(CommonStyles.card,
         SchemaFormNative(P.schema,Some(P.ui),onSubmit = Some(P.onSubmit),formData = P.formData)(
-          <.div(Style.action,
-            <.button(Style.button,^.`type` := "submit","Submit")
+          <.div(CommonStyles.action,
+            <.button(CommonStyles.button,^.`type` := "submit","Submit")
           )
         )
       )

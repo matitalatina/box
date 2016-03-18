@@ -4,6 +4,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.Reusability
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
+import postgresweb.Auth
 import postgresweb.controllers.Controller
 import postgresweb.css.CommonStyles
 import postgresweb.routes.AppRouter
@@ -32,6 +33,10 @@ object LeftNav {
   class Backend(scope:BackendScope[Props,State]) {
 
 
+    def logout(p:Props):Callback = {
+      Auth.logout() >>
+      p.ctrl.routeTo(p.ctrl.homeContainer)
+    }
 
     def render(p:Props,s:State) = {
 
@@ -45,6 +50,9 @@ object LeftNav {
         <.span(CommonStyles.title, p.ctrl.leftMenuTitle),
         <.nav(CommonStyles.navigation,
           s.elements.map(e => <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.leftMenuClick(e)))
+        ),
+        <.div(
+          <.button(CommonStyles.button,"Logout",^.onClick --> logout(p))
         )
       )
     }

@@ -1,0 +1,110 @@
+package postgresweb.components
+
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.prefix_<^._
+import postgresweb.Auth
+import postgresweb.components.WindowComponent.Style._
+import postgresweb.controllers.Controller
+import postgresweb.css.CommonStyles
+
+import scala.concurrent.Future
+import scalacss.Defaults._
+import scalacss.ScalaCssReact._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
+
+
+/**
+  * Created by andreaminetti on 17/03/16.
+  */
+case class LoginComponent(controller:Controller) {
+
+  object Style extends StyleSheet.Inline {
+    import dsl._
+    val contentCentred = style(
+      addClassNames("mdl-layout__content"),
+      padding(24.px)
+    )
+
+    val topCard = style(addClassNames("mdl-card__title","mdl-color--primary","mdl-color-text--white"))
+    val topCardTitle = style(addClassNames("mdl-card__title-text"))
+    val cardContent = style(addClassNames("mdl-card__supporting-text"))
+    val textFieldDiv = style(addClassNames("mdl-textfield","mdl-js-textfield"))
+    val textFieldInput = style(addClassNames("mdl-textfield__input"))
+    val textFieldLabel = style(addClassNames("mdl-textfield__label"))
+
+
+  }
+
+  case class State(username: String, password: String)
+
+  class Backend(scope: BackendScope[Unit, State]) {
+    def onChangeUsername(e: ReactEventI) = {
+      val value = e.target.value
+      e.preventDefaultCB >>
+      scope.modState { _.copy(username = value) }
+    }
+
+    def onChangePassword(e: ReactEventI) = {
+      val value = e.target.value
+      e.preventDefaultCB >>
+      scope.modState(_.copy(password = value))
+    }
+
+
+
+    def handleSubmit(e: ReactEventI):Callback = for {
+        _ <- Callback.log("logging in")
+        _ <- e.preventDefaultCB
+        state <- scope.state
+        auth <- {
+          println(state)
+          Auth.login(state.username,state.password)
+        }
+      } yield Unit
+
+
+
+
+    def render(state: State) =
+      <.div(CommonStyles.layoutCenter,
+        <.main(Style.contentCentred,
+          <.div(CommonStyles.card,
+            <.div(Style.topCard,
+              <.h2(Style.topCardTitle,"Box Login")
+            ),
+            <.div(Style.cardContent,
+              <.form(^.onSubmit ==> handleSubmit,
+                <.div(Style.textFieldDiv,
+                  <.input(Style.textFieldInput, ^.`type` := "text", ^.id := "username", ^.onChange ==> onChangeUsername, ^.value := state.username),
+                  <.label(Style.textFieldLabel, ^.`for` := "username", "Username")
+                ),
+                <.div(Style.textFieldDiv,
+                  <.input(Style.textFieldInput, ^.`type` := "password", ^.id := "password", ^.onChange ==> onChangePassword),
+                  <.label(Style.textFieldLabel, ^.`for` := "password", "Password")
+                )
+              )
+            ),
+            <.div(CommonStyles.action,
+              <.button(CommonStyles.button, "Log In", ^.`type` := "submit", ^.onClick ==> handleSubmit)
+            )
+          )
+        )
+      )
+
+  }
+
+  val component = ReactComponentB[Unit]("LoginComponent")
+    .initialState(State("",""))
+    .renderBackend[Backend]
+    .componentDidMount{ c =>
+      Callback{
+        scalajs.js.Dynamic.global.componentHandler.upgradeDom()
+      }
+    }
+    .buildU
+
+  def apply() = component()
+
+}
