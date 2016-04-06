@@ -40,7 +40,9 @@ object JSONSchemas {
 
 
   def keysOf(table:String):Future[Seq[String]] = {
+    println("Getting " + table + " keys")
     new PgInformationSchema(table,Auth.adminDB).pk.map { pks =>
+      println(pks)
       pks.map(_.slickfy)
     }
 
@@ -66,10 +68,10 @@ object JSONSchemas {
     "smallint" -> "number",
     "bigint" -> "number",
     "double precision" -> "number",
-    "timestamp without time zone" -> "string",
+    "timestamp without time zone" -> "date-time",
     "date" -> "string",
     "real" -> "number",
-    "boolean" -> "checkbox",
+    "boolean" -> "boolean",
     "bytea" -> "string",
     "numeric" -> "number",
     "text" -> "string",

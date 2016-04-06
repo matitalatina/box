@@ -9,7 +9,7 @@ import org.specs2.runner.JUnitRunner
 class FormServiceSpec extends BaseSpec {
 
 
-  import ch.wsl.rest.service.JsonProtocol._
+  import ch.wsl.box.rest.service.JsonProtocol._
 
   "Form masks" should {
 

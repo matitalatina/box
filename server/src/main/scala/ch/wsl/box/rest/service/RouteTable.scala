@@ -40,8 +40,11 @@ trait RouteTable extends HttpService {
           } ~
             put {
               entity(as[M]) { e =>
+                println(e)
                 val result = db.run {
-                  table.insertOrUpdate(e)
+                  val action = table.update(e)
+                  println(action.statements)
+                  action
                 }.map(_ => e)
                 complete(result) //result should be in the same future as e
               }

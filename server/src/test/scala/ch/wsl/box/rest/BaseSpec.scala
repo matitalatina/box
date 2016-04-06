@@ -1,7 +1,7 @@
 package ch.wsl.box.rest
 
 import akka.actor.ActorSystem
-import ch.wsl.rest.service.{RouteRoot, MainService}
+import ch.wsl.box.rest.service.{RouteRoot, MainService}
 import org.specs2.mutable.Specification
 import org.specs2.time.NoTimeConversions
 import spray.http.BasicHttpCredentials

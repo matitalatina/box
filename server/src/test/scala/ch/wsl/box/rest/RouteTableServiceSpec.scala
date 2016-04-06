@@ -1,7 +1,7 @@
 package ch.wsl.box.rest
 
 import ch.wsl.box.model.shared._
-import ch.wsl.rest.logic._
+import ch.wsl.box.rest.logic._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 
@@ -17,7 +17,7 @@ import ch.wsl.model.tablesTestDB._
 class RouteTableServiceSpec extends BaseSpec {
 
 
-  import ch.wsl.rest.service.JsonProtocol._
+  import ch.wsl.box.rest.service.JsonProtocol._
 
   //preparation
   val jsonA = """{ "id": 1,
@@ -76,19 +76,19 @@ class RouteTableServiceSpec extends BaseSpec {
     }
 
     "return correct row" in {
-      get(endpoint+"/a/"+expectedA.id) {
+      get(endpoint+"/a/id/id::"+expectedA.id) {
         responseAs[ARow] === expectedA
       }
     }
 
     "update a row" in {
-      put(endpoint + "/a/"+expectedA.id,parse(jsonAmod)) {
+      put(endpoint + "/a/id/id::"+expectedA.id,parse(jsonAmod)) {
         handled must beTrue
       }
     }
 
     "return updated row" in {
-      get(endpoint+"/a/"+expectedA.id) {
+      get(endpoint+"/a/id/id::"+expectedA.id) {
         responseAs[ARow] === expectedAmod
       }
     }
@@ -106,7 +106,7 @@ class RouteTableServiceSpec extends BaseSpec {
     }
 
     "delete row" in {
-      delete(endpoint + "/a/"+expectedA.id) {
+      delete(endpoint + "/a/id/id::"+expectedA.id) {
         handled must beTrue
         responseAs[JSONCount].count === 1
       }

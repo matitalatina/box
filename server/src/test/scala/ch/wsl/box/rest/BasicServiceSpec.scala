@@ -1,6 +1,6 @@
 package ch.wsl.box.rest
 
-import ch.wsl.rest.service.{JsonProtocol, MainService}
+import ch.wsl.box.rest.service.{JsonProtocol, MainService}
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import spray.http.BasicHttpCredentials
@@ -15,7 +15,7 @@ class BasicServiceSpec extends BaseSpec {
 
     "Respond with greeting on root path" in {
       Get("/") ~> route ~> check {
-        response.toString must contain("Postgres-rest-UI")
+        response.toString must contain("Postgres-UI")
       }
     }
 
