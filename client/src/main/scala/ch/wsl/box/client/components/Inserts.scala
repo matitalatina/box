@@ -15,6 +15,8 @@ case class Inserts(controller:CRUDController) {
 
   case class State(schema:String, ui:JSONSchemaUI)
 
+  val initialState = State("{}",JSONSchemaUI.empty)
+
   class Backend(scope:BackendScope[Unit,State]) {
 
 
@@ -32,9 +34,11 @@ case class Inserts(controller:CRUDController) {
     }.runNow()
 
     def render(s:State) = {
-      <.div(CommonStyles.row,
-        <.div(CommonStyles.fullWidth,SchemaForm(SchemaForm.Props(s.schema, s.ui,onSubmit)))
-      )
+      if(s != initialState) {
+        <.div(CommonStyles.row,
+          <.div(CommonStyles.fullWidth, SchemaForm(SchemaForm.Props(s.schema, s.ui, onSubmit)))
+        )
+      } else <.div()
     }
 
   }
@@ -42,7 +46,7 @@ case class Inserts(controller:CRUDController) {
 
 
   val component = ReactComponentB[Unit]("ItemsInfo")
-    .initialState(State("{}",JSONSchemaUI.empty))
+    .initialState(initialState)
     .backend(s => new Backend(s))
     .renderBackend
     .buildU

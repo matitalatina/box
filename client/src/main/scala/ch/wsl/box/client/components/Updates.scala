@@ -17,6 +17,8 @@ case class Updates(controller:CRUDController) {
 
   case class State(schema:String, ui:JSONSchemaUI, value: Option[js.Any] = None)
 
+  val initialState = State("{}",JSONSchemaUI.empty)
+
   class Backend(scope:BackendScope[Unit,State]) {
 
 
@@ -39,17 +41,18 @@ case class Updates(controller:CRUDController) {
 
 
     def render(s:State) = {
-
-      <.div(CommonStyles.row,
-        <.div(CommonStyles.fullWidth,SchemaForm(SchemaForm.Props(s.schema,s.ui,onSubmit,s.value)))
-      )
+      if(s != initialState) {
+        <.div(CommonStyles.row,
+          <.div(CommonStyles.fullWidth, SchemaForm(SchemaForm.Props(s.schema, s.ui, onSubmit, s.value)))
+        )
+      } else <.div()
     }
   }
 
 
 
   val component = ReactComponentB[Unit]("ItemsInfo")
-    .initialState(State("{}",JSONSchemaUI.empty))
+    .initialState(initialState)
     .renderBackend[Backend]
     .buildU
 

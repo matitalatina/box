@@ -68,7 +68,7 @@ object JSONSchemas {
     "smallint" -> "number",
     "bigint" -> "number",
     "double precision" -> "number",
-    "timestamp without time zone" -> "date-time",
+    "timestamp without time zone" -> "string",
     "date" -> "string",
     "real" -> "number",
     "boolean" -> "boolean",
