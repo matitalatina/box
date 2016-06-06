@@ -109,7 +109,8 @@ object Settings {
     "io.circe" %%% "circe-generic" % versions.circe,
     "io.circe" %%% "circe-parser" % versions.circe,
     "io.circe" %%% "circe-scalajs" % versions.circe,
-    "org.scalatest" %%% "scalatest" % versions.scalatest % "test"
+    "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
+    "io.github.widok" %%% "scala-js-momentjs" % "0.1.5"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

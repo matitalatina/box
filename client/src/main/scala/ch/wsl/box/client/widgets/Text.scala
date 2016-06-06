@@ -24,7 +24,7 @@ object Text extends Widget {
     println("test input render")
     js.Dynamic.global.console.log(P)
 
-    <.input(^.`type` := "text", ^.value := P.value.toString)
+    <.input(^.`type` := "text", ^.defaultValue := P.value.toString)
 
   }
 

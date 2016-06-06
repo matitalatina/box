@@ -23,7 +23,7 @@ object Datepicker extends Widget {
   override def render: (WidgetProps) => ReactElement = { P =>
 
 
-    <.input(^.`type` := "text", ^.`class` := className, ^.value := P.value.toString)
+    <.input(^.`type` := "text", ^.`class` := className, ^.defaultValue := P.value.toString)
 
   }
 
@@ -40,7 +40,7 @@ object Datepicker extends Widget {
         org.scalajs.dom.console.log("Selected")
       }
       override val field: Node = org.scalajs.dom.document.getElementsByClassName(className).item(0)
-      override val format: String = "D MMM YYYY"
+      override val format: String = "YYYY-MM-DD"
     }.toDict()
 
     new Pikaday(opts)
@@ -61,6 +61,10 @@ trait PikadayOptions{
   }
 }
 
+/**
+  * https://github.com/dbushell/Pikaday
+  * @param opts
+  */
 @js.native
 class Pikaday(opts:js.Dictionary[js.Any]) extends js.Object {
 
