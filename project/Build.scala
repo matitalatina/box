@@ -67,6 +67,17 @@ object Build extends sbt.Build {
     .dependsOn(sharedJS)
 
 
+  lazy val serve = taskKey[Unit]("start server")
+
+
+  lazy val root: Project = (project in file("."))
+    .settings(
+      serve := {
+        (fastOptJS in Compile in client).toTask.value
+        (run in Compile in server).toTask("").value
+      }
+    )
+
   // Client projects (just one in this case)
   lazy val clients = Seq(client)
 
@@ -92,4 +103,6 @@ object Build extends sbt.Build {
     val rname = outputDir + "/ch/wsl/box/rest/service/GeneratedRoutes.scala"
     Seq(file(fname),file(rname))
   }
+
+
 }
