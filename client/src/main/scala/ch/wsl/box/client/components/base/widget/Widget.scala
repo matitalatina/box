@@ -1,18 +1,32 @@
 package ch.wsl.box.client.components.base.widget
 
+import ch.wsl.box.model.shared.JSONSchema
 import japgolly.scalajs.react.ReactElement
 
 import scala.scalajs.js
+import js.JSConverters._
 
 /**
   * Created by andreaminetti on 06/04/16.
   */
-trait Widget[T <: Widget.Props] {
+trait Widget {
 
   def name:String
 
-  def render:(js.Dynamic => ReactElement)
+  def render:(WidgetProps => ReactElement)
 
+
+}
+
+@js.native
+trait WidgetProps extends js.Object{
+  def schema:js.Any
+  def value:js.UndefOr[js.Any]
+  def defaultValue:js.UndefOr[js.Any]
+  def required:Boolean
+  def onChange:js.Function
+  def placeholder:js.UndefOr[js.Any]
+  def options:js.Any
 }
 
 object Widget {
@@ -20,8 +34,7 @@ object Widget {
 
   def apply() = registred
 
-  def register[T <: Widget.Props](widget: Widget[T]) = registred.update(widget.name,widget.render)
+  def register(widget: Widget) = registred.update(widget.name,widget.render)
 
-  trait Props
 
 }

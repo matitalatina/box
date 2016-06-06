@@ -51,7 +51,7 @@ object JSONForm {
             )
           }
         }
-        case _ => JSONField(JSONSchemas.typesMapping(field.data_type),table = table, key = field.column_name.slickfy)
+        case _ => JSONField(JSONSchemas.typesMapping(field.data_type),table = table, key = field.column_name.slickfy, widget = Some("myinputwidget"))
       }
     }
 
