@@ -1,7 +1,9 @@
 package ch.wsl.box.client.components.base.widget
 
+
+import ch.wsl.box.client.widgets.Register
 import ch.wsl.box.model.shared.JSONSchema
-import japgolly.scalajs.react.ReactElement
+import japgolly.scalajs.react.{Callback, ReactElement}
 
 import scala.scalajs.js
 import js.JSConverters._
@@ -14,6 +16,13 @@ trait Widget {
   def name:String
 
   def render:(WidgetProps => ReactElement)
+
+  /**
+    * After render operations for widgets, usually called on custom class for widget
+    *
+    * @return
+    */
+  def mount:Callback
 
 
 }
@@ -30,11 +39,17 @@ trait WidgetProps extends js.Object{
 }
 
 object Widget {
-  private var registred:js.Dictionary[js.Function] = js.Dictionary()
 
-  def apply() = registred
 
-  def register(widget: Widget) = registred.update(widget.name,widget.render)
+  def apply() = {
+    val registred:js.Dictionary[js.Function] = js.Dictionary()
+    Register().foreach{ widget =>
+      registred.update(widget.name,widget.render)
+    }
+    registred
+  }
+
+  def mount:Callback = Register().map(_.mount).foldLeft(Callback.log("Widgets callbacks"))((i,o) => i >> o)
 
 
 }

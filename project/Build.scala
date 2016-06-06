@@ -68,6 +68,7 @@ object Build extends sbt.Build {
 
 
   lazy val serve = taskKey[Unit]("start server")
+  lazy val cleanAll = taskKey[Unit]("clean all projects")
 
 
   lazy val root: Project = (project in file("."))
@@ -75,6 +76,10 @@ object Build extends sbt.Build {
       serve := {
         (fastOptJS in Compile in client).toTask.value
         (run in Compile in server).toTask("").value
+      },
+      cleanAll := {
+        (clean in Compile in client).toTask.value
+        (clean in Compile in server).toTask.value
       }
     )
 

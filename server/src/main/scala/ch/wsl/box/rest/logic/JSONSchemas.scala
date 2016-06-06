@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.model.shared.{JSONSchemaL2, JSONSchema}
+import ch.wsl.box.model.shared.{WidgetsNames, JSONSchemaL2, JSONSchema}
 import ch.wsl.box.rest.service.Auth
 
 import scala.concurrent.Future
@@ -76,6 +76,23 @@ object JSONSchemas {
     "numeric" -> "number",
     "text" -> "string",
     "USER-DEFINED" -> "string"
+  )
+
+  val widgetMapping = Map(
+    "integer" -> None,
+    "character varying" -> Some(WidgetsNames.textinput),
+    "character" -> Some(WidgetsNames.textinput),
+    "smallint" -> None,
+    "bigint" -> None,
+    "double precision" -> None,
+    "timestamp without time zone" -> None,
+    "date" -> Some(WidgetsNames.datepicker),
+    "real" -> None,
+    "boolean" -> None,
+    "bytea" -> None,
+    "numeric" -> None,
+    "text" -> Some(WidgetsNames.textinput),
+    "USER-DEFINED" -> None
   )
 
 }

@@ -1,6 +1,5 @@
 package ch.wsl.box.client.components.base
 
-import ch.wsl.box.client.components.base.form.Input
 import ch.wsl.box.client.components.base.widget.Widget
 import ch.wsl.box.client.css.CommonStyles
 import ch.wsl.box.model.shared.JSONSchemaUI
@@ -16,8 +15,6 @@ import scala.scalajs.js.{Any, UndefOr}
 object SchemaForm {
 
 
-  Widget.register(Input)
-
   case class Props(schema:String, ui:JSONSchemaUI, onSubmit: SchemaFormState => Unit, formData:Option[js.Any] = None)
 
 
@@ -31,6 +28,7 @@ object SchemaForm {
         )
       )
     }
+    .componentDidMountCB(Widget.mount)
     .build
 
 
