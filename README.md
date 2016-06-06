@@ -1,6 +1,13 @@
 Postgres REST UI
 ============================
 
+Usage
+-----
+```
+sbt serve
+```
+Serve task compiles both client (with fastOptJS) and server then starts the server
+
 Modules
 ------
 - codegen: Code generation from postgres database using slick codegen library
@@ -29,5 +36,5 @@ Knows Issues
 
 If on compile time `StackOverflow` errors appears use the following parameters:
 ```
-sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:MaxPermSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss3m run
+sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:MaxPermSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss3m serve
 ```
