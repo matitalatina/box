@@ -3,9 +3,11 @@ package ch.wsl.box.client.widgets
 
 import ch.wsl.box.client.components.base.widget.{WidgetProps, Widget}
 import ch.wsl.box.model.shared.WidgetsNames
-import japgolly.scalajs.react.{Callback, ReactElement}
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import org.scalajs.dom.Node
+import org.scalajs.dom.raw.HTMLInputElement
+import org.widok.moment.Moment
 
 import scala.scalajs.js
 
@@ -20,12 +22,26 @@ object Datepicker extends Widget {
 
   private val className = "widget-pickadate"
 
-  override def render: (WidgetProps) => ReactElement = { P =>
-
-
-    <.input(^.`type` := "text", ^.`class` := className, ^.defaultValue := P.value.toString)
-
+  def onChange(wp:WidgetProps)(e: ReactEventI): Callback = Callback{
+    wp.onChange(e.target.value)
   }
+
+  private var wp:Option[WidgetProps] = None
+
+  override def render: (WidgetProps) => ReactElement = { P =>
+    wp = Some(P)
+    <.input(^.`type` := "text", ^.`class` := className, ^.defaultValue := P.value.map(_.toString).getOrElse(""), ^.onChange ==> onChange(P))
+  }
+
+
+  def opts(wp:WidgetProps) = new PikadayOptions {
+    override def onSelect:(js.Any) => Unit = (date) => {
+      val d = Moment(date.toString).format(format)
+      wp.onChange(d)
+    }
+    override val field: Node = org.scalajs.dom.document.getElementsByClassName(className).item(0)
+    override val format: String = "YYYY-MM-DD"
+  }.toDict()
 
   /**
     * After render operations for widgets, usually called on custom class for widget
@@ -33,24 +49,14 @@ object Datepicker extends Widget {
     * @return
     */
   override def mount: Callback = Callback{
-
-
-    val opts = new PikadayOptions {
-      override def onSelect(): Unit = {
-        org.scalajs.dom.console.log("Selected")
-      }
-      override val field: Node = org.scalajs.dom.document.getElementsByClassName(className).item(0)
-      override val format: String = "YYYY-MM-DD"
-    }.toDict()
-
-    new Pikaday(opts)
+    wp.foreach( p => new Pikaday(opts(p)))
   } >> Callback.log("Pikaday mounted")
 }
 
 trait PikadayOptions{
   val field:Node
   val format:String
-  def onSelect():Unit
+  def onSelect:(js.Any) => Unit
 
   def toDict():js.Dictionary[js.Any] = {
     val dict:js.Dictionary[js.Any] = js.Dictionary()
@@ -63,6 +69,7 @@ trait PikadayOptions{
 
 /**
   * https://github.com/dbushell/Pikaday
+ *
   * @param opts
   */
 @js.native

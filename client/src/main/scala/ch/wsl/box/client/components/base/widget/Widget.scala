@@ -3,7 +3,7 @@ package ch.wsl.box.client.components.base.widget
 
 import ch.wsl.box.client.widgets.Register
 import ch.wsl.box.model.shared.JSONSchema
-import japgolly.scalajs.react.{Callback, ReactElement}
+import japgolly.scalajs.react._
 
 import scala.scalajs.js
 import js.JSConverters._
@@ -33,7 +33,7 @@ trait WidgetProps extends js.Object{
   def value:js.UndefOr[js.Any]
   def defaultValue:js.UndefOr[js.Any]
   def required:Boolean
-  def onChange:js.Function
+  def onChange(v:js.Any):js.Function
   def placeholder:js.UndefOr[js.Any]
   def options:js.Any
 }

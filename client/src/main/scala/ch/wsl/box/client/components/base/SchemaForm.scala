@@ -18,15 +18,23 @@ object SchemaForm {
   case class Props(schema:String, ui:JSONSchemaUI, onSubmit: SchemaFormState => Unit, formData:Option[js.Any] = None)
 
 
+  def onChange():Unit = println("changed something")
+
   val component = ReactComponentB[Props]("SchemaForm")
     .render_P { P =>
       <.div(CommonStyles.card,
-        SchemaFormNative(P.schema,Some(P.ui),onSubmit = Some(P.onSubmit),formData = P.formData, widgets = Some(Widget()))(
+        SchemaFormNative(P.schema,Some(P.ui),onSubmit = Some(P.onSubmit),formData = P.formData, onChange = Some(onChange), widgets = Some(Widget()))(
           <.div(CommonStyles.action,
             <.button(CommonStyles.button,^.`type` := "submit","Submit")
           )
+        ),
+        <.hr(),
+        <.div(
+          <.h3("Debug"),
+          <.div(P.formData.toString)
         )
       )
+
     }
     .componentDidMountCB(Widget.mount)
     .build
