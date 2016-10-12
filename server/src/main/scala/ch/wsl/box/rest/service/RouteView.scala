@@ -32,7 +32,7 @@ trait RouteView {
 
     views = Set(name) ++ views
 
-    import CirceSupport._
+    import JSONSupport._
     import Directives._
     import io.circe.generic.auto._
 

@@ -4,7 +4,7 @@ import ch.wsl.box.client.components.{WindowComponent, Tables}
 import ch.wsl.box.client.components.WindowComponent
 
 import scalacss.ScalaCssReact._
-import scalacss.mutable.GlobalRegistry
+import scalacss.internal.mutable.GlobalRegistry
 import scalacss.Defaults._
 
 object AppCSS {

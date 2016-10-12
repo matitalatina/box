@@ -173,10 +173,9 @@ package object tables {
              |import akka.http.scaladsl.server.{Directives, Route}
              |import akka.stream.Materializer
              |import $modelPackages._
-             |import de.heikoseeberger.akkahttpcirce.CirceSupport
              |
              |trait $name extends RouteTable with RouteView {
-             |  import CirceSupport._
+             |  import JSONSupport._
              |  import Directives._
              |  import ch.wsl.box.rest.model.JsonImplicits._
              |  import io.circe.generic.auto._

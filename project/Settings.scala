@@ -45,28 +45,27 @@ object Settings {
 
     //Testing
     val specs2 = "3.7"
-    val junit = "4.8.1"
-    val scalatest = "3.0.0-M10"
-    val selenium = "2.28.0"
+    val junit = "4.12"
+    val scalatest = "3.0.0"
+    val selenium = "2.53.1"
 
     //logs
-    val logback = "1.1.1"
+    val logback = "1.1.7"
 
     //json parsers
-    val json4s = "3.3.0"
     val circe = "0.5.1"
 
     //database
-    val postgres = "9.4.1208"
+    val postgres = "9.4.1211"
     val slick = "3.1.1"
 
     //frontend
-    val scalaJSReact = "0.10.4"
-    val scalaCss = "0.3.1"
+    val scalaJSReact = "0.11.2"
+    val scalaCss = "0.5.0"
 
     //js
-    val reactJS = "0.14.7"
-    val materialDesign = "1.1.1"
+    val reactJS = "15.3.2"
+    val materialDesign = "1.2.1"
 
   }
 

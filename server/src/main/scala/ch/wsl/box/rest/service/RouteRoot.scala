@@ -4,7 +4,6 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.rest.logic.Forms
-import de.heikoseeberger.akkahttpcirce.CirceSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -21,7 +20,7 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with GeneratedRou
     */
   val route:Route = {
 
-    import CirceSupport._
+    import JSONSupport._
     import Directives._
     import ch.megard.akka.http.cors.CorsDirectives._
     import io.circe.generic.auto._

@@ -21,10 +21,10 @@ object Auth {
   private val localStorageLoggedKey = "box-auth-loggedin"
   private val loggedInTrue = "true"
 
-  def isLoggedIn = dom.localStorage.getItem(localStorageLoggedKey) == loggedInTrue
+  def isLoggedIn = dom.window.localStorage.getItem(localStorageLoggedKey) == loggedInTrue
 
   def auth:(String,String) =  {
-    ("Authorization" -> dom.localStorage.getItem(localStorageAuthKey))
+    ("Authorization" -> dom.window.localStorage.getItem(localStorageAuthKey))
     //("Authorization" -> basicAuthToken("andreaminetti", ""))
   }
 
@@ -32,18 +32,18 @@ object Auth {
 
     println(username)
 
-    dom.localStorage.setItem(localStorageAuthKey, basicAuthToken(username, password))
+    dom.window.localStorage.setItem(localStorageAuthKey, basicAuthToken(username, password))
 
     TableClient.models().map { m => //simple call to check if is logged in
-      dom.localStorage.setItem(localStorageLoggedKey,loggedInTrue)
+      dom.window.localStorage.setItem(localStorageLoggedKey,loggedInTrue)
       dom.window.location.reload()
       "ok"
     }
   }
 
   def logout():Callback = Callback{
-    dom.localStorage.removeItem(localStorageLoggedKey)
-    dom.localStorage.removeItem(localStorageAuthKey)
+    dom.window.localStorage.removeItem(localStorageLoggedKey)
+    dom.window.localStorage.removeItem(localStorageAuthKey)
   }
 
 }

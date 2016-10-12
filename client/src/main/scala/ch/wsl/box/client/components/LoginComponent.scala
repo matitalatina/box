@@ -6,6 +6,7 @@ import ch.wsl.box.client.services.Auth
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
 
+import scala.concurrent.Future
 import scalacss.Defaults._
 import scalacss.ScalaCssReact._
 
@@ -50,15 +51,17 @@ case class LoginComponent(controller:Controller) {
 
 
 
-    def handleSubmit(e: ReactEventI):Callback = for {
+    def handleSubmit(e: ReactEventI):Callback = {
+      for {
         _ <- Callback.log("logging in")
         _ <- e.preventDefaultCB
         state <- scope.state
         auth <- {
           println(state)
-          Auth.login(state.username,state.password)
+          Auth.login(state.username, state.password)
         }
-      } yield Unit
+      } yield auth
+    }.void
 
 
 

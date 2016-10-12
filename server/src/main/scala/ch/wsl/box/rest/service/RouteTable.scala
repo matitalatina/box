@@ -35,7 +35,7 @@ trait RouteTable {
     models = Set(name) ++ models
 
     val utils = new RouteHelper[T,M](name,table)
-    import CirceSupport._
+    import JSONSupport._
     import Directives._
     import io.circe.generic.auto._
 
