@@ -1,12 +1,16 @@
 package ch.wsl.box.rest.service
 
-import ch.wsl.box.model.shared.JSONQuery
+import akka.http.scaladsl.marshalling._
+import akka.http.scaladsl.unmarshalling._
+import akka.stream.Materializer
+import ch.wsl.box.model.shared.{JSONResult, JSONCount, JSONQuery}
 import ch.wsl.box.rest.logic.{RouteHelper, JSONForm, JSONSchemas}
-import org.json4s.JsonAST._
+import de.heikoseeberger.akkahttpcirce.CirceSupport
 import slick.driver.PostgresDriver.api._
-import spray.httpx.marshalling.Marshaller
-import spray.httpx.unmarshalling._
-import spray.routing._
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{Directives, Route}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -14,22 +18,30 @@ import scala.concurrent.Future
 /**
  * Created by andreaminetti on 16/02/16.
  */
-trait RouteView extends HttpService {
+trait RouteView {
 
   var views = Set[String]()
 
-  def view[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
+  def view[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit
+                                                                                              mat:Materializer,
+                                                                                              unmarshaller: FromRequestUnmarshaller[M],
+                                                                                              marshaller:ToResponseMarshaller[M],
+                                                                                              seqmarshaller: ToResponseMarshaller[Seq[M]],
+                                                                                              jsonmarshaller:ToResponseMarshaller[JSONResult[M]],
+                                                                                              db:Database):Route = {
 
     views = Set(name) ++ views
 
-    import JsonProtocol._
+    import CirceSupport._
+    import Directives._
+    import io.circe.generic.auto._
 
     val helper = new RouteHelper[T,M](name,table)
 
     path(name) {
       path("schema") {
         get {
-          complete{ JSONSchemas.of(name,db) }
+            complete{ JSONSchemas.of(name,db) }
         }
       } ~
         path("form") {
@@ -46,7 +58,7 @@ trait RouteView extends HttpService {
           get { ctx =>
 
             val result = db.run { table.length.result }.map{r =>
-              JObject(List(JField("count",JInt(r))))
+              JSONCount(r)
             }
             ctx.complete{ result }
           }

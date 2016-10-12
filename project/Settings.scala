@@ -35,15 +35,16 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.11.7"
-    val ficus = "1.2.0"
+    val scala = "2.11.8"
+    val ficus = "1.3.0"
 
     //HTTP actors
-    val spray = "1.3.3"
-    val akka = "2.3.9"
+    val akka = "2.4.11"
+    val akkaHttpJson = "1.10.1"
+    val akkaCors = "0.1.7"
 
     //Testing
-    val specs2 = "2.3.11"
+    val specs2 = "3.7"
     val junit = "4.8.1"
     val scalatest = "3.0.0-M10"
     val selenium = "2.28.0"
@@ -53,7 +54,7 @@ object Settings {
 
     //json parsers
     val json4s = "3.3.0"
-    val circe = "0.3.0"
+    val circe = "0.5.1"
 
     //database
     val postgres = "9.4.1208"
@@ -89,11 +90,13 @@ object Settings {
   /** Dependencies only used by the JVM project */
   val jvmDependencies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(
     "org.scala-lang"           % "scala-reflect"     % versions.scala,
-    "io.spray"                 %% "spray-can"        % versions.spray,
-    "io.spray"                 %% "spray-routing"    % versions.spray,
-    "io.spray"                 %% "spray-testkit"    % versions.spray,
+    "com.typesafe.akka"        %% "akka-http-experimental" % versions.akka,
+    "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
     "com.typesafe.akka"        %% "akka-actor"       % versions.akka,
-    "org.json4s"               %% "json4s-native"    % versions.json4s,
+    "ch.megard"                %% "akka-http-cors"   % versions.akkaCors,
+    "io.circe"                 %% "circe-core"       % versions.circe,
+    "io.circe"                 %% "circe-generic"    % versions.circe,
+    "io.circe"                 %% "circe-parser"     % versions.circe,
     "ch.qos.logback"           %  "logback-classic"  % versions.logback,
     "org.specs2"               %% "specs2"           % versions.specs2    % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",

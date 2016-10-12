@@ -1,9 +1,12 @@
 package ch.wsl.box.rest.service
 
+import akka.http.scaladsl.model.headers.{HttpChallenges, BasicHttpCredentials}
+import akka.http.scaladsl.server.Directives
+import akka.http.scaladsl.server.directives.{AuthenticationResult, SecurityDirectives, Credentials}
+import akka.http.scaladsl.server.directives.Credentials.Missing
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
 import slick.driver.PostgresDriver.api._
-import spray.routing.authentication._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -71,12 +74,17 @@ object Auth {
     * It authenticate the users against PostgresSQL roles
     *
     */
-  object CustomUserPassAuthenticator extends UserPassAuthenticator[UserProfile] {
-    def apply(userPass: Option[UserPass]) =
-      userPass match {
-        case Some(UserPass(user, pass)) =>  Future.successful(getUserProfile(user, pass))
-        case _ => Future.successful(None)
+  object PostgresAuthenticator {
+
+    import SecurityDirectives._
+
+    def postgresBasicAuth = authenticateOrRejectWithChallenge[BasicHttpCredentials, UserProfile] { cred =>
+      cred.flatMap(c => getUserProfile(c.username, c.password)) match {
+        case Some(u) =>  Future.successful(AuthenticationResult.success(u))
+        case None => Future.successful(AuthenticationResult.failWithChallenge(HttpChallenges.basic("Postgres user password")))
       }
+    }
+
   }
 
 }

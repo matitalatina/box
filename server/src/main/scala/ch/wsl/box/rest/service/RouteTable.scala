@@ -1,13 +1,15 @@
 package ch.wsl.box.rest.service
 
-import ch.wsl.box.model.shared.{JSONKeys, JSONQuery, JSONCount}
+import akka.http.scaladsl.marshalling.ToResponseMarshaller
+import akka.http.scaladsl.server.{Route, Directives}
+import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
+import akka.stream.Materializer
+import ch.wsl.box.model.shared.{JSONResult, JSONKeys, JSONQuery, JSONCount}
 import ch.wsl.box.rest.logic._
-import org.json4s.JsonAST._
+import de.heikoseeberger.akkahttpcirce.CirceSupport
 import slick.driver.PostgresDriver.api._
-import spray.http.StatusCodes
-import spray.httpx.marshalling.Marshaller
-import spray.httpx.unmarshalling._
-import spray.routing._
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -17,16 +19,25 @@ import scala.util.{Failure, Success}
  * Created by andreaminetti on 16/02/16.
  */
 
-trait RouteTable extends HttpService {
+trait RouteTable {
 
   var models = Set[String]()
 
-  def model[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit mar:Marshaller[M], unmar: Unmarshaller[M], db:Database):Route = {
+  def model[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])
+                                                            (implicit
+                                                             mat:Materializer,
+                                                             unmarshaller: FromRequestUnmarshaller[M],
+                                                             marshaller:ToResponseMarshaller[M],
+                                                             seqmarshaller: ToResponseMarshaller[Seq[M]],
+                                                             jsonmarshaller:ToResponseMarshaller[JSONResult[M]],
+                                                             db:Database):Route = {
 
     models = Set(name) ++ models
 
     val utils = new RouteHelper[T,M](name,table)
-    import JsonProtocol._
+    import CirceSupport._
+    import Directives._
+    import io.circe.generic.auto._
 
 
     pathPrefix(name) {
@@ -73,9 +84,13 @@ trait RouteTable extends HttpService {
         }
       } ~
       path("count") {
-        get { ctx =>
-          db.run{table.length.result}.map{ result =>
-            ctx.complete{ JObject(List(JField("count",JInt(result)))) }
+        get {
+          complete {
+            db.run {
+              table.length.result
+            }.map { result =>
+              JSONCount(result)
+            }
           }
         }
       } ~

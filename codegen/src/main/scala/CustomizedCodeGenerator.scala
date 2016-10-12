@@ -170,14 +170,18 @@ package object tables {
         def generate(pkg:String,name:String,modelPackages:String):String =
           s"""package ${pkg}
              |
-             |import spray.routing._
+             |import akka.http.scaladsl.server.{Directives, Route}
+             |import akka.stream.Materializer
              |import $modelPackages._
+             |import de.heikoseeberger.akkahttpcirce.CirceSupport
              |
-             |trait $name extends HttpService with RouteTable with RouteView {
-             |  def generatedRoutes()(implicit db:slick.driver.PostgresDriver.api.Database):Route = {
+             |trait $name extends RouteTable with RouteView {
+             |  import CirceSupport._
+             |  import Directives._
+             |  import ch.wsl.box.rest.model.JsonImplicits._
+             |  import io.circe.generic.auto._
              |
-             |    import JsonProtocol._
-             |
+             |  def generatedRoutes()(implicit db:slick.driver.PostgresDriver.api.Database, mat:Materializer):Route = {
              |    ${composeRoutes()}
              |  }
              |}

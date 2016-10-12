@@ -1,6 +1,9 @@
 package ch.wsl.box.rest.service
 
-import spray.routing._
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 
 /**
   *
@@ -8,9 +11,9 @@ import spray.routing._
   * Statically serves files
   *
   */
-trait RouteUI extends HttpService{
+trait RouteUI {
 
-  val clientFiles: Route =
+  val clientFiles:Route =
     path("") {
       get {
         getFromFile("index.html")
