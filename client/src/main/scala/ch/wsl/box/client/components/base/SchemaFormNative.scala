@@ -30,7 +30,7 @@ case class SchemaFormNative(
                              schema:String,
                              uiSchema:Option[JSONSchemaUI] = None,
                              formData:Option[js.Any] = None,
-                             onChange:Option[() => Unit] = None,
+                             onChange:Option[SchemaFormState => Unit] = None,
                              onError:Option[() => Unit] = None,
                              onSubmit:Option[SchemaFormState => Unit] = None,
                              schemaField:Option[() => Unit] = None,

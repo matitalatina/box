@@ -6,8 +6,9 @@ import ch.wsl.box.model.shared.WidgetsNames
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import org.scalajs.dom.Node
-import org.scalajs.dom.raw.HTMLInputElement
+import org.scalajs.dom.raw.{TextEvent, HTMLInputElement}
 import org.widok.moment.Moment
+import org.scalajs.dom
 
 import scala.scalajs.js
 
@@ -30,14 +31,15 @@ object Datepicker extends Widget {
 
   override def render: (WidgetProps) => ReactElement = { P =>
     wp = Some(P)
-    <.input(^.`type` := "text", ^.`class` := className, ^.defaultValue := P.value.map(_.toString).getOrElse(""), ^.onChange ==> onChange(P))
+    <.input(^.`type` := "text", ^.`class` := className, ^.defaultValue := P.value.map(_.toString).getOrElse(""), ^.onChange ==> onChange(P), ^.onInput ==> onChange(P))
   }
 
 
-  def opts(wp:WidgetProps) = new PikadayOptions {
+  def opts = new PikadayOptions {
     override def onSelect:(js.Any) => Unit = (date) => {
-      val d = Moment(date.toString).format(format)
-      wp.onChange(d)
+      val event = dom.document.createEvent("HTMLEvents")
+      event.initEvent("input", true, false)
+      field.dispatchEvent(event)
     }
     override val field: Node = org.scalajs.dom.document.getElementsByClassName(className).item(0)
     override val format: String = "YYYY-MM-DD"
@@ -49,7 +51,7 @@ object Datepicker extends Widget {
     * @return
     */
   override def mount: Callback = Callback{
-    wp.foreach( p => new Pikaday(opts(p)))
+    new Pikaday(opts)
   } >> Callback.log("Pikaday mounted")
 }
 

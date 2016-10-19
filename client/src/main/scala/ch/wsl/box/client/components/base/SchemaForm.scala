@@ -1,10 +1,13 @@
 package ch.wsl.box.client.components.base
 
+import ch.wsl.box.client.components.base.Debug.DebugComponent
 import ch.wsl.box.client.components.base.widget.Widget
 import ch.wsl.box.client.css.CommonStyles
+import ch.wsl.box.client.utils.Log
 import ch.wsl.box.model.shared.JSONSchemaUI
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
+import org.scalajs.dom.raw.HTMLInputElement
 
 import scala.scalajs.js
 import scala.scalajs.js.{Any, UndefOr}
@@ -18,10 +21,17 @@ object SchemaForm {
   case class Props(schema:String, ui:JSONSchemaUI, onSubmit: SchemaFormState => Unit, formData:Option[js.Any] = None)
 
 
-  def onChange():Unit = println("changed something")
+  val debugRefKey = "debugRef"
+  val debugRef = Ref.to(Debug.component,debugRefKey)
 
-  val component = ReactComponentB[Props]("SchemaForm")
-    .render_P { P =>
+  class Backend($: BackendScope[Props, Unit]) {
+
+    def onChange(formState:SchemaFormState):Unit = {
+      debugRef($).foreach(_.backend.change(Some(formState.formData)))
+    }
+
+
+    def render(P:Props) = {
       <.div(CommonStyles.card,
         SchemaFormNative(P.schema,Some(P.ui),onSubmit = Some(P.onSubmit),formData = P.formData, onChange = Some(onChange), widgets = Some(Widget()))(
           <.div(CommonStyles.action,
@@ -29,13 +39,13 @@ object SchemaForm {
           )
         ),
         <.hr(),
-        <.div(
-          <.h3("Debug"),
-          <.div(P.formData.toString)
-        )
+        Debug(ref=debugRefKey)
       )
-
     }
+  }
+
+  val component = ReactComponentB[Props]("SchemaForm")
+    .renderBackend[Backend]
     .componentDidMountCB(Widget.mount)
     .build
 
