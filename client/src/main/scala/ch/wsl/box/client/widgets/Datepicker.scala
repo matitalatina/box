@@ -1,15 +1,15 @@
 package ch.wsl.box.client.widgets
 
 
-import ch.wsl.box.client.components.base.widget.{WidgetProps, Widget}
+import ch.wsl.box.client.components.base.widget.{Widget, WidgetProps}
 import ch.wsl.box.model.shared.WidgetsNames
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import org.scalajs.dom.Node
-import org.scalajs.dom.raw.{TextEvent, HTMLInputElement}
 import org.scalajs.dom
 
 import scala.scalajs.js
+import scala.scalajs.js.Any
 
 
 /**
@@ -27,6 +27,9 @@ object Datepicker extends Widget {
   }
 
   private var wp:Option[WidgetProps] = None
+
+
+  override def beforeSave(data: Any): Any = ???
 
   override def render: (WidgetProps) => ReactElement = { P =>
     wp = Some(P)
