@@ -54,6 +54,10 @@ object Build extends sbt.Build {
       // use Scala.js provided launcher code to start the client app
       persistLauncher := true,
       persistLauncher in Test := false,
+      fork in fastOptJS := true,
+      fork in fullOptJS := true,
+      javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
+      javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
       // use uTest framework for tests
       testFrameworks += new TestFramework("utest.runner.Framework"),
       requiresDOM := true,

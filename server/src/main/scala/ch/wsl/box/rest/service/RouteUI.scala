@@ -21,7 +21,7 @@ trait RouteUI {
     } ~
       pathPrefix("js") {
         path(Segment) { file =>
-          getFromFile("client/target/scala-2.11/"+file)
+          getFromFile("client/target/scala-2.12/"+file)
         }
       } ~
       pathPrefix("css") {
@@ -31,7 +31,7 @@ trait RouteUI {
       } ~
       pathPrefix("lib") {
         path(Segment) { file =>
-          getFromFile("client/target/scala-2.11/classes/" + file)
+          getFromFile("client/target/scala-2.12/classes/" + file)
         }
       }
 }

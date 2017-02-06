@@ -35,16 +35,17 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.11.8"
-    val ficus = "1.3.0"
+    val scala = "2.12.1"
+    val ficus = "1.4.0"
 
     //HTTP actors
-    val akka = "2.4.11"
-    val akkaHttpJson = "1.10.1"
-    val akkaCors = "0.1.7"
+    val akka = "2.4.12"
+    val akkaHttp = "10.0.3"
+    val akkaHttpJson = "1.12.0"
+    val akkaCors = "0.1.11"
 
     //Testing
-    val specs2 = "3.7"
+    val specs2 = "3.8.6"
     val junit = "4.12"
     val scalatest = "3.0.0"
     val selenium = "2.53.1"
@@ -53,15 +54,15 @@ object Settings {
     val logback = "1.1.7"
 
     //json parsers
-    val circe = "0.5.1"
+    val circe = "0.7.0"
 
     //database
     val postgres = "9.4.1211"
-    val slick = "3.1.1"
+    val slick = "3.2.0-M2"
 
     //frontend
-    val scalaJSReact = "0.11.2"
-    val scalaCss = "0.5.0"
+    val scalaJSReact = "0.11.3"
+    val scalaCss = "0.5.1"
 
     //js
     val reactJS = "15.3.2"
@@ -89,7 +90,7 @@ object Settings {
   /** Dependencies only used by the JVM project */
   val jvmDependencies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(
     "org.scala-lang"           % "scala-reflect"     % versions.scala,
-    "com.typesafe.akka"        %% "akka-http-experimental" % versions.akka,
+    "com.typesafe.akka"        %% "akka-http-core"   % versions.akkaHttp,
     "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
     "com.typesafe.akka"        %% "akka-actor"       % versions.akka,
     "ch.megard"                %% "akka-http-cors"   % versions.akkaCors,
@@ -97,7 +98,7 @@ object Settings {
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,
     "ch.qos.logback"           %  "logback-classic"  % versions.logback,
-    "org.specs2"               %% "specs2"           % versions.specs2    % "test",
+    "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test"
   ))
@@ -112,7 +113,7 @@ object Settings {
     "io.circe" %%% "circe-parser" % versions.circe,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
-    "io.github.widok" %%% "scala-js-momentjs" % "0.1.5"
+    "ru.pavkin" %%% "scala-js-momentjs" % "0.4.1"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

@@ -1,4 +1,4 @@
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.9")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.14")
 
 
 //uncomment to enable SASS compilation, you need sass

@@ -7,7 +7,6 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
 import org.scalajs.dom.Node
 import org.scalajs.dom.raw.{TextEvent, HTMLInputElement}
-import org.widok.moment.Moment
 import org.scalajs.dom
 
 import scala.scalajs.js
