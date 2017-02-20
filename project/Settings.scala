@@ -39,7 +39,7 @@ object Settings {
     val ficus = "1.4.0"
 
     //HTTP actors
-    val akka = "2.4.12"
+    val akka = "2.4.17"
     val akkaHttp = "10.0.3"
     val akkaHttpJson = "1.12.0"
     val akkaCors = "0.1.11"
@@ -65,7 +65,7 @@ object Settings {
     val scalaCss = "0.5.1"
 
     //js
-    val reactJS = "15.3.2"
+    val reactJS = "15.4.2"
     val materialDesign = "1.2.1"
 
   }
@@ -98,9 +98,15 @@ object Settings {
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,
     "ch.qos.logback"           %  "logback-classic"  % versions.logback,
+    "org.webjars"              % "webjars-locator"   % "0.32",
+    "org.webjars.npm"          % "pikaday"            % "1.5.1",
+    "org.webjars.npm"          % "react-jsonschema-form" % "0.42.0",
+    "org.webjars.npm"          % "moment" % "2.17.1",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
-    "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test"
+    "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test",
+    "com.typesafe.akka"        %% "akka-testkit"     % versions.akka % "test",
+    "com.typesafe.akka"        %% "akka-http-testkit" % versions.akkaHttp % "test"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */
@@ -112,8 +118,9 @@ object Settings {
     "io.circe" %%% "circe-generic" % versions.circe,
     "io.circe" %%% "circe-parser" % versions.circe,
     "io.circe" %%% "circe-scalajs" % versions.circe,
-    "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
-    "ru.pavkin" %%% "scala-js-momentjs" % "0.4.1"
+    "org.scala-js" %%% "scalajs-dom" % "0.9.1",
+    "org.scalatest" %%% "scalatest" % versions.scalatest % "test"
+    //"ru.pavkin" %%% "scala-js-momentjs" % "0.4.1" exclude("org.webjars.bower", "moment")
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

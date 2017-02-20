@@ -2,6 +2,7 @@ package ch.wsl.box.client.widgets
 
 
 import ch.wsl.box.client.components.base.widget.{Widget, WidgetProps}
+import ch.wsl.box.client.libraries.{Pikaday, PikadayOptions}
 import ch.wsl.box.model.shared.WidgetsNames
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.prefix_<^._
@@ -10,13 +11,13 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.Any
+import scala.util.Random
 
 
 /**
   * Created by andreaminetti on 06/06/16.
   */
 object Datepicker extends Widget {
-
 
   override def name: String = WidgetsNames.datepicker
 
@@ -26,26 +27,14 @@ object Datepicker extends Widget {
     wp.onChange(e.target.value)
   }
 
-  private var wp:Option[WidgetProps] = None
 
-
-  override def beforeSave(data: Any): Any = ???
 
   override def render: (WidgetProps) => ReactElement = { P =>
-    wp = Some(P)
-    <.input(^.`type` := "text", ^.`class` := className, ^.defaultValue := P.value.map(_.toString).getOrElse(""), ^.onChange ==> onChange(P), ^.onInput ==> onChange(P))
+    //wp = Some(P)
+    <.input(^.id := P.id ,^.`type` := "text", ^.`class` := className, ^.defaultValue := P.value.map(_.toString).getOrElse(""), ^.onChange ==> onChange(P), ^.onInput ==> onChange(P))
   }
 
 
-  def opts = new PikadayOptions {
-    override def onSelect:(js.Any) => Unit = (date) => {
-      val event = dom.document.createEvent("HTMLEvents")
-      event.initEvent("input", true, false)
-      field.dispatchEvent(event)
-    }
-    override val field: Node = org.scalajs.dom.document.getElementsByClassName(className).item(0)
-    override val format: String = "YYYY-MM-DD"
-  }.toDict()
 
   /**
     * After render operations for widgets, usually called on custom class for widget
@@ -53,30 +42,6 @@ object Datepicker extends Widget {
     * @return
     */
   override def mount: Callback = Callback{
-    new Pikaday(opts)
+    Pikaday(className,"YYYY-MM-DD")
   } >> Callback.log("Pikaday mounted")
-}
-
-trait PikadayOptions{
-  val field:Node
-  val format:String
-  def onSelect:(js.Any) => Unit
-
-  def toDict():js.Dictionary[js.Any] = {
-    val dict:js.Dictionary[js.Any] = js.Dictionary()
-    dict.update("field",field)
-    dict.update("format",format)
-    dict.update("onSelect",onSelect)
-    dict
-  }
-}
-
-/**
-  * https://github.com/dbushell/Pikaday
- *
-  * @param opts
-  */
-@js.native
-class Pikaday(opts:js.Dictionary[js.Any]) extends js.Object {
-
 }

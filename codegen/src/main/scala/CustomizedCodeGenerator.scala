@@ -177,7 +177,6 @@ package object tables {
              |trait $name extends RouteTable with RouteView {
              |  import JSONSupport._
              |  import Directives._
-             |  import ch.wsl.box.rest.model.JsonImplicits._
              |  import io.circe.generic.auto._
              |
              |  def generatedRoutes()(implicit db:slick.driver.PostgresDriver.api.Database, mat:Materializer):Route = {

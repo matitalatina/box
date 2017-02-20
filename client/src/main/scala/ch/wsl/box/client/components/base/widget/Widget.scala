@@ -29,6 +29,7 @@ trait Widget {
 
 @js.native
 trait WidgetProps extends js.Object{
+  def id:String
   def schema:js.Any
   def value:js.UndefOr[js.Any]
   def defaultValue:js.UndefOr[js.Any]
@@ -36,6 +37,7 @@ trait WidgetProps extends js.Object{
   def onChange(v:js.Any):js.Function
   def placeholder:js.UndefOr[js.Any]
   def options:js.Any
+  def formContext:js.Any
 }
 
 object Widget {

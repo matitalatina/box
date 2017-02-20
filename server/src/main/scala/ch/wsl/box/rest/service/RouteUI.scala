@@ -11,7 +11,7 @@ import akka.http.scaladsl.server.Route
   * Statically serves files
   *
   */
-trait RouteUI {
+trait RouteUI extends WebJarsSupport {
 
   val clientFiles:Route =
     path("") {
@@ -33,5 +33,8 @@ trait RouteUI {
         path(Segment) { file =>
           getFromFile("client/target/scala-2.12/classes/" + file)
         }
+      } ~
+      pathPrefix("webjars") {
+        webJars
       }
 }
