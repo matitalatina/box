@@ -50,7 +50,7 @@ object Build extends sbt.Build {
       // RuntimeDOM is needed for tests
       jsDependencies += RuntimeDOM % "test",
       // yes, we want to package JS dependencies
-      skip in packageJSDependencies := false,
+      skip in packageJSDependencies := true,
       // use Scala.js provided launcher code to start the client app
       persistLauncher := true,
       persistLauncher in Test := false,
@@ -64,6 +64,7 @@ object Build extends sbt.Build {
       // Compile tests to JS using fast-optimisation
       scalaJSStage in Test := FastOptStage,
       fullClasspath in Test ~= { _.filter(_.data.exists) },
+      scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) },
       artifactPath in (Compile, fastOptJS) := ((crossTarget in (Compile, fastOptJS)).value / ((moduleName in fastOptJS).value + "-opt.js"))
     )
     .enablePlugins(ScalaJSPlugin)

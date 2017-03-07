@@ -32,7 +32,7 @@ object JSONSupport extends CirceSupport{
 
   implicit val TimestampFormat : Encoder[Timestamp] with Decoder[Timestamp] = new Encoder[Timestamp] with Decoder[Timestamp] {
 
-    val timestampFormatter = new SimpleDateFormat("yyyy-mm-dd")
+    val timestampFormatter = new SimpleDateFormat("yyyy-mm-dd ")
 
     override def apply(a: Timestamp): Json = Encoder.encodeString.apply(timestampFormatter.format(a))
 

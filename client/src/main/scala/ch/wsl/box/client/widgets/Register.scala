@@ -8,6 +8,7 @@ import ch.wsl.box.client.components.base.widget.Widget
 object Register {
   def apply():Seq[Widget] = Seq(
     Datepicker,
+    Timepicker,
     Text
   )
 }

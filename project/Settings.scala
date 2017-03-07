@@ -102,6 +102,7 @@ object Settings {
     "org.webjars.npm"          % "pikaday"            % "1.5.1",
     "org.webjars.npm"          % "react-jsonschema-form" % "0.42.0",
     "org.webjars.npm"          % "moment" % "2.17.1",
+    "org.webjars.npm"          % "jquery-timepicker" % "1.3.2",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test",
@@ -119,7 +120,10 @@ object Settings {
     "io.circe" %%% "circe-parser" % versions.circe,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-    "org.scalatest" %%% "scalatest" % versions.scalatest % "test"
+    "com.github.chandu0101.scalajs-react-components" %%% "core" % "0.6.0-SNAPSHOT",
+    "com.github.chandu0101.scalajs-react-components" %%% "macros" % "0.6.0-SNAPSHOT",
+    "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.1"
     //"ru.pavkin" %%% "scala-js-momentjs" % "0.4.1" exclude("org.webjars.bower", "moment")
   ))
 

@@ -14,8 +14,6 @@ object JSONForm {
   
   def tableFieldTitles: Config = {
     val config = ConfigFactory.load()
-    println("CONFIG")
-    println(config)
 
     config.as[Config]("rest.lookup.labels")
   }

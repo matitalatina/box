@@ -85,7 +85,7 @@ object JSONSchemas {
     "smallint" -> None,
     "bigint" -> None,
     "double precision" -> None,
-    "timestamp without time zone" -> None,
+    "timestamp without time zone" -> Some(WidgetsNames.timepicker),
     "date" -> Some(WidgetsNames.datepicker),
     "real" -> None,
     "boolean" -> None,
