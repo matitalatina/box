@@ -9,6 +9,7 @@ object Register {
   def apply():Seq[Widget] = Seq(
     Datepicker,
     Timepicker,
+    DatetimePicker,
     Text
   )
 }
