@@ -1,12 +1,11 @@
 package ch.wsl.box.client.components
 
-import ch.wsl.box.client.components.base.{SchemaFormState, SchemaForm}
+import ch.wsl.box.client.components.base.{SchemaForm, SchemaFormNative}
 import ch.wsl.box.model.shared.JSONSchemaUI
-import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{ReactComponentB, _}
-import ch.wsl.box.client.components.base.SchemaFormState
+import japgolly.scalajs.react.vdom.html_<^._
 import ch.wsl.box.client.controllers.CRUDController
 import ch.wsl.box.client.css.CommonStyles
+import japgolly.scalajs.react._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
@@ -15,9 +14,9 @@ import scala.scalajs.js.JSON
 
 case class Updates(controller:CRUDController) {
 
-  case class State(schema:String, ui:JSONSchemaUI, value: Option[js.Any] = None)
+  case class State(schema:Option[String], ui:Option[JSONSchemaUI], value: Option[js.Any] = None)
 
-  val initialState = State("{}",JSONSchemaUI.empty)
+  val initialState = State(None,None)
 
   class Backend(scope:BackendScope[Unit,State]) {
 
@@ -27,12 +26,12 @@ case class Updates(controller:CRUDController) {
       form <- controller.uiSchema
       value <- controller.get
     } yield {
-      scope.modState(_.copy(schema = schema, ui=form, value = Some(value))).runNow()
+      scope.modState(_.copy(schema = Some(schema), ui=Some(form), value = Some(value))).runNow()
     }
 
 
 
-    def onSubmit(s:SchemaFormState):Unit = {
+    def onSubmit(s:SchemaFormNative.State):Unit = {
       Callback.log("Updating") >>
       controller.onUpdate(s.formData) >>
       controller.routeTo(controller.listContainer)
@@ -51,10 +50,10 @@ case class Updates(controller:CRUDController) {
 
 
 
-  val component = ReactComponentB[Unit]("ItemsInfo")
+  val component = ScalaComponent.build[Unit]("ItemsInfo")
     .initialState(initialState)
     .renderBackend[Backend]
-    .buildU
+    .build
 
   def apply() = component()
 }

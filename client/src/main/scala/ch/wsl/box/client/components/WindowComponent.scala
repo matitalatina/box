@@ -5,7 +5,8 @@ import ch.wsl.box.client.controllers.Controller
 import ch.wsl.box.client.css.CommonStyles
 import ch.wsl.box.client.services.Auth
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.raw.ReactElement
+import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -24,11 +25,11 @@ object WindowComponent {
   }
 
 
-  def login(e: ReactEventI): CallbackTo[Future[String]] = {
+  def login(e: ReactEvent): CallbackTo[Future[String]] = {
     Auth.login("","")
   }
 
-  def render(P:Props):ReactElement = {
+  def render(P:Props):VdomElement = {
     if(Auth.isLoggedIn) {
       renderOk(P)
     } else {
@@ -36,15 +37,15 @@ object WindowComponent {
     }
   }
 
-  def renderLogin(P:Props):ReactElement = LoginComponent(P.controller)()
+  def renderLogin(P:Props):VdomElement = LoginComponent(P.controller)()
 
   def renderOk(P:Props) = {
 
     println("rendering window")
 
     <.div(CommonStyles.layout,
-      TopNav(TopNav.Props(P.controller)),
-      LeftNav(LeftNav.Props(P.controller)),
+      TopNav(TopNav.Props(P.controller))(),
+      LeftNav(LeftNav.Props(P.controller))(),
       <.main(Style.content,
         <.div(Style.pageContent,
           <.div(CommonStyles.row,
@@ -58,12 +59,12 @@ object WindowComponent {
   }
 
 
-  val component = ReactComponentB[Props]("ItemsPage")
+  val component = ScalaComponent.build[Props]("ItemsPage")
     .render_P(render)
     .build
 
   case class Props(controller: Controller)
 
-  def apply(props : Props,ref: js.UndefOr[String] = "", key: js.Any = {}) = component.set(key, ref)(props)
+  def apply(props : Props,ref: js.UndefOr[String] = "", key: js.Any = {}) = component(props)
 
 }

@@ -3,8 +3,8 @@ package ch.wsl.box.client.widgets
 import ch.wsl.box.client.components.base.widget.{Widget, WidgetProps}
 import ch.wsl.box.client.libraries.{JQueryTimepicker, Pikaday}
 import ch.wsl.box.model.shared.WidgetsNames
-import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{Callback, ReactElement, ReactEventI}
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react._
 
 import scala.scalajs.js
 
@@ -27,17 +27,17 @@ object DatetimePicker extends Widget {
     }
   }
 
-  def onChangeDate(wp:WidgetProps)(e: ReactEventI): Callback = Callback{
+  def onChangeDate(wp:WidgetProps)(e: ReactEventFromInput): Callback = Callback{
     val (date,time) = splitDateTime(wp.value)
     wp.onChange(e.target.value + " " + time)
   }
 
-  def onChangeTime(wp:WidgetProps)(e: ReactEventI): Callback = Callback{
+  def onChangeTime(wp:WidgetProps)(e: ReactEventFromInput): Callback = Callback{
     val (date,time) = splitDateTime(wp.value)
     wp.onChange(date + " " + e.target.value)
   }
 
-  override def render: (WidgetProps) => ReactElement = { P =>
+  override def render: (WidgetProps) => VdomElement = { P =>
     val (date,time) = splitDateTime(P.value)
     <.div(
       <.input(^.id := P.id + "-date" ,^.`type` := "text", ^.`class` := classNameDate, ^.defaultValue := date, ^.onChange ==> onChangeDate(P), ^.onInput ==> onChangeDate(P)),

@@ -4,7 +4,7 @@ import ch.wsl.box.client.controllers.{Controller, Container}
 import ch.wsl.box.client.css.CommonStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.Reusability
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.scalajs.js
 import scalacss.Defaults._
@@ -19,7 +19,7 @@ object TopNav {
     val header = style(addClassNames("mdl-layout__header"))
     val row = style(addClassNames("mdl-layout__header-row"))
 
-    val tabs = style(addClassNames("mdl-layout__tab-bar","mdl-js-ripple-effect"))
+    val tabs:StyleA = style(addClassNames("mdl-layout__tab-bar","mdl-js-ripple-effect"))
 
     def tab(selected:Boolean) = selected match {
       case true => style(addClassNames("mdl-layout__tab","is-active"))
@@ -44,7 +44,7 @@ object TopNav {
 //  } yield cb
 
   //inizializzazione del componente
-  val component = ReactComponentB[Props]("TopNav")
+  val component = ScalaComponent.build[Props]("TopNav")
     .render_P { P =>
 
       println(P.controller.topMenu.map(_.name))
@@ -54,7 +54,7 @@ object TopNav {
           <.div(CommonStyles.title, "PostgresRest UI")
         ),
         <.div(Style.tabs,
-          P.controller.topMenu.map(item => <.a(Style.tab(item == P.controller.container), item.name, ^.onClick --> P.controller.topMenuClick(item)))
+          P.controller.topMenu.toTagMod(item => <.a(Style.tab(item == P.controller.container), item.name, ^.onClick --> P.controller.topMenuClick(item)))
         )
       )
     }
@@ -62,7 +62,7 @@ object TopNav {
 
   def apply(props: Props, ref: js.UndefOr[String] = "", key: js.Any = {}) = {
     println("Creating topnav")
-    component.set(key, ref)(props)
+    component(props)
   }
 
 }

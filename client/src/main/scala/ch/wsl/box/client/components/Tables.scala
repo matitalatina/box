@@ -3,12 +3,12 @@ package ch.wsl.box.client.components
 import ch.wsl.box.client.controllers.CRUDController
 import ch.wsl.box.client.css.CommonStyles
 import ch.wsl.box.model.shared._
-import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalacss.Defaults._
-import scalacss.ScalaCssReact._
+
 
 object Tables{
   object Style extends StyleSheet.Inline {
@@ -76,7 +76,7 @@ case class Tables(controller: CRUDController) {
       * @param `type` type of the field (you can use JSONSchema::typeOfTitle to retrive it
       * @return A list of options according to the type
       */
-    def filterOption(`type`:String):Seq[TagMod] = `type` match {
+    def filterOption(`type`:String):Seq[VdomElement] = `type` match {
       case "string" => Seq(
         <.option(^.value := "=", ^.selected := true,"="),
         <.option(^.value := "like","Like")
@@ -98,7 +98,7 @@ case class Tables(controller: CRUDController) {
     //def refresh() = Callback.future(controller.table)
 
 
-    def modOperator(s:State, field:String)(e: ReactEventI):Callback = {
+    def modOperator(s:State, field:String)(e: ReactEventFromInput):Callback = {
       val operator = e.target.value
       println(operator)
       val value = controller.query.filter.find(_.column == field).map(_.value).getOrElse("")
@@ -111,7 +111,7 @@ case class Tables(controller: CRUDController) {
 
     }
 
-    def modFilter(s:State, field:String)(e: ReactEventI):Callback = {
+    def modFilter(s:State, field:String)(e: ReactEventFromInput):Callback = {
       val value = e.target.value
       val operator:Option[String] = controller.query.filter.find(_.column == field).flatMap(_.operator)
       val newFilter = if(value.size > 0) {
@@ -131,8 +131,11 @@ case class Tables(controller: CRUDController) {
     }
 
 
+    import scalacss.ScalaCssReact._
 
     def render(S:State) = {
+
+
       import Tables._
       <.div(CommonStyles.row,
         <.div(CommonStyles.fullWidth,
@@ -140,25 +143,25 @@ case class Tables(controller: CRUDController) {
             <.table(Style.table,
               <.thead(
                 <.tr(
-                  S.table.headers.map(title => <.th(Style.td,title))
+                  S.table.headers.toTagMod(title => <.th(Style.td,title))
                 )
               ),
               <.tbody(
                 <.tr(
-                  S.table.headers.map(title => <.td(Style.td,
+                  S.table.headers.toTagMod(title => <.td(Style.td,
                     <.input(Style.input,^.onChange ==> modFilter(S,title))  , //TODO should not be the title here but the key
                     <.span(Style.select,
                       <.select(
                         ^.onChange ==> modOperator(S,title), //TODO should not be the title here but the key
-                        filterOption(S.table.model.schema.typeOfTitle(title))
+                        filterOption(S.table.model.schema.typeOfTitle(title)).toTagMod(x => x)
                       )
                     )
                   ))
                 ),
-                S.table.rows.map{row =>
+                S.table.rows.toTagMod{row =>
                   <.tr( Style.selected(row == S.selectedRow),
                     ^.onClick --> selectRow(S.table,row),
-                    row.map{ case (id,cell) =>
+                    row.toTagMod{ case (id,cell) =>
                       <.td(Style.td,cell)
                     }
                   )
@@ -173,10 +176,10 @@ case class Tables(controller: CRUDController) {
 
 
 
-  val component = ReactComponentB[Unit]("ItemsInfo")
+  val component = ScalaComponent.build[Unit]("ItemsInfo")
     .initialState(State(Table.empty,1,Vector()))
     .renderBackend[Backend]
-    .buildU
+    .build
 
   def apply() = component()
 }

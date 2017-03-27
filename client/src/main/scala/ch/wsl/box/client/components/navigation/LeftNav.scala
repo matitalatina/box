@@ -4,7 +4,7 @@ import ch.wsl.box.client.controllers.Controller
 import ch.wsl.box.client.css.CommonStyles
 import ch.wsl.box.client.services.Auth
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.scalajs.js.{Any, UndefOr}
 import scalacss.Defaults._
@@ -45,7 +45,7 @@ object LeftNav {
       <.div(Style.nav,
         <.span(CommonStyles.title, p.ctrl.leftMenuTitle),
         <.nav(CommonStyles.navigation,
-          s.elements.map(e => <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.leftMenuClick(e)))
+          s.elements.toTagMod(e => <.a(CommonStyles.navigationLink, e, ^.onClick --> p.ctrl.leftMenuClick(e)))
         ),
         <.div(
           <.button(CommonStyles.button,"Logout",^.onClick --> logout(p))
@@ -55,12 +55,12 @@ object LeftNav {
   }
 
 
-  val component = ReactComponentB[Props]("LeftNav")
+  val component = ScalaComponent.build[Props]("LeftNav")
     .initialState(State(Vector(),""))
     .renderBackend[Backend]
     .build
 
 
-  def apply(props: Props, ref: UndefOr[String] = "", key: Any = {}) = component.set(key, ref)(props)
+  def apply(props: Props, ref: UndefOr[String] = "", key: Any = {}) = component(props)
 
 }

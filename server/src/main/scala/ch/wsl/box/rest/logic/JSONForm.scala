@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.model.shared.{JSONFieldMap, JSONFieldHTTPOption, JSONFieldOptions, JSONField}
+import ch.wsl.box.model.shared._
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 
@@ -43,6 +43,7 @@ object JSONForm {
               key = field.column_name.slickfy,
               table = table,
               placeholder = Some(fk.referencingTable + " Lookup"),
+              //widget = Some(WidgetsNames.select),
               options = Some(
                 JSONFieldOptions(JSONFieldHTTPOption("http://localhost:8080/" + fk.referencingTable), JSONFieldMap(fk.referencingKeys.head, title))
               )

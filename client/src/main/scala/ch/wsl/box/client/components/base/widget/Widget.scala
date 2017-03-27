@@ -4,6 +4,7 @@ package ch.wsl.box.client.components.base.widget
 import ch.wsl.box.client.widgets.Register
 import ch.wsl.box.model.shared.JSONSchema
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.VdomElement
 
 import scala.scalajs.js
 import js.JSConverters._
@@ -15,7 +16,13 @@ trait Widget {
 
   def name:String
 
-  def render:(WidgetProps => ReactElement)
+  def render:(WidgetProps => VdomElement)
+
+  def rawElement:(WidgetProps => raw.ReactElement) = {props => render(props).rawElement}
+
+//  def component(props:WidgetProps) = {
+//    ScalaComponent.buildStatic(name + "Item1",render(props)).build
+//  }
 
   /**
     * After render operations for widgets, usually called on custom class for widget
@@ -46,7 +53,7 @@ object Widget {
   def apply() = {
     val registred:js.Dictionary[js.Function] = js.Dictionary()
     Register().foreach{ widget =>
-      registred.update(widget.name,widget.render)
+      registred.update(widget.name,widget.rawElement)
     }
     registred
   }

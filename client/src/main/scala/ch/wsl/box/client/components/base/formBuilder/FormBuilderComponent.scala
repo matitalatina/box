@@ -1,8 +1,8 @@
 package ch.wsl.box.client.components.base.formBuilder
 
 import ch.wsl.box.client.css.CommonStyles
-import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{BackendScope, ReactComponentB}
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react._
 
 import scalacss.Defaults._
 import scalacss.ScalaCssReact._
@@ -51,10 +51,10 @@ object FormBuilderComponent {
     }
   }
 
-  val component = ReactComponentB[Unit]("FormBuilderComponent")
+  val component = ScalaComponent.build[Unit]("FormBuilderComponent")
     .initialState(State(1,1))
     .renderBackend[Backend]
-    .buildU
+    .build
 
 
   def apply() = component()

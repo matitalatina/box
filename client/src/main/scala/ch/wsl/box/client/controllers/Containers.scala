@@ -1,12 +1,13 @@
 package ch.wsl.box.client.controllers
 
 import ch.wsl.box.client.components.base.formBuilder.FormBuilderComponent
-import ch.wsl.box.client.components.{Updates, Homes, Inserts, Tables}
+import ch.wsl.box.client.components._
 import ch.wsl.box.client.model.Menu
 import ch.wsl.box.client.routes.RoutesUtils
 import ch.wsl.box.model.shared.JSONKeys
-import japgolly.scalajs.react.ReactComponentU
+import japgolly.scalajs.react.component.Scala
 import japgolly.scalajs.react.extra.router.RouterConfigDsl
+import japgolly.scalajs.react._
 
 /**
   * Created by andreaminetti on 15/03/16.
@@ -15,7 +16,7 @@ import japgolly.scalajs.react.extra.router.RouterConfigDsl
 
 sealed abstract class Container(val title: String,
                                 val model:String,
-                                val component:ReactComponentU[_,_,_,_]
+                                val component:Scala.Unmounted[_,_,_]
                                )
 
 object Containers{
@@ -25,6 +26,7 @@ object Containers{
 
   case class Home(controller:Controller) extends Container("Home","none",Homes(controller)())
 
+  case object Test extends Container("Test","none",HomePage())
 
 }
 
@@ -57,10 +59,10 @@ class CRUDContainers(controller:CRUDController) {
     val update = dynamicRouteCT[Update](( string("^[a-z0-9_-]+") / "update" / string("(.+)$")).caseClass[Update])
 
     (
-      staticRoute("",home) ~> renderR(r => RoutesUtils.renderController(controller,home)(r))
-    | table ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
-    | insert ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
-    | update ~> dynRenderR { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }
+      staticRoute("",home) ~> renderR(r => RoutesUtils.renderController(controller,home)(r))(x => x.vdomElement)
+    | table ~> dynRenderR[Table,GenericComponent.Unmounted[_,_]] { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }(x => x.vdomElement)
+    | insert ~> dynRenderR[Insert,GenericComponent.Unmounted[_,_]] { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }(x => x.vdomElement)
+    | update ~> dynRenderR[Update,GenericComponent.Unmounted[_,_]] { case (m, r) => RoutesUtils.renderControllerWithModel(controller)(r, m) }(x => x.vdomElement)
     )
   }
 

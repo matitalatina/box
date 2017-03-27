@@ -14,7 +14,7 @@ object ReactApp extends JSApp {
   override def main(): Unit = {
     AppCSS.load
     //loads all the routes
-    AppRouter.router().render(dom.document.getElementById("box-app"))
+    AppRouter.router().renderIntoDOM(dom.document.getElementById("box-app"))
 
   }
 

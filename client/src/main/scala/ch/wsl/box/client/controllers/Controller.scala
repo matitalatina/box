@@ -1,10 +1,12 @@
 package ch.wsl.box.client.controllers
 
 import ch.wsl.box.client.model.Menu
-import ch.wsl.box.model.shared.{JSONKeys, JSONSchemaUI, Table, JSONQuery}
-import japgolly.scalajs.react.vdom.ReactTagOf
-import japgolly.scalajs.react.{CallbackTo, Callback, ReactElement}
+import ch.wsl.box.model.shared.{JSONKeys, JSONQuery, JSONSchemaUI, Table}
+import japgolly.scalajs.react.{Callback, CallbackTo}
 import japgolly.scalajs.react.extra.router.RouterCtl
+import japgolly.scalajs.react.raw.{ReactComponent, ReactElement}
+import japgolly.scalajs.react.vdom.TagMod
+import japgolly.scalajs.react.vdom.html_<^.VdomElement
 import org.scalajs.dom
 import org.scalajs.dom.html.Anchor
 
@@ -45,7 +47,7 @@ trait Controller {
   def leftMenu:Future[Vector[String]]
   def leftMenuTitle:String
 
-  def render():ReactElement = container.component
+  def render():VdomElement = container.component.vdomElement
 
 }
 

@@ -1,10 +1,11 @@
 package ch.wsl.box.client.routes
 
-import ch.wsl.box.client.controllers.{Controller, Container, TableController}
+import ch.wsl.box.client.components.HomePage
+import ch.wsl.box.client.controllers.{Container, Containers, Controller, TableController}
 import ch.wsl.box.client.model.Menu
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router._
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -38,6 +39,7 @@ object AppRouter {
       import dsl._
 
       ( trimSlashes
+      | staticRoute("#test",Containers.Test) ~> render(HomePage())
       | staticRoute("",homeController.homeContainer) ~> renderR(RoutesUtils.renderController(homeController,homeController.homeContainer))
       | tableController.containers.routes.prefixPath_/("#tables")
       ).notFound(redirectToPage(homeController.homeContainer)(Redirect.Replace))

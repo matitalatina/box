@@ -10,6 +10,7 @@ object Register {
     Datepicker,
     Timepicker,
     DatetimePicker,
-    Text
+    Text,
+    SelectWidget
   )
 }

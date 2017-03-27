@@ -4,7 +4,7 @@ import ch.wsl.box.client.controllers.Controller
 import ch.wsl.box.client.css.CommonStyles
 import ch.wsl.box.client.services.Auth
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.concurrent.Future
 import scalacss.Defaults._
@@ -37,13 +37,13 @@ case class LoginComponent(controller:Controller) {
   case class State(username: String, password: String)
 
   class Backend(scope: BackendScope[Unit, State]) {
-    def onChangeUsername(e: ReactEventI) = {
+    def onChangeUsername(e: ReactEventFromInput) = {
       val value = e.target.value
       e.preventDefaultCB >>
       scope.modState { _.copy(username = value) }
     }
 
-    def onChangePassword(e: ReactEventI) = {
+    def onChangePassword(e: ReactEventFromInput) = {
       val value = e.target.value
       e.preventDefaultCB >>
       scope.modState(_.copy(password = value))
@@ -51,7 +51,7 @@ case class LoginComponent(controller:Controller) {
 
 
 
-    def handleSubmit(e: ReactEventI):Callback = {
+    def handleSubmit(e: ReactEventFromInput):Callback = {
       for {
         _ <- Callback.log("logging in")
         _ <- e.preventDefaultCB
@@ -94,7 +94,7 @@ case class LoginComponent(controller:Controller) {
 
   }
 
-  val component = ReactComponentB[Unit]("LoginComponent")
+  val component = ScalaComponent.build[Unit]("LoginComponent")
     .initialState(State("",""))
     .renderBackend[Backend]
     .componentDidMount{ c =>
@@ -102,7 +102,7 @@ case class LoginComponent(controller:Controller) {
         scalajs.js.Dynamic.global.componentHandler.upgradeDom()
       }
     }
-    .buildU
+    .build
 
   def apply() = component()
 

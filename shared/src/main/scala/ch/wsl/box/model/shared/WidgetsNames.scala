@@ -8,4 +8,5 @@ object WidgetsNames {
   val datepicker = "datepicker"
   val timepicker = "timepicker"
   val datetimePicker = "datetimePicker"
+  val select = "selectWidget"
 }

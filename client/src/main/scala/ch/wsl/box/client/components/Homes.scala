@@ -2,8 +2,8 @@ package ch.wsl.box.client.components
 
 import ch.wsl.box.client.controllers.Controller
 import ch.wsl.box.client.css.CommonStyles
-import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{BackendScope, ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{BackendScope, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -27,7 +27,7 @@ case class Homes(ctrl: Controller) {
       <.div(
         <.h1(ctrl.leftMenuTitle),
         <.ul(
-          s.elements.map { e =>
+          s.elements.toTagMod { e =>
             <.li(
               <.a(CommonStyles.navigationLink, e, ^.onClick --> ctrl.leftMenuClick(e))
             )
@@ -37,10 +37,10 @@ case class Homes(ctrl: Controller) {
   }
 
 
-  val component = ReactComponentB[Unit]("CRUDHome")
+  val component = ScalaComponent.build[Unit]("CRUDHome")
     .initialState(State(Vector()))
     .renderBackend[Backend]
-    .buildU
+    .build
 
 
   def apply() = component()
