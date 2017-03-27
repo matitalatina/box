@@ -22,7 +22,6 @@ object Text extends Widget {
   }
 
   override def render: (WidgetProps) => VdomElement = { P =>
-    println("rendering textinput")
     <.input(^.`type` := "text", ^.defaultValue := P.value.map(_.toString).getOrElse(""), ^.onChange ==> onChange(P))
   }
 

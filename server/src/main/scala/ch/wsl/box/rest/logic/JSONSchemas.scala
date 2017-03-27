@@ -75,7 +75,8 @@ object JSONSchemas {
     "bytea" -> "string",
     "numeric" -> "number",
     "text" -> "string",
-    "USER-DEFINED" -> "string"
+    "USER-DEFINED" -> "string",
+    "time without time zone" -> "string"
   )
 
   val widgetMapping = Map(
@@ -86,13 +87,14 @@ object JSONSchemas {
     "bigint" -> None,
     "double precision" -> None,
     "timestamp without time zone" -> None,//Some(WidgetsNames.datetimePicker),
-    "date" -> Some(WidgetsNames.datepicker),
+    "date" -> None,//Some(WidgetsNames.datepicker),
     "real" -> None,
     "boolean" -> None,
     "bytea" -> None,
     "numeric" -> None,
     "text" -> Some(WidgetsNames.textinput),
-    "USER-DEFINED" -> None
+    "USER-DEFINED" -> None,
+    "time without time zone" -> Some(WidgetsNames.timepicker)
   )
 
 }

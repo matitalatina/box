@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.service
 
-import java.sql.Timestamp
+import java.sql.{Time, Timestamp}
 import java.text.SimpleDateFormat
 
 import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
@@ -32,11 +32,21 @@ object JSONSupport extends CirceSupport{
 
   implicit val TimestampFormat : Encoder[Timestamp] with Decoder[Timestamp] = new Encoder[Timestamp] with Decoder[Timestamp] {
 
-    val timestampFormatter = new SimpleDateFormat("yyyy-mm-dd ")
+    val timestampFormatter = new SimpleDateFormat("yyyy-mm-dd HH:mm")
 
     override def apply(a: Timestamp): Json = Encoder.encodeString.apply(timestampFormatter.format(a))
 
     override def apply(c: HCursor): Result[Timestamp] = Decoder.decodeString.map(s => new Timestamp(timestampFormatter.parse(s).getTime)).apply(c)
+  }
+
+
+  implicit val TimeFormat : Encoder[Time] with Decoder[Time] = new Encoder[Time] with Decoder[Time] {
+
+    val timeFormatter = new SimpleDateFormat("HH:mm")
+
+    override def apply(a: Time): Json = Encoder.encodeString.apply(timeFormatter.format(a))
+
+    override def apply(c: HCursor): Result[Time] = Decoder.decodeString.map(s => new Time(timeFormatter.parse(s).getTime)).apply(c)
   }
 
 }
