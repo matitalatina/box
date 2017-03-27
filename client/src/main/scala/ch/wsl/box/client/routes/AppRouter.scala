@@ -1,6 +1,6 @@
 package ch.wsl.box.client.routes
 
-import ch.wsl.box.client.components.HomePage
+import ch.wsl.box.client.components.Tests
 import ch.wsl.box.client.controllers.{Container, Containers, Controller, TableController}
 import ch.wsl.box.client.model.Menu
 import japgolly.scalajs.react.Callback
@@ -39,7 +39,7 @@ object AppRouter {
       import dsl._
 
       ( trimSlashes
-      | staticRoute("#test",Containers.Test) ~> render(HomePage())
+      | staticRoute("#test",Containers.Test) ~> render(Tests())
       | staticRoute("",homeController.homeContainer) ~> renderR(RoutesUtils.renderController(homeController,homeController.homeContainer))
       | tableController.containers.routes.prefixPath_/("#tables")
       ).notFound(redirectToPage(homeController.homeContainer)(Redirect.Replace))

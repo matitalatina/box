@@ -5,6 +5,7 @@ Working on
 ---------------------
 
 1. Time jQuery plugin (not rendering, why?)
+1. Restore debug
 1. Select widget
 
 

@@ -26,13 +26,19 @@ object JQueryTimepicker {
       });
 
 
-
       el.timepicker(jsOpts)
     }
   }
 
   def apply(className:String,opts:TimepickerOptions = TimepickerOptions()) = {
-    jQuery("."+className).timepicker(opts)
+    val timepicker = jQuery("."+className)
+    if(timepicker.length > 0) {
+      js.Dynamic.global.console.log("AAAAAAA" + className)
+      js.Dynamic.global.console.log(timepicker)
+      val mounted = timepicker.timepicker(opts)
+      js.Dynamic.global.console.log(mounted)
+      mounted
+    }
   }
 }
 

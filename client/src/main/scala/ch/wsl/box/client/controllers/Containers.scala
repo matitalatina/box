@@ -26,7 +26,7 @@ object Containers{
 
   case class Home(controller:Controller) extends Container("Home","none",Homes(controller)())
 
-  case object Test extends Container("Test","none",HomePage())
+  case object Test extends Container("Test","none",Tests())
 
 }
 

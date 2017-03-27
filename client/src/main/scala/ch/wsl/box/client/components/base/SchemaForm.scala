@@ -30,6 +30,8 @@ object SchemaForm {
     //  debugRef($).foreach(_.backend.change(Some(formState.formData)))
     }
 
+    def remount() = Widget.mount
+
 
     def render(P:Props) = {
       val sfProps = for{
@@ -52,8 +54,9 @@ object SchemaForm {
     def renderForm(P:SchemaFormNative.Props) = {
       <.div(CommonStyles.card,
         SchemaFormNative(P),
-        <.hr()
+        <.hr(),
         //,Debug(ref=debugRefKey)
+        <.button(^.onClick --> remount(),"REMOUNT")
       )
     }
   }
