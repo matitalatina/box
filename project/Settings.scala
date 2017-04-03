@@ -77,14 +77,15 @@ object Settings {
     * the special %%% function selects the correct version for each project
     */
   val sharedJVMJSDependencies = Def.setting(Seq(
+    "io.udash"                 %%% "udash-core-shared" % versions.udash,
+    "io.udash"                 %%% "udash-rest-shared" % versions.udash,
+    "io.udash"                 %%% "udash-rpc-shared" % versions.udash
   ))
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(
     "com.typesafe.slick"       %% "slick"           % versions.slick,
     "org.postgresql"           %  "postgresql"      % versions.postgres,
-    "com.iheart"               %% "ficus"           % versions.ficus,
-    "io.udash"                 %%% "udash-core-shared" % versions.udash,
-    "io.udash"                 %%% "udash-rpc-shared" % versions.udash
+    "com.iheart"               %% "ficus"           % versions.ficus
   ))
 
   val codegenDependecies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(

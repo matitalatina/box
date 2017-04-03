@@ -12,5 +12,6 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
 
   private val (url2State, state2Url) = Bidirectional[String, RoutingState] {
     case "" => IndexState
+    case "/models" => ModelsState
   }
 }
