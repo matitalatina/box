@@ -26,7 +26,7 @@ trait RouteUI extends WebJarsSupport {
     } ~
       pathPrefix("js") {
         path(Segment) { file =>
-          getFromFile("client/target/scala-2.12/"+file)
+          getFromFile("client/target/scala-2.11/UdashStatic/WebContent/scripts/"+file)
         }
       } ~
       pathPrefix("css") {
@@ -36,7 +36,7 @@ trait RouteUI extends WebJarsSupport {
       } ~
       pathPrefix("lib") {
         path(Segment) { file =>
-          getFromFile("client/target/scala-2.12/classes/" + file)
+          getFromFile("client/target/scala-2.11/classes/" + file)
         }
       } ~
       pathPrefix("webjars") {

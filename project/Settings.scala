@@ -35,7 +35,7 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.12.1"
+    val scala = "2.11.8"
     val ficus = "1.4.0"
 
     //HTTP actors
@@ -61,12 +61,14 @@ object Settings {
     val slick = "3.2.0-M2"
 
     //frontend
-    val scalaJSReact = "1.0.0-RC1"
     val scalaCss = "0.5.3-RC1"
 
     //js
-    val reactJS = "15.4.2"
-    val materialDesign = "1.2.1"
+    val bootstrap =  "3.3.1-1"
+
+    val udash = "0.4.0"
+    val udashJQuery = "1.0.0"
+
 
   }
 
@@ -80,7 +82,9 @@ object Settings {
   val sharedJVMCodegenDependencies = Def.setting(Seq(
     "com.typesafe.slick"       %% "slick"           % versions.slick,
     "org.postgresql"           %  "postgresql"      % versions.postgres,
-    "com.iheart"               %% "ficus"           % versions.ficus
+    "com.iheart"               %% "ficus"           % versions.ficus,
+    "io.udash"                 %%% "udash-core-shared" % versions.udash,
+    "io.udash"                 %%% "udash-rpc-shared" % versions.udash
   ))
 
   val codegenDependecies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(
@@ -98,11 +102,8 @@ object Settings {
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,
     "ch.qos.logback"           %  "logback-classic"  % versions.logback,
+    "io.udash"                 %% "udash-rpc-backend" % versions.udash,
     "org.webjars"              % "webjars-locator"   % "0.32",
-    "org.webjars.npm"          % "pikaday"            % "1.5.1",
-    "org.webjars.npm"          % "react-jsonschema-form" % "0.45.0",
-    "org.webjars.npm"          % "moment" % "2.17.1",
-    "org.webjars.npm"          % "rc-time-picker" % "2.3.3",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test",
@@ -112,26 +113,15 @@ object Settings {
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */
   val scalajsDependencies = Def.setting(Seq(
-    "com.github.japgolly.scalajs-react" %%% "extra" % versions.scalaJSReact,
+    "io.udash" %%% "udash-core-frontend" % versions.udash,
+    "io.udash" %%% "udash-rpc-frontend" % versions.udash,
+    "io.udash" %%% "udash-jquery" % versions.udashJQuery,
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,
-    "com.github.japgolly.scalacss" %%% "ext-react" % versions.scalaCss,
-    "io.circe" %%% "circe-core" % versions.circe,
-    "io.circe" %%% "circe-generic" % versions.circe,
-    "io.circe" %%% "circe-parser" % versions.circe,
-    "io.circe" %%% "circe-scalajs" % versions.circe,
-    "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-    "com.olvind" %%% "scalajs-react-components" % "0.6.0",
-    "com.olvind" %%% "scalajs-react-components-macros" % "0.6.0",
-    "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
-    "be.doeraene" %%% "scalajs-jquery" % "0.9.1"
-    //"ru.pavkin" %%% "scala-js-momentjs" % "0.4.1" exclude("org.webjars.bower", "moment")
+    "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */
   val jsDependencies = Def.setting(Seq(
-    "org.webjars.npm" % "react"     % versions.reactJS / "react-with-addons.js" commonJSName "React"    minified "react-with-addons.min.js",
-    "org.webjars.npm" % "react-dom" % versions.reactJS / "react-dom.js"         commonJSName "ReactDOM" minified "react-dom.min.js" dependsOn "react-with-addons.js",
-    "org.webjars.npm" % "react-select" % "1.0.0-rc.3" / "react-select.js" dependsOn "react-with-addons.js",
-    "org.webjars.npm" % "material-design-lite" % versions.materialDesign / "dist/material.min.js"
+    "org.webjars" % "bootstrap-sass" % versions.bootstrap / "3.3.1/javascripts/bootstrap.js" dependsOn "jquery.js"
   ))
 }
