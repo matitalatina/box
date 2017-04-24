@@ -13,3 +13,9 @@ case object ErrorState extends RoutingState(RootState)
 case object IndexState extends RoutingState(RootState)
 
 case object ModelsState extends RoutingState(RootState)
+
+case class ModelTableState(model:String) extends RoutingState(ModelsState)
+case class ModelInsertState(model:String) extends RoutingState(ModelsState)
+case class ModelUpdateState(model:String,id:String) extends RoutingState(ModelsState)
+
+

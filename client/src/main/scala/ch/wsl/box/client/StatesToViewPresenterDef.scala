@@ -8,6 +8,7 @@ class StatesToViewPresenterDef extends ViewPresenterRegistry[RoutingState] {
     case RootState => RootViewPresenter
     case IndexState => IndexViewPresenter
     case ModelsState => ModelsViewPresenter
+    case ModelTableState(model) => ModelTableViewPresenter
     case _ => ErrorViewPresenter
   }
 }
