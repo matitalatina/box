@@ -40,6 +40,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel]) extends View {
   override def renderChild(view: View): Unit = {}
 
   override def getTemplate: scalatags.generic.Modifier[Element] = div(
-    h1(bind(model.subProp(_.name)))
+    h1(bind(model.subProp(_.name))),
+    p("table")
   )
 }

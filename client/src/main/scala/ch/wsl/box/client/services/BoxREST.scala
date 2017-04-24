@@ -15,14 +15,14 @@ trait BoxREST {
   @GET def forms():Future[Seq[String]]
 }
 
-trait BoxModelREST[T]{
-
-  def get()
-  def update(obj:T)
-  def insert(obj:T)
-  def delete(obj:T)
-
-}
+//trait BoxModelREST[T]{
+//
+//  def get()
+//  def update(obj:T)
+//  def insert(obj:T)
+//  def delete(obj:T)
+//
+//}
 
 object RestClient {
 
@@ -32,6 +32,8 @@ object RestClient {
     dom.window.location.hostname,
     dom.window.location.port.toInt,
     "/api/v1")
+
+
 
   def basicAuthToken(username: String, password: String):String = "Basic " + (username + ":" + password).getBytes.toBase64
 }

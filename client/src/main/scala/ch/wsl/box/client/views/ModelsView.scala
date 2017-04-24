@@ -4,7 +4,7 @@ package ch.wsl.box.client.views
   * Created by andre on 4/3/2017.
   */
 
-import ch.wsl.box.client.{ModelTableState, ModelsState}
+import ch.wsl.box.client.{ModelFormState, ModelTableState, ModelsState}
 import ch.wsl.box.client.services.Box
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
@@ -12,16 +12,16 @@ import io.udash.core.Presenter
 import org.scalajs.dom.Element
 
 
-case class Models(list:Seq[String], noChilds:Boolean)
+case class Models(list:Seq[String], model:Option[String])
 
-case object ModelsViewPresenter extends ViewPresenter[ModelsState.type] {
+case object ModelsViewPresenter extends ViewPresenter[ModelsState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
-  override def create(): (View, Presenter[ModelsState.type]) = {
+  override def create(): (View, Presenter[ModelsState]) = {
     val model = ModelProperty{
-      Models(Seq(),true)
+      Models(Seq(),None)
     }
     val presenter = new ModelsPresenter(model)
     val view = new ModelsView(model)
@@ -29,13 +29,18 @@ case object ModelsViewPresenter extends ViewPresenter[ModelsState.type] {
   }
 }
 
-class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState.type] {
+class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  override def handleState(state: ModelsState.type): Unit = {
+  override def handleState(state: ModelsState): Unit = {
     Box.models().map{ models =>
       model.subSeq(_.list).set(models)
+    }
+    if(state.model != "") {
+      model.subProp(_.model).set(Some(state.model))
+    } else {
+      model.subProp(_.model).set(None)
     }
   }
 }
@@ -49,10 +54,7 @@ class ModelsView(model:ModelProperty[Models]) extends View {
     import io.udash.wrappers.jquery._
     jQ(child).children().remove()
     if(view != null) {
-      model.subProp(_.noChilds).set(false)
       view.getTemplate.applyTo(child)
-    } else {
-      model.subProp(_.noChilds).set(true)
     }
 
   }
@@ -66,11 +68,17 @@ class ModelsView(model:ModelProperty[Models]) extends View {
       )
     ),
     div(BootstrapStyles.Grid.colMd10)(
-      showIf(model.subProp(_.noChilds))(
-        div(
-          h1("Models"),
-          p("select your model")
-        ).render
+      produce(model)( m =>
+        m.model match {
+          case None => div(
+            h1("Models"),
+            p("select your model")
+          ).render
+          case Some(model) => div(
+            a(href := ModelFormState(model,None).url)("New " + model),
+            a(href := ModelTableState(model).url)("Table " + model)
+          ).render
+        }
       ),
       child
     )

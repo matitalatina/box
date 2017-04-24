@@ -7,8 +7,9 @@ class StatesToViewPresenterDef extends ViewPresenterRegistry[RoutingState] {
   def matchStateToResolver(state: RoutingState): ViewPresenter[_ <: RoutingState] = state match {
     case RootState => RootViewPresenter
     case IndexState => IndexViewPresenter
-    case ModelsState => ModelsViewPresenter
+    case ModelsState(_) => ModelsViewPresenter
     case ModelTableState(model) => ModelTableViewPresenter
+    case ModelFormState(model,id) => ModelFormViewPresenter
     case _ => ErrorViewPresenter
   }
 }
