@@ -32,10 +32,8 @@ import scalacss.ScalatagsCss._
 import scalatags.JsDom._
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.styles.partials.FooterStyles
-import ch.wsl.box.client.styles.partials.HeaderStyles
 jQ(GlobalStyles.render[TypedTag[org.scalajs.dom.raw.HTMLStyleElement]].render).insertBefore(appRoot.get)
 jQ(FooterStyles.render[TypedTag[org.scalajs.dom.raw.HTMLStyleElement]].render).insertBefore(appRoot.get)
-jQ(HeaderStyles.render[TypedTag[org.scalajs.dom.raw.HTMLStyleElement]].render).insertBefore(appRoot.get)
       }
     })
   }

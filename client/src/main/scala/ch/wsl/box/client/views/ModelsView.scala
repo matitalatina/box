@@ -5,21 +5,23 @@ package ch.wsl.box.client.views
   */
 
 import ch.wsl.box.client.ModelsState
-import ch.wsl.box.client.services.RestClient
+import ch.wsl.box.client.services.Box
 import io.udash._
+import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.Presenter
 import org.scalajs.dom.Element
 
 
-case class Models(list:String)
+case class Models(list:Seq[String])
 
 case object ModelsViewPresenter extends ViewPresenter[ModelsState.type] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+
   override def create(): (View, Presenter[ModelsState.type]) = {
     val model = ModelProperty{
-      Models("")
+      Models(Seq())
     }
     val presenter = new ModelsPresenter(model)
     val view = new ModelsView(model)
@@ -32,8 +34,8 @@ class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def handleState(state: ModelsState.type): Unit = {
-    RestClient.server.models(RestClient.basicAuthToken("postgres","")).map{ models =>
-      model.subProp(_.list).set(models.mkString(","))
+    Box.models().map{ models =>
+      model.subSeq(_.list).set(models)
     }
   }
 }
@@ -44,7 +46,15 @@ class ModelsView(model:ModelProperty[Models]) extends View {
 
   override def renderChild(view: View): Unit = {}
 
-  override def getTemplate: scalatags.generic.Modifier[Element] = ul(
-    li(bind(model.subProp(_.list)))
+  override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.row)(
+    div(BootstrapStyles.Grid.colXs2)(
+      ul(
+        repeat(model.subSeq(_.list))(m => li(m.get).render)
+      )
+    ),
+    div(BootstrapStyles.Grid.colXs10)(
+      h1("Models"),
+      p("select your model")
+    )
   )
 }

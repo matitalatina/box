@@ -15,6 +15,15 @@ trait BoxREST {
   @GET def forms():Future[Seq[String]]
 }
 
+trait BoxModelREST[T]{
+
+  def get()
+  def update(obj:T)
+  def insert(obj:T)
+  def delete(obj:T)
+
+}
+
 object RestClient {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue

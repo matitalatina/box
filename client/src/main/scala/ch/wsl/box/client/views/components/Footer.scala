@@ -9,11 +9,7 @@ import scalacss.ScalatagsCss._
 
 object Footer {
   private lazy val template = footer(FooterStyles.footer)(
-    div(GlobalStyles.body)(
-      div(FooterStyles.footerInner)(
-        p(FooterStyles.footerCopyrights)("WSL 2017")
-      )
-    )
+        p("WSL 2017")
   ).render
 
   def getTemplate: Element = template

@@ -11,10 +11,10 @@ object FooterStyles extends StyleSheet.Inline {
   import dsl._
 
   val footer = style(
-    backgroundColor.black,
+    borderTop(solid,1 px,black),
     height(StyleConstants.Sizes.FooterHeight px),
     fontSize(1.2 rem),
-    color.white,
+    color.black,
 
     MediaQueries.phone(
       style(
@@ -37,23 +37,4 @@ object FooterStyles extends StyleSheet.Inline {
 
 
 
-  val footerLinks = style(
-    display.inlineBlock,
-    verticalAlign.middle
-  )
-
-
-  val footerCopyrights = style(
-    position.absolute,
-    right(`0`),
-    bottom(`0`),
-    fontSize.inherit,
-
-    MediaQueries.tabletPortrait(
-      style(
-        position.relative,
-        textAlign.right
-      )
-    )
-  )
 }

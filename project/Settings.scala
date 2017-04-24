@@ -116,6 +116,7 @@ object Settings {
   val scalajsDependencies = Def.setting(Seq(
     "io.udash" %%% "udash-core-frontend" % versions.udash,
     "io.udash" %%% "udash-rpc-frontend" % versions.udash,
+    "io.udash" %%% "udash-bootstrap" % versions.udash,
     "io.udash" %%% "udash-jquery" % versions.udashJQuery,
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss
@@ -123,6 +124,6 @@ object Settings {
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */
   val jsDependencies = Def.setting(Seq(
-    "org.webjars" % "bootstrap-sass" % versions.bootstrap / "3.3.1/javascripts/bootstrap.js" dependsOn "jquery.js"
+    //"org.webjars" % "bootstrap-sass" % versions.bootstrap / "3.3.1/javascripts/bootstrap.js" dependsOn "jquery.js"
   ))
 }
