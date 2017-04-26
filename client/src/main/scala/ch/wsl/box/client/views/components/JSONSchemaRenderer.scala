@@ -1,6 +1,9 @@
 package ch.wsl.box.client.views.components
 
 import ch.wsl.box.model.shared.JSONSchema
+import org.scalajs.dom.Element
+
+import scalatags.JsDom.TypedTag
 
 
 /**
@@ -11,9 +14,14 @@ object JSONSchemaRenderer {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
-  def apply(schema:JSONSchema) = {
+  def apply(schema:JSONSchema):TypedTag[Element] = {
+
+    val content = schema.title.getOrElse("")
+
     div(
-      h1("")
+      h1(content)
     )
   }
+
+  def apply(schema:Option[JSONSchema]):TypedTag[Element] = apply(schema.getOrElse(JSONSchema.empty))
 }
