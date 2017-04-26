@@ -16,10 +16,10 @@ object JSONSchemaRenderer {
 
   def apply(schema:JSONSchema):TypedTag[Element] = {
 
-    val content = schema.title.getOrElse("")
-
     div(
-      h1(content)
+      for((name,props) <- schema.properties.toSeq) yield {
+        div(name)
+      }
     )
   }
 
