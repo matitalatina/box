@@ -1,6 +1,6 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.model.shared.{JSONSchema, JSONSchemaL2, JSONSchemaL3}
+import ch.wsl.box.model.shared.{JSONField, JSONSchema, JSONSchemaL2, JSONSchemaL3}
 import io.circe.Json
 import org.scalajs.dom
 
@@ -25,4 +25,6 @@ object Box {
   def models():Future[Seq[String]] = client.get[Seq[String]]("/models")
   def list(model:String) = client.get[Seq[Json]](s"/$model")
   def schema(model:String) = client.get[JSONSchema](s"/$model/schema")
+  def form(model:String) = client.get[Seq[JSONField]](s"/$model/form")
+  def count(model:String) = client.get[Int](s"/$model/count")
 }
