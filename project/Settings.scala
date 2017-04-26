@@ -54,7 +54,7 @@ object Settings {
     val logback = "1.1.7"
 
     //json parsers
-    val circe = "0.7.0"
+    val circe = "0.7.1"
 
     //database
     val postgres = "9.4.1211"
@@ -120,7 +120,10 @@ object Settings {
     "io.udash" %%% "udash-jquery" % versions.udashJQuery,
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
-    "com.lihaoyi" %%% "upickle" % "0.4.3",
+    "io.circe" %%% "circe-core" % versions.circe,
+    "io.circe" %%% "circe-generic" % versions.circe,
+    "io.circe" %%% "circe-parser" % versions.circe,
+    "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
     "org.scala-js" %%% "scalajs-dom" % "0.9.0"
   ))

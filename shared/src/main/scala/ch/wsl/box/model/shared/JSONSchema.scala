@@ -6,12 +6,12 @@ package ch.wsl.box.model.shared
 
 case class JSONSchema(
                        `type`:String,
-                       title:Option[String] = None,
-                       properties: Map[String,JSONSchemaL2] = Map(),
-                       required: Option[Seq[String]] = None,
-                       readonly: Option[Boolean] = None,
-                       enum: Option[Seq[String]] = None,
-                       order: Option[Int] = None
+                       title:Option[String],
+                       properties: Map[String,JSONSchemaL2],
+                       required: Option[Seq[String]],
+                       readonly: Option[Boolean],
+                       enum: Option[Seq[String]],
+                       order: Option[Int]
                      ) {
 
   def typeOfTitle:Map[String,String] = properties.map{ case (k,v) => v.title.getOrElse("no Title") -> v.`type` }
@@ -20,24 +20,24 @@ case class JSONSchema(
 
 case class JSONSchemaL2(
                          `type`:String,
-                         title:Option[String] = None,
-                         properties: Option[Map[String,JSONSchemaL3]] = None,
-                         required: Option[Seq[String]] = None,
-                         readonly: Option[Boolean] = None,
-                         enum: Option[Seq[String]] = None,
-                         order: Option[Int] = None
+                         title:Option[String],
+                         properties: Option[Map[String,JSONSchemaL3]],
+                         required: Option[Seq[String]],
+                         readonly: Option[Boolean],
+                         enum: Option[Seq[String]],
+                         order: Option[Int]
                        )
 
 case class JSONSchemaL3(
                          `type`:String,
-                         title:Option[String] = None,
-                         required: Option[Seq[String]] = None,
-                         readonly: Option[Boolean] = None,
-                         enum: Option[Seq[String]] = None,
-                         order: Option[Int] = None
+                         title:Option[String],
+                         required: Option[Seq[String]],
+                         readonly: Option[Boolean],
+                         enum: Option[Seq[String]],
+                         order: Option[Int]
                        )
 
 
 object JSONSchema{
-  def empty = JSONSchema("object")
+  def empty = JSONSchema("object",None,Map(),None,None,None,None)
 }

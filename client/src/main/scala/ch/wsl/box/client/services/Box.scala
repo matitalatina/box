@@ -1,8 +1,8 @@
 package ch.wsl.box.client.services
 
 import ch.wsl.box.model.shared.{JSONSchema, JSONSchemaL2, JSONSchemaL3}
+import io.circe.Json
 import org.scalajs.dom
-import upickle.Js
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -14,9 +14,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 object Box {
 
 
-  import upickle.default._
-  import ch.wsl.box.client.formatters.Formatters._
-
+  import io.circe.generic.auto._
 
   def username = "postgres"
   def password = ""
@@ -25,6 +23,6 @@ object Box {
 
 
   def models():Future[Seq[String]] = client.get[Seq[String]]("/models")
-  def list(model:String) = client.get[Seq[Js.Value]](s"/$model")
+  def list(model:String) = client.get[Seq[Json]](s"/$model")
   def schema(model:String) = client.get[JSONSchema](s"/$model/schema")
 }

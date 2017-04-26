@@ -2,9 +2,9 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.ModelTableState
 import ch.wsl.box.client.services.Box
+import io.circe.Json
 import io.udash._
 import org.scalajs.dom.Element
-import upickle.Js
 
 import scalatags.generic.Modifier
 
@@ -13,7 +13,7 @@ import scalatags.generic.Modifier
   */
 
 
-case class ModelTableModel(name:String,rows:Seq[Js.Value])
+case class ModelTableModel(name:String,rows:Seq[Json])
 
 case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 

@@ -15,9 +15,10 @@ case class HttpClient(endpoint:String,user:String, password:String) {
   private def basicAuthToken(username: String, password: String):String = "Basic " + (username + ":" + password).getBytes.toBase64
 
 
-  import upickle.default._
+  import io.circe.syntax._
+  import io.circe.parser.decode
 
-  def get[T](url:String)(implicit readWriter: Reader[T]):Future[T] = {
+  def get[T](url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = {
     val promise = Promise[T]()
 
 
@@ -26,8 +27,10 @@ case class HttpClient(endpoint:String,user:String, password:String) {
     xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
-          val result = Try(read[T](xhr.responseText))
-          promise.complete(result)
+          decode[T](xhr.responseText) match {
+            case Left(fail) => promise.failure(fail)
+            case Right(result) => promise.success(result)
+          }
       } else {
         promise.failure(new Exception("HTTP status" + xhr.status))
       }
@@ -43,15 +46,17 @@ case class HttpClient(endpoint:String,user:String, password:String) {
 
   }
 
-  def post[D,R](url:String,obj:D)(implicit dataReadWriter: Writer[D],responseReadWriter: Reader[R]):Future[R] = {
+  def post[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]):Future[R] = {
     val promise = Promise[R]()
 
     xhr.open("POST",endpoint+url,true)
     xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
-        val result = Try(read[R](xhr.responseText))
-        promise.complete(result)
+        decode[R](xhr.responseText) match {
+          case Left(fail) => promise.failure(fail)
+          case Right(result) => promise.success(result)
+        }
       } else {
         promise.failure(new Exception("HTTP status" + xhr.status))
       }
@@ -61,7 +66,7 @@ case class HttpClient(endpoint:String,user:String, password:String) {
       promise.failure(new Exception("Error HTTP status" + xhr.status))
     }
 
-    xhr.send(write(obj))
+    xhr.send(obj.asJson.toString())
 
     promise.future
 
