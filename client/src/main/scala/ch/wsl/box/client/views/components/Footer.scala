@@ -1,5 +1,4 @@
 package ch.wsl.box.client.views.components
-import ch.wsl.box.client.config.ExternalUrls
 import ch.wsl.box.client.styles.{GlobalStyles}
 import ch.wsl.box.client.styles.partials.FooterStyles
 import org.scalajs.dom.raw.Element

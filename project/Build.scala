@@ -60,6 +60,7 @@ object Build extends sbt.Build {
       javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
       // use uTest framework for tests
       testFrameworks += new TestFramework("utest.runner.Framework"),
+      jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(org.scalajs.jsenv.selenium.Chrome()),
       requiresDOM := true,
       // Compile tests to JS using fast-optimisation
       scalaJSStage in Test := FastOptStage,

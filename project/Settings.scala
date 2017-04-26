@@ -119,7 +119,10 @@ object Settings {
     "io.udash" %%% "udash-bootstrap" % versions.udash,
     "io.udash" %%% "udash-jquery" % versions.udashJQuery,
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,
-    "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss
+    "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
+    "com.lihaoyi" %%% "upickle" % "0.4.3",
+    "com.lihaoyi" %% "utest" % "0.4.5" % "test",
+    "org.scala-js" %%% "scalajs-dom" % "0.9.0"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

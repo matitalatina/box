@@ -1,7 +1,6 @@
 package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.{IndexState, RoutingState}
-import ch.wsl.box.client.config.ExternalUrls
 import ch.wsl.box.client.styles.GlobalStyles
 import org.scalajs.dom.raw.Element
 
