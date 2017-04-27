@@ -6,7 +6,7 @@ import ch.wsl.box.client.views.components.JSONSchemaRenderer
 import ch.wsl.box.model.shared.JSONSchema
 import io.udash._
 import io.udash.core.Presenter
-import org.scalajs.dom.Element
+import org.scalajs.dom.{Element, Event}
 
 
 /**
@@ -23,7 +23,8 @@ case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
     val model = ModelProperty{
       ModelFormModel("",None,Seq())
     }
-    (ModelFormView(model),ModelFormPresenter(model))
+    val presenter = ModelFormPresenter(model)
+    (ModelFormView(model,presenter),presenter)
   }
 }
 
@@ -44,9 +45,14 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
     }.recover{ case e => e.printStackTrace() }
 
   }
+
+  def save() = {
+    println(model.get)
+  }
+
 }
 
-case class ModelFormView(model:ModelProperty[ModelFormModel]) extends View {
+case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelFormPresenter) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
@@ -68,7 +74,11 @@ case class ModelFormView(model:ModelProperty[ModelFormModel]) extends View {
             li(x)
           }
         ).render
-      }
+      },
+      button(
+        cls := "primary",
+        onclick :+= ((ev: Event) => presenter.save(), true)
+      )("Save")
     )
   }
 }
