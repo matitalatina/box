@@ -4,6 +4,7 @@ import ch.wsl.box.client.ModelTableState
 import ch.wsl.box.client.services.Box
 import io.circe.Json
 import io.udash._
+import io.udash.bootstrap.table.UdashTable
 import org.scalajs.dom.Element
 
 import scalatags.generic.Modifier
@@ -49,9 +50,21 @@ case class ModelTableView(model:ModelProperty[ModelTableModel]) extends View {
 
   override def getTemplate: scalatags.generic.Modifier[Element] = div(
     h1(bind(model.subProp(_.name))),
-    p("table"),
-    repeat(model.subSeq(_.rows)){ row =>
-      div(row.get.toString()).render
-    }
+    UdashTable()(model.subSeq(_.rows))(
+      headerFactory = Some(() => {
+        tr(
+          produce(model.subProp(_.rows)) { rows =>
+            for ((k, v) <- rows.headOption.toList.flatMap(_.asObject.get.toList)) yield {
+              th(k).render
+            }
+          }
+        ).render
+      }),
+      rowFactory = (el) => tr(
+        for((k,v) <- el.get.asObject.get.toList) yield {
+          td(v.toString())
+        }
+      ).render
+    ).render
   )
 }
