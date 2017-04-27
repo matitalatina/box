@@ -51,6 +51,7 @@ case class HttpClient(endpoint:String,user:String, password:String) {
 
     xhr.open("POST",endpoint+url,true)
     xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
+    xhr.setRequestHeader("Content-Type","application/json")
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
         decode[R](xhr.responseText) match {

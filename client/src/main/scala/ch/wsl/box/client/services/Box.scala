@@ -27,4 +27,5 @@ object Box {
   def schema(model:String) = client.get[JSONSchema](s"/$model/schema")
   def form(model:String) = client.get[Seq[JSONField]](s"/$model/form")
   def count(model:String) = client.get[Int](s"/$model/count")
+  def insert(model:String, data:Json) = client.post[Json,String](s"/$model",data)
 }

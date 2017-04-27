@@ -3,17 +3,22 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.ModelFormState
 import ch.wsl.box.client.services.Box
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
-import ch.wsl.box.model.shared.JSONSchema
+import ch.wsl.box.model.shared.{JSONSchema, JSONSchemaL2}
+import io.circe.Json
 import io.udash._
+import io.udash.bootstrap.UdashBootstrap
+import io.udash.bootstrap.label.UdashLabel
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
+
+import scala.util.Try
 
 
 /**
   * Created by andre on 4/24/2017.
   */
 
-case class ModelFormModel(name:String, schema:Option[JSONSchema],results:Seq[String])
+case class ModelFormModel(name:String, schema:Option[JSONSchema],results:Seq[String],error:String)
 
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
@@ -21,7 +26,7 @@ case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
   override def create(): (View, Presenter[ModelFormState]) = {
     val model = ModelProperty{
-      ModelFormModel("",None,Seq())
+      ModelFormModel("",None,Seq(),"")
     }
     val presenter = ModelFormPresenter(model)
     (ModelFormView(model,presenter),presenter)
@@ -46,8 +51,28 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
   }
 
+  import io.circe.syntax._
+  def parse(id:String,schema:JSONSchemaL2,value:Option[String]):(String,Json) = try{
+
+    val data = schema.`type` match {
+      case "string" => value.asJson
+      case "number" => value.map( v => v.toDouble).asJson
+    }
+
+    (id,data)
+  } catch { case t: Throwable =>
+    model.subProp(_.error).set(s"Error parsing $id field: " + t.getMessage)
+    throw t
+  }
+
   def save() = {
-    println(model.get)
+    val m = model.get
+    m.schema.foreach{ schema =>
+        val jsons = for {
+          ((name, property), i) <- schema.properties.zipWithIndex
+        } yield parse(name, property, m.results.lift(i))
+        Box.insert(m.name, jsons.toMap.asJson)
+    }
   }
 
 }
@@ -63,6 +88,13 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
 
     div(
       h1(bind(model.subProp(_.name))),
+      produce(model.subProp(_.error)){ error =>
+        div(
+          if(error.length > 0) {
+            UdashLabel.danger(UdashBootstrap.newId(), error).render
+          }
+        ).render
+      },
       produce(model.subProp(_.schema)){ schema =>
         div(
           JSONSchemaRenderer(schema,model.subSeq(_.results).elemProperties)
