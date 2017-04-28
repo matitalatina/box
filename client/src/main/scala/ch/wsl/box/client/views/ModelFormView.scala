@@ -3,7 +3,8 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.ModelFormState
 import ch.wsl.box.client.services.Box
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
-import ch.wsl.box.model.shared.{JSONSchema, JSONSchemaL2}
+import ch.wsl.box.client.views.components.JSONSchemaRenderer.FormDefinition
+import ch.wsl.box.model.shared.{JSONField, JSONSchema, JSONSchemaL2}
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.UdashBootstrap
@@ -18,7 +19,8 @@ import scala.util.Try
   * Created by andre on 4/24/2017.
   */
 
-case class ModelFormModel(name:String, schema:Option[JSONSchema],results:Seq[String],error:String)
+
+case class ModelFormModel(name:String, form:Option[FormDefinition], results:Seq[String], error:String)
 
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
@@ -38,16 +40,19 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   override def handleState(state: ModelFormState): Unit = {
     model.subProp(_.name).set(state.model)
 
-    Box.schema(state.model).map{ schema =>
+    {for{
+      schema <- Box.schema(state.model)
+      form <- Box.form(state.model)
+    } yield {
 
       //initialise an array of n strings, where n is the number of fields
       val results:Seq[String] = schema.properties.toSeq.map(_ => "")
 
       //the order here is relevant, changing the value on schema will trigger the view update so it needs the result array correctly set
       model.subSeq(_.results).set(results)
-      model.subProp(_.schema).set(Some(schema))
+      model.subProp(_.form).set(Some(FormDefinition(schema,form)))
 
-    }.recover{ case e => e.printStackTrace() }
+    }}.recover{ case e => e.printStackTrace() }
 
   }
 
@@ -67,9 +72,9 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
   def save() = {
     val m = model.get
-    m.schema.foreach{ schema =>
+    m.form.foreach{ form =>
         val jsons = for {
-          ((name, property), i) <- schema.properties.zipWithIndex
+          ((name, property), i) <- form.schema.properties.zipWithIndex
         } yield parse(name, property, m.results.lift(i))
         Box.insert(m.name, jsons.toMap.asJson)
     }
@@ -95,9 +100,9 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
           }
         ).render
       },
-      produce(model.subProp(_.schema)){ schema =>
+      produce(model.subProp(_.form)){ form =>
         div(
-          JSONSchemaRenderer(schema,model.subSeq(_.results).elemProperties)
+          JSONSchemaRenderer(form,model.subSeq(_.results).elemProperties)
         ).render
       },
       produce(model.subSeq(_.results)) { results =>
@@ -107,6 +112,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
           }
         ).render
       },
+      produce(model.subProp(_.form)){form => p(form.toString()).render },
       button(
         cls := "primary",
         onclick :+= ((ev: Event) => presenter.save(), true)
