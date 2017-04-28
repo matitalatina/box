@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components
 
-import ch.wsl.box.model.shared.{JSONField, JSONSchema}
+import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONSchema, WidgetsNames}
 import io.udash.properties.single.Property
 import org.scalajs.dom.Element
 import io.udash._
@@ -22,9 +22,9 @@ object JSONSchemaRenderer {
   import scalatags.JsDom.all._
 
 
-  def datepicker(modelLabel:String, model:Property[String]):Modifier = {
+  def datetimepicker(modelLabel:String, model:Property[String],format:String = "DD-MM-YYYY hh:mm"):Modifier = {
     val pickerOptions = ModelProperty(UdashDatePicker.DatePickerOptions(
-      format = "MMMM Do YYYY, hh:mm a",
+      format = format,
       locale = Some("en_GB")
     ))
 
@@ -45,14 +45,22 @@ object JSONSchemaRenderer {
     ).render
   }
 
+  def optionsRenderer(modelLabel:String, options:JSONFieldOptions,model:Property[String]):Modifier = {
+    div(BootstrapStyles.Form.formGroup)(
+      label(modelLabel),
+      Select(model,options.options.values.toSeq,BootstrapStyles.Form.formControl)
+    )
+  }
+
 
   def fieldRenderer(field:JSONField,model:Property[String]):Modifier = {
     val label = field.title.getOrElse(field.key)
     (field.`type`,field.widget,field.options) match {
+      case (_,_,Some(options)) => optionsRenderer(label,options,model)
       case ("number",_,_) => UdashForm.numberInput()(label)(model)
-      case ("string",Some("timepicker"),_) => datepicker(label,model)
-      case ("string",Some("datepicker"),_) => UdashForm.textInput()(label)(model)
-      case ("string",Some("datetimepicker"),_) => UdashForm.textInput()(label)(model)
+      case ("string",Some(WidgetsNames.timepicker),_) => datetimepicker(label,model,"hh:mm")
+      case ("string",Some(WidgetsNames.datepicker),_) => datetimepicker(label,model,"DD-MM-YYYY")
+      case ("string",Some(WidgetsNames.datetimePicker),_) => datetimepicker(label,model)
       case (_,_,_) => UdashForm.textInput()(label)(model)
     }
   }

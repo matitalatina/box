@@ -16,8 +16,7 @@ case class JSONField(
 
 case class TitleMap(value:String,name:String)
 
-case class JSONFieldOptions(async:JSONFieldHTTPOption, map:JSONFieldMap)
+case class JSONFieldOptions(refModel:String, map:JSONFieldMap, options:Map[String,String] = Map())
 
-case class JSONFieldHTTPOption(url:String)
 
 case class JSONFieldMap(valueProperty:String, textProperty:String)

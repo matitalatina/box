@@ -36,7 +36,7 @@ object JSONForm {
           } else {
             constraints = fk.contraintName :: constraints
 
-            val title = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse("en")
+            val title = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse("name")
 
             JSONField(
               JSONSchemas.typesMapping(field.data_type),
@@ -45,7 +45,7 @@ object JSONForm {
               placeholder = Some(fk.referencingTable + " Lookup"),
               //widget = Some(WidgetsNames.select),
               options = Some(
-                JSONFieldOptions(JSONFieldHTTPOption("http://localhost:8080/" + fk.referencingTable), JSONFieldMap(fk.referencingKeys.head, title))
+                JSONFieldOptions(fk.referencingTable, JSONFieldMap(fk.referencingKeys.head, title))
               )
             )
           }
