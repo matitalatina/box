@@ -86,25 +86,30 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   }
 
   import io.circe.syntax._
-  def parse(id:String,schema:JSONSchemaL2,value:Option[String]):(String,Json) = try{
-
-    val data = schema.`type` match {
-      case "string" => value.asJson
-      case "number" => value.map( v => v.toDouble).asJson
+  def parse(field: JSONField,value:Option[String]):(String,Json) = try{
+    println(s"parsing ${field.key} with value $value")
+    val valueToSave = value match {
+      case Some("") => None
+      case _ => value
+    }
+    val data = field.`type` match {
+      case "string" => valueToSave.asJson
+      case "number" => valueToSave.map( v => v.toDouble).asJson
     }
 
-    (id,data)
+    (field.key,data)
   } catch { case t: Throwable =>
-    model.subProp(_.error).set(s"Error parsing $id field: " + t.getMessage)
+    model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
     throw t
   }
 
   def save() = {
     val m = model.get
+    println(m.results)
     m.form.foreach{ form =>
         val jsons = for {
-          ((name, property), i) <- form.schema.properties.zipWithIndex
-        } yield parse(name, property, m.results.lift(i))
+          (field, i) <- form.fields.zipWithIndex
+        } yield parse(field, m.results.lift(i))
         Box.insert(m.name, jsons.toMap.asJson)
     }
   }
