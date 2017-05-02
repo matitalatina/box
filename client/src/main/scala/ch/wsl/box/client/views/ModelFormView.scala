@@ -41,14 +41,10 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
   def fetchLookupOptions(field:JSONField,opts:JSONFieldOptions):Future[JSONField] = {
-    println("fetch")
     Box.list(opts.refModel).map{ values =>
       val options:Map[String,String] = values.map{ value =>
-        println(values)
         val key:String = value.hcursor.get[Json](opts.map.valueProperty).fold({x => println(x); ""},{x => x.toString})
         val label:String = value.hcursor.get[Json](opts.map.textProperty).fold({x => println(x); ""},{x => x.as[String].right.getOrElse(x.toString())})
-        println("key:" + key)
-        println("label:" + label)
         (key,label)
       }.toMap
       field.copy(options = Some(field.options.get.copy(options = options)))
@@ -72,7 +68,6 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       emptyFields <- Box.form(state.model)
       fields <- populateOptionsValuesInFields(emptyFields)
     } yield {
-      println(fields)
 
       //initialise an array of n strings, where n is the number of fields
       val results:Seq[String] = schema.properties.toSeq.map(_ => "")

@@ -2,6 +2,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.ModelTableState
 import ch.wsl.box.client.services.Box
+import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.table.UdashTable
@@ -15,7 +16,7 @@ import scalatags.generic.Modifier
   */
 
 
-case class ModelTableModel(name:String,rows:Seq[Json])
+case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField])
 
 case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 
@@ -24,7 +25,7 @@ case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
   override def create(): (View, Presenter[ModelTableState]) = {
 
     val model = ModelProperty{
-      ModelTableModel("",Seq())
+      ModelTableModel("",Seq(),Seq())
     }
 
     (ModelTableView(model),ModelTablePresenter(model))
@@ -37,7 +38,11 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
 
   override def handleState(state: ModelTableState): Unit = {
     model.subProp(_.name).set(state.model)
-    Box.list(state.model).map{ list =>
+    for{
+      list <- Box.list(state.model)
+      fields <- Box.form(state.model)
+    } yield {
+      model.subSeq(_.fields).set(fields)
       model.subSeq(_.rows).set(list)
     }
   }
@@ -54,17 +59,20 @@ case class ModelTableView(model:ModelProperty[ModelTableModel]) extends View {
     UdashTable()(model.subSeq(_.rows))(
       headerFactory = Some(() => {
         tr(
-          produce(model.subProp(_.rows)) { rows =>
-            for ((k, v) <- rows.headOption.toList.flatMap(_.asObject.get.toList)) yield {
-              th(k).render
-            }
+          produce(model.subSeq(_.fields)) { fields =>
+              for{field <- fields} yield {
+                val title:String = field.title.getOrElse(field.key)
+                th(title).render
+              }
           }
         ).render
       }),
       rowFactory = (el) => tr(
-        for((k,v) <- el.get.asObject.get.toList) yield {
-          val content:String = v.as[String].right.getOrElse(v.toString())
-          td(content)
+        produce(model.subSeq(_.fields)) { fields =>
+          for{field <- fields} yield {
+            val content:String = el.get.hcursor.get[Json](field.key).fold({x => println(x); ""},{x => x.as[String].right.getOrElse(x.toString())})
+            td(content).render
+          }
         }
       ).render
     ).render
