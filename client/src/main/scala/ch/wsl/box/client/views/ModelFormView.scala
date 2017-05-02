@@ -47,7 +47,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         val label:String = value.hcursor.get[Json](opts.map.textProperty).fold({x => println(x); ""},{x => x.as[String].right.getOrElse(x.toString())})
         (key,label)
       }.toMap
-      field.copy(options = Some(field.options.get.copy(options = options)))
+      field.copy(options = Some(field.options.get.copy(options = Map("" -> "") ++ options)))
     }
   }
 
@@ -80,16 +80,29 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
   }
 
+
   import io.circe.syntax._
+
+  def parseOption(options:JSONFieldOptions,valueToSave:Option[String]):Json = {
+    options.options.find(_._2 == valueToSave.getOrElse(""))
+      .map(x =>
+        if(x._2 == "") return Json.Null else
+        Try(x._1.toInt.asJson).getOrElse(x._1.asJson)
+      ).getOrElse(Json.Null)
+  }
+
+
   def parse(field: JSONField,value:Option[String]):(String,Json) = try{
     println(s"parsing ${field.key} with value $value")
+
     val valueToSave = value match {
       case Some("") => None
       case _ => value
     }
-    val data = field.`type` match {
-      case "string" => valueToSave.asJson
-      case "number" => valueToSave.map( v => v.toDouble).asJson
+    val data = (field.`type`,field.options) match {
+      case (_,Some(options)) => parseOption(options,valueToSave)
+      case ("string",_) => valueToSave.asJson
+      case ("number",_) => valueToSave.map( v => v.toDouble).asJson
     }
 
     (field.key,data)

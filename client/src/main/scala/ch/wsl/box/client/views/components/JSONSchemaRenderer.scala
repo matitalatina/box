@@ -50,10 +50,6 @@ object JSONSchemaRenderer {
 
     def fromDate(dt:java.util.Date):String = {
       val date = new Date(dt.getTime)
-      println(date)
-      println(date.getFullYear())
-      println(date.getMonth())
-      println(date.getDate())
       if(date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return ""
       val result = format match {
         case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth()+1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
