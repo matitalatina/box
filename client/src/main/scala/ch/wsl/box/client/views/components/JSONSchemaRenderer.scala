@@ -1,5 +1,6 @@
 package ch.wsl.box.client.views.components
 
+
 import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONSchema, WidgetsNames}
 import io.udash.properties.single.Property
 import org.scalajs.dom.Element
@@ -8,6 +9,7 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.bootstrap.form.{UdashForm, UdashInputGroup}
 
+import scala.scalajs.js.Date
 import scalatags.JsDom.TypedTag
 
 
@@ -22,16 +24,41 @@ object JSONSchemaRenderer {
   import scalatags.JsDom.all._
 
 
-  def datetimepicker(modelLabel:String, model:Property[String],format:String = "DD-MM-YYYY hh:mm"):Modifier = {
+  final val dateTimePickerFormat = "YYYY-MM-DD hh:mm"
+  final val datePickerFormat = "YYYY-MM-DD"
+  final val timePickerFormat = "hh:mm"
+
+  def datetimepicker(modelLabel:String, model:Property[String],format:String = dateTimePickerFormat):Modifier = {
     val pickerOptions = ModelProperty(UdashDatePicker.DatePickerOptions(
       format = format,
       locale = Some("en_GB")
     ))
 
 
-    def toDate(str:String):java.util.Date = new java.util.Date()
-    def fromDate(dt:java.util.Date):String = ""
+    def toDate(str:String):java.util.Date = {
+      format match {
+        case `timePickerFormat` => {
+          val string = "1970-01-01 " + str
+          new java.util.Date(Date.parse(string).toLong)
+        }
+        case _ => new java.util.Date(Date.parse(str).toLong)
+      }
+
+    }
+
+    def fromDate(dt:java.util.Date):String = {
+      val date = new Date(dt.getTime)
+      val result = format match {
+        case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth()+1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
+        case `datePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth()+1) + "-" + "%02d".format(date.getDate())
+        case `timePickerFormat` => "%02d".format(date.getHours()) + ":" +  "%02d".format(date.getMinutes())
+      }
+      result
+    }
+
+
     val date = model.transform(toDate,fromDate)
+
 
     val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
 
@@ -40,7 +67,7 @@ object JSONSchemaRenderer {
       label(modelLabel),
       UdashInputGroup()(
         UdashInputGroup.input(picker.render),
-        UdashInputGroup.addon("")
+        UdashInputGroup.addon("date2: ",bind(date))
       ).render
     ).render
   }
@@ -58,8 +85,8 @@ object JSONSchemaRenderer {
     (field.`type`,field.widget,field.options) match {
       case (_,_,Some(options)) => optionsRenderer(label,options,model)
       case ("number",_,_) => UdashForm.numberInput()(label)(model)
-      case ("string",Some(WidgetsNames.timepicker),_) => datetimepicker(label,model,"hh:mm")
-      case ("string",Some(WidgetsNames.datepicker),_) => datetimepicker(label,model,"DD-MM-YYYY")
+      case ("string",Some(WidgetsNames.timepicker),_) => datetimepicker(label,model,timePickerFormat)
+      case ("string",Some(WidgetsNames.datepicker),_) => datetimepicker(label,model,datePickerFormat)
       case ("string",Some(WidgetsNames.datetimePicker),_) => datetimepicker(label,model)
       case (_,_,_) => UdashForm.textInput()(label)(model)
     }
