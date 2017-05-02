@@ -24,18 +24,20 @@ object JSONSchemaRenderer {
   import scalatags.JsDom.all._
 
 
-  final val dateTimePickerFormat = "YYYY-MM-DD hh:mm"
+  final val dateTimePickerFormat = "YYYY-MM-DD HH:mm"
   final val datePickerFormat = "YYYY-MM-DD"
-  final val timePickerFormat = "hh:mm"
+  final val timePickerFormat = "HH:mm"
 
   def datetimepicker(modelLabel:String, model:Property[String],format:String = dateTimePickerFormat):Modifier = {
     val pickerOptions = ModelProperty(UdashDatePicker.DatePickerOptions(
       format = format,
-      locale = Some("en_GB")
+      locale = Some("en_GB"),
+      showClear = true
     ))
 
 
     def toDate(str:String):java.util.Date = {
+      if(str == "") return null;
       format match {
         case `timePickerFormat` => {
           val string = "1970-01-01 " + str
@@ -48,6 +50,11 @@ object JSONSchemaRenderer {
 
     def fromDate(dt:java.util.Date):String = {
       val date = new Date(dt.getTime)
+      println(date)
+      println(date.getFullYear())
+      println(date.getMonth())
+      println(date.getDate())
+      if(date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return ""
       val result = format match {
         case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth()+1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
         case `datePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth()+1) + "-" + "%02d".format(date.getDate())
