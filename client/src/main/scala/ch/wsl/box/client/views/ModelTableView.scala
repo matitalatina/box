@@ -1,7 +1,8 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.ModelTableState
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{Enhancer, REST}
+import ch.wsl.box.client.views.components.FieldsRenderer
 import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash._
@@ -40,7 +41,8 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
     model.subProp(_.name).set(state.model)
     for{
       list <- REST.list(state.model)
-      fields <- REST.form(state.model)
+      emptyFields <- REST.form(state.model)
+      fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
       model.subSeq(_.fields).set(fields)
       model.subSeq(_.rows).set(list)
@@ -70,8 +72,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel]) extends View {
       rowFactory = (el) => tr(
         produce(model.subSeq(_.fields)) { fields =>
           for{field <- fields} yield {
-            val content:String = el.get.hcursor.get[Json](field.key).fold({x => println(x); ""},{x => x.as[String].right.getOrElse(x.toString())})
-            td(content).render
+            td(FieldsRenderer(el.get,field)).render
           }
         }
       ).render
