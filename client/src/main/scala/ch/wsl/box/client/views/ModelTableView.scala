@@ -7,6 +7,7 @@ import io.udash._
 import io.udash.bootstrap.table.UdashTable
 import org.scalajs.dom.Element
 
+import scala.util.Try
 import scalatags.generic.Modifier
 
 /**
@@ -62,7 +63,8 @@ case class ModelTableView(model:ModelProperty[ModelTableModel]) extends View {
       }),
       rowFactory = (el) => tr(
         for((k,v) <- el.get.asObject.get.toList) yield {
-          td(v.toString())
+          val content:String = v.as[String].right.getOrElse(v.toString())
+          td(content)
         }
       ).render
     ).render

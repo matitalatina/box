@@ -67,7 +67,7 @@ object JSONSchemaRenderer {
       label(modelLabel),
       UdashInputGroup()(
         UdashInputGroup.input(picker.render),
-        UdashInputGroup.addon("date2: ",bind(date))
+        UdashInputGroup.addon("")
       ).render
     ).render
   }

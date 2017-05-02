@@ -46,7 +46,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       val options:Map[String,String] = values.map{ value =>
         println(values)
         val key:String = value.hcursor.get[Json](opts.map.valueProperty).fold({x => println(x); ""},{x => x.toString})
-        val label:String = value.hcursor.get[Json](opts.map.textProperty).fold({x => println(x); ""},{x => x.toString()})
+        val label:String = value.hcursor.get[Json](opts.map.textProperty).fold({x => println(x); ""},{x => x.as[String].right.getOrElse(x.toString())})
         println("key:" + key)
         println("label:" + label)
         (key,label)
