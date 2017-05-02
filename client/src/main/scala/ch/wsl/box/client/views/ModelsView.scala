@@ -4,8 +4,8 @@ package ch.wsl.box.client.views
   * Created by andre on 4/3/2017.
   */
 
+import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.{ModelFormState, ModelTableState, ModelsState}
-import ch.wsl.box.client.services.Box
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.Presenter
@@ -34,7 +34,7 @@ class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def handleState(state: ModelsState): Unit = {
-    Box.models().map{ models =>
+    REST.models().map{ models =>
       model.subSeq(_.list).set(models)
     }
     if(state.model != "") {

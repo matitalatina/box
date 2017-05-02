@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.ModelTableState
-import ch.wsl.box.client.services.Box
+import ch.wsl.box.client.services.REST
 import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash._
@@ -39,8 +39,8 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
   override def handleState(state: ModelTableState): Unit = {
     model.subProp(_.name).set(state.model)
     for{
-      list <- Box.list(state.model)
-      fields <- Box.form(state.model)
+      list <- REST.list(state.model)
+      fields <- REST.form(state.model)
     } yield {
       model.subSeq(_.fields).set(fields)
       model.subSeq(_.rows).set(list)

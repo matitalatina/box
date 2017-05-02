@@ -1,17 +1,14 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.model.shared.{JSONField, JSONSchema, JSONSchemaL2, JSONSchemaL3}
+import ch.wsl.box.model.shared.{JSONField, JSONSchema}
 import io.circe.Json
-import org.scalajs.dom
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by andre on 4/24/2017.
   */
-object Box {
+object REST {
 
 
   import io.circe.generic.auto._

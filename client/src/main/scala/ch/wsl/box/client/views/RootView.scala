@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views
 
-import ch.wsl.box.client.services.Box
+import ch.wsl.box.client.services.REST
 import io.udash._
 import ch.wsl.box.client.{IndexState, ModelsState, RootState}
 import org.scalajs.dom.Element

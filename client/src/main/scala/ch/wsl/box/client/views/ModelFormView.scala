@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.ModelFormState
-import ch.wsl.box.client.services.Box
+import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
 import ch.wsl.box.client.views.components.JSONSchemaRenderer.FormDefinition
 import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONSchema, JSONSchemaL2}
@@ -41,7 +41,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
   def fetchLookupOptions(field:JSONField,opts:JSONFieldOptions):Future[JSONField] = {
-    Box.list(opts.refModel).map{ values =>
+    REST.list(opts.refModel).map{ values =>
       val options:Map[String,String] = values.map{ value =>
         val key:String = value.hcursor.get[Json](opts.map.valueProperty).fold({x => println(x); ""},{x => x.toString})
         val label:String = value.hcursor.get[Json](opts.map.textProperty).fold({x => println(x); ""},{x => x.as[String].right.getOrElse(x.toString())})
@@ -64,8 +64,8 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
     model.subProp(_.name).set(state.model)
 
     {for{
-      schema <- Box.schema(state.model)
-      emptyFields <- Box.form(state.model)
+      schema <- REST.schema(state.model)
+      emptyFields <- REST.form(state.model)
       fields <- populateOptionsValuesInFields(emptyFields)
     } yield {
 
@@ -118,7 +118,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         val jsons = for {
           (field, i) <- form.fields.zipWithIndex
         } yield parse(field, m.results.lift(i))
-        Box.insert(m.name, jsons.toMap.asJson)
+        REST.insert(m.name, jsons.toMap.asJson)
     }
   }
 

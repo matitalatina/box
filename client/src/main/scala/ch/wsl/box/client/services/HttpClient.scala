@@ -3,7 +3,6 @@ package ch.wsl.box.client.services
 import org.scalajs.dom
 
 import scala.concurrent.{Future, Promise}
-import scala.util.Try
 
 /**
   * Created by andre on 4/26/2017.
@@ -15,8 +14,8 @@ case class HttpClient(endpoint:String,user:String, password:String) {
   private def basicAuthToken(username: String, password: String):String = "Basic " + (username + ":" + password).getBytes.toBase64
 
 
-  import io.circe.syntax._
   import io.circe.parser.decode
+  import io.circe.syntax._
 
   def get[T](url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = {
     val promise = Promise[T]()
