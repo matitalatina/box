@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.ModelFormState
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
 import ch.wsl.box.client.views.components.JSONSchemaRenderer.FormDefinition
 import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONSchema, JSONSchemaL2}
@@ -40,33 +40,13 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
-  def fetchLookupOptions(field:JSONField,opts:JSONFieldOptions):Future[JSONField] = {
-    REST.list(opts.refModel).map{ values =>
-      val options:Map[String,String] = values.map{ value =>
-        val key:String = value.hcursor.get[Json](opts.map.valueProperty).fold({x => println(x); ""},{x => x.toString})
-        val label:String = value.hcursor.get[Json](opts.map.textProperty).fold({x => println(x); ""},{x => x.as[String].right.getOrElse(x.toString())})
-        (key,label)
-      }.toMap
-      field.copy(options = Some(field.options.get.copy(options = Map("" -> "") ++ options)))
-    }
-  }
-
-  def populateOptionsValuesInFields(fields:Seq[JSONField]):Future[Seq[JSONField]] = Future.sequence{
-    fields.map{ field =>
-      field.options match {
-        case None => Future.successful(field)
-        case Some(opts) => fetchLookupOptions(field,opts)
-      }
-    }
-  }
-
   override def handleState(state: ModelFormState): Unit = {
     model.subProp(_.name).set(state.model)
 
     {for{
       schema <- REST.schema(state.model)
       emptyFields <- REST.form(state.model)
-      fields <- populateOptionsValuesInFields(emptyFields)
+      fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
 
       //initialise an array of n strings, where n is the number of fields
@@ -80,47 +60,23 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
   }
 
-
   import io.circe.syntax._
-
-  def parseOption(options:JSONFieldOptions,valueToSave:Option[String]):Json = {
-    options.options.find(_._2 == valueToSave.getOrElse(""))
-      .map(x =>
-        if(x._2 == "") return Json.Null else
-        Try(x._1.toInt.asJson).getOrElse(x._1.asJson)
-      ).getOrElse(Json.Null)
-  }
-
-
-  def parse(field: JSONField,value:Option[String]):(String,Json) = try{
-    println(s"parsing ${field.key} with value $value")
-
-    val valueToSave = value match {
-      case Some("") => None
-      case _ => value
-    }
-    val data = (field.`type`,field.options) match {
-      case (_,Some(options)) => parseOption(options,valueToSave)
-      case ("string",_) => valueToSave.asJson
-      case ("number",_) => valueToSave.map( v => v.toDouble).asJson
-    }
-
-    (field.key,data)
-  } catch { case t: Throwable =>
-    model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
-    throw t
-  }
 
   def save() = {
     val m = model.get
     println(m.results)
     m.form.foreach{ form =>
-        val jsons = for {
-          (field, i) <- form.fields.zipWithIndex
-        } yield parse(field, m.results.lift(i))
-        REST.insert(m.name, jsons.toMap.asJson)
+      val jsons = for {
+        (field, i) <- form.fields.zipWithIndex
+      } yield Enhancer.parse(field, m.results.lift(i)){ t =>
+        model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
+      }
+      REST.insert(m.name, jsons.toMap.asJson)
     }
   }
+
+
+
 
 }
 
