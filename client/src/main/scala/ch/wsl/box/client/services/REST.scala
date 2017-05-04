@@ -1,6 +1,6 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.model.shared.{JSONField, JSONSchema}
+import ch.wsl.box.model.shared.{JSONField, JSONKey, JSONKeys, JSONSchema}
 import io.circe.Json
 
 import scala.concurrent.Future
@@ -20,9 +20,12 @@ object REST {
 
 
   def models():Future[Seq[String]] = client.get[Seq[String]]("/models")
-  def list(model:String) = client.get[Seq[Json]](s"/$model")
-  def schema(model:String) = client.get[JSONSchema](s"/$model/schema")
-  def form(model:String) = client.get[Seq[JSONField]](s"/$model/form")
-  def count(model:String) = client.get[Int](s"/$model/count")
-  def insert(model:String, data:Json) = client.post[Json,String](s"/$model",data)
+  def list(model:String): Future[Seq[Json]] = client.get[Seq[Json]](s"/$model")
+  def schema(model:String): Future[JSONSchema] = client.get[JSONSchema](s"/$model/schema")
+  def form(model:String): Future[Seq[JSONField]] = client.get[Seq[JSONField]](s"/$model/form")
+  def count(model:String): Future[Int] = client.get[Int](s"/$model/count")
+  def insert(model:String, data:Json): Future[String] = client.post[Json,String](s"/$model",data)
+  def get(model:String,keys:JSONKeys):Future[Json] = {
+    client.get[Json](s"/$model/id/${keys.asString}")
+  }
 }

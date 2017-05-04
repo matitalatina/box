@@ -63,4 +63,20 @@ object Enhancer {
     throw t
   }
 
+  def extract(current:Json,fields:Seq[JSONField]):Seq[String] = fields.map{ field =>
+    val resultString = current.hcursor.get[Json](field.key).fold(
+      _ => "",
+      rawJs => rawJs.as[String].fold(
+        _ => rawJs.toString(),
+        x => x
+      )
+    )
+
+    field.options match {
+      case None => resultString
+      case Some(opts) => opts.options.lift(resultString).getOrElse(resultString)
+    }
+
+  }
+
 }

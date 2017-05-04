@@ -4,7 +4,7 @@ import ch.wsl.box.client.ModelFormState
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
 import ch.wsl.box.client.views.components.JSONSchemaRenderer.FormDefinition
-import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONSchema, JSONSchemaL2}
+import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.UdashBootstrap
@@ -41,16 +41,23 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
   override def handleState(state: ModelFormState): Unit = {
-    model.subProp(_.name).set(state.model)
+    model.subProp(_.name).set(state.model + state.id.map(" - " + _).getOrElse(""))
+
+    println(state)
+
 
     {for{
       schema <- REST.schema(state.model)
       emptyFields <- REST.form(state.model)
+      current <- state.id match {
+        case Some(id) => REST.get(state.model,JSONKeys(Vector(JSONKey("id",id)))) //TODO fix keys
+        case None => Future.successful(Json.Null)
+      }
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
 
       //initialise an array of n strings, where n is the number of fields
-      val results:Seq[String] = schema.properties.toSeq.map(_ => "")
+      val results:Seq[String] = Enhancer.extract(current,fields)
 
       //the order here is relevant, changing the value on schema will trigger the view update so it needs the result array correctly set
       model.subSeq(_.results).set(results)
