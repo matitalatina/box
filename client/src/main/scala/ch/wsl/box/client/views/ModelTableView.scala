@@ -1,13 +1,13 @@
 package ch.wsl.box.client.views
 
-import ch.wsl.box.client.ModelTableState
+import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.views.components.FieldsRenderer
 import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.table.UdashTable
-import org.scalajs.dom.Element
+import org.scalajs.dom.{Element, Event}
 
 import scala.util.Try
 import scalatags.generic.Modifier
@@ -29,13 +29,14 @@ case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
       ModelTableModel("",Seq(),Seq())
     }
 
-    (ModelTableView(model),ModelTablePresenter(model))
+    val presenter = ModelTablePresenter(model)
+    (ModelTableView(model,presenter),presenter)
   }
 }
 
 case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Presenter[ModelTableState]{
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
+  import ch.wsl.box.client.Context._
 
   override def handleState(state: ModelTableState): Unit = {
     model.subProp(_.name).set(state.model)
@@ -48,9 +49,15 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
       model.subSeq(_.rows).set(list)
     }
   }
+
+  def edit(el:Json) = {
+    val id = el.hcursor.get[String]("id").right.getOrElse(el.hcursor.get[Json]("id").right.getOrElse(Json.Null).toString())
+    val newState = ModelFormState(model.subProp(_.name).get,Some(id))
+    io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
+  }
 }
 
-case class ModelTableView(model:ModelProperty[ModelTableModel]) extends View {
+case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTablePresenter) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
@@ -66,7 +73,8 @@ case class ModelTableView(model:ModelProperty[ModelTableModel]) extends View {
                 val title:String = field.title.getOrElse(field.key)
                 th(title).render
               }
-          }
+          },
+          th("Actions")
         ).render
       }),
       rowFactory = (el) => tr(
@@ -74,7 +82,11 @@ case class ModelTableView(model:ModelProperty[ModelTableModel]) extends View {
           for{field <- fields} yield {
             td(FieldsRenderer(el.get,field)).render
           }
-        }
+        },
+        td(button(
+          cls := "primary",
+          onclick :+= ((ev: Event) => presenter.edit(el.get), true)
+        )("Edit"))
       ).render
     ).render
   )

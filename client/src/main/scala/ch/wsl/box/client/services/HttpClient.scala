@@ -45,10 +45,13 @@ case class HttpClient(endpoint:String,user:String, password:String) {
 
   }
 
-  def post[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]):Future[R] = {
+  def post[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("POST",url,obj)
+  def put[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("PUT",url,obj)
+
+  private def send[D,R](method:String,url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]):Future[R] = {
     val promise = Promise[R]()
 
-    xhr.open("POST",endpoint+url,true)
+    xhr.open(method,endpoint+url,true)
     xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
     xhr.setRequestHeader("Content-Type","application/json")
     xhr.onload = { (e: dom.Event) =>

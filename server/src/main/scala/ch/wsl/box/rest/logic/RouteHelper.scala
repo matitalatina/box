@@ -67,4 +67,15 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, 
     } yield result
   }
 
+  def updateById(i:JSONKeys,e:M)(implicit db:Database):Future[Int] = {
+    println (e)
+    for{
+      result <- db.run {
+        val action = filter(i).update(e)
+        println (action.statements)
+        action
+      }
+    } yield result
+  }
+
 }

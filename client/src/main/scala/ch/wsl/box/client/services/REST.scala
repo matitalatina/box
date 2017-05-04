@@ -28,4 +28,5 @@ object REST {
   def get(model:String,keys:JSONKeys):Future[Json] = {
     client.get[Json](s"/$model/id/${keys.asString}")
   }
+  def update(model:String,keys:JSONKeys,data:Json):Future[String] = client.put[Json,String](s"/$model/id/${keys.asString}",data)
 }

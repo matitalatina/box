@@ -51,13 +51,10 @@ trait RouteTable {
           } ~
             put {
               entity(as[M]) { e =>
-                println(e)
-                val result = db.run {
-                  val action = table.update(e)
-                  println(action.statements)
-                  action
-                }.map(_ => e)
-                complete(result) //result should be in the same future as e
+                onComplete(utils.updateById(JSONKeys.fromString(id),e)) {
+                  case Success(entity) => complete("Ok")
+                  case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
+                }
               }
             } ~
             delete {

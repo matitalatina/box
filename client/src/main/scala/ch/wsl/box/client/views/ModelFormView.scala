@@ -21,7 +21,7 @@ import scala.util.Try
   */
 
 
-case class ModelFormModel(name:String, form:Option[FormDefinition], results:Seq[String], error:String)
+case class ModelFormModel(name:String, id:Option[String], form:Option[FormDefinition], results:Seq[String], error:String)
 
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
@@ -29,7 +29,7 @@ case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
   override def create(): (View, Presenter[ModelFormState]) = {
     val model = ModelProperty{
-      ModelFormModel("",None,Seq(),"")
+      ModelFormModel("",None,None,Seq(),"")
     }
     val presenter = ModelFormPresenter(model)
     (ModelFormView(model,presenter),presenter)
@@ -40,9 +40,11 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
-  override def handleState(state: ModelFormState): Unit = {
-    model.subProp(_.name).set(state.model + state.id.map(" - " + _).getOrElse(""))
+  def key(id:String) = JSONKeys(Vector(JSONKey("id",id))) //TODO fix keys
 
+  override def handleState(state: ModelFormState): Unit = {
+    model.subProp(_.name).set(state.model)
+    model.subProp(_.id).set(state.id)
     println(state)
 
 
@@ -50,7 +52,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       schema <- REST.schema(state.model)
       emptyFields <- REST.form(state.model)
       current <- state.id match {
-        case Some(id) => REST.get(state.model,JSONKeys(Vector(JSONKey("id",id)))) //TODO fix keys
+        case Some(id) => REST.get(state.model,key(id))
         case None => Future.successful(Json.Null)
       }
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
@@ -78,7 +80,10 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       } yield Enhancer.parse(field, m.results.lift(i)){ t =>
         model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
       }
-      REST.insert(m.name, jsons.toMap.asJson)
+      m.id match {
+        case Some(id) => REST.update(m.name,key(id),jsons.toMap.asJson)
+        case None => REST.insert(m.name, jsons.toMap.asJson)
+      }
     }
   }
 
@@ -97,7 +102,10 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
   override def getTemplate: scalatags.generic.Modifier[Element] = {
 
     div(
-      h1(bind(model.subProp(_.name))),
+      h1(bind(model.subProp(_.name)),produce(model.subProp(_.id)){ id =>
+        val subTitle = id.map(" - " + _).getOrElse("")
+        small(subTitle).render
+      }),
       produce(model.subProp(_.error)){ error =>
         div(
           if(error.length > 0) {
