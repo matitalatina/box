@@ -191,11 +191,12 @@ package object tables {
       }
 
 
-      override def tableName = (dbName: String) => toCamelCase(dbName)
+      override def tableName = (dbName: String) => dbName
       /** Maps database table name to entity case class name
  *
         *@group Basic customization overrides */
-      override def entityName = (dbName: String) => toCamelCase(dbName)+"Row"
+      override def entityName = (dbName: String) => dbName+"_row"
+
 
       /**
         * Capitalizes the first (16 bit) character of each word separated by one or more '_'. Lower cases all other characters.
@@ -286,6 +287,13 @@ package object tables {
 
         override def TableClass = new TableClassDef {
           override def optionEnabled = columns.size <= 22 && mappingEnabled && columns.exists(c => !c.model.nullable)
+        }
+
+        override def Column = new Column(_){
+          // customize Scala column names
+          override def rawName = model.name
+
+
         }
 
 
