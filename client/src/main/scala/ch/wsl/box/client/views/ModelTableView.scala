@@ -17,7 +17,7 @@ import scalatags.generic.Modifier
   */
 
 
-case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String])
+case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String], editing:Seq[(String,Boolean)])
 
 case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 
@@ -26,7 +26,7 @@ case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
   override def create(): (View, Presenter[ModelTableState]) = {
 
     val model = ModelProperty{
-      ModelTableModel("",Seq(),Seq(),Seq())
+      ModelTableModel("",Seq(),Seq(),Seq(),Seq())
     }
 
     val presenter = ModelTablePresenter(model)
@@ -50,6 +50,9 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
       model.subSeq(_.fields).set(fields)
       model.subSeq(_.rows).set(list)
       model.subProp(_.keys).set(keys)
+
+      val editing = list.flatMap(el => fields.map{ f => el.keys(keys).asString + "-" + f.key -> false })
+      model.subProp(_.editing).set(editing)
     }
   }
 
@@ -66,33 +69,64 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
+  import Enhancer._
+
   override def renderChild(view: View): Unit = {}
+
 
   override def getTemplate: scalatags.generic.Modifier[Element] = div(
     h1(bind(model.subProp(_.name))),
-    UdashTable()(model.subSeq(_.rows))(
-      headerFactory = Some(() => {
-        tr(
-          produce(model.subSeq(_.fields)) { fields =>
-              for{field <- fields} yield {
-                val title:String = field.title.getOrElse(field.key)
+    produce(model.subSeq(_.editing)) { e =>
+      UdashTable()(model.subSeq(_.rows))(
+        headerFactory = Some(() => {
+          tr(
+            produce(model.subSeq(_.fields)) { fields =>
+              for {field <- fields} yield {
+                val title: String = field.title.getOrElse(field.key)
                 th(title).render
               }
+            },
+            th("Actions")
+          ).render
+        }),
+        rowFactory = (el) => tr(
+          produce(model.subSeq(_.fields)) { fields =>
+            for {field <- fields} yield {
+              val key = el.get.keys(model.get.keys).asString
+              val editing = model.subProp(_.editing).transform(toEditable(field.key,key), fromEditable(model.get.editing, field.key, key))
+              td(FieldsRenderer(
+                el.get,
+                field,
+                model.subProp(_.keys).get, el.transform(x => x.get(field.key), x => Enhancer.parse(field, Some(x))(_ => Unit)._2),
+                editing
+              )).render
+            }
           },
-          th("Actions")
+          td(button(
+            cls := "primary",
+            onclick :+= ((ev: Event) => presenter.edit(el.get), true)
+          )("Edit"))
         ).render
-      }),
-      rowFactory = (el) => tr(
-        produce(model.subSeq(_.fields)) { fields =>
-          for{field <- fields} yield {
-            td(FieldsRenderer(el.get,field,model.subProp(_.keys).get)).render
-          }
-        },
-        td(button(
-          cls := "primary",
-          onclick :+= ((ev: Event) => presenter.edit(el.get), true)
-        )("Edit"))
       ).render
-    ).render
+    }
   )
+
+  def toEditable(field:String,key:String)(in:Seq[(String,Boolean)]):Boolean = {
+
+    val result = for{
+      field <- in.find(_._1 == key + "-" + field).map(_._2)
+    } yield {
+      field
+    }
+
+    result.getOrElse(false)
+  }
+
+  def fromEditable(original:Seq[(String,Boolean)],field:String, key:String)(in:Boolean):Seq[(String,Boolean)] = original.map{case (k,v) =>
+    val value = if(k == key + "-" + field) {
+      in
+    } else v
+    k -> value
+  }
+
 }

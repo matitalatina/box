@@ -83,8 +83,11 @@ object JSONSchemaRenderer {
   }
 
 
-  def fieldRenderer(field:JSONField,model:Property[String]):Modifier = {
-    val label = field.title.getOrElse(field.key)
+  def fieldRenderer(field:JSONField,model:Property[String],showLabel:Boolean = true):Modifier = {
+    val label = showLabel match {
+      case true => field.title.getOrElse(field.key)
+      case false => ""
+    }
     (field.`type`,field.widget,field.options) match {
       case (_,_,Some(options)) => optionsRenderer(label,options,model)
       case ("number",_,_) => UdashForm.numberInput()(label)(model)
