@@ -1,6 +1,6 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions}
+import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONKeys}
 import io.circe.Json
 
 import scala.concurrent.Future
@@ -77,6 +77,20 @@ object Enhancer {
       case Some(opts) => opts.options.lift(resultString).getOrElse(resultString)
     }
 
+  }
+
+
+  implicit class EnhancedJson(el:Json) {
+    def get(field: String) = el.hcursor.get[Json](field).fold(
+      { x => println(x); "" }, { x => x.as[String].right.getOrElse(x.toString()) }
+    )
+
+    def keys(fields:Seq[String]) :JSONKeys = {
+      val values = fields map { field =>
+        get(field)
+      }
+      JSONKeys.fromMap(fields.zip(values).toMap)
+    }
   }
 
 }

@@ -3,7 +3,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.views.components.FieldsRenderer
-import ch.wsl.box.model.shared.JSONField
+import ch.wsl.box.model.shared.{JSONField, JSONKeys}
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.table.UdashTable
@@ -17,7 +17,7 @@ import scalatags.generic.Modifier
   */
 
 
-case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField])
+case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String])
 
 case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 
@@ -26,7 +26,7 @@ case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
   override def create(): (View, Presenter[ModelTableState]) = {
 
     val model = ModelProperty{
-      ModelTableModel("",Seq(),Seq())
+      ModelTableModel("",Seq(),Seq(),Seq())
     }
 
     val presenter = ModelTablePresenter(model)
@@ -37,22 +37,27 @@ case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Presenter[ModelTableState]{
 
   import ch.wsl.box.client.Context._
+  import Enhancer._
 
   override def handleState(state: ModelTableState): Unit = {
     model.subProp(_.name).set(state.model)
     for{
       list <- REST.list(state.model)
       emptyFields <- REST.form(state.model)
+      keys <- REST.keys(state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
       model.subSeq(_.fields).set(fields)
       model.subSeq(_.rows).set(list)
+      model.subProp(_.keys).set(keys)
     }
   }
 
+
+
   def edit(el:Json) = {
-    val id = el.hcursor.get[String]("id").right.getOrElse(el.hcursor.get[Json]("id").right.getOrElse(Json.Null).toString())
-    val newState = ModelFormState(model.subProp(_.name).get,Some(id))
+    val key = el.keys(model.subProp(_.keys).get)
+    val newState = ModelFormState(model.subProp(_.name).get,Some(key.asString))
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 }
@@ -80,7 +85,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
       rowFactory = (el) => tr(
         produce(model.subSeq(_.fields)) { fields =>
           for{field <- fields} yield {
-            td(FieldsRenderer(el.get,field)).render
+            td(FieldsRenderer(el.get,field,model.subProp(_.keys).get)).render
           }
         },
         td(button(

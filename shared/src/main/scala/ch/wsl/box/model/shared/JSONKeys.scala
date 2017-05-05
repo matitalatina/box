@@ -5,6 +5,9 @@ package ch.wsl.box.model.shared
   */
 case class JSONKeys(keys:Vector[JSONKey]) {
   def asString = keys.map(k => k.key + "::" + k.value).mkString(",")
+
+  def values: Vector[String] = keys.map(_.value)
+
 }
 
 object JSONKeys {
@@ -15,6 +18,12 @@ object JSONKeys {
       JSONKey(c(0),c(1))
     }.toVector
   )
+
+  def fromMap(keys:Map[String,String]) = {
+    val jsonKeys = keys.map{ case (k,v) => JSONKey(k,v)}
+    JSONKeys(jsonKeys.toVector)
+  }
+
 }
 
 case class JSONKey(key:String,value:String)

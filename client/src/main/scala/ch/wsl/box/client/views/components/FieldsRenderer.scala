@@ -17,15 +17,17 @@ object FieldsRenderer {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
-  def apply(value:Json, field:JSONField):TypedTag[Element] = {
+  import ch.wsl.box.client.services.Enhancer._
+
+  def apply(value:Json, field:JSONField, keys:Seq[String]):TypedTag[Element] = {
     val rawValue:String = value.hcursor.get[Json](field.key).fold(
       {x => println(x); ""},
       {x => x.as[String].right.getOrElse(x.toString())}
     )
     field.options match {
       case Some(opts) => {
-        val label: String = opts.options.lift(rawValue).getOrElse("")
-        a(href := ModelFormState(field.table,Some(rawValue)).url,label)
+        val label: String = opts.options.lift(value.get(field.key)).getOrElse("")
+        a(href := ModelFormState(field.table,Some(value.keys(keys).asString)).url,label)
       }
       case None => p(rawValue)
     }

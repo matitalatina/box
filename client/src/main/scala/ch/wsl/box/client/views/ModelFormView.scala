@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views
 
-import ch.wsl.box.client.ModelFormState
+import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
 import ch.wsl.box.client.views.components.JSONSchemaRenderer.FormDefinition
@@ -37,10 +37,8 @@ case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 }
 
 case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Presenter[ModelFormState] {
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-
-  def key(id:String) = JSONKeys(Vector(JSONKey("id",id))) //TODO fix keys
+  import ch.wsl.box.client.Context._
 
   override def handleState(state: ModelFormState): Unit = {
     model.subProp(_.name).set(state.model)
@@ -49,14 +47,18 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
     {for{
+      keys <- REST.keys(state.model)
+      ids = state.id.map(JSONKeys.fromString)
       schema <- REST.schema(state.model)
       emptyFields <- REST.form(state.model)
       current <- state.id match {
-        case Some(id) => REST.get(state.model,key(id))
+        case Some(id) => REST.get(state.model,ids.get)
         case None => Future.successful(Json.Null)
       }
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
+
+
 
       //initialise an array of n strings, where n is the number of fields
       val results:Seq[String] = Enhancer.extract(current,fields)
@@ -80,9 +82,15 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       } yield Enhancer.parse(field, m.results.lift(i)){ t =>
         model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
       }
-      m.id match {
-        case Some(id) => REST.update(m.name,key(id),jsons.toMap.asJson)
+      val saveAction = m.id match {
+        case Some(id) => REST.update(m.name,JSONKeys.fromString(id),jsons.toMap.asJson)
         case None => REST.insert(m.name, jsons.toMap.asJson)
+      }
+      saveAction.map{_ =>
+
+        val newState = ModelTableState(model.subProp(_.name).get)
+        io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
+
       }
     }
   }
