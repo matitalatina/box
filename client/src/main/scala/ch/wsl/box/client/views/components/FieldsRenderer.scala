@@ -26,7 +26,10 @@ object FieldsRenderer {
     editing.set(!editing.get)
   }
 
-  def apply(value:Json, field:JSONField, keys:Seq[String], model:Property[String], editing:Property[Boolean]):TypedTag[Element] = {
+  def apply(value:Json, field:JSONField, keys:Seq[String], model:Property[String]):TypedTag[Element] = {
+
+    val editing = Property(false)
+
     val rawValue:String = value.hcursor.get[Json](field.key).fold(
       {x => println(x); ""},
       {x => x.as[String].right.getOrElse(x.toString())}
