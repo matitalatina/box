@@ -14,10 +14,10 @@ object Enhancer {
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   def fetchLookupOptions(field:JSONField,opts:JSONFieldOptions):Future[JSONField] = {
-    REST.list(opts.refModel).map{ values =>
+    REST.list(opts.refModel,50).map{ values =>
       val options:Map[String,String] = values.map{ value =>
-        val key:String = value.hcursor.get[Json](opts.map.valueProperty).fold({x =>  ""},{x => x.toString})
-        val label:String = value.hcursor.get[Json](opts.map.textProperty).fold({x =>  ""},{x => x.as[String].right.getOrElse(x.toString())})
+        val key:String = value.get(opts.map.valueProperty)
+        val label:String = value.get(opts.map.textProperty)
         (key,label)
       }.toMap
       field.copy(options = Some(field.options.get.copy(options = Map("" -> "") ++ options)))

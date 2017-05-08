@@ -19,15 +19,17 @@ import scalatags.generic.Modifier
 
 case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String])
 
+object ModelTableModel{
+  def empty = ModelTableModel("",Seq(),Seq(),Seq())
+}
+
 case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def create(): (View, Presenter[ModelTableState]) = {
 
-    val model = ModelProperty{
-      ModelTableModel("",Seq(),Seq(),Seq())
-    }
+    val model = ModelProperty(ModelTableModel.empty)
 
     val presenter = ModelTablePresenter(model)
     (ModelTableView(model,presenter),presenter)
@@ -40,9 +42,10 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
   import Enhancer._
 
   override def handleState(state: ModelTableState): Unit = {
+    model.set(ModelTableModel.empty)
     model.subProp(_.name).set(state.model)
     for{
-      list <- REST.list(state.model)
+      list <- REST.list(state.model,20)
       emptyFields <- REST.form(state.model)
       keys <- REST.keys(state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
@@ -108,7 +111,9 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
             onclick :+= ((ev: Event) => presenter.edit(el.get), true)
           )("Edit"))
         ).render
-      ).render
+      ).render,
+    showIf(model.subProp(_.fields).transform(_.size == 0)){ p("loading...").render }
+
   )
 
 

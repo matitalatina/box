@@ -45,4 +45,6 @@ object JSONQuery{
     sort = List(),
     filter = List()
   )
+
+  def limit(limit:Int) = baseQuery.copy(count = limit)
 }
