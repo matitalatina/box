@@ -17,7 +17,7 @@ import scalatags.generic.Modifier
   */
 
 
-case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String], editing:Seq[(String,Boolean)])
+case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String], editing:Seq[(String,Seq[(String,Boolean)])])
 
 case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 
@@ -47,12 +47,17 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
       keys <- REST.keys(state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
-      model.subSeq(_.fields).set(fields)
-      model.subSeq(_.rows).set(list)
-      model.subProp(_.keys).set(keys)
 
-      val editing = list.flatMap(el => fields.map{ f => el.keys(keys).asString + "-" + f.key -> false })
-      model.subProp(_.editing).set(editing)
+      val editing = list.map(el => el.keys(keys).asString -> fields.map{ f =>  f.key -> false })
+      val m = ModelTableModel(
+        name = state.model,
+        rows = list,
+        fields = fields,
+        keys = keys,
+        editing = editing
+      )
+
+      model.set(m)
     }
   }
 
@@ -76,7 +81,6 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
 
   override def getTemplate: scalatags.generic.Modifier[Element] = div(
     h1(bind(model.subProp(_.name))),
-    produce(model.subSeq(_.editing)) { e =>
       UdashTable()(model.subSeq(_.rows))(
         headerFactory = Some(() => {
           tr(
@@ -108,23 +112,30 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
           )("Edit"))
         ).render
       ).render
-    }
   )
 
-  def toEditable(field:String,key:String)(in:Seq[(String,Boolean)]):Boolean = {
+  def toEditable(field:String,key:String)(in:Seq[(String,Seq[(String,Boolean)])]):Boolean = {
 
     val result = for{
-      field <- in.find(_._1 == key + "-" + field).map(_._2)
+      field <- in.find(_._1 == key).map(_._2)
+      result <- field.find(_._2 == field).map(_._2)
     } yield {
-      field
+      result
     }
 
     result.getOrElse(false)
   }
 
-  def fromEditable(original:Seq[(String,Boolean)],field:String, key:String)(in:Boolean):Seq[(String,Boolean)] = original.map{case (k,v) =>
-    val value = if(k == key + "-" + field) {
-      in
+  def fromEditable(original:Seq[(String,Seq[(String,Boolean)])],field:String, key:String)(in:Boolean):Seq[(String,Seq[(String,Boolean)])] = original.map{case (k,v) =>
+    val value = if(k == key) {
+      v.map{ case (k2,v2) =>
+        val result = if(k2 == field) {
+          in
+        } else {
+          v2
+        }
+        k2 -> result
+      }
     } else v
     k -> value
   }

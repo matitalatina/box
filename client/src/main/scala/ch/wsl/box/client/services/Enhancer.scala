@@ -82,7 +82,7 @@ object Enhancer {
 
   implicit class EnhancedJson(el:Json) {
     def get(field: String) = el.hcursor.get[Json](field).fold(
-      { x => println(x); "" }, { x => x.as[String].right.getOrElse(x.toString()) }
+      { x => "" }, { x => x.as[String].right.getOrElse(x.toString()) }
     )
 
     def keys(fields:Seq[String]) :JSONKeys = {
