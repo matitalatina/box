@@ -26,15 +26,15 @@ object FieldsRenderer {
     editing.set(!editing.get)
   }
 
-  def apply(value:Json, field:JSONField, keys:Seq[String], model:Property[String]):TypedTag[Element] = {
+  def apply(value:String, field:JSONField, keys:Seq[String], model:Property[String]):TypedTag[Element] = {
 
 
     val contentFixed = field.options match {
       case Some(opts) => {
-        val label: String = opts.options.lift(value.get(field.key)).getOrElse("")
-        a(href := ModelFormState(field.table,Some(value.keys(keys).asString)).url,label)
+        val label: String = opts.options.lift(value).getOrElse("")
+        a(href := ModelFormState(field.table,Some("")).url,label)
       }
-      case None => p(value.get(field.key))
+      case None => p(value)
     }
 
     val editing = Property(false)

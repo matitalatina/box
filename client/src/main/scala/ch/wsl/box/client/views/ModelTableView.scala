@@ -17,7 +17,8 @@ import scalatags.generic.Modifier
   */
 
 
-case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String])
+case class Row(data: Seq[String])
+case class ModelTableModel(name:String,rows:Seq[Row], fields:Seq[JSONField], keys:Seq[String])
 
 object ModelTableModel{
   def empty = ModelTableModel("",Seq(),Seq(),Seq())
@@ -46,15 +47,16 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
     model.subProp(_.name).set(state.model)
     for{
       list <- REST.list(state.model,20)
+      csv <- REST.csv(state.model,20)
       emptyFields <- REST.form(state.model)
       keys <- REST.keys(state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
 
-      val editing = list.flatMap(el => fields.map{ f => el.keys(keys).asString + "-" + f.key -> false })
+
       val m = ModelTableModel(
         name = state.model,
-        rows = list,
+        rows = csv.map{Row(_)},
         fields = fields,
         keys = keys
       )
@@ -97,19 +99,20 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
         }),
         rowFactory = (el) => tr(
           produce(model.subSeq(_.fields)) { fields =>
-            for {field <- fields} yield {
-              val key = el.get.keys(model.get.keys).asString
+            for {(field,i) <- fields.zipWithIndex} yield {
+              val value = el.get.data.lift(i).getOrElse("")
               td(FieldsRenderer(
-                el.get,
+                value,
                 field,
-                model.subProp(_.keys).get, el.transform(x => x.get(field.key), x => Enhancer.parse(field, Some(x))(_ => Unit)._2)
+                model.subProp(_.keys).get,
+                Property("")//el.transform(x => value, x => Enhancer.parse(field, Some(value))(_ => Unit)._2)
               )).render
             }
-          },
-          td(button(
-            cls := "primary",
-            onclick :+= ((ev: Event) => presenter.edit(el.get), true)
-          )("Edit"))
+          }
+//          td(button(
+//            cls := "primary",
+//            onclick :+= ((ev: Event) => presenter.edit(el.get), true)
+//          )("Edit"))
         ).render
       ).render,
     showIf(model.subProp(_.fields).transform(_.size == 0)){ p("loading...").render }

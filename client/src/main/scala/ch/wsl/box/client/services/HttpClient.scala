@@ -48,6 +48,9 @@ case class HttpClient(endpoint:String,user:String, password:String) {
   def post[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("POST",url,obj)
   def put[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("PUT",url,obj)
 
+
+
+
   private def send[D,R](method:String,url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]):Future[R] = {
     val promise = Promise[R]()
 
@@ -60,6 +63,31 @@ case class HttpClient(endpoint:String,user:String, password:String) {
           case Left(fail) => promise.failure(fail)
           case Right(result) => promise.success(result)
         }
+      } else {
+        promise.failure(new Exception("HTTP status" + xhr.status))
+      }
+    }
+
+    xhr.onerror = { (e: dom.Event) =>
+      promise.failure(new Exception("Error HTTP status" + xhr.status))
+    }
+
+    xhr.send(obj.asJson.toString())
+
+    promise.future
+
+  }
+
+  def postString[D](url:String,obj:D)(implicit encoder: io.circe.Encoder[D]):Future[String] = {
+    val promise = Promise[String]()
+
+
+    xhr.open("POST",endpoint+url,true)
+    xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
+    xhr.setRequestHeader("Content-Type","application/json")
+    xhr.onload = { (e: dom.Event) =>
+      if (xhr.status == 200) {
+        promise.success(xhr.responseText)
       } else {
         promise.failure(new Exception("HTTP status" + xhr.status))
       }

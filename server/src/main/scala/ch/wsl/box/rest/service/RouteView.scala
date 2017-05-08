@@ -22,7 +22,7 @@ trait RouteView {
 
   var views = Set[String]()
 
-  def view[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])(implicit
+  def view[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](name:String, table:TableQuery[T])(implicit
                                                                                               mat:Materializer,
                                                                                               unmarshaller: FromRequestUnmarshaller[M],
                                                                                               marshaller:ToResponseMarshaller[M],

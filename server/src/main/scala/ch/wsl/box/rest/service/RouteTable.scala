@@ -1,15 +1,15 @@
 package ch.wsl.box.rest.service
 
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
-import akka.http.scaladsl.server.{Route, Directives}
+import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
-import ch.wsl.box.model.shared.{JSONResult, JSONKeys, JSONQuery, JSONCount}
+import ch.wsl.box.model.shared.{JSONCount, JSONKeys, JSONQuery, JSONResult}
 import ch.wsl.box.rest.logic._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import slick.driver.PostgresDriver.api._
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
+
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -23,7 +23,7 @@ trait RouteTable {
 
   var models = Set[String]()
 
-  def model[T <: slick.driver.PostgresDriver.api.Table[M],M](name:String, table:TableQuery[T])
+  def model[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](name:String, table:TableQuery[T])
                                                             (implicit
                                                              mat:Materializer,
                                                              unmarshaller: FromRequestUnmarshaller[M],
@@ -36,9 +36,12 @@ trait RouteTable {
 
     val utils = new RouteHelper[T,M](name,table)
     import JSONSupport._
-    import Directives._
     import io.circe.generic.auto._
 
+    import akka.http.scaladsl.server.Directives._
+
+    import akka.http.scaladsl.model.headers._
+    import akka.http.scaladsl.model._
 
     pathPrefix(name) {
       pathPrefix("id") {
@@ -96,6 +99,15 @@ trait RouteTable {
           entity(as[JSONQuery]) { query =>
             println("list")
             complete(utils.find(query))
+          }
+        }
+      } ~
+      path("csv") {
+        post {
+          entity(as[JSONQuery]) { query =>
+            println("csv")
+
+            complete(utils.find(query).map(x => HttpEntity(ContentTypes.`text/plain(UTF-8)`,x.csv)))
           }
         }
       } ~
