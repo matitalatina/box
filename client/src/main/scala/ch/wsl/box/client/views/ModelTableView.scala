@@ -17,7 +17,7 @@ import scalatags.generic.Modifier
   */
 
 
-case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String], editing:Seq[(String,Seq[(String,Boolean)])])
+case class ModelTableModel(name:String,rows:Seq[Json], fields:Seq[JSONField], keys:Seq[String], editing:Seq[(String,Boolean)])
 
 case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 
@@ -48,7 +48,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
 
-      val editing = list.map(el => el.keys(keys).asString -> fields.map{ f =>  f.key -> false })
+      val editing = list.flatMap(el => fields.map{ f => el.keys(keys).asString + "-" + f.key -> false })
       val m = ModelTableModel(
         name = state.model,
         rows = list,
@@ -114,28 +114,20 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
       ).render
   )
 
-  def toEditable(field:String,key:String)(in:Seq[(String,Seq[(String,Boolean)])]):Boolean = {
+  def toEditable(field:String,key:String)(in:Seq[(String,Boolean)]):Boolean = {
 
     val result = for{
-      field <- in.find(_._1 == key).map(_._2)
-      result <- field.find(_._2 == field).map(_._2)
+      field <- in.find(_._1 == key + "-" + field).map(_._2)
     } yield {
-      result
+      field
     }
 
     result.getOrElse(false)
   }
 
-  def fromEditable(original:Seq[(String,Seq[(String,Boolean)])],field:String, key:String)(in:Boolean):Seq[(String,Seq[(String,Boolean)])] = original.map{case (k,v) =>
-    val value = if(k == key) {
-      v.map{ case (k2,v2) =>
-        val result = if(k2 == field) {
-          in
-        } else {
-          v2
-        }
-        k2 -> result
-      }
+  def fromEditable(original:Seq[(String,Boolean)],field:String, key:String)(in:Boolean):Seq[(String,Boolean)] = original.map{case (k,v) =>
+    val value = if(k == key + "-" + field) {
+      in
     } else v
     k -> value
   }
