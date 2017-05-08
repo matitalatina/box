@@ -1,11 +1,11 @@
 package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
-import ch.wsl.box.model.shared.JSONField
+import ch.wsl.box.model.shared.{JSONField, JSONKeys}
 import io.circe.Json
 import org.scalajs.dom.{Element, Event}
-
 import io.udash._
+
 import scalatags.JsDom.TypedTag
 
 /**
@@ -26,24 +26,25 @@ object FieldsRenderer {
     editing.set(!editing.get)
   }
 
-  def apply(value:String, field:JSONField, keys:Seq[String], model:Property[String]):TypedTag[Element] = {
+  def apply(value:String, field:JSONField, keys:JSONKeys):TypedTag[Element] = {
 
 
     val contentFixed = field.options match {
       case Some(opts) => {
         val label: String = opts.options.lift(value).getOrElse("")
-        a(href := ModelFormState(field.table,Some("")).url,label)
+        a(href := ModelFormState(field.table,Some(keys.asString)).url,label)
       }
       case None => p(value)
     }
 
     val editing = Property(false)
+    val model = Property(value)
+
     div(onclick :+= ((ev: Event) => toggleEdit(editing), true),
       showIf(editing.transform(x => !x))(contentFixed.render),
       showIf(editing)(div(JSONSchemaRenderer.fieldRenderer(field,model,false)).render)
     )
 
-//    div(contentFixed)
 
   }
 }

@@ -47,7 +47,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
     model.subProp(_.name).set(state.model)
     for{
       list <- REST.list(state.model,20)
-      csv <- REST.csv(state.model,20)
+      csv <- REST.csv(state.model,50)
       emptyFields <- REST.form(state.model)
       keys <- REST.keys(state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
@@ -66,10 +66,11 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
   }
 
 
+  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.fields).get,model.subProp(_.keys).get)
 
-  def edit(el:Json) = {
-    val key = el.keys(model.subProp(_.keys).get)
-    val newState = ModelFormState(model.subProp(_.name).get,Some(key.asString))
+  def edit(el:Row) = {
+    val k = key(el)
+    val newState = ModelFormState(model.subProp(_.name).get,Some(k.asString))
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 }
@@ -97,23 +98,25 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
             th("Actions")
           ).render
         }),
-        rowFactory = (el) => tr(
-          produce(model.subSeq(_.fields)) { fields =>
-            for {(field,i) <- fields.zipWithIndex} yield {
-              val value = el.get.data.lift(i).getOrElse("")
-              td(FieldsRenderer(
-                value,
-                field,
-                model.subProp(_.keys).get,
-                Property("")//el.transform(x => value, x => Enhancer.parse(field, Some(value))(_ => Unit)._2)
-              )).render
+        rowFactory = (el) => {
+          val key = presenter.key(el.get)
+          tr(
+            td(button(
+              cls := "primary",
+              onclick :+= ((ev: Event) => presenter.edit(el.get), true)
+            )("Edit")),
+            produce(model.subSeq(_.fields)) { fields =>
+              for {(field, i) <- fields.zipWithIndex} yield {
+                val value = el.get.data.lift(i).getOrElse("")
+                td(FieldsRenderer(
+                  value,
+                  field,
+                  key
+                )).render
+              }
             }
-          }
-//          td(button(
-//            cls := "primary",
-//            onclick :+= ((ev: Event) => presenter.edit(el.get), true)
-//          )("Edit"))
-        ).render
+          ).render
+        }
       ).render,
     showIf(model.subProp(_.fields).transform(_.size == 0)){ p("loading...").render }
 

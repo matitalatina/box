@@ -93,4 +93,14 @@ object Enhancer {
     }
   }
 
+  def extractKeys(row:Seq[String],fields:Seq[JSONField],keys:Seq[String]):JSONKeys = {
+    val map = for{
+      key <- keys
+      (field,i) <- fields.zipWithIndex if field.key == key
+    } yield {
+      key -> row.lift(i).getOrElse("")
+    }
+    JSONKeys.fromMap(map.toMap)
+  }
+
 }
