@@ -1,12 +1,11 @@
 package ch.wsl.box.codegen
 
 import net.ceedubs.ficus.Ficus._
+import slick.ast.ColumnOption
 import slick.codegen.OutputHelpers
-
 import slick.jdbc.meta.MTable
 import slick.model.Model
 import slick.driver.PostgresDriver
-
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -232,14 +231,17 @@ package object tables {
 
         // disable entity class generation and mapping
         override def EntityType = new EntityType{
+
+
+
           override def code = {
-            val args = columns.map(c=>
-              c.default.map( v =>
+            val args = columns.map { c =>
+              c.default.map(v =>
                 s"${c.name}: ${c.exposedType} = $v"
               ).getOrElse(
-                  s"${c.name}: ${c.exposedType}"
-                )
-            ).mkString(", ")
+                s"${c.name}: ${c.exposedType}"
+              )
+            }.mkString(", ")
 
               val prns = (parents.take(1).map(" extends "+_) ++ parents.drop(1).map(" with "+_)).mkString("")
               val result = s"""case class $name($args)$prns"""
@@ -289,9 +291,22 @@ package object tables {
           override def optionEnabled = columns.size <= 22 && mappingEnabled && columns.exists(c => !c.model.nullable)
         }
 
+        def tableModel = model
+
         override def Column = new Column(_){
           // customize Scala column names
           override def rawName = model.name
+
+
+          override def asOption: Boolean = {
+            val singleKey = model.options.contains(ColumnOption.PrimaryKey)
+            val multipleKey = tableModel.primaryKey.exists(_.columns.exists(_.name == model.name))
+            if(singleKey || multipleKey) {
+              true
+            } else {
+              super.asOption
+            }
+          }
 
 
         }
