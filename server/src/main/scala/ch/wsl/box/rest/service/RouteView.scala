@@ -3,12 +3,12 @@ package ch.wsl.box.rest.service
 import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.unmarshalling._
 import akka.stream.Materializer
-import ch.wsl.box.model.shared.{JSONResult, JSONCount, JSONQuery}
-import ch.wsl.box.rest.logic.{RouteHelper, JSONForm, JSONSchemas}
+import ch.wsl.box.model.shared.{JSONCount, JSONQuery, JSONResult}
+import ch.wsl.box.rest.logic.{JSONForm, JSONSchemas, RouteHelper}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import slick.driver.PostgresDriver.api._
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directives, Route}
 
@@ -38,7 +38,8 @@ trait RouteView {
 
     val helper = new RouteHelper[T,M](name,table)
 
-    path(name) {
+    pathPrefix(name) {
+      println(s"view with name: $name")
       path("schema") {
         get {
             complete{ JSONSchemas.of(name,db) }
@@ -68,6 +69,15 @@ trait RouteView {
             entity(as[JSONQuery]) { query =>
               println("list")
               complete(helper.find(query))
+            }
+          }
+        } ~
+        path("csv") {
+          post {
+            entity(as[JSONQuery]) { query =>
+              println("csv")
+
+              complete(helper.find(query).map(x => HttpEntity(ContentTypes.`text/plain(UTF-8)`,x.csv)))
             }
           }
         } ~
