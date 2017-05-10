@@ -18,6 +18,10 @@ object JSONForm {
     config.as[Config]("rest.lookup.labels")
   }
 
+  def defaultTableLookupField:String = {
+    tableFieldTitles.as[Option[String]]("default").getOrElse("name")
+  }
+
   def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[Seq[JSONField]] = {
 
     val schema = new PgInformationSchema(table, db)
@@ -36,7 +40,7 @@ object JSONForm {
           } else {
             constraints = fk.contraintName :: constraints
 
-            val title = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse("name")
+            val title = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse(defaultTableLookupField)
 
             JSONField(
               JSONSchemas.typesMapping(field.data_type),
