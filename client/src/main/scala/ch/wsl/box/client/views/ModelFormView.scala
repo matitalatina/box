@@ -23,14 +23,16 @@ import scala.util.Try
 
 case class ModelFormModel(name:String, id:Option[String], form:Option[FormDefinition], results:Seq[String], error:String, keys:Seq[String])
 
+object ModelFormModel{
+  def empty = ModelFormModel("",None,None,Seq(),"",Seq())
+}
+
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def create(): (View, Presenter[ModelFormState]) = {
-    val model = ModelProperty{
-      ModelFormModel("",None,None,Seq(),"",Seq())
-    }
+    val model = ModelProperty{ModelFormModel.empty}
     val presenter = ModelFormPresenter(model)
     (ModelFormView(model,presenter),presenter)
   }
@@ -41,6 +43,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   import ch.wsl.box.client.Context._
 
   override def handleState(state: ModelFormState): Unit = {
+    model.set(ModelFormModel.empty)
     model.subProp(_.name).set(state.model)
     model.subProp(_.id).set(state.id)
     println(state)
@@ -59,14 +62,19 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
     } yield {
 
 
-
       //initialise an array of n strings, where n is the number of fields
       val results:Seq[String] = Enhancer.extract(current,fields)
 
-      //the order here is relevant, changing the value on schema will trigger the view update so it needs the result array correctly set
-      model.subProp(_.keys).set(keys)
-      model.subSeq(_.results).set(results)
-      model.subProp(_.form).set(Some(FormDefinition(schema,fields)))
+      model.set(ModelFormModel(
+        name = state.model,
+        id = state.id,
+        form = Some(FormDefinition(
+          schema,fields
+        )),
+        results,
+        "",
+        keys
+      ))
 
     }}.recover{ case e => e.printStackTrace() }
 
@@ -92,7 +100,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         val newState = ModelTableState(model.subProp(_.name).get)
         io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
 
-      }
+      }.recover{ case e => e.printStackTrace() }
     }
   }
 

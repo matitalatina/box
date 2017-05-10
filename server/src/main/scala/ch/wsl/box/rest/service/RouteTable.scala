@@ -121,7 +121,8 @@ trait RouteTable {
         } ~
         post {
           entity(as[M]) { e =>
-            val result = db.run { table.forceInsert(e) }.map(_ => e)
+            println("Inserting: " + e)
+            val result: Future[M] = db.run { table.returning(table) += e } //returns object with id
             complete(result)
           }
         }

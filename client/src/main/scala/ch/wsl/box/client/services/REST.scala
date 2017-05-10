@@ -29,7 +29,7 @@ object REST {
   def schema(model:String): Future[JSONSchema] = client.get[JSONSchema](s"/$model/schema")
   def form(model:String): Future[Seq[JSONField]] = client.get[Seq[JSONField]](s"/$model/form")
   def count(model:String): Future[Int] = client.get[Int](s"/$model/count")
-  def insert(model:String, data:Json): Future[String] = client.post[Json,String](s"/$model",data)
+  def insert(model:String, data:Json): Future[Json] = client.post[Json,Json](s"/$model",data)
   def get(model:String,keys:JSONKeys):Future[Json] = {
     client.get[Json](s"/$model/id/${keys.asString}")
   }
