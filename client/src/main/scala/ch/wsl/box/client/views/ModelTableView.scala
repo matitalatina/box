@@ -89,13 +89,14 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
       UdashTable()(model.subSeq(_.rows))(
         headerFactory = Some(() => {
           tr(
+            th("Actions"),
             produce(model.subSeq(_.fields)) { fields =>
               for {field <- fields} yield {
                 val title: String = field.title.getOrElse(field.key)
                 th(title).render
               }
-            },
-            th("Actions")
+            }
+
           ).render
         }),
         rowFactory = (el) => {

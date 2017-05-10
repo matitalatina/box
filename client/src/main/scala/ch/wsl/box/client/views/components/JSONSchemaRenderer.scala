@@ -83,22 +83,23 @@ object JSONSchemaRenderer {
   }
 
 
-  def fieldRenderer(field:JSONField,model:Property[String],showLabel:Boolean = true):Modifier = {
+  def fieldRenderer(field:JSONField,model:Property[String],keys:Seq[String],showLabel:Boolean = true):Modifier = {
     val label = showLabel match {
       case true => field.title.getOrElse(field.key)
       case false => ""
     }
-    (field.`type`,field.widget,field.options) match {
-      case (_,_,Some(options)) => optionsRenderer(label,options,model)
-      case ("number",_,_) => UdashForm.numberInput()(label)(model)
-      case ("string",Some(WidgetsNames.timepicker),_) => datetimepicker(label,model,timePickerFormat)
-      case ("string",Some(WidgetsNames.datepicker),_) => datetimepicker(label,model,datePickerFormat)
-      case ("string",Some(WidgetsNames.datetimePicker),_) => datetimepicker(label,model)
-      case (_,_,_) => UdashForm.textInput()(label)(model)
+    (field.`type`,field.widget,field.options,keys.contains(field.key)) match {
+      case (_,_,_,true) => p(label+" - "+model.get)
+      case (_,_,Some(options),_) => optionsRenderer(label,options,model)
+      case ("number",_,_,_) => UdashForm.numberInput()(label)(model)
+      case ("string",Some(WidgetsNames.timepicker),_,_) => datetimepicker(label,model,timePickerFormat)
+      case ("string",Some(WidgetsNames.datepicker),_,_) => datetimepicker(label,model,datePickerFormat)
+      case ("string",Some(WidgetsNames.datetimePicker),_,_) => datetimepicker(label,model)
+      case (_,_,_,_) => UdashForm.textInput()(label)(model)
     }
   }
 
-  def apply(form:FormDefinition,results: Seq[Property[String]]):TypedTag[Element] = {
+  def apply(form:FormDefinition,results: Seq[Property[String]],keys:Seq[String]):TypedTag[Element] = {
 
     div(BootstrapStyles.row)(
       div(BootstrapStyles.Grid.colMd6)(
@@ -106,7 +107,7 @@ object JSONSchemaRenderer {
           div(
             UdashForm(
               results.lift(i).map { r =>
-                fieldRenderer(field,r)
+                fieldRenderer(field,r,keys)
               }
             ).render
           )
@@ -115,5 +116,5 @@ object JSONSchemaRenderer {
     )
   }
 
-  def apply(schema:Option[FormDefinition],results: Seq[Property[String]]):TypedTag[Element] = apply(schema.getOrElse(FormDefinition(JSONSchema.empty,Seq())),results)
+  def apply(schema:Option[FormDefinition],results: Seq[Property[String]],keys:Seq[String]):TypedTag[Element] = apply(schema.getOrElse(FormDefinition(JSONSchema.empty,Seq())),results,keys)
 }

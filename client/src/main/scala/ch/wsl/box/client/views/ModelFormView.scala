@@ -21,7 +21,7 @@ import scala.util.Try
   */
 
 
-case class ModelFormModel(name:String, id:Option[String], form:Option[FormDefinition], results:Seq[String], error:String)
+case class ModelFormModel(name:String, id:Option[String], form:Option[FormDefinition], results:Seq[String], error:String, keys:Seq[String])
 
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
@@ -29,7 +29,7 @@ case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
   override def create(): (View, Presenter[ModelFormState]) = {
     val model = ModelProperty{
-      ModelFormModel("",None,None,Seq(),"")
+      ModelFormModel("",None,None,Seq(),"",Seq())
     }
     val presenter = ModelFormPresenter(model)
     (ModelFormView(model,presenter),presenter)
@@ -64,6 +64,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       val results:Seq[String] = Enhancer.extract(current,fields)
 
       //the order here is relevant, changing the value on schema will trigger the view update so it needs the result array correctly set
+      model.subProp(_.keys).set(keys)
       model.subSeq(_.results).set(results)
       model.subProp(_.form).set(Some(FormDefinition(schema,fields)))
 
@@ -123,7 +124,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
       },
       produce(model.subProp(_.form)){ form =>
         div(
-          JSONSchemaRenderer(form,model.subSeq(_.results).elemProperties)
+          JSONSchemaRenderer(form,model.subSeq(_.results).elemProperties,model.get.keys)
         ).render
       },
       produce(model.subSeq(_.results)) { results =>

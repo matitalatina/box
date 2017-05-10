@@ -42,7 +42,7 @@ object FieldsRenderer {
 
     div(onclick :+= ((ev: Event) => toggleEdit(editing), true),
       showIf(editing.transform(x => !x))(contentFixed.render),
-      showIf(editing)(div(JSONSchemaRenderer.fieldRenderer(field,model,false)).render)
+      showIf(editing)(div(JSONSchemaRenderer.fieldRenderer(field,model,keys.keys.map(_.key),false)).render)
     )
 
 
