@@ -135,14 +135,6 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
           JSONSchemaRenderer(form,model.subSeq(_.results).elemProperties,model.get.keys)
         ).render
       },
-      produce(model.subSeq(_.results)) { results =>
-        ul(
-          for(x <- results) yield {
-            li(x)
-          }
-        ).render
-      },
-      produce(model.subProp(_.form)){form => p(form.toString()).render },
       button(
         cls := "primary",
         onclick :+= ((ev: Event) => presenter.save(), true)

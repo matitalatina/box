@@ -89,7 +89,7 @@ object JSONSchemaRenderer {
       case false => ""
     }
     (field.`type`,field.widget,field.options,keys.contains(field.key)) match {
-      case (_,_,_,true) => p(label+" - "+model.get)
+      case (_,_,_,true) => UdashForm.textInput()(label)(model,disabled := true)
       case (_,_,Some(options),_) => optionsRenderer(label,options,model)
       case ("number",_,_,_) => UdashForm.numberInput()(label)(model)
       case ("string",Some(WidgetsNames.timepicker),_,_) => datetimepicker(label,model,timePickerFormat)

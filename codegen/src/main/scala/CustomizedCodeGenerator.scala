@@ -256,7 +256,7 @@ package object tables {
 
       def factoryHList(hlist:${TableClass.elementType}HList):${TableClass.elementType} = {
         val x = hlist.toList
-        ${TableClass.elementType}("""+columns.zipWithIndex.map(x => "x("+x._2+").asInstanceOf["+x._1.actualType+"]").mkString(",")+s""");
+        ${TableClass.elementType}("""+columns.zipWithIndex.map(x => "x("+x._2+").asInstanceOf["+x._1.exposedType+"]").mkString(",")+s""");
       }
 
       def toHList(e:${TableClass.elementType}):Option[${TableClass.elementType}HList] = {

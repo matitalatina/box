@@ -12,21 +12,18 @@ import io.udash.core.Presenter
 
 import scalacss.ScalatagsCss._
 
-case class RootViewModel()
 
 case object RootViewPresenter extends ViewPresenter[RootState.type]{
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def create(): (View, Presenter[RootState.type]) = {
-    val model = ModelProperty{
-      RootViewModel()
-    }
-    (new RootView(model),new RootPresenter(model))
+
+    (new RootView(),new RootPresenter())
   }
 }
 
-class RootPresenter(model:ModelProperty[RootViewModel]) extends Presenter[RootState.type] {
+class RootPresenter() extends Presenter[RootState.type] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -34,7 +31,7 @@ class RootPresenter(model:ModelProperty[RootViewModel]) extends Presenter[RootSt
   }
 }
 
-class RootView(model:ModelProperty[RootViewModel]) extends View {
+class RootView() extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
