@@ -298,14 +298,15 @@ package object tables {
           override def rawName = model.name
 
 
-          override def asOption: Boolean = {
+          private def primaryKey = {
             val singleKey = model.options.contains(ColumnOption.PrimaryKey)
             val multipleKey = tableModel.primaryKey.exists(_.columns.exists(_.name == model.name))
-            if(singleKey || multipleKey) {
-              true
-            } else {
-              super.asOption
-            }
+            singleKey || multipleKey
+          }
+
+          override def asOption: Boolean =  primaryKey match {
+            case true => true
+            case false => super.asOption
           }
 
 
