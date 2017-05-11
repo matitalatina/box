@@ -7,6 +7,7 @@ import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
+import io.udash.bootstrap.BootstrapStyles.BootstrapClass
 import io.udash.bootstrap.dropdown.UdashDropdown
 import io.udash.bootstrap.dropdown.UdashDropdown.DropdownEvent
 import io.udash.bootstrap.form.{InputGroupSize, UdashForm, UdashInputGroup}
@@ -16,7 +17,7 @@ import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.{Element, Event, KeyboardEvent}
 
 import scala.util.Try
-import scalatags.generic.Modifier
+import scalatags.generic.{AttrPair, Modifier}
 
 /**
   * Created by andre on 4/24/2017.
@@ -26,10 +27,10 @@ import scalatags.generic.Modifier
 
 case class Row(data: Seq[String])
 case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
-case class ModelTableModel(name:String,rows:Seq[Row],keys:Seq[String],metadata:Seq[Metadata])
+case class ModelTableModel(name:String,rows:Seq[Row],keys:Seq[String],metadata:Seq[Metadata],selected:Option[Row])
 
 object ModelTableModel{
-  def empty = ModelTableModel("",Seq(),Seq(),Seq())
+  def empty = ModelTableModel("",Seq(),Seq(),Seq(),None)
 }
 
 case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
@@ -67,7 +68,8 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
         keys = keys,
         metadata = fields.map{ field =>
           Metadata(field,Sort.IGNORE,"",Filter.default(field.`type`))
-        }
+        },
+        None
       )
 
       model.set(m)
@@ -128,6 +130,10 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
     model.subProp(_.metadata).set(newMetadata)
     reloadRows()
   }
+
+  def selected(row: Row) = {
+    model.subProp(_.selected).set(Some(row))
+  }
 }
 
 case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTablePresenter) extends View {
@@ -157,8 +163,9 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
 
   }
 
-  override def getTemplate: scalatags.generic.Modifier[Element] = div(
-    h1(bind(model.subProp(_.name))),
+  override def getTemplate: scalatags.generic.Modifier[Element] = {
+    div(
+      h1(bind(model.subProp(_.name))),
       UdashTable()(model.subSeq(_.rows))(
         headerFactory = Some(() => {
           tr(
@@ -167,8 +174,6 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
               for {(metadata) <- metadataList} yield {
                 val title: String = metadata.field.title.getOrElse(metadata.field.key)
                 val filter = Property(metadata.filter)
-
-
 
                 th(
                   a(
@@ -189,7 +194,10 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
         }),
         rowFactory = (el) => {
           val key = presenter.key(el.get)
-          tr(
+
+          val selected = model.subProp(_.selected).transform(_.exists(_ == el.get))
+
+          tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
             td(button(
               cls := "primary",
               onclick :+= ((ev: Event) => presenter.edit(el.get), true)
@@ -207,9 +215,10 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
           ).render
         }
       ).render,
-    showIf(model.subProp(_.metadata).transform(_.size == 0)){ p("loading...").render }
+      showIf(model.subProp(_.metadata).transform(_.size == 0)){ p("loading...").render }
 
-  )
+    )
+  }
 
 
 }
