@@ -4,20 +4,12 @@ import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.views.components.FieldsRenderer
 import ch.wsl.box.model.shared._
-import io.circe.Json
 import io.udash._
-import io.udash.bootstrap.BootstrapStyles
-import io.udash.bootstrap.BootstrapStyles.BootstrapClass
-import io.udash.bootstrap.dropdown.UdashDropdown
-import io.udash.bootstrap.dropdown.UdashDropdown.DropdownEvent
-import io.udash.bootstrap.form.{InputGroupSize, UdashForm, UdashInputGroup}
+import io.udash.bootstrap.form.{InputGroupSize, UdashInputGroup}
 import io.udash.bootstrap.table.UdashTable
-import io.udash.bootstrap.utils.Icons
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.{Element, Event, KeyboardEvent}
 
-import scala.util.Try
-import scalatags.generic.{AttrPair, Modifier}
 
 /**
   * Created by andre on 4/24/2017.
@@ -33,7 +25,7 @@ object ModelTableModel{
   def empty = ModelTableModel("",Seq(),Seq(),Seq(),None)
 }
 
-case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
+case class ModelTableViewPresenter(onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -41,12 +33,12 @@ case object ModelTableViewPresenter extends ViewPresenter[ModelTableState] {
 
     val model = ModelProperty(ModelTableModel.empty)
 
-    val presenter = ModelTablePresenter(model)
+    val presenter = ModelTablePresenter(model,onSelect)
     (ModelTableView(model,presenter),presenter)
   }
 }
 
-case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Presenter[ModelTableState]{
+case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Seq[(JSONField,String)] => Unit) extends Presenter[ModelTableState]{
 
   import ch.wsl.box.client.Context._
   import Enhancer._
@@ -76,7 +68,6 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
     }
   }
 
-
   def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.metadata).get.map(_.field),model.subProp(_.keys).get)
 
   def edit(el:Row) = {
@@ -95,6 +86,17 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
     for {
       csv <- REST.csv(model.subProp(_.name).get,query)
     } yield model.subProp(_.rows).set(csv.map(Row(_)))
+  }
+
+  def filterByKey(key:JSONKeys) = {
+    val newMetadata = model.subProp(_.metadata).get.map{ m =>
+      key.keys.headOption.exists(_.key == m.field.key) match {
+        case true => m.copy(filter = key.keys.head.value, filterType = Filter.EQUALS)
+        case false => m
+      }
+    }
+    model.subProp(_.metadata).set(newMetadata)
+    reloadRows()
   }
 
   def filter(metadata: Metadata,filter:String) = {
@@ -132,6 +134,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
   }
 
   def selected(row: Row) = {
+    onSelect(model.get.metadata.map(_.field).zip(row.data))
     model.subProp(_.selected).set(Some(row))
   }
 }

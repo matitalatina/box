@@ -1,6 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.{MasterChildState, ModelTableState}
+import ch.wsl.box.model.shared.{JSONField, JSONKeys}
 import io.udash.ViewPresenter
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.{Presenter, View}
@@ -14,12 +15,20 @@ import scalatags.generic.Modifier
   */
 
 
-object MasterChildViewPresenter extends ViewPresenter[MasterChildState]{
+case class MasterChildViewPresenter(master:String,child:String) extends ViewPresenter[MasterChildState]{
 
   override def create(): (View, Presenter[MasterChildState]) = {
 
-    val (masterView,masterPresenter) = ModelTableViewPresenter.create()
-    val (childView,childPresenter) = ModelTableViewPresenter.create()
+    val (childView,childPresenter) = ModelTableViewPresenter().create()
+
+    def onChangeMaster(rows:Seq[(JSONField,String)]):Unit = {
+      println("change master")
+      val keys = rows.filter(_._1.options.exists(_.refModel == child))
+      childPresenter.asInstanceOf[ModelTablePresenter].filterByKey(JSONKeys.fromMap(keys.map(x => x._1.key -> x._2).toMap))
+    }
+
+    val (masterView,masterPresenter) = ModelTableViewPresenter(onChangeMaster).create()
+
 
     (MasterChildView(masterView,childView),MasterChildPresenter(masterPresenter,childPresenter))
   }
