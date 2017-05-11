@@ -48,3 +48,20 @@ object JSONQuery{
 
   def limit(limit:Int) = baseQuery.copy(count = limit)
 }
+
+object Sort{
+  final val DESC = "desc"
+  final val IGNORE = ""
+  final val ASC = "asc"
+
+  def next(s:String) = s match {
+    case DESC => IGNORE
+    case ASC => DESC
+    case IGNORE => ASC
+  }
+}
+
+object Filter {
+  final val NONE = "none"
+}
+

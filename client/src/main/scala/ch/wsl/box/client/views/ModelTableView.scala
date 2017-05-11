@@ -3,9 +3,10 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.views.components.FieldsRenderer
-import ch.wsl.box.model.shared.{JSONField, JSONKeys}
+import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
+import io.udash.bootstrap.form.UdashForm
 import io.udash.bootstrap.table.UdashTable
 import org.scalajs.dom.{Element, Event}
 
@@ -17,8 +18,10 @@ import scalatags.generic.Modifier
   */
 
 
+
 case class Row(data: Seq[String])
-case class ModelTableModel(name:String,rows:Seq[Row], fields:Seq[JSONField], keys:Seq[String])
+case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
+case class ModelTableModel(name:String,rows:Seq[Row],keys:Seq[String],metadata:Seq[Metadata])
 
 object ModelTableModel{
   def empty = ModelTableModel("",Seq(),Seq(),Seq())
@@ -46,8 +49,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
     model.set(ModelTableModel.empty)
     model.subProp(_.name).set(state.model)
     for{
-      list <- REST.list(state.model,20)
-      csv <- REST.csv(state.model,50)
+      csv <- REST.csv(state.model,JSONQuery.limit(30))
       emptyFields <- REST.form(state.model)
       keys <- REST.keys(state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
@@ -56,9 +58,11 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
 
       val m = ModelTableModel(
         name = state.model,
-        rows = csv.map{Row(_)},
-        fields = fields,
-        keys = keys
+        rows = csv.map{ Row(_)},
+        keys = keys,
+        metadata = fields.map{ field =>
+          Metadata(field,Sort.IGNORE,"",Filter.NONE)
+        }
       )
 
       model.set(m)
@@ -66,12 +70,33 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
   }
 
 
-  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.fields).get,model.subProp(_.keys).get)
+  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.metadata).get.map(_.field),model.subProp(_.keys).get)
 
   def edit(el:Row) = {
     val k = key(el)
     val newState = ModelFormState(model.subProp(_.name).get,Some(k.asString))
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
+  }
+
+  def reloadRows() = {
+    val sort = model.subProp(_.metadata).get.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.key, s.sort)).toList
+    val query = JSONQuery(20, 1, sort, List())
+
+    for {
+      csv <- REST.csv(model.subProp(_.name).get,query)
+    } yield model.subProp(_.rows).set(csv.map(Row(_)))
+  }
+
+  def sort(metadata: Metadata) = {
+
+    val newMetadata = model.subProp(_.metadata).get.map{ m =>
+      m.field.key == metadata.field.key match {
+        case false => m
+        case true => m.copy(sort = Sort.next(m.sort))
+      }
+    }
+    model.subProp(_.metadata).set(newMetadata)
+    reloadRows()
   }
 }
 
@@ -90,10 +115,18 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
         headerFactory = Some(() => {
           tr(
             th("Actions"),
-            produce(model.subSeq(_.fields)) { fields =>
-              for {field <- fields} yield {
-                val title: String = field.title.getOrElse(field.key)
-                th(title).render
+            produce(model.subSeq(_.metadata)) { metadataList =>
+              for {(metadata) <- metadataList} yield {
+                val title: String = metadata.field.title.getOrElse(metadata.field.key)
+                val filter = Property("")
+                th(
+                  a(
+                    onclick :+= ((ev: Event) => presenter.sort(metadata), true),
+                    title," ",
+                    metadata.sort
+                  ),
+                  br,
+                  UdashForm.textInput()()(filter)).render
               }
             }
 
@@ -106,12 +139,12 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
               cls := "primary",
               onclick :+= ((ev: Event) => presenter.edit(el.get), true)
             )("Edit")),
-            produce(model.subSeq(_.fields)) { fields =>
-              for {(field, i) <- fields.zipWithIndex} yield {
+            produce(model.subSeq(_.metadata)) { metadatas =>
+              for {(metadata, i) <- metadatas.zipWithIndex} yield {
                 val value = el.get.data.lift(i).getOrElse("")
                 td(FieldsRenderer(
                   value,
-                  field,
+                  metadata.field,
                   key
                 )).render
               }
@@ -119,7 +152,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
           ).render
         }
       ).render,
-    showIf(model.subProp(_.fields).transform(_.size == 0)){ p("loading...").render }
+    showIf(model.subProp(_.metadata).transform(_.size == 0)){ p("loading...").render }
 
   )
 

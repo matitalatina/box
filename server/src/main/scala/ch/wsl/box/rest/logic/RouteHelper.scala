@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.model.shared.{JSONKey, JSONKeys, JSONQuery, JSONResult}
+import ch.wsl.box.model.shared._
 import slick.driver.PostgresDriver.api._
 import slick.lifted.{ColumnOrdered, Query, Rep, TableQuery}
 
@@ -24,8 +24,8 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](na
       query.sortBy{ x =>
         val c:slick.driver.PostgresDriver.api.Rep[_] = x.col(sort.column).rep
         sort.order.toLowerCase() match {
-          case "asc" => ColumnOrdered(c,new slick.ast.Ordering)
-          case "desc" => ColumnOrdered(c,new slick.ast.Ordering(direction=slick.ast.Ordering.Desc))
+          case Sort.ASC => ColumnOrdered(c,new slick.ast.Ordering)
+          case Sort.DESC => ColumnOrdered(c,new slick.ast.Ordering(direction=slick.ast.Ordering.Desc))
         }
       }
     }
