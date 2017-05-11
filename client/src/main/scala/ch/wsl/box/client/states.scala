@@ -2,7 +2,7 @@ package ch.wsl.box.client
 
 import io.udash._
 
-sealed abstract class RoutingState(val parentState: RoutingState) extends State {
+sealed abstract class RoutingState(override val parentState: RoutingState) extends State {
   def url(implicit application: Application[RoutingState]): String = s"#${application.matchState(this).value}"
 }
 
@@ -15,6 +15,8 @@ case object IndexState extends RoutingState(RootState)
 case class ModelsState(model:String) extends RoutingState(RootState)
 
 case class ModelTableState(model:String) extends RoutingState(ModelsState(model))
+case class MasterChildState(parentModel:String, childModel:String) extends RoutingState(ModelsState(parentModel))
+
 case class ModelFormState(model:String, id:Option[String]) extends RoutingState(ModelsState(model))
 
 
