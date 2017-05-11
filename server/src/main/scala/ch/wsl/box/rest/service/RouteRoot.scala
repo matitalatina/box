@@ -42,7 +42,8 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with GeneratedRou
               generatedRoutes() ~
                 path("models") {
                   get {
-                    complete(models ++ views)
+                    val allmodels = models ++ views
+                    complete(allmodels.toSeq.sorted)
                   }
                 } ~
                 pathPrefix("form") {

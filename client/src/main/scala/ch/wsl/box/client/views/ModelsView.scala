@@ -8,11 +8,12 @@ import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.{ModelFormState, ModelTableState, ModelsState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
+import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
-import org.scalajs.dom.Element
+import org.scalajs.dom.{Element, Event}
 
 
-case class Models(list:Seq[String], model:Option[String])
+case class Models(list:Seq[String], model:Option[String], search:String, filteredList:Seq[String])
 
 case object ModelsViewPresenter extends ViewPresenter[ModelsState] {
 
@@ -21,10 +22,10 @@ case object ModelsViewPresenter extends ViewPresenter[ModelsState] {
 
   override def create(): (View, Presenter[ModelsState]) = {
     val model = ModelProperty{
-      Models(Seq(),None)
+      Models(Seq(),None,"",Seq())
     }
     val presenter = new ModelsPresenter(model)
-    val view = new ModelsView(model)
+    val view = new ModelsView(model,presenter)
     (view,presenter)
   }
 }
@@ -36,6 +37,7 @@ class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState
   override def handleState(state: ModelsState): Unit = {
     REST.models().map{ models =>
       model.subSeq(_.list).set(models)
+      model.subSeq(_.filteredList).set(models)
     }
     if(state.model != "") {
       model.subProp(_.model).set(Some(state.model))
@@ -43,9 +45,15 @@ class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState
       model.subProp(_.model).set(None)
     }
   }
+
+
+  def updateModelsList() = {
+    model.subProp(_.filteredList).set(model.subProp(_.list).get.filter(m => m.startsWith(model.get.search)))
+  }
+
 }
 
-class ModelsView(model:ModelProperty[Models]) extends View {
+class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
@@ -63,9 +71,14 @@ class ModelsView(model:ModelProperty[Models]) extends View {
 
   override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.row)(
     div(BootstrapStyles.Grid.colMd2)(
-      ul(
-        repeat(model.subSeq(_.list))(m => li(a(href := ModelTableState(m.get).url)(m.get)).render)
-      )
+      UdashForm.textInput()("Search model")(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateModelsList(), true)),
+      produce(model.subProp(_.search)) { q =>
+        ul(
+          repeat(model.subSeq(_.filteredList)){m =>
+            li(a(href := ModelTableState(m.get).url)(m.get)).render
+          }
+        ).render
+      }
     ),
     div(BootstrapStyles.Grid.colMd10)(
       produce(model)( m =>
