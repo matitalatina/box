@@ -6,9 +6,14 @@ import ch.wsl.box.client.views.components.FieldsRenderer
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
-import io.udash.bootstrap.form.UdashForm
+import io.udash.bootstrap.BootstrapStyles
+import io.udash.bootstrap.dropdown.UdashDropdown
+import io.udash.bootstrap.dropdown.UdashDropdown.DropdownEvent
+import io.udash.bootstrap.form.{InputGroupSize, UdashForm, UdashInputGroup}
 import io.udash.bootstrap.table.UdashTable
-import org.scalajs.dom.{Element, Event}
+import io.udash.bootstrap.utils.Icons
+import org.scalajs.dom.ext.KeyCode
+import org.scalajs.dom.{Element, Event, KeyboardEvent}
 
 import scala.util.Try
 import scalatags.generic.Modifier
@@ -61,7 +66,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
         rows = csv.map{ Row(_)},
         keys = keys,
         metadata = fields.map{ field =>
-          Metadata(field,Sort.IGNORE,"",Filter.NONE)
+          Metadata(field,Sort.IGNORE,"",Filter.default(field.`type`))
         }
       )
 
@@ -79,12 +84,37 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel]) extends Pre
   }
 
   def reloadRows() = {
-    val sort = model.subProp(_.metadata).get.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.key, s.sort)).toList
-    val query = JSONQuery(20, 1, sort, List())
+
+    val metadata = model.subProp(_.metadata).get
+    val sort = metadata.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.key, s.sort)).toList
+    val filter = metadata.filter(_.filter != "").map(f => JSONQueryFilter(f.field.key,Some(f.filterType),f.filter)).toList
+    val query = JSONQuery(20, 1, sort, filter)
 
     for {
       csv <- REST.csv(model.subProp(_.name).get,query)
     } yield model.subProp(_.rows).set(csv.map(Row(_)))
+  }
+
+  def filter(metadata: Metadata,filter:String) = {
+    val newMetadata = model.subProp(_.metadata).get.map{ m =>
+      m.field.key == metadata.field.key match {
+        case true => m.copy(filter = filter)
+        case false => m
+      }
+    }
+    model.subProp(_.metadata).set(newMetadata)
+    reloadRows()
+  }
+
+  def filterType(metadata:Metadata,filterType:String) = {
+    val newMetadata = model.subProp(_.metadata).get.map{ m =>
+      m.field.key == metadata.field.key match {
+        case true => m.copy(filterType = filterType)
+        case false => m
+      }
+    }
+    model.subProp(_.metadata).set(newMetadata)
+    reloadRows()
   }
 
   def sort(metadata: Metadata) = {
@@ -109,6 +139,24 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
   override def renderChild(view: View): Unit = {}
 
 
+  def filterOptions(metadata: Metadata) = {
+    val filterModel = Property(metadata.filterType)
+
+
+    //hack using model transfomation to get onChange event, using standard HTML breaks udash property model
+    val filterHandler = filterModel.transform(
+      (s:String) => s,
+      {(s:String) =>
+        println("changed " + s);
+        presenter.filterType(metadata,s);
+        s
+      }
+    )
+
+    Select(filterHandler,Filter.options(metadata.field.`type`))
+
+  }
+
   override def getTemplate: scalatags.generic.Modifier[Element] = div(
     h1(bind(model.subProp(_.name))),
       UdashTable()(model.subSeq(_.rows))(
@@ -118,7 +166,10 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
             produce(model.subSeq(_.metadata)) { metadataList =>
               for {(metadata) <- metadataList} yield {
                 val title: String = metadata.field.title.getOrElse(metadata.field.key)
-                val filter = Property("")
+                val filter = Property(metadata.filter)
+
+
+
                 th(
                   a(
                     onclick :+= ((ev: Event) => presenter.sort(metadata), true),
@@ -126,7 +177,11 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
                     metadata.sort
                   ),
                   br,
-                  UdashForm.textInput()()(filter)).render
+                  UdashInputGroup(InputGroupSize.Small)(
+                    UdashInputGroup.addon(filterOptions(metadata)),
+                    UdashInputGroup.input(TextInput.debounced(filter,onkeyup :+= ((ev: KeyboardEvent) => if(ev.keyCode == KeyCode.Enter) presenter.filter(metadata,filter.get), true)).render)
+                  ).render
+                ).render
               }
             }
 

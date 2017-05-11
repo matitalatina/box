@@ -63,5 +63,22 @@ object Sort{
 
 object Filter {
   final val NONE = "none"
+  final val EQUALS = "="
+  final val NOT = "not"
+  final val `>` = ">"
+  final val `<` = "<"
+  final val LIKE = "like"
+
+  def options(`type`:String) = `type` match {
+    case "number" => Seq(Filter.EQUALS,Filter.`>`,Filter.`<`,Filter.NOT)
+    case "string" => Seq(Filter.LIKE,Filter.EQUALS,Filter.NOT)
+    case _ => Seq(Filter.EQUALS,Filter.NOT)
+  }
+
+  def default(`type`:String) = `type` match {
+    case "number" => Filter.EQUALS
+    case "string" => Filter.LIKE
+    case _ => Filter.EQUALS
+  }
 }
 

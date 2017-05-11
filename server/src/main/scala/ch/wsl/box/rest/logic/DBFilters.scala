@@ -1,5 +1,6 @@
 package ch.wsl.box.rest.logic
 
+import ch.wsl.box.model.shared.Filter
 import slick.driver.PostgresDriver.api._
 
 trait DBFilters {
@@ -14,11 +15,11 @@ trait DBFilters {
     println("operator: " + op)
     
     op match{
-      case "="      => ==(c, v)
-      case "not"    => not(c, v)
-      case ">"      => >(c, v)
-      case "<"      => <(c, v)
-      case "like"   => like(c, v)
+      case Filter.EQUALS      => ==(c, v)
+      case Filter.NOT    => not(c, v)
+      case Filter.`>`      => >(c, v)
+      case Filter.<      => <(c, v)
+      case Filter.LIKE  => like(c, v)
     }
   }
   
@@ -117,6 +118,8 @@ trait UglyDBFilters extends DBFilters {
   def like(col:Col,v:Any):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
 
     val c:Rep[_] = col.rep
+
+    println("Executing like on" + col.toString)
 
     col.`type` match {
           case "String" => c.asInstanceOf[Rep[String]] like v.asInstanceOf[String]

@@ -17,7 +17,7 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](na
   def find(query:JSONQuery)(implicit db:Database):Future[JSONResult[M]] = {
     val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) =>
       println(jsFilter)
-      query.filter(x => operator(jsFilter.operator.getOrElse("="))(x.col(jsFilter.column),jsFilter.value))
+      query.filter(x => operator(jsFilter.operator.getOrElse(Filter.EQUALS))(x.col(jsFilter.column),jsFilter.value))
     }
 
     val qSorted = query.sort.foldRight[Query[T,M,Seq]](qFiltered){case (sort,query) =>
@@ -33,7 +33,7 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](na
     val qPaged:Rep[Seq[T#TableElementType]] = qSorted.drop((query.page - 1) * query.count).take(query.count)
 
     for {
-      result <- db.run { qPaged.result }
+      result <- db.run { val r = qPaged.result; r.statements.foreach(println); r}
       count <- db.run{ qSorted.length.result }
     } yield JSONResult(count,result.toList) // to list because json4s does't like generics types for serialization
   }
