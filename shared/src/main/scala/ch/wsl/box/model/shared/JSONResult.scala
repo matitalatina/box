@@ -23,7 +23,7 @@ object JSONResult{
 
     def toCSV() = prod.productIterator.map{
       case Some(value) => escape(value)
-      case None => ""
+      case None => escape("")
       case rest => escape(rest)
     }.mkString(",")
   }
