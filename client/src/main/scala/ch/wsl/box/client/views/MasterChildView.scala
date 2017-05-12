@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.{MasterChildState, ModelTableState}
-import ch.wsl.box.model.shared.{JSONField, JSONKeys}
+import ch.wsl.box.model.shared.{Filter, JSONField, JSONKeys}
 import io.udash.ViewPresenter
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.{Presenter, View}
@@ -21,10 +21,22 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
     val (childView,childPresenter) = ModelTableViewPresenter().create()
 
-    def onChangeMaster(rows:Seq[(JSONField,String)]):Unit = {
+    def onChangeMaster(rows:Seq[(JSONField,String)],keys:Seq[String]):Unit = {
       println("change master")
       val keys = rows.filter(_._1.options.exists(_.refModel == child))
-      childPresenter.asInstanceOf[ModelTablePresenter].filterByKey(JSONKeys.fromMap(keys.map(x => x._1.key -> x._2).toMap))
+      val childTable = childPresenter.asInstanceOf[ModelTablePresenter]
+      if(keys.length > 0)
+        childTable.filterByKey(JSONKeys.fromMap(keys.map(x => x._1.key -> x._2).toMap))
+
+      for{
+        metadata <- childTable.model.get.metadata.find(_.field.options.exists(_.refModel == master))
+        key <- keys.headOption
+        value <- rows.find(_._1.key == key)
+      } yield {
+        childTable.filter(metadata.copy(filter = value._2,filterType = Filter.EQUALS),value._2)
+      }
+
+
     }
 
     val (masterView,masterPresenter) = ModelTableViewPresenter(onChangeMaster).create()
