@@ -25,7 +25,7 @@ object ModelTableModel{
   def empty = ModelTableModel("",Seq(),Seq(),Seq(),None)
 }
 
-case class ModelTableViewPresenter(onSelect:(Seq[(JSONField,String)],Seq[String]) => Unit = ((f,k) => Unit)) extends ViewPresenter[ModelTableState] {
+case class ModelTableViewPresenter(onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -38,7 +38,7 @@ case class ModelTableViewPresenter(onSelect:(Seq[(JSONField,String)],Seq[String]
   }
 }
 
-case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:(Seq[(JSONField,String)],Seq[String]) => Unit) extends Presenter[ModelTableState]{
+case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Seq[(JSONField,String)] => Unit) extends Presenter[ModelTableState]{
 
   import ch.wsl.box.client.Context._
   import Enhancer._
@@ -100,6 +100,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:(S
   }
 
   def filter(metadata: Metadata,filter:String) = {
+    println("filtering")
     val newMetadata = model.subProp(_.metadata).get.map{ m =>
       m.field.key == metadata.field.key match {
         case true => m.copy(filter = filter)
@@ -134,7 +135,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:(S
   }
 
   def selected(row: Row) = {
-    onSelect(model.get.metadata.map(_.field).zip(row.data),model.get.keys)
+    onSelect(model.get.metadata.map(_.field).zip(row.data))
     model.subProp(_.selected).set(Some(row))
   }
 }
