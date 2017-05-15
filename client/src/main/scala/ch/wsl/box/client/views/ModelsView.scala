@@ -35,16 +35,15 @@ class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def handleState(state: ModelsState): Unit = {
+    model.subProp(_.kind).set(Some(state.kind))
     REST.models(state.kind).map{ models =>
       model.subSeq(_.list).set(models)
       model.subSeq(_.filteredList).set(models)
     }
     if(state.model != "") {
       model.subProp(_.model).set(Some(state.model))
-      model.subProp(_.kind).set(Some(state.kind))
     } else {
       model.subProp(_.model).set(None)
-      model.subProp(_.kind).set(None)
     }
   }
 

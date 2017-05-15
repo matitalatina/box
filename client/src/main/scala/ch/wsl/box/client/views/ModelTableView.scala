@@ -47,9 +47,9 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     model.set(ModelTableModel.empty)
     model.subProp(_.name).set(state.model)
     for{
-      csv <- REST.csv(state.model,JSONQuery.limit(30))
-      emptyFields <- REST.form(state.model)
-      keys <- REST.keys(state.model)
+      csv <- REST.csv(state.kind,state.model,JSONQuery.limit(30))
+      emptyFields <- REST.form(state.kind,state.model)
+      keys <- REST.keys(state.kind,state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {
 
@@ -85,7 +85,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     val query = JSONQuery(20, 1, sort, filter)
 
     for {
-      csv <- REST.csv(model.subProp(_.name).get,query)
+      csv <- REST.csv(model.subProp(_.kind).get,model.subProp(_.name).get,query)
     } yield model.subProp(_.rows).set(csv.map(Row(_)))
   }
 

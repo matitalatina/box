@@ -50,12 +50,12 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
     {for{
-      keys <- REST.keys(state.model)
+      keys <- REST.keys(state.kind,state.model)
       ids = state.id.map(JSONKeys.fromString)
-      schema <- REST.schema(state.model)
-      emptyFields <- REST.form(state.model)
+      schema <- REST.schema(state.kind,state.model)
+      emptyFields <- REST.form(state.kind,state.model)
       current <- state.id match {
-        case Some(id) => REST.get(state.model,ids.get)
+        case Some(id) => REST.get(state.kind,state.model,ids.get)
         case None => Future.successful(Json.Null)
       }
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
@@ -93,8 +93,8 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
       }
       val saveAction = m.id match {
-        case Some(id) => REST.update(m.name,JSONKeys.fromString(id),jsons.toMap.asJson)
-        case None => REST.insert(m.name, jsons.toMap.asJson)
+        case Some(id) => REST.update(m.kind,m.name,JSONKeys.fromString(id),jsons.toMap.asJson)
+        case None => REST.insert(m.kind,m.name, jsons.toMap.asJson)
       }
       saveAction.map{_ =>
 

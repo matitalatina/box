@@ -14,7 +14,7 @@ object Enhancer {
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   def fetchLookupOptions(field:JSONField,opts:JSONFieldOptions):Future[JSONField] = {
-    REST.list(opts.refModel,50).map{ values =>
+    REST.list("model",opts.refModel,50).map{ values =>
       val options:Map[String,String] = values.map{ value =>
         val key:String = value.get(opts.map.valueProperty)
         val label:String = value.get(opts.map.textProperty)
