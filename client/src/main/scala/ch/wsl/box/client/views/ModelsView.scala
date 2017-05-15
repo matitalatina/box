@@ -13,7 +13,7 @@ import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 
 
-case class Models(list:Seq[String], model:Option[String], search:String, filteredList:Seq[String])
+case class Models(list:Seq[String], model:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
 
 case object ModelsViewPresenter extends ViewPresenter[ModelsState] {
 
@@ -22,7 +22,7 @@ case object ModelsViewPresenter extends ViewPresenter[ModelsState] {
 
   override def create(): (View, Presenter[ModelsState]) = {
     val model = ModelProperty{
-      Models(Seq(),None,"",Seq())
+      Models(Seq(),None,None,"",Seq())
     }
     val presenter = new ModelsPresenter(model)
     val view = new ModelsView(model,presenter)
@@ -35,14 +35,16 @@ class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def handleState(state: ModelsState): Unit = {
-    REST.models().map{ models =>
+    REST.models(state.kind).map{ models =>
       model.subSeq(_.list).set(models)
       model.subSeq(_.filteredList).set(models)
     }
     if(state.model != "") {
       model.subProp(_.model).set(Some(state.model))
+      model.subProp(_.kind).set(Some(state.kind))
     } else {
       model.subProp(_.model).set(None)
+      model.subProp(_.kind).set(None)
     }
   }
 
@@ -75,7 +77,7 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter) extends
       produce(model.subProp(_.search)) { q =>
         ul(
           repeat(model.subSeq(_.filteredList)){m =>
-            li(a(href := ModelTableState(m.get).url)(m.get)).render
+            li(a(href := ModelTableState(model.subProp(_.kind).get.getOrElse(""),m.get).url)(m.get)).render
           }
         ).render
       }
@@ -88,8 +90,8 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter) extends
             p("select your model")
           ).render
           case Some(model) => div(
-            a(href := ModelFormState(model,None).url)("New " + model),
-            a(href := ModelTableState(model).url)("Table " + model)
+            a(href := ModelFormState(m.kind.getOrElse(""),model,None).url)("New " + model),
+            a(href := ModelTableState(m.kind.getOrElse(""),model).url)("Table " + model)
           ).render
         }
       ),

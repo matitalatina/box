@@ -12,10 +12,11 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
 
   private val (url2State, state2Url) = Bidirectional[String, RoutingState] {
     case "" => IndexState
-    case "/models" => ModelsState("")
-    case "/model" /:/ model /:/ "insert" => ModelFormState(model,None)
-    case "/model" /:/ model /:/ "update" /:/ id => ModelFormState(model,Some(id))
-    case "/model" /:/ model /:/ "child" /:/ childModel => MasterChildState(model,childModel)
-    case "/model" /:/ model => ModelTableState(model)
+    case "/models" => ModelsState("model","")
+    case "/forms" => ModelsState("form","")
+    case kind /:/ model /:/ "insert" => ModelFormState(kind,model,None)
+    case kind /:/ model /:/ "update" /:/ id => ModelFormState(kind,model,Some(id))
+    case kind /:/ model /:/ "child" /:/ childModel => MasterChildState(kind,model,childModel)
+    case kind /:/ model => ModelTableState(kind,model)
   }
 }

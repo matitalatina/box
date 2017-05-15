@@ -39,11 +39,16 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with GeneratedRou
           } ~
             postgresBasicAuth { userProfile =>
               implicit val db = userProfile.db
-              generatedRoutes() ~
+
                 path("models") {
                   get {
                     val allmodels = models ++ views
                     complete(allmodels.toSeq.sorted)
+                  }
+                } ~
+                path("forms") {
+                  get {
+                    complete(Forms.list)
                   }
                 } ~
                 pathPrefix("form") {
@@ -57,7 +62,7 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with GeneratedRou
                         complete(Forms.list)
                       }
                     }
-                }
+                } ~ generatedRoutes()
             }
         }
       }

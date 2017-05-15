@@ -20,7 +20,7 @@ object REST {
   private def client = HttpClient("http://localhost:8080/api/v1",username,password)
 
 
-  def models():Future[Seq[String]] = client.get[Seq[String]]("/models")
+  def models(kind:String):Future[Seq[String]] = client.get[Seq[String]](s"/${kind}s")
   def list(model:String,limit:Int): Future[Seq[Json]] = client.post[JSONQuery,JSONResult[Json]](s"/$model/list",JSONQuery.limit(limit)).map(_.data)
   def csv(model:String,q:JSONQuery): Future[Seq[Seq[String]]] = client.postString[JSONQuery](s"/$model/csv",q).map{ result =>
     result.split("\r\n").toSeq.map{x => x.substring(1,x.length-1).split("\",\"").toSeq}

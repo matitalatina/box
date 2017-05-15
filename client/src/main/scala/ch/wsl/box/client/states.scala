@@ -12,11 +12,11 @@ case object ErrorState extends RoutingState(RootState)
 
 case object IndexState extends RoutingState(RootState)
 
-case class ModelsState(model:String) extends RoutingState(RootState)
+case class ModelsState(kind:String,model:String) extends RoutingState(RootState)
 
-case class ModelTableState(model:String) extends RoutingState(ModelsState(model))
-case class MasterChildState(parentModel:String, childModel:String) extends RoutingState(ModelsState(parentModel))
+case class ModelTableState(kind:String,model:String) extends RoutingState(ModelsState(kind,model))
+case class MasterChildState(kind:String,parentModel:String, childModel:String) extends RoutingState(ModelsState(kind,parentModel))
 
-case class ModelFormState(model:String, id:Option[String]) extends RoutingState(ModelsState(model))
+case class ModelFormState(kind:String,model:String, id:Option[String]) extends RoutingState(ModelsState(kind,model))
 
 

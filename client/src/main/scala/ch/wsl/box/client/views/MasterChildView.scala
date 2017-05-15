@@ -49,8 +49,8 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
 case class MasterChildPresenter(masterPresenter:Presenter[ModelTableState],childPresenter:Presenter[ModelTableState]) extends Presenter[MasterChildState] {
   override def handleState(state: MasterChildState): Unit = {
-    masterPresenter.handleState(ModelTableState(state.parentModel))
-    childPresenter.handleState(ModelTableState(state.childModel))
+    masterPresenter.handleState(ModelTableState(state.kind,state.parentModel))
+    childPresenter.handleState(ModelTableState(state.kind,state.childModel))
   }
 }
 

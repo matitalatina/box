@@ -21,10 +21,10 @@ import scala.util.Try
   */
 
 
-case class ModelFormModel(name:String, id:Option[String], form:Option[FormDefinition], results:Seq[String], error:String, keys:Seq[String])
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[FormDefinition], results:Seq[String], error:String, keys:Seq[String])
 
 object ModelFormModel{
-  def empty = ModelFormModel("",None,None,Seq(),"",Seq())
+  def empty = ModelFormModel("","",None,None,Seq(),"",Seq())
 }
 
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
@@ -67,6 +67,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
       model.set(ModelFormModel(
         name = state.model,
+        kind = state.kind,
         id = state.id,
         form = Some(FormDefinition(
           schema,fields
@@ -97,7 +98,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       }
       saveAction.map{_ =>
 
-        val newState = ModelTableState(model.subProp(_.name).get)
+        val newState = ModelTableState(model.subProp(_.kind).get,model.subProp(_.name).get)
         io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
 
       }.recover{ case e => e.printStackTrace() }

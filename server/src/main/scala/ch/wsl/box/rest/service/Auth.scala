@@ -32,6 +32,11 @@ object Auth {
     user=dbConf.as[String]("user"),
     password=dbConf.as[String]("password"))
 
+  def boxDB = Database.forURL(dbPath,
+    driver="org.postgresql.Driver",
+    user=dbConf.as[String]("user"),
+    password=dbConf.as[String]("password"))
+
 
   case class UserProfile(name: String, db: Database)
 

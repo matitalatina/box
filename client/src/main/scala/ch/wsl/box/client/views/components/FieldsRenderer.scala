@@ -33,7 +33,7 @@ object FieldsRenderer {
       case Some(opts) => {
         val label: String = opts.options.lift(value).getOrElse(value)
         val finalLabel = if(label.trim.length > 0) label else value
-        a(href := ModelFormState(opts.refModel,Some(JSONKeys.fromMap(Map(field.key -> value)).asString)).url,finalLabel)
+        a(href := ModelFormState("model",opts.refModel,Some(JSONKeys.fromMap(Map(field.key -> value)).asString)).url,finalLabel)
       }
       case None => p(value)
     }

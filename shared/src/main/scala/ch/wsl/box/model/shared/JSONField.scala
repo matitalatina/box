@@ -8,7 +8,6 @@ case class JSONField(
                       table: String,
                       key:String,
                       title:Option[String] = None,
-                      titleMap:Option[List[TitleMap]] = None,
                       options:Option[JSONFieldOptions] = None,
                       placeholder:Option[String] = None,
                       widget: Option[String] = None

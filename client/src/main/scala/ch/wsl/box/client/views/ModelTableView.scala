@@ -19,10 +19,10 @@ import org.scalajs.dom.{Element, Event, KeyboardEvent}
 
 case class Row(data: Seq[String])
 case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
-case class ModelTableModel(name:String,rows:Seq[Row],keys:Seq[String],metadata:Seq[Metadata],selected:Option[Row])
+case class ModelTableModel(name:String,kind:String,rows:Seq[Row],keys:Seq[String],metadata:Seq[Metadata],selected:Option[Row])
 
 object ModelTableModel{
-  def empty = ModelTableModel("",Seq(),Seq(),Seq(),None)
+  def empty = ModelTableModel("","",Seq(),Seq(),Seq(),None)
 }
 
 case class ModelTableViewPresenter(onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
@@ -56,6 +56,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
 
       val m = ModelTableModel(
         name = state.model,
+        kind = state.kind,
         rows = csv.map{ Row(_)},
         keys = keys,
         metadata = fields.map{ field =>
@@ -72,7 +73,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
 
   def edit(el:Row) = {
     val k = key(el)
-    val newState = ModelFormState(model.subProp(_.name).get,Some(k.asString))
+    val newState = ModelFormState(model.subProp(_.kind).get,model.subProp(_.name).get,Some(k.asString))
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 
@@ -170,58 +171,59 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
   override def getTemplate: scalatags.generic.Modifier[Element] = {
     div(
       h1(bind(model.subProp(_.name))),
-      UdashTable()(model.subSeq(_.rows))(
-        headerFactory = Some(() => {
-          tr(
-            th("Actions"),
-            produce(model.subSeq(_.metadata)) { metadataList =>
-              for {(metadata) <- metadataList} yield {
-                val title: String = metadata.field.title.getOrElse(metadata.field.key)
-                val filter = Property(metadata.filter)
+      div(id := "box-table",
+        UdashTable()(model.subSeq(_.rows))(
+          headerFactory = Some(() => {
+            tr(
+              th("Actions"),
+              produce(model.subSeq(_.metadata)) { metadataList =>
+                for {(metadata) <- metadataList} yield {
+                  val title: String = metadata.field.title.getOrElse(metadata.field.key)
+                  val filter = Property(metadata.filter)
 
-                th(
-                  a(
-                    onclick :+= ((ev: Event) => presenter.sort(metadata), true),
-                    title," ",
-                    metadata.sort
-                  ),
-                  br,
-                  UdashInputGroup(InputGroupSize.Small)(
-                    UdashInputGroup.addon(filterOptions(metadata)),
-                    UdashInputGroup.input(TextInput.debounced(filter,onkeyup :+= ((ev: KeyboardEvent) => if(ev.keyCode == KeyCode.Enter) presenter.filter(metadata,filter.get), true)).render)
+                  th(
+                    a(
+                      onclick :+= ((ev: Event) => presenter.sort(metadata), true),
+                      title," ",
+                      metadata.sort
+                    ),
+                    br,
+                    UdashInputGroup(InputGroupSize.Small)(
+                      UdashInputGroup.addon(filterOptions(metadata)),
+                      UdashInputGroup.input(TextInput.debounced(filter,onkeyup :+= ((ev: KeyboardEvent) => if(ev.keyCode == KeyCode.Enter) presenter.filter(metadata,filter.get), true)).render)
+                    ).render
                   ).render
-                ).render
+                }
               }
-            }
 
-          ).render
-        }),
-        rowFactory = (el) => {
-          val key = presenter.key(el.get)
+            ).render
+          }),
+          rowFactory = (el) => {
+            val key = presenter.key(el.get)
 
-          val selected = model.subProp(_.selected).transform(_.exists(_ == el.get))
+            val selected = model.subProp(_.selected).transform(_.exists(_ == el.get))
 
-          tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
-            td(button(
-              cls := "primary",
-              onclick :+= ((ev: Event) => presenter.edit(el.get), true)
-            )("Edit")),
-            produce(model.subSeq(_.metadata)) { metadatas =>
-              for {(metadata, i) <- metadatas.zipWithIndex} yield {
+            tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
+              td(button(
+                cls := "primary",
+                onclick :+= ((ev: Event) => presenter.edit(el.get), true)
+              )("Edit")),
+              produce(model.subSeq(_.metadata)) { metadatas =>
+                for {(metadata, i) <- metadatas.zipWithIndex} yield {
 
-                val value = el.get.data.lift(i).getOrElse("")
-                td(FieldsRenderer(
-                  value,
-                  metadata.field,
-                  key
-                )).render
+                  val value = el.get.data.lift(i).getOrElse("")
+                  td(FieldsRenderer(
+                    value,
+                    metadata.field,
+                    key
+                  )).render
+                }
               }
-            }
-          ).render
-        }
-      ).render,
-      showIf(model.subProp(_.metadata).transform(_.size == 0)){ p("loading...").render }
-
+            ).render
+          }
+        ).render,
+        showIf(model.subProp(_.metadata).transform(_.size == 0)){ p("loading...").render }
+      )
     )
   }
 
