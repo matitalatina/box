@@ -190,11 +190,11 @@ package object tables {
       }
 
 
-      override def tableName = (dbName: String) => dbName
+      override def tableName = (dbName: String) => dbName.capitalize
       /** Maps database table name to entity case class name
  *
         *@group Basic customization overrides */
-      override def entityName = (dbName: String) => dbName+"_row"
+      override def entityName = (dbName: String) => dbName.capitalize+"_row"
 
 
       /**
@@ -292,6 +292,10 @@ package object tables {
         }
 
         def tableModel = model
+
+        override def ForeignKey = new ForeignKeyDef(_) {
+          //override def code: String = "" // dont generate foreign keys
+        }
 
         override def Column = new Column(_){
           // customize Scala column names

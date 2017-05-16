@@ -22,6 +22,8 @@ object Auth {
   val dbConf: Config = ConfigFactory.load().as[Config]("db")
   val dbPath = dbConf.as[String]("url")
 
+  val boxDbConf: Config = ConfigFactory.load().as[Config]("box.db")
+
   /**
     * Admin DB connection, useful for quering the information Schema
  *
@@ -32,10 +34,10 @@ object Auth {
     user=dbConf.as[String]("user"),
     password=dbConf.as[String]("password"))
 
-  def boxDB = Database.forURL(dbPath,
+  def boxDB = Database.forURL(boxDbConf.as[String]("url"),
     driver="org.postgresql.Driver",
-    user=dbConf.as[String]("user"),
-    password=dbConf.as[String]("password"))
+    user=boxDbConf.as[String]("user"),
+    password=boxDbConf.as[String]("password"))
 
 
   case class UserProfile(name: String, db: Database)
