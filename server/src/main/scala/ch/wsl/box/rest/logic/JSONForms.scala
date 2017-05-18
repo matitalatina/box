@@ -8,7 +8,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-object JSONForm {
+object JSONForms {
 
   import StringHelper._
   
@@ -22,7 +22,7 @@ object JSONForm {
     tableFieldTitles.as[Option[String]]("default").getOrElse("name")
   }
 
-  def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[Seq[JSONField]] = {
+  def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[JSONForm] = {
 
     val schema = new PgInformationSchema(table, db)
 
@@ -63,7 +63,9 @@ object JSONForm {
       }
     }
 
-    schema.columns.flatMap{ c => Future.sequence(c.map(field2form))}
+    schema.columns.flatMap{ c => Future.sequence(c.map(field2form))}.map{ fields =>
+      JSONForm(1,fields,Layout(Seq(LayoutBlock(None,12,fields.map(_.key)))))
+    }
 
 
   }

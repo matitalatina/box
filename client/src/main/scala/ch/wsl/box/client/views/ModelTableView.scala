@@ -48,7 +48,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     model.subProp(_.name).set(state.model)
     for{
       csv <- REST.csv(state.kind,state.model,JSONQuery.limit(30))
-      emptyFields <- REST.form(state.kind,state.model)
+      emptyFields <- REST.form(state.kind,state.model).map(_.fields)
       keys <- REST.keys(state.kind,state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
     } yield {

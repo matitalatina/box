@@ -53,7 +53,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       keys <- REST.keys(state.kind,state.model)
       ids = state.id.map(JSONKeys.fromString)
       schema <- REST.schema(state.kind,state.model)
-      emptyFields <- REST.form(state.kind,state.model)
+      emptyFields <- REST.form(state.kind,state.model).map(_.fields)
       current <- state.id match {
         case Some(id) => REST.get(state.kind,state.model,ids.get)
         case None => Future.successful(Json.Null)

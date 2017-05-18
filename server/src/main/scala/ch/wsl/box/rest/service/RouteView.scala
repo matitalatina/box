@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.unmarshalling._
 import akka.stream.Materializer
 import ch.wsl.box.model.shared.{JSONCount, JSONQuery, JSONResult}
-import ch.wsl.box.rest.logic.{JSONForm, JSONSchemas, RouteHelper}
+import ch.wsl.box.rest.logic.{JSONForms, JSONSchemas, RouteHelper}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import slick.driver.PostgresDriver.api._
 import akka.http.scaladsl.Http
@@ -47,7 +47,7 @@ trait RouteView {
       } ~
         path("form") {
           get {
-            complete{ JSONForm.of(name,db) }
+            complete{ JSONForms.of(name,db) }
           }
         } ~
         path("keys") {

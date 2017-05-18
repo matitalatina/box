@@ -10,7 +10,8 @@ case class JSONField(
                       title:Option[String] = None,
                       options:Option[JSONFieldOptions] = None,
                       placeholder:Option[String] = None,
-                      widget: Option[String] = None
+                      widget: Option[String] = None,
+                      subformId: Option[Int] = None
                     )
 
 case class TitleMap(value:String,name:String)

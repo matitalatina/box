@@ -27,7 +27,7 @@ object REST {
   }
   def keys(kind:String,model:String): Future[Seq[String]] = client.get[Seq[String]](s"/$kind/$model/keys")
   def schema(kind:String,model:String): Future[JSONSchema] = client.get[JSONSchema](s"/$kind/$model/schema")
-  def form(kind:String,model:String): Future[Seq[JSONField]] = client.get[Seq[JSONField]](s"/$kind/$model/form")
+  def form(kind:String,model:String): Future[JSONForm] = client.get[JSONForm](s"/$kind/$model/form")
   def count(kind:String,model:String): Future[Int] = client.get[Int](s"/$kind/$model/count")
   def insert(kind:String,model:String, data:Json): Future[Json] = client.post[Json,Json](s"/$kind/$model",data)
   def get(kind:String,model:String,keys:JSONKeys):Future[Json] = {

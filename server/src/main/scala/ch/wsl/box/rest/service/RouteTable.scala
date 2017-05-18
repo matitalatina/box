@@ -75,7 +75,7 @@ trait RouteTable {
       } ~
       path("form") {
         get {
-          complete{ JSONForm.of(name,db) }
+          complete{ JSONForms.of(name,db) }
         }
       } ~
       path("keys") {
