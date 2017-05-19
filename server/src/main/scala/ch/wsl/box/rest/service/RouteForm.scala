@@ -22,6 +22,9 @@ trait RouteForm {
     import akka.http.scaladsl.model._
 
     pathPrefix(name) {
+
+      val form = Forms(name)
+
       pathPrefix("id") {
         path(Segment) { id =>
           get {
@@ -47,7 +50,7 @@ trait RouteForm {
         path("form") {
           get {
             complete {
-              Forms(name)
+              form
             }
           }
         } ~

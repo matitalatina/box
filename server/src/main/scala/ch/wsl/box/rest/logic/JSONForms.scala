@@ -4,6 +4,7 @@ import ch.wsl.box.model.shared._
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -22,7 +23,7 @@ object JSONForms {
     tableFieldTitles.as[Option[String]]("default").getOrElse("name")
   }
 
-  def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[JSONForm] = {
+  def of(table:String,db:slick.driver.PostgresDriver.api.Database,lang:String):Future[JSONForm] = {
 
     val schema = new PgInformationSchema(table, db)
 
@@ -36,7 +37,7 @@ object JSONForms {
           if (constraints.contains(fk.contraintName)) {
             println("error: " + fk.contraintName)
             println(field.column_name)
-            JSONField(JSONSchemas.typesMapping(field.data_type),table = table, key = field.column_name.slickfy)
+            JSONField(JSONSchemas.typesMapping(field.data_type), key = field.column_name.slickfy)
           } else {
             constraints = fk.contraintName :: constraints
 
@@ -45,7 +46,6 @@ object JSONForms {
             JSONField(
               JSONSchemas.typesMapping(field.data_type),
               key = field.column_name.slickfy,
-              table = table,
               placeholder = Some(fk.referencingTable + " Lookup"),
               //widget = Some(WidgetsNames.select),
               options = Some(
@@ -56,7 +56,6 @@ object JSONForms {
         }
         case _ => JSONField(
           JSONSchemas.typesMapping(field.data_type),
-          table = table,
           key = field.column_name.slickfy,
           widget = JSONSchemas.widgetMapping(field.data_type)
         )
@@ -64,7 +63,7 @@ object JSONForms {
     }
 
     schema.columns.flatMap{ c => Future.sequence(c.map(field2form))}.map{ fields =>
-      JSONForm(1,fields,Layout(Seq(LayoutBlock(None,12,fields.map(_.key)))))
+      JSONForm(1,fields,Layout.fromFields(fields),table,lang)
     }
 
 

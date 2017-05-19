@@ -5,18 +5,19 @@ package ch.wsl.box.model.shared
   */
 case class JSONField(
                       `type`:String,
-                      table: String,
                       key:String,
                       title:Option[String] = None,
                       options:Option[JSONFieldOptions] = None,
                       placeholder:Option[String] = None,
                       widget: Option[String] = None,
-                      subformId: Option[Int] = None
+                      subform: Option[Subform] = None
                     )
 
-case class TitleMap(value:String,name:String)
 
 case class JSONFieldOptions(refModel:String, map:JSONFieldMap, options:Map[String,String] = Map())
 
 
 case class JSONFieldMap(valueProperty:String, textProperty:String)
+
+case class Subform(id:Int,localFields:String,subFields:String)
+

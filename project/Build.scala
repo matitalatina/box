@@ -150,7 +150,8 @@ object Build extends sbt.Build {
     toError(r.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log))
     val fname = outputDir + "/ch/wsl/box/model/Tables.scala"
     val rname = outputDir + "/ch/wsl/box/rest/service/GeneratedRoutes.scala"
-    Seq(file(fname),file(rname))
+    val registryname = outputDir + "/ch/wsl/box/model/TablesRegistry.scala"
+    Seq(file(fname),file(rname),file(registryname))
   }
 
 

@@ -7,6 +7,12 @@ package ch.wsl.box.model.shared
 
 case class Layout(blocks: Seq[LayoutBlock])
 
+object Layout{
+  def fromFields(fields:Seq[JSONField]) = Layout(Seq(
+    LayoutBlock(None,12,fields.map(x => s"${x.key}"))
+  ))
+}
+
 /**
   *
   * @param title title of the block

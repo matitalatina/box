@@ -115,6 +115,13 @@ object CustomizedCodeGenerator {
       "ch.wsl.box.model.tables"
     )
 
+    val registryGen = gen.RegistryModelsGenerator(calculatedViews,calculatedTables)
+
+    registryGen.writeToFile(
+      args(0),
+      "ch.wsl.box.model",
+      "TablesRegistry.scala"
+    )
 
     println("Exit")
 
@@ -186,6 +193,43 @@ package object tables {
 
           def writeToFile(folder:String, pkg:String, name:String, fileName:String,modelPackages:String) =
             writeStringToFile(generate(pkg,name,modelPackages),folder,pkg,fileName)
+
+      }
+
+      case class RegistryModelsGenerator(viewList:Seq[String],tableList:Seq[String]) {
+
+        def mapModel(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
+          s"""   "${table.model.name.table}" -> JsonActionHelper[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name})"""
+        }
+
+        def implicits(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
+          s"""implicit val ${table.model.name.table}_decoder: Decoder[${table.EntityType.name}] = deriveDecoder[${table.EntityType.name}]
+             |implicit val ${table.model.name.table}_encoder: Encoder[${table.EntityType.name}] = deriveEncoder[${table.EntityType.name}]
+           """.stripMargin
+        }
+
+        def generate(pkg:String):String =
+          s"""package ${pkg}
+             |
+             |import ch.wsl.box.rest.logic.{JsonActionHelper, ModelJsonActions}
+             |import tables._
+             |
+             |object TablesRegistry {
+             |
+             |  import io.circe._
+             |  import io.circe.generic.auto._
+             |  import ch.wsl.box.rest.service.JSONSupport._
+             |
+             |
+             |  val actions: Map[String, ModelJsonActions] = Map(
+             |  ${tableList.flatMap(mapModel).mkString(",\n")}
+             |  )
+             |
+             |}
+           """.stripMargin
+
+        def writeToFile(folder:String, pkg:String, fileName:String) =
+          writeStringToFile(generate(pkg),folder,pkg,fileName)
 
       }
 

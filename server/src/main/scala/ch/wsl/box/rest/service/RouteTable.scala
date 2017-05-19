@@ -34,7 +34,7 @@ trait RouteTable {
 
     models = Set(name) ++ models
 
-    val utils = new RouteHelper[T,M](name,table)
+    val utils = new RouteHelper[T,M](table)
     import JSONSupport._
     import io.circe.generic.auto._
 
@@ -75,7 +75,7 @@ trait RouteTable {
       } ~
       path("form") {
         get {
-          complete{ JSONForms.of(name,db) }
+          complete{ JSONForms.of(name,db,"en") }
         }
       } ~
       path("keys") {

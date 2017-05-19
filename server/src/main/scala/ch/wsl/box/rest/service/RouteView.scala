@@ -36,7 +36,7 @@ trait RouteView {
     import Directives._
     import io.circe.generic.auto._
 
-    val helper = new RouteHelper[T,M](name,table)
+    val helper = new RouteHelper[T,M](table)
 
     pathPrefix(name) {
       println(s"view with name: $name")
@@ -47,7 +47,7 @@ trait RouteView {
       } ~
         path("form") {
           get {
-            complete{ JSONForms.of(name,db) }
+            complete{ JSONForms.of(name,db,"en") }
           }
         } ~
         path("keys") {
