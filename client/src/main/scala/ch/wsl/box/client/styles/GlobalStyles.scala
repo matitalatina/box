@@ -18,10 +18,14 @@ object GlobalStyles extends StyleSheet.Inline {
     )
   )
 
-  val smallTable = style(
-    unsafeRoot("td")(
-      padding(1 px)
+  val smallCells = style(
+    padding(3 px).important,
+    fontSize(10 px),
+    unsafeRoot("p")(
+      margin(0 px)
     )
   )
+
+
 
 }

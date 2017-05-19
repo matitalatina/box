@@ -2,11 +2,13 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
+import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.views.components.FieldsRenderer
 import ch.wsl.box.model.shared._
 import io.udash._
 import io.udash.bootstrap.form.{InputGroupSize, UdashInputGroup}
 import io.udash.bootstrap.table.UdashTable
+import scalacss.ScalatagsCss._
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.{Element, Event, KeyboardEvent}
 
@@ -174,28 +176,25 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
       div(id := "box-table",
         UdashTable()(model.subSeq(_.rows))(
           headerFactory = Some(() => {
-            tr(
-              th("Actions"),
-              produce(model.subSeq(_.metadata)) { metadataList =>
-                for {(metadata) <- metadataList} yield {
-                  val title: String = metadata.field.title.getOrElse(metadata.field.key)
-                  val filter = Property(metadata.filter)
+              tr(
+                th(GlobalStyles.smallCells)("Actions"),
+                produce(model.subSeq(_.metadata)) { metadataList =>
+                  for {(metadata) <- metadataList} yield {
+                    val title: String = metadata.field.title.getOrElse(metadata.field.key)
+                    val filter = Property(metadata.filter)
 
-                  th(
-                    a(
-                      onclick :+= ((ev: Event) => presenter.sort(metadata), true),
-                      title," ",
-                      metadata.sort
-                    ),
-                    br,
-                    UdashInputGroup(InputGroupSize.Small)(
-                      UdashInputGroup.addon(filterOptions(metadata)),
-                      UdashInputGroup.input(TextInput.debounced(filter,onkeyup :+= ((ev: KeyboardEvent) => if(ev.keyCode == KeyCode.Enter) presenter.filter(metadata,filter.get), true)).render)
+                    th(GlobalStyles.smallCells)(
+                      a(
+                        onclick :+= ((ev: Event) => presenter.sort(metadata), true),
+                        title," ",
+                        metadata.sort
+                      ),br,
+                      filterOptions(metadata),
+                      TextInput.debounced(filter,onkeyup :+= ((ev: KeyboardEvent) => if(ev.keyCode == KeyCode.Enter) presenter.filter(metadata,filter.get), true))
+
                     ).render
-                  ).render
+                  }
                 }
-              }
-
             ).render
           }),
           rowFactory = (el) => {
@@ -204,7 +203,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
             val selected = model.subProp(_.selected).transform(_.exists(_ == el.get))
 
             tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
-              td(button(
+              td(GlobalStyles.smallCells)(a(
                 cls := "primary",
                 onclick :+= ((ev: Event) => presenter.edit(el.get), true)
               )("Edit")),
@@ -212,7 +211,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
                 for {(metadata, i) <- metadatas.zipWithIndex} yield {
 
                   val value = el.get.data.lift(i).getOrElse("")
-                  td(FieldsRenderer(
+                  td(GlobalStyles.smallCells)(FieldsRenderer(
                     value,
                     metadata.field,
                     key

@@ -13,8 +13,8 @@ class IndexView extends View {
   import scalatags.JsDom.all._
 
   private val content = div(
-    h2("Postgres Box Client")
-
+    h2("Postgres Box Client"),
+    table(tr(td(GlobalStyles.smallCells)("test")))
   )
 
   override def getTemplate: Modifier = content
