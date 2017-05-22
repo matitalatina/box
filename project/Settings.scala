@@ -79,7 +79,10 @@ object Settings {
   val sharedJVMJSDependencies = Def.setting(Seq(
     "io.udash"                 %%% "udash-core-shared" % versions.udash,
     "io.udash"                 %%% "udash-rest-shared" % versions.udash,
-    "io.udash"                 %%% "udash-rpc-shared" % versions.udash
+    "io.udash"                 %%% "udash-rpc-shared" % versions.udash,
+    "io.circe" %%% "circe-core" % versions.circe,
+    "io.circe" %%% "circe-generic" % versions.circe,
+    "io.circe" %%% "circe-parser" % versions.circe
   ))
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(
@@ -120,9 +123,6 @@ object Settings {
     "io.udash" %%% "udash-jquery" % versions.udashJQuery,
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
-    "io.circe" %%% "circe-core" % versions.circe,
-    "io.circe" %%% "circe-generic" % versions.circe,
-    "io.circe" %%% "circe-parser" % versions.circe,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
     "org.scala-js" %%% "scalajs-dom" % "0.9.0"

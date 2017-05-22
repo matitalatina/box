@@ -4,6 +4,7 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.model.TablesRegistry
+import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
 import slick.lifted.Query
 import slick.driver.PostgresDriver.api._
@@ -20,7 +21,7 @@ case class Reference(association:Seq[ReferenceKey])
 
 case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters {
 
-  import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
+  import ch.wsl.box.shared.utils.JsonUtils._
 
 
   private def createQuery(model:Json,subform: Subform):JSONQuery = {
@@ -57,4 +58,14 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
 
   def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(_.headOption.asJson)
+
+  def csv(query:JSONQuery):Future[String] = extractSeq(query).map{ results =>
+    val strings = results.map { row =>
+      form.tableFields.map { field =>
+        row.get(field)
+      }
+    }
+    CSV.of(strings)
+  }
+
 }

@@ -1,30 +1,23 @@
 package ch.wsl.box.model.shared
 
+import ch.wsl.box.shared.utils.CSV
+
 /**
   * Created by andreaminetti on 03/03/16.
   */
 case class JSONResult[M <: Product](count:Int,data:List[M]) {
 
   import JSONResult._
-  def csv:String = data.map(_.toCSV()).mkString("\r\n")
+  def csv:String = CSV.of(data.map(_.values()))
 }
 
 object JSONResult{
   implicit class CSVWrapper(val prod: Product) extends AnyVal {
 
-    private def escape(value:Any):String = {
-      val str = value.toString
-//      str.contains(",") || str.contains("\n")  match {
-//        case true => "\""+str.replaceAll("\"","\\\"")+"\""
-//        case false => str
-//      }
-      "\""+str.replaceAll("\"","\\\"")+"\""
-    }
-
-    def toCSV() = prod.productIterator.map{
-      case Some(value) => escape(value)
-      case None => escape("")
-      case rest => escape(rest)
-    }.mkString(",")
+    def values():Seq[String] = prod.productIterator.map{
+      case Some(value) => value.toString
+      case None => ""
+      case rest => rest.toString
+    }.toSeq
   }
 }

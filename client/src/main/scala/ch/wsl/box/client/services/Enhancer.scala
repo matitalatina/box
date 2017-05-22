@@ -11,6 +11,8 @@ import scala.util.Try
   */
 object Enhancer {
 
+  import ch.wsl.box.shared.utils.JsonUtils._
+
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   def fetchLookupOptions(field:JSONField,opts:JSONFieldOptions):Future[JSONField] = {
@@ -64,13 +66,8 @@ object Enhancer {
   }
 
   def extract(current:Json,fields:Seq[JSONField]):Seq[String] = fields.map{ field =>
-    val resultString = current.hcursor.get[Json](field.key).fold(
-      _ => "",
-      rawJs => rawJs.as[String].fold(
-        _ => rawJs.toString(),
-        x => x
-      )
-    )
+
+    val resultString = current.get(field.key)
 
     field.options match {
       case None => resultString
@@ -80,18 +77,7 @@ object Enhancer {
   }
 
 
-  implicit class EnhancedJson(el:Json) {
-    def get(field: String) = el.hcursor.get[Json](field).fold(
-      { x => "" }, { x => x.as[String].right.getOrElse(x.toString()) }
-    )
 
-    def keys(fields:Seq[String]) :JSONKeys = {
-      val values = fields map { field =>
-        get(field)
-      }
-      JSONKeys.fromMap(fields.zip(values).toMap)
-    }
-  }
 
   def extractKeys(row:Seq[String],fields:Seq[JSONField],keys:Seq[String]):JSONKeys = {
     val map = for{

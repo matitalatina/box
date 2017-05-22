@@ -1,13 +1,13 @@
 package ch.wsl.box.rest.service
 
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives
 import ch.wsl.box.model.shared.{JSONForm, JSONKeys, JSONQuery}
-import ch.wsl.box.rest.logic.{FormShaper, Forms}
+import ch.wsl.box.rest.logic.{FormShaper, Forms, JSONSchemas}
 import io.circe.Json
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import slick.driver.PostgresDriver.api._
 
 /**
@@ -71,7 +71,7 @@ trait RouteForm {
         path("keys") {
           get {
             complete {
-              ???
+              form.map(f => JSONSchemas.keysOf(f.table) )
             }
           }
         } ~
@@ -95,7 +95,9 @@ trait RouteForm {
             entity(as[JSONQuery]) { query =>
               println("csv")
               complete(shaper(form){ fs =>
-                fs.extractArray(query)
+                fs.csv(query).map{csv =>
+                  HttpEntity(ContentTypes.`text/plain(UTF-8)`,csv)
+                }
               })
             }
           }

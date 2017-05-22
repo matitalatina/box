@@ -62,7 +62,7 @@ object Forms {
     } yield {
       val jsonFields = fieldsToJsonFields(fields)
       val layout = form.layout.map{l => parse(l).right.get.as[Layout].right.get}.getOrElse(Layout.fromFields(jsonFields))
-      JSONForm(form.id.get,jsonFields,layout,form.table,lang)
+      JSONForm(form.id.get,jsonFields,layout,form.table,lang,form.tableFields.toSeq.flatMap(_.split(",")))
     }
 
   }
