@@ -6,6 +6,8 @@ import slick.codegen.OutputHelpers
 import slick.jdbc.meta.MTable
 import slick.model.Model
 import slick.driver.PostgresDriver
+import slick.jdbc.PostgresProfile
+import slick.sql.SqlProfile
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -355,6 +357,11 @@ package object tables {
           override def asOption: Boolean =  primaryKey match {
             case true => true
             case false => super.asOption
+          }
+
+          override def options: Iterable[String] = primaryKey match {
+            case false => super.options
+            case true => {super.options.toSeq ++ Seq("O.AutoInc")}.distinct
           }
 
 
