@@ -28,7 +28,14 @@ case class JsonActionHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
   override def update(keys:JSONKeys,json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Int] = utils.updateById(keys,json.as[M].right.get)
 
   override def insert(json: Json)(implicit db:Database): Future[Json] = {
-    val result: Future[M] = db.run { table.returning(table) += json.as[M].right.get }
+    println(json)
+    val data:M = json.as[M].fold({ fail =>
+      println(fail.toString())
+      println(fail.history)
+      throw new Exception(fail.toString())
+    },
+    { x => x})
+    val result: Future[M] = db.run { table.returning(table) += data }
     result.map(_.asJson)
   }
 }

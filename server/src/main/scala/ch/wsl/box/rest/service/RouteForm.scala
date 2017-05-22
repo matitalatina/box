@@ -2,6 +2,7 @@ package ch.wsl.box.rest.service
 
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives
+import ch.wsl.box.model.TablesRegistry
 import ch.wsl.box.model.shared.{JSONForm, JSONKeys, JSONQuery}
 import ch.wsl.box.rest.logic.{FormShaper, Forms, JSONSchemas}
 import io.circe.Json
@@ -107,7 +108,13 @@ trait RouteForm {
             ???
           } ~
             post {
-              ???
+              entity(as[Json]) { e =>
+                complete {
+                  form.flatMap { f =>
+                    TablesRegistry.actions(f.table).insert(e)
+                  }
+                }
+              }
             }
         }
 
