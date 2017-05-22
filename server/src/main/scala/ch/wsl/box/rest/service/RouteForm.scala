@@ -1,18 +1,28 @@
 package ch.wsl.box.rest.service
 
 import akka.http.scaladsl.server.Directives
-import ch.wsl.box.model.shared.{JSONKeys, JSONQuery}
-import ch.wsl.box.rest.logic.Forms
+import ch.wsl.box.model.shared.{JSONForm, JSONKeys, JSONQuery}
+import ch.wsl.box.rest.logic.{FormShaper, Forms}
 import io.circe.Json
 
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
+import slick.driver.PostgresDriver.api._
 
 /**
   * Created by andre on 5/15/2017.
   */
 trait RouteForm {
-  def route(name:String) = {
+
+  def shaper[T](futForm:Future[JSONForm])(f:FormShaper => T)(implicit db:Database):Future[T] = for{
+    form <- futForm
+    formShaper = FormShaper(form)
+  } yield {
+    f(formShaper)
+  }
+
+  def formRoutes(name:String)(implicit db:Database) = {
 
     import JSONSupport._
     import Directives._
@@ -21,7 +31,6 @@ trait RouteForm {
 
     import akka.http.scaladsl.model._
 
-    pathPrefix(name) {
 
       val form = Forms(name)
 
@@ -40,6 +49,11 @@ trait RouteForm {
             }
         }
       } ~
+        path("identity") {
+          get {
+            complete(name)
+          }
+        } ~
         path("schema") {
           get {
             complete {
@@ -80,8 +94,9 @@ trait RouteForm {
           post {
             entity(as[JSONQuery]) { query =>
               println("csv")
-
-              complete(???)
+              complete(shaper(form){ fs =>
+                fs.extractArray(query)
+              })
             }
           }
         } ~
@@ -93,7 +108,7 @@ trait RouteForm {
               ???
             }
         }
-    }
+
 
 
   }

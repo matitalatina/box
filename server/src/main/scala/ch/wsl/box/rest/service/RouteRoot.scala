@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by andreaminetti on 15/03/16.
   */
-trait RouteRoot extends RouteTable with RouteView with RouteUI with GeneratedRoutes {
+trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm with GeneratedRoutes {
 
   implicit val materializer:Materializer
 
@@ -54,10 +54,9 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with GeneratedRou
                   }
                 } ~
                 pathPrefix("form") {
-                  path(Segment) { name =>
-                    get {
-                      complete(Forms(name))
-                    }
+                  pathPrefix(Segment) { name =>
+                    println(s"getting form:$name")
+                    formRoutes(name)
                   }
                 }
 
