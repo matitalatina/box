@@ -18,7 +18,7 @@ import scalatags.JsDom.TypedTag
   */
 object JSONSchemaRenderer {
 
-  case class FormDefinition(schema:JSONSchema,fields:Seq[JSONField])
+  case class FormDefinition(fields:Seq[JSONField])
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
@@ -103,7 +103,7 @@ object JSONSchemaRenderer {
 
     div(BootstrapStyles.row)(
       div(BootstrapStyles.Grid.colMd6)(
-        for((((name,props),field),i) <- form.schema.properties.toSeq.zip(form.fields).zipWithIndex) yield {
+        for((field,i) <- form.fields.zipWithIndex) yield {
           div(
             UdashForm(
               results.lift(i).map { r =>
@@ -116,5 +116,5 @@ object JSONSchemaRenderer {
     )
   }
 
-  def apply(schema:Option[FormDefinition],results: Seq[Property[String]],keys:Seq[String]):TypedTag[Element] = apply(schema.getOrElse(FormDefinition(JSONSchema.empty,Seq())),results,keys)
+  def apply(schema:Option[FormDefinition],results: Seq[Property[String]],keys:Seq[String]):TypedTag[Element] = apply(schema.getOrElse(FormDefinition(Seq())),results,keys)
 }
