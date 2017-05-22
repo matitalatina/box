@@ -53,8 +53,9 @@ object Forms {
     import io.circe.generic.auto._
 
     def fieldQuery(formId:Int) = for{
-      fields <- Field.table zip Field.Field_i18n if fields._1.form_id === formId && fields._2.lang === lang
-    } yield fields
+      field <- Field.table if field.form_id === formId
+      fieldI18n <- Field.Field_i18n if fieldI18n.lang === lang && fieldI18n.field_id === field.id
+    } yield (field,fieldI18n)
 
     for{
       form <- Auth.boxDB.run( formQuery.result ).map(_.head)
