@@ -29,7 +29,14 @@ object Forms {
         value <- field.refValueProperty
         text <- fieldI18n.refTextProperty
       } yield JSONFieldOptions(model,JSONFieldMap(value,text))
-      JSONField(field.`type`,field.key,fieldI18n.title,options,fieldI18n.placeholder,field.widget)
+
+      val subform = for{
+        id <- field.subform
+        local <- field.localFields
+        remote <- field.subFields
+      } yield Subform(id,local,remote)
+
+      JSONField(field.`type`,field.key,fieldI18n.title,options,fieldI18n.placeholder,field.widget,subform)
     }
   }
 

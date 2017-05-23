@@ -30,12 +30,17 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
     } yield {
       JSONQueryFilter(remote,Some(Filter.EQUALS),model.hcursor.get[Json](local).right.get.toString())
     }
-    JSONQuery(50,0,List(),filters.toList)
+    JSONQuery(50,1,List(),filters.toList)
   }
 
-  private def getSubform(model:Json, field:JSONField,form:JSONForm,subform:Subform):Future[Seq[Json]] = {
+  private def getSubform(model:Json, field:JSONField,form:JSONForm,subform:Subform):Future[Json] = {
     val query = createQuery(model,subform)
-    TablesRegistry.actions(form.table).getModel(query)
+
+    for {
+      form <- Forms(subform.id, form.lang)
+      result <- FormShaper(form).extractArray(query)
+    } yield result
+
   }
 
 
@@ -48,7 +53,7 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
         case Some(subform) => for{
           form <- Forms(subform.id,form.lang)
           result <- getSubform(json,field,form,subform)
-        } yield field.key -> result.asJson
+        } yield field.key -> result
       }
     }
     Future.sequence(values).map(_.toMap.asJson)

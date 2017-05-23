@@ -25,15 +25,15 @@ object Field {
     *  @param refModel Database column refModel SqlType(text), Default(None)
     *  @param refValueProperty Database column refValueProperty SqlType(text), Default(None)
     *  @param subform Database column subform SqlType(int4), Default(None) */
-  case class Field_row(id: Option[Int] = None, form_id: Int, `type`: String, key: String, widget: Option[String] = None, refModel: Option[String] = None, refValueProperty: Option[String] = None, subform: Option[Int] = None)
+  case class Field_row(id: Option[Int] = None, form_id: Int, `type`: String, key: String, widget: Option[String] = None, refModel: Option[String] = None, refValueProperty: Option[String] = None, subform: Option[Int] = None, localFields:Option[String] = None,subFields:Option[String] = None)
   /** GetResult implicit for fetching Field_row objects using plain SQL queries */
 
   /** Table description of table field. Objects of this class serve as prototypes for rows in queries.
     *  NOTE: The following names collided with Scala keywords and were escaped: type */
   class Field(_tableTag: Tag) extends profile.api.Table[Field_row](_tableTag, "field") {
-    def * = (Rep.Some(id), form_id, `type`, key, widget, refModel, refValueProperty, subform) <> (Field_row.tupled, Field_row.unapply)
+    def * = (Rep.Some(id), form_id, `type`, key, widget, refModel, refValueProperty, subform,localFields,subFields) <> (Field_row.tupled, Field_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(form_id), Rep.Some(`type`),  key, widget, refModel, refValueProperty, subform).shaped.<>({r=>import r._; _1.map(_=> Field_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(form_id), Rep.Some(`type`),  key, widget, refModel, refValueProperty, subform,localFields,subFields).shaped.<>({r=>import r._; _1.map(_=> Field_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -52,6 +52,8 @@ object Field {
     val refValueProperty: Rep[Option[String]] = column[Option[String]]("refValueProperty", O.Default(None))
     /** Database column subform SqlType(int4), Default(None) */
     val subform: Rep[Option[Int]] = column[Option[Int]]("subform", O.Default(None))
+    val localFields: Rep[Option[String]] = column[Option[String]]("localFields", O.Default(None))
+    val subFields: Rep[Option[String]] = column[Option[String]]("subFields", O.Default(None))
 
     /** Foreign key referencing Form (database name fkey_form) */
     lazy val formFk = foreignKey("fkey_form", form_id, Form.table)(r => r.id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
