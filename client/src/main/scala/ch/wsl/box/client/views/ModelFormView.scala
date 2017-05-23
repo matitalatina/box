@@ -50,8 +50,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
     {for{
       emptyFieldsForm <- REST.form(state.kind,state.model)
-      fields <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm.fields)
-      form = emptyFieldsForm.copy(fields = fields)
+      form <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm)
       ids = state.id.map(JSONKeys.fromString)
       current <- state.id match {
         case Some(id) => REST.get(state.kind,state.model,ids.get)
@@ -62,7 +61,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
       //initialise an array of n strings, where n is the number of fields
-      val results:Seq[Json] = Enhancer.extract(current,fields)
+      val results:Seq[Json] = Enhancer.extract(current,form)
 
       model.set(ModelFormModel(
         name = state.model,
@@ -86,7 +85,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
     m.form.foreach{ form =>
       val jsons = for {
         (field, i) <- form.fields.zipWithIndex
-      } yield Enhancer.parse(field, m.results.lift(i)){ t =>
+      } yield Enhancer.parse(field, m.results.lift(i),form.keys){ t =>
         model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
       }
       val saveAction = m.id match {

@@ -1,9 +1,8 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONKeys}
+import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONForm, JSONKeys}
 import io.circe._
 import io.circe.syntax._
-
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -28,14 +27,14 @@ object Enhancer {
     }
   }
 
-  def populateOptionsValuesInFields(fields:Seq[JSONField]):Future[Seq[JSONField]] = Future.sequence{
-    fields.map{ field =>
+  def populateOptionsValuesInFields(form:JSONForm):Future[JSONForm] = Future.sequence{
+    form.fields.map { field =>
       field.options match {
-        case None => Future.successful(field)
-        case Some(opts) => fetchLookupOptions(field,opts)
+        case Some(opts) if !form.keys.contains(field.key) => fetchLookupOptions(field, opts)
+        case _ => Future.successful(field)
       }
     }
-  }
+  }.map{ fields => form.copy(fields = fields) }
 
   import io.circe.syntax._
 
@@ -47,7 +46,7 @@ object Enhancer {
       ).getOrElse(Json.Null)
   }
 
-  def parse(field: JSONField,value:Option[Json])(onError:(Throwable => Unit)):(String,Json) = try{
+  def parse(field: JSONField,value:Option[Json], keys:Seq[String])(onError:(Throwable => Unit)):(String,Json) = try{
     println(s"parsing ${field.key} with value $value")
 
     val valueToSave:Json = value match {
@@ -55,7 +54,7 @@ object Enhancer {
       case Some(v) => v
     }
     val data = (field.`type`,field.options) match {
-      case (_,Some(options)) => parseOption(options,valueToSave)
+      case (_,Some(options)) if !keys.contains(field.key) => parseOption(options,valueToSave)
       case (_,_) => valueToSave
     }
 
@@ -65,16 +64,16 @@ object Enhancer {
     throw t
   }
 
-  def extract(current:Json,fields:Seq[JSONField]):Seq[Json] = fields.map{ field =>
+  def extract(current:Json,form:JSONForm):Seq[Json] = form.fields.map{ field =>
 
-    val result = current.hcursor.get[Json](field.key).right.getOrElse(Json.Null)
+    val result = current.js(field.key)
 
     field.options match {
-      case None => result
-      case Some(opts) => {
+      case Some(opts) if !form.keys.contains(field.key) => {
         val resultString = current.get(field.key)
         opts.options.lift(resultString).getOrElse(resultString).asJson
       }
+      case _ => result
     }
 
   }

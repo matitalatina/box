@@ -51,8 +51,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     for{
       csv <- REST.csv(state.kind,state.model,JSONQuery.limit(30))
       emptyFieldsForm <- REST.form(state.kind,state.model)
-      fields <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm.fields)
-      form = emptyFieldsForm.copy(fields = fields)
+      form <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm)
     } yield {
 
 
@@ -60,7 +59,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
         name = state.model,
         kind = state.kind,
         rows = csv.map{ Row(_)},
-        metadata = fields.map{ field =>
+        metadata = form.fields.map{ field =>
           Metadata(field,Sort.IGNORE,"",Filter.default(field.`type`))
         },
         form = Some(form),

@@ -94,10 +94,16 @@ object JSONSchemaRenderer {
       case false => ""
     }
     def jsToString(json:Json):String = json.string
-    def strToJson(str:String):Json = str.asJson
-    val stringModel = model.transform(jsToString,strToJson)
+    def strToJson(str:String):Json = field.`type` match {
+      case "number" => str.toDouble.asJson
+      case _ => str.asJson
+    }
+    val stringModel = model.transform[String](jsToString(_),strToJson(_))
     (field.`type`,field.widget,field.options,keys.contains(field.key),field.subform) match {
-      case (_,_,_,true,_) => UdashForm.textInput()(label)(stringModel,disabled := true)
+      case (_,_,_,true,_) => {
+        println(s"$label ${stringModel.get}")
+        UdashForm.textInput()(label)(stringModel,disabled := true)
+      }
       case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
       case ("number",_,_,_,_) => UdashForm.numberInput()(label)(stringModel)
       case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,stringModel,timePickerFormat)
@@ -115,7 +121,10 @@ object JSONSchemaRenderer {
     def splitJsonFields(form:JSONForm)(js:Json):Seq[Json] = form.fields.map{ field =>
       js.hcursor.get[Json](field.key).right.get
     }
-    def mergeJsonFields(form:JSONForm)(longJs:Seq[Json]):Json = form.fields.map(_.key).zip(longJs).toMap.asJson
+    def mergeJsonFields(form:JSONForm)(longJs:Seq[Json]):Json = {
+      println("mergeJsonFields")
+      form.fields.map(_.key).zip(longJs).toMap.asJson
+    }
 
     subforms.find(_.id == subform.id) match {
       case None => p("subform not found")

@@ -9,7 +9,17 @@ import io.circe._
 object JsonUtils {
   implicit class EnhancedJson(el:Json) {
 
-    def string = el.as[String].right.getOrElse(el.toString)
+    def string:String = {
+      val result = el.fold(
+        "",
+        bool => bool.toString,
+        num => num.toString,
+        str => str,
+        arr => arr.toString,
+        obj => obj.toString
+      )
+      result
+    }
 
     def js(field:String):Json = el.hcursor.get[Json](field).right.getOrElse(Json.Null)
 
