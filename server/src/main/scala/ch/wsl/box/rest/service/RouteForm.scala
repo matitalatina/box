@@ -77,6 +77,13 @@ trait RouteForm {
             }
           }
         } ~
+        path("subform") {
+          get {
+            complete {
+              form.flatMap{ f => Forms.subforms(f)}
+            }
+          }
+        } ~
         path("keys") {
           get {
             complete {

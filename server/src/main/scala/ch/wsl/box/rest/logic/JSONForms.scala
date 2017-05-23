@@ -68,7 +68,7 @@ object JSONForms {
       fields <- Future.sequence(c.map(field2form))
       keys <- JSONSchemas.keysOf(table)
     } yield {
-      JSONForm(1,fields,Layout.fromFields(fields),table,lang,fields.map(_.key),keys)
+      JSONForm(1,table,fields,Layout.fromFields(fields),table,lang,fields.map(_.key),keys)
     }
 
 

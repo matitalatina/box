@@ -108,7 +108,30 @@ object JSONSchemaRenderer {
     }
   }
 
-  def subform(result:Property[Json],label:String,subform:Subform,subforms:Seq[JSONForm]) = ???
+  def subform(result:Property[Json],label:String,subform:Subform,subforms:Seq[JSONForm]):Modifier = {
+    def splitJson(js:Json):Seq[Json] = js.as[Seq[Json]].right.getOrElse(Seq())
+    def mergeJson(longJs:Seq[Json]):Json = longJs.asJson
+
+    def splitJsonFields(form:JSONForm)(js:Json):Seq[Json] = form.fields.map{ field =>
+      js.hcursor.get[Json](field.key).right.get
+    }
+    def mergeJsonFields(form:JSONForm)(longJs:Seq[Json]):Json = form.fields.map(_.key).zip(longJs).toMap.asJson
+
+    subforms.find(_.id == subform.id) match {
+      case None => p("subform not found")
+      case Some(f) => {
+        val model = result.transformToSeq(splitJson,mergeJson).elemProperties.map(_.transformToSeq(splitJsonFields(f),mergeJsonFields(f)).elemProperties)
+        div(
+          h4(f.name),
+          for{ results <- model} yield {
+            println(s"rendering form: $f with results: $results, original: ${result.get}")
+            apply(f,results,subforms).render
+          }.render
+        )
+      }
+    }
+
+  }
 
   def apply(form:JSONForm,results: Seq[Property[Json]],subforms:Seq[JSONForm]):TypedTag[Element] = {
 
@@ -118,7 +141,7 @@ object JSONSchemaRenderer {
           div(
             UdashForm(
               results.lift(i).map { r =>
-                fieldRenderer(field,r,form.keys)
+                fieldRenderer(field,r,form.keys, subforms = subforms)
               }
             ).render
           )

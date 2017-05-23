@@ -20,10 +20,10 @@ import scala.util.Try
   */
 
 
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONForm], results:Seq[Json], error:String)
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONForm], results:Seq[Json], error:String,subforms:Seq[JSONForm])
 
 object ModelFormModel{
-  def empty = ModelFormModel("","",None,None,Seq(),"")
+  def empty = ModelFormModel("","",None,None,Seq(),"",Seq())
 }
 
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
@@ -57,7 +57,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         case Some(id) => REST.get(state.kind,state.model,ids.get)
         case None => Future.successful(Json.Null)
       }
-
+      subforms <- if(state.kind == "form") REST.subforms(state.model) else Future.successful(Seq())
     } yield {
 
 
@@ -70,7 +70,8 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         id = state.id,
         form = Some(form),
         results,
-        ""
+        "",
+        subforms
       ))
 
     }}.recover{ case e => e.printStackTrace() }
@@ -131,7 +132,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         div(
           form match {
             case None => p("Loading form")
-            case Some(f) => JSONSchemaRenderer(f,model.subSeq(_.results).elemProperties,Seq())
+            case Some(f) => JSONSchemaRenderer(f,model.subSeq(_.results).elemProperties,model.subProp(_.subforms).get)
           }
         ).render
       },

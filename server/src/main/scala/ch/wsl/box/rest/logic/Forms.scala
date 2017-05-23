@@ -82,7 +82,24 @@ object Forms {
 
       val jsonFields = {missingKeyFields ++ fieldsToJsonFields(fields)}.distinct
       val layout = form.layout.map{l => parse(l).right.get.as[Layout].right.get}.getOrElse(Layout.fromFields(jsonFields))
-      JSONForm(form.id.get,jsonFields,layout,form.table,lang,tableFields,keys)
+      JSONForm(form.id.get,form.name,jsonFields,layout,form.table,lang,tableFields,keys)
+    }
+
+  }
+
+  def subforms(form:JSONForm):Future[Seq[JSONForm]] = {
+    val result = Future.sequence{
+      form.fields.flatMap(_.subform).map{ subform =>
+        apply(subform.id,form.lang)
+      }
+    }
+    val subresults = result.map(x => Future.sequence(x.map(subforms)))
+    for{
+      firstLevel <- result
+      secondLevel <- subresults
+      thirdLevel <- secondLevel.map(_.flatten)
+    } yield {
+      firstLevel ++ thirdLevel
     }
 
   }
