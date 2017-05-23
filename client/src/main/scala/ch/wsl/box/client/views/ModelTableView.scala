@@ -21,10 +21,10 @@ import org.scalajs.dom.{Element, Event, KeyboardEvent}
 
 case class Row(data: Seq[String])
 case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
-case class ModelTableModel(name:String,kind:String,rows:Seq[Row],keys:Seq[String],metadata:Seq[Metadata],form:Option[JSONForm],selected:Option[Row])
+case class ModelTableModel(name:String,kind:String,rows:Seq[Row],metadata:Seq[Metadata],form:Option[JSONForm],selected:Option[Row])
 
 object ModelTableModel{
-  def empty = ModelTableModel("","",Seq(),Seq(),Seq(),None,None)
+  def empty = ModelTableModel("","",Seq(),Seq(),None,None)
 }
 
 case class ModelTableViewPresenter(onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
@@ -51,7 +51,6 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     for{
       csv <- REST.csv(state.kind,state.model,JSONQuery.limit(30))
       emptyFieldsForm <- REST.form(state.kind,state.model)
-      keys <- REST.keys(state.kind,state.model)
       fields <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm.fields)
       form = emptyFieldsForm.copy(fields = fields)
     } yield {
@@ -61,7 +60,6 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
         name = state.model,
         kind = state.kind,
         rows = csv.map{ Row(_)},
-        keys = keys,
         metadata = fields.map{ field =>
           Metadata(field,Sort.IGNORE,"",Filter.default(field.`type`))
         },
@@ -73,7 +71,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     }
   }
 
-  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.form).get.toSeq.flatMap(_.tableFields),model.subProp(_.keys).get)
+  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.form).get.toSeq.flatMap(_.tableFields),model.subProp(_.form).get.toSeq.flatMap(_.keys))
 
   def edit(el:Row) = {
     val k = key(el)

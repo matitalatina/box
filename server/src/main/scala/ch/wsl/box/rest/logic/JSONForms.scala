@@ -62,8 +62,13 @@ object JSONForms {
       }
     }
 
-    schema.columns.flatMap{ c => Future.sequence(c.map(field2form))}.map{ fields =>
-      JSONForm(1,fields,Layout.fromFields(fields),table,lang,fields.map(_.key))
+
+    for{
+      c <- schema.columns
+      fields <- Future.sequence(c.map(field2form))
+      keys <- JSONSchemas.keysOf(table)
+    } yield {
+      JSONForm(1,fields,Layout.fromFields(fields),table,lang,fields.map(_.key),keys)
     }
 
 

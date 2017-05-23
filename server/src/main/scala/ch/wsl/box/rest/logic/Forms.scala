@@ -82,7 +82,7 @@ object Forms {
 
       val jsonFields = {missingKeyFields ++ fieldsToJsonFields(fields)}.distinct
       val layout = form.layout.map{l => parse(l).right.get.as[Layout].right.get}.getOrElse(Layout.fromFields(jsonFields))
-      JSONForm(form.id.get,jsonFields,layout,form.table,lang,tableFields)
+      JSONForm(form.id.get,jsonFields,layout,form.table,lang,tableFields,keys)
     }
 
   }

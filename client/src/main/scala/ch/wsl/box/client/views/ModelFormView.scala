@@ -3,7 +3,6 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
-import ch.wsl.box.client.views.components.JSONSchemaRenderer.FormDefinition
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
@@ -21,10 +20,10 @@ import scala.util.Try
   */
 
 
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[FormDefinition], results:Seq[Json], error:String, keys:Seq[String])
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONForm], results:Seq[Json], error:String)
 
 object ModelFormModel{
-  def empty = ModelFormModel("","",None,None,Seq(),"",Seq())
+  def empty = ModelFormModel("","",None,None,Seq(),"")
 }
 
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
@@ -50,14 +49,15 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
     {for{
-      keys <- REST.keys(state.kind,state.model)
+      emptyFieldsForm <- REST.form(state.kind,state.model)
+      fields <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm.fields)
+      form = emptyFieldsForm.copy(fields = fields)
       ids = state.id.map(JSONKeys.fromString)
-      emptyFields <- REST.form(state.kind,state.model).map(_.fields)
       current <- state.id match {
         case Some(id) => REST.get(state.kind,state.model,ids.get)
         case None => Future.successful(Json.Null)
       }
-      fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
+
     } yield {
 
 
@@ -68,12 +68,9 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         name = state.model,
         kind = state.kind,
         id = state.id,
-        form = Some(FormDefinition(
-          fields
-        )),
+        form = Some(form),
         results,
-        "",
-        keys
+        ""
       ))
 
     }}.recover{ case e => e.printStackTrace() }
@@ -132,7 +129,10 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
       },
       produce(model.subProp(_.form)){ form =>
         div(
-          JSONSchemaRenderer(form,model.subSeq(_.results).elemProperties,model.get.keys)
+          form match {
+            case None => p("Loading form")
+            case Some(f) => JSONSchemaRenderer(f,model.subSeq(_.results).elemProperties,Seq())
+          }
         ).render
       },
       button(
