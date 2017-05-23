@@ -60,10 +60,22 @@ object Forms {
     for{
       form <- Auth.boxDB.run( formQuery.result ).map(_.head)
       fields <- Auth.boxDB.run{fieldQuery(form.id.get).result}
+      keys <- JSONSchemas.keysOf(form.table)
     } yield {
-      val jsonFields = fieldsToJsonFields(fields)
+
+
+
+      val missingKeyFields = keys.filterNot(k => fields.map(_._1.key).contains(k)).map{ key =>
+        JSONField("string",key)
+      }
+
+      val definedTableFields = form.tableFields.toSeq.flatMap(_.split(","))
+      val missingKeyTableFields = keys.filterNot(k => definedTableFields.contains(k))
+      val tableFields = missingKeyTableFields ++ definedTableFields
+
+      val jsonFields = {missingKeyFields ++ fieldsToJsonFields(fields)}.distinct
       val layout = form.layout.map{l => parse(l).right.get.as[Layout].right.get}.getOrElse(Layout.fromFields(jsonFields))
-      JSONForm(form.id.get,jsonFields,layout,form.table,lang,form.tableFields.toSeq.flatMap(_.split(",")))
+      JSONForm(form.id.get,jsonFields,layout,form.table,lang,tableFields)
     }
 
   }

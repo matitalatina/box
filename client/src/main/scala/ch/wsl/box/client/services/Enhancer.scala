@@ -79,10 +79,10 @@ object Enhancer {
 
 
 
-  def extractKeys(row:Seq[String],fields:Seq[JSONField],keys:Seq[String]):JSONKeys = {
+  def extractKeys(row:Seq[String],fields:Seq[String],keys:Seq[String]):JSONKeys = {
     val map = for{
       key <- keys
-      (field,i) <- fields.zipWithIndex if field.key == key
+      (field,i) <- fields.zipWithIndex if field == key
     } yield {
       key -> row.lift(i).getOrElse("")
     }

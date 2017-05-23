@@ -38,11 +38,19 @@ trait RouteForm {
       pathPrefix("id") {
         path(Segment) { id =>
           get {
-            ???
+            complete(shaper(form){ fs =>
+              fs.extractOne(JSONKeys.fromString(id).query).map{record =>
+                HttpEntity(ContentTypes.`text/plain(UTF-8)`,record)
+              }
+            })
           } ~
             put {
               entity(as[Json]) { e =>
-                ???
+                complete {
+                  form.flatMap { f =>
+                    TablesRegistry.actions(f.table).update(JSONKeys.fromString(id),e)
+                  }
+                }
               }
             } ~
             delete {
@@ -79,7 +87,9 @@ trait RouteForm {
         path("count") {
           get {
             complete {
-              ???
+              form.map { f =>
+                TablesRegistry.actions(f.table).count()
+              }
             }
           }
         } ~
@@ -87,7 +97,11 @@ trait RouteForm {
           post {
             entity(as[JSONQuery]) { query =>
               println("list")
-              ???
+              complete(shaper(form){ fs =>
+                fs.extractArray(query).map{arr =>
+                  HttpEntity(ContentTypes.`text/plain(UTF-8)`,arr)
+                }
+              })
             }
           }
         } ~
@@ -104,9 +118,6 @@ trait RouteForm {
           }
         } ~
         pathEnd {
-          get {
-            ???
-          } ~
             post {
               entity(as[Json]) { e =>
                 complete {

@@ -8,6 +8,8 @@ case class JSONKeys(keys:Vector[JSONKey]) {
 
   def values: Vector[String] = keys.map(_.value)
 
+  def query:JSONQuery = JSONQuery(1,1,List(),keys.map(_.filter).toList)
+
 }
 
 object JSONKeys {
@@ -26,4 +28,6 @@ object JSONKeys {
 
 }
 
-case class JSONKey(key:String,value:String)
+case class JSONKey(key:String,value:String) {
+  def filter = JSONQueryFilter(key,Some(Filter.EQUALS),value)
+}

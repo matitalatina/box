@@ -21,10 +21,10 @@ import org.scalajs.dom.{Element, Event, KeyboardEvent}
 
 case class Row(data: Seq[String])
 case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
-case class ModelTableModel(name:String,kind:String,rows:Seq[Row],keys:Seq[String],metadata:Seq[Metadata],selected:Option[Row])
+case class ModelTableModel(name:String,kind:String,rows:Seq[Row],keys:Seq[String],metadata:Seq[Metadata],form:Option[JSONForm],selected:Option[Row])
 
 object ModelTableModel{
-  def empty = ModelTableModel("","",Seq(),Seq(),Seq(),None)
+  def empty = ModelTableModel("","",Seq(),Seq(),Seq(),None,None)
 }
 
 case class ModelTableViewPresenter(onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
@@ -50,9 +50,10 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     model.subProp(_.name).set(state.model)
     for{
       csv <- REST.csv(state.kind,state.model,JSONQuery.limit(30))
-      emptyFields <- REST.form(state.kind,state.model).map(_.fields)
+      emptyFieldsForm <- REST.form(state.kind,state.model)
       keys <- REST.keys(state.kind,state.model)
-      fields <- Enhancer.populateOptionsValuesInFields(emptyFields)
+      fields <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm.fields)
+      form = emptyFieldsForm.copy(fields = fields)
     } yield {
 
 
@@ -64,6 +65,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
         metadata = fields.map{ field =>
           Metadata(field,Sort.IGNORE,"",Filter.default(field.`type`))
         },
+        form = Some(form),
         None
       )
 
@@ -71,7 +73,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     }
   }
 
-  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.metadata).get.map(_.field),model.subProp(_.keys).get)
+  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.form).get.toSeq.flatMap(_.tableFields),model.subProp(_.keys).get)
 
   def edit(el:Row) = {
     val k = key(el)
@@ -178,8 +180,11 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
           headerFactory = Some(() => {
               tr(
                 th(GlobalStyles.smallCells)("Actions"),
-                produce(model.subSeq(_.metadata)) { metadataList =>
-                  for {(metadata) <- metadataList} yield {
+                produce(model.subProp(_.form)) { form =>
+                  for {
+                    key <- form.toSeq.flatMap(_.tableFields)
+                    metadata <- model.subProp(_.metadata).get.filter(_.field.key == key)
+                  } yield {
                     val title: String = metadata.field.title.getOrElse(metadata.field.key)
                     val filter = Property(metadata.filter)
 

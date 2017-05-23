@@ -38,7 +38,10 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
     TablesRegistry.actions(form.table).getModel(query)
   }
 
+
+
   private def toJson(json:Json):Future[Json] = {
+
     val values = form.fields.map{ field =>
       field.subform match {
         case None => Future.successful(field.key -> json.hcursor.get[Json](field.key).right.get)
@@ -59,7 +62,9 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
   def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(_.headOption.asJson)
 
-  def csv(query:JSONQuery):Future[String] = extractSeq(query).map{ results =>
+  def csv(query:JSONQuery):Future[String] = for {
+    results <- extractSeq(query)
+  } yield {
     val strings = results.map { row =>
       form.tableFields.map { field =>
         row.get(field)
