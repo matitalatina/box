@@ -47,8 +47,8 @@ trait RouteForm {
             put {
               entity(as[Json]) { e =>
                 complete {
-                  form.flatMap { f =>
-                    TablesRegistry.actions(f.table).update(JSONKeys.fromString(id),e)
+                  shaper(form){ fs =>
+                    fs.updateAll(JSONKeys.fromString(id),e)
                   }
                 }
               }
@@ -128,8 +128,8 @@ trait RouteForm {
             post {
               entity(as[Json]) { e =>
                 complete {
-                  form.flatMap { f =>
-                    TablesRegistry.actions(f.table).insert(e)
+                  shaper(form){ fs =>
+                    fs.insertAll(e)
                   }
                 }
               }

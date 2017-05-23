@@ -37,7 +37,13 @@ case class JsonActionHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
     }
   }
 
-  override def update(keys:JSONKeys,json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Int] = utils.updateById(keys,json.as[M].right.get)
+  override def update(keys:JSONKeys,json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Int] = {
+    for{
+      current <- getById(keys)
+      merged = current.deepMerge(json)
+      result <- utils.updateById(keys,merged.as[M].right.get)
+    } yield result
+  }
 
   override def insert(json: Json)(implicit db:Database): Future[Json] = {
     println(json)

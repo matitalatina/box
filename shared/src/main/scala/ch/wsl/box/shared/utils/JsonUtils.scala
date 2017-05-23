@@ -11,8 +11,12 @@ object JsonUtils {
 
     def string = el.as[String].right.getOrElse(el.toString)
 
+    def js(field:String):Json = el.hcursor.get[Json](field).right.getOrElse(Json.Null)
+
+    def seq(field:String):Seq[Json] = el.hcursor.get[Seq[Json]](field).right.getOrElse(Seq())
+
     def get(field: String) = el.hcursor.get[Json](field).fold(
-      { x => "" }, { x => x.string }
+      { x => println(s"error getting $field on $el: $x"); "" }, { x => x.string }
     )
 
     def keys(fields:Seq[String]) :JSONKeys = {
