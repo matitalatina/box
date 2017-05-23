@@ -39,7 +39,7 @@ object FieldsRenderer {
     }
 
     val editing = Property(false)
-    val model = Property(value)
+    val model = Property(value.asJson)
 
     div(onclick :+= ((ev: Event) => toggleEdit(editing), true),
       showIf(editing.transform(x => !x))(contentFixed.render),

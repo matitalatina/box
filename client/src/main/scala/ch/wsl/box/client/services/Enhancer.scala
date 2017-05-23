@@ -1,7 +1,9 @@
 package ch.wsl.box.client.services
 
 import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONKeys}
-import io.circe.Json
+import io.circe._
+import io.circe.syntax._
+
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -13,7 +15,7 @@ object Enhancer {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
+  import _root_.scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   def fetchLookupOptions(field:JSONField,opts:JSONFieldOptions):Future[JSONField] = {
     REST.list("model",opts.refModel,50).map{ values =>
@@ -37,26 +39,24 @@ object Enhancer {
 
   import io.circe.syntax._
 
-  def parseOption(options:JSONFieldOptions,valueToSave:Option[String]):Json = {
-    options.options.find(_._2 == valueToSave.getOrElse(""))
+  def parseOption(options:JSONFieldOptions,valueToSave:Json):Json = {
+    options.options.find(_._2 == valueToSave.string)
       .map(x =>
         if(x._2 == "") return Json.Null else
           Try(x._1.toInt.asJson).getOrElse(x._1.asJson)
       ).getOrElse(Json.Null)
   }
 
-  def parse(field: JSONField,value:Option[String])(onError:(Throwable => Unit)):(String,Json) = try{
+  def parse(field: JSONField,value:Option[Json])(onError:(Throwable => Unit)):(String,Json) = try{
     println(s"parsing ${field.key} with value $value")
 
-    val valueToSave = value match {
-      case Some("") => None
-      case _ => value
+    val valueToSave:Json = value match {
+      case None => Json.Null
+      case Some(v) => v
     }
     val data = (field.`type`,field.options) match {
       case (_,Some(options)) => parseOption(options,valueToSave)
-      case ("string",_) => valueToSave.asJson
-      case ("number",_) => valueToSave.map( v => v.toDouble).asJson
-      case (_,_) => valueToSave.asJson
+      case (_,_) => valueToSave
     }
 
     (field.key,data)
@@ -65,13 +65,16 @@ object Enhancer {
     throw t
   }
 
-  def extract(current:Json,fields:Seq[JSONField]):Seq[String] = fields.map{ field =>
+  def extract(current:Json,fields:Seq[JSONField]):Seq[Json] = fields.map{ field =>
 
-    val resultString = current.get(field.key)
+    val result = current.hcursor.get[Json](field.key).right.getOrElse(Json.Null)
 
     field.options match {
-      case None => resultString
-      case Some(opts) => opts.options.lift(resultString).getOrElse(resultString)
+      case None => result
+      case Some(opts) => {
+        val resultString = current.get(field.key)
+        opts.options.lift(resultString).getOrElse(resultString).asJson
+      }
     }
 
   }

@@ -21,7 +21,7 @@ import scala.util.Try
   */
 
 
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[FormDefinition], results:Seq[String], error:String, keys:Seq[String])
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[FormDefinition], results:Seq[Json], error:String, keys:Seq[String])
 
 object ModelFormModel{
   def empty = ModelFormModel("","",None,None,Seq(),"",Seq())
@@ -62,7 +62,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
       //initialise an array of n strings, where n is the number of fields
-      val results:Seq[String] = Enhancer.extract(current,fields)
+      val results:Seq[Json] = Enhancer.extract(current,fields)
 
       model.set(ModelFormModel(
         name = state.model,

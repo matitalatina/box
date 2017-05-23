@@ -8,8 +8,11 @@ import io.circe._
   */
 object JsonUtils {
   implicit class EnhancedJson(el:Json) {
+
+    def string = el.as[String].right.getOrElse(el.toString)
+
     def get(field: String) = el.hcursor.get[Json](field).fold(
-      { x => "" }, { x => x.as[String].right.getOrElse(x.toString()) }
+      { x => "" }, { x => x.string }
     )
 
     def keys(fields:Seq[String]) :JSONKeys = {

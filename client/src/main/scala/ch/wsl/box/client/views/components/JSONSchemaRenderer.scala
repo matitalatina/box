@@ -2,6 +2,8 @@ package ch.wsl.box.client.views.components
 
 
 import ch.wsl.box.model.shared.{JSONField, JSONFieldOptions, JSONSchema, WidgetsNames}
+import io.circe.Json
+import ch.wsl.box.shared.utils.JsonUtils._
 import io.udash.properties.single.Property
 import org.scalajs.dom.Element
 import io.udash._
@@ -13,6 +15,8 @@ import scala.scalajs.js.Date
 import scalatags.JsDom.TypedTag
 
 
+
+
 /**
   * Created by andre on 4/25/2017.
   */
@@ -22,6 +26,8 @@ object JSONSchemaRenderer {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.circe._
+  import io.circe.syntax._
 
 
   final val dateTimePickerFormat = "YYYY-MM-DD HH:mm"
@@ -83,23 +89,28 @@ object JSONSchemaRenderer {
   }
 
 
-  def fieldRenderer(field:JSONField,model:Property[String],keys:Seq[String],showLabel:Boolean = true):Modifier = {
+  def fieldRenderer(field:JSONField,model:Property[Json],keys:Seq[String],showLabel:Boolean = true):Modifier = {
     val label = showLabel match {
       case true => field.title.getOrElse(field.key)
       case false => ""
     }
+    def jsToString(json:Json):String = json.string
+    def strToJson(str:String):Json = str.asJson
+    val stringModel = model.transform(jsToString,strToJson)
     (field.`type`,field.widget,field.options,keys.contains(field.key)) match {
-      case (_,_,_,true) => UdashForm.textInput()(label)(model,disabled := true)
-      case (_,_,Some(options),_) => optionsRenderer(label,options,model)
-      case ("number",_,_,_) => UdashForm.numberInput()(label)(model)
-      case ("string",Some(WidgetsNames.timepicker),_,_) => datetimepicker(label,model,timePickerFormat)
-      case ("string",Some(WidgetsNames.datepicker),_,_) => datetimepicker(label,model,datePickerFormat)
-      case ("string",Some(WidgetsNames.datetimePicker),_,_) => datetimepicker(label,model)
-      case (_,_,_,_) => UdashForm.textInput()(label)(model)
+      case (_,_,_,true) => UdashForm.textInput()(label)(stringModel,disabled := true)
+      case (_,_,Some(options),_) => optionsRenderer(label,options,stringModel)
+      case ("number",_,_,_) => UdashForm.numberInput()(label)(stringModel)
+      case ("string",Some(WidgetsNames.timepicker),_,_) => datetimepicker(label,stringModel,timePickerFormat)
+      case ("string",Some(WidgetsNames.datepicker),_,_) => datetimepicker(label,stringModel,datePickerFormat)
+      case ("string",Some(WidgetsNames.datetimePicker),_,_) => datetimepicker(label,stringModel)
+      case (_,_,_,_) => UdashForm.textInput()(label)(stringModel)
     }
   }
 
-  def apply(form:FormDefinition,results: Seq[Property[String]],keys:Seq[String]):TypedTag[Element] = {
+  def subform(label:String,formId:String) = ???
+
+  def apply(form:FormDefinition,results: Seq[Property[Json]],keys:Seq[String]):TypedTag[Element] = {
 
     div(BootstrapStyles.row)(
       div(BootstrapStyles.Grid.colMd6)(
@@ -116,5 +127,5 @@ object JSONSchemaRenderer {
     )
   }
 
-  def apply(schema:Option[FormDefinition],results: Seq[Property[String]],keys:Seq[String]):TypedTag[Element] = apply(schema.getOrElse(FormDefinition(Seq())),results,keys)
+  def apply(schema:Option[FormDefinition],results: Seq[Property[Json]],keys:Seq[String]):TypedTag[Element] = apply(schema.getOrElse(FormDefinition(Seq())),results,keys)
 }
