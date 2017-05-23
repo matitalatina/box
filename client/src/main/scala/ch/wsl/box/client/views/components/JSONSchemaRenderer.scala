@@ -20,6 +20,8 @@ import scalatags.JsDom.TypedTag
 /**
   * Created by andre on 4/25/2017.
   */
+
+
 object JSONSchemaRenderer {
 
 
@@ -101,7 +103,6 @@ object JSONSchemaRenderer {
     val stringModel = model.transform[String](jsToString(_),strToJson(_))
     (field.`type`,field.widget,field.options,keys.contains(field.key),field.subform) match {
       case (_,_,_,true,_) => {
-        println(s"$label ${stringModel.get}")
         UdashForm.textInput()(label)(stringModel,disabled := true)
       }
       case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
@@ -115,43 +116,65 @@ object JSONSchemaRenderer {
   }
 
   def subform(result:Property[Json],label:String,subform:Subform,subforms:Seq[JSONForm]):Modifier = {
-    def splitJson(js:Json):Seq[Json] = js.as[Seq[Json]].right.getOrElse(Seq())
-    def mergeJson(longJs:Seq[Json]):Json = longJs.asJson
-
-    def splitJsonFields(form:JSONForm)(js:Json):Seq[Json] = form.fields.map{ field =>
-      js.hcursor.get[Json](field.key).right.get
+    def splitJson(js:Json):Seq[Json] = {
+      println("splitjson")
+      js.as[Seq[Json]].right.getOrElse(Seq())
     }
-    def mergeJsonFields(form:JSONForm)(longJs:Seq[Json]):Json = {
+    def mergeJson(longJs:Seq[Json]):Json = {
+      println("mergejson")
+      longJs.asJson
+    }
+
+    val model = result.transform(splitJson,mergeJson)
+
+    def splitJsonFields(form:JSONForm,i:Int)(js:Seq[Json]):Seq[Json] = form.fields.map{ field =>
+      println("splitJsonFields")
+      js.lift(i).map(_.hcursor.get[Json](field.key).right.get).getOrElse(Json.Null)
+    }
+    def mergeJsonFields(form:JSONForm,i:Int)(longJs:Seq[Json]):Seq[Json] = for{
+      (m,j) <- model.get.zipWithIndex
+    } yield{
       println("mergeJsonFields")
-      form.fields.map(_.key).zip(longJs).toMap.asJson
+      if(i == j) form.fields.map(_.key).zip(longJs).toMap.asJson else m
     }
 
     subforms.find(_.id == subform.id) match {
       case None => p("subform not found")
       case Some(f) => {
-        val model = result.transformToSeq(splitJson,mergeJson).elemProperties.map(_.transformToSeq(splitJsonFields(f),mergeJsonFields(f)).elemProperties)
+
+
+        val sizeModel = Property(model.get.size)
+
         div(
           h4(f.name),
-          for{ results <- model} yield {
-            println(s"rendering form: $f with results: $results, original: ${result.get}")
-            apply(f,results,subforms).render
-          }.render
+          produce(sizeModel) { size =>
+            for{i <- 0 to size} yield {
+              val subResults = model.transform(splitJsonFields(f,i), mergeJsonFields(f,i))
+              println(s"rendering form: $f , original: ${result}")
+              apply(f, subResults, subforms).render
+            }
+          }
         )
       }
     }
 
   }
 
-  def apply(form:JSONForm,results: Seq[Property[Json]],subforms:Seq[JSONForm]):TypedTag[Element] = {
+  def apply(form:JSONForm,results: Property[Seq[Json]],subforms:Seq[JSONForm]):TypedTag[Element] = {
+
+    def seqJsonToJson(i:Int)(seq:Seq[Json]):Json = seq.lift(i).getOrElse(Json.Null)
+    def jsonToSeqJson(i:Int)(n:Json):Seq[Json] = for{
+      (e,j) <- results.get.zipWithIndex
+    } yield {
+      if(i == j) n else e
+    }
 
     div(BootstrapStyles.row)(
       div(BootstrapStyles.Grid.colMd6)(
         for((field,i) <- form.fields.zipWithIndex) yield {
           div(
             UdashForm(
-              results.lift(i).map { r =>
-                fieldRenderer(field,r,form.keys, subforms = subforms)
-              }
+                fieldRenderer(field,results.transform(seqJsonToJson(i),jsonToSeqJson(i)),form.keys, subforms = subforms)
             ).render
           )
         }

@@ -131,7 +131,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         div(
           form match {
             case None => p("Loading form")
-            case Some(f) => JSONSchemaRenderer(f,model.subSeq(_.results).elemProperties,model.subProp(_.subforms).get)
+            case Some(f) => JSONSchemaRenderer(f,model.subSeq(_.results),model.subProp(_.subforms).get)
           }
         ).render
       },
