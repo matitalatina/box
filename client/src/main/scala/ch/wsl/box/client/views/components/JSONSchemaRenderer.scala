@@ -117,24 +117,20 @@ object JSONSchemaRenderer {
 
   def subform(result:Property[Json],label:String,subform:Subform,subforms:Seq[JSONForm]):Modifier = {
     def splitJson(js:Json):Seq[Json] = {
-      println("splitjson")
       js.as[Seq[Json]].right.getOrElse(Seq())
     }
     def mergeJson(longJs:Seq[Json]):Json = {
-      println("mergejson")
       longJs.asJson
     }
 
     val model = result.transform(splitJson,mergeJson)
 
     def splitJsonFields(form:JSONForm,i:Int)(js:Seq[Json]):Seq[Json] = form.fields.map{ field =>
-      println("splitJsonFields")
       js.lift(i).map(_.hcursor.get[Json](field.key).right.get).getOrElse(Json.Null)
     }
     def mergeJsonFields(form:JSONForm,i:Int)(longJs:Seq[Json]):Seq[Json] = for{
       (m,j) <- model.get.zipWithIndex
     } yield{
-      println("mergeJsonFields")
       if(i == j) form.fields.map(_.key).zip(longJs).toMap.asJson else m
     }
 
@@ -150,7 +146,6 @@ object JSONSchemaRenderer {
           produce(sizeModel) { size =>
             for{i <- 0 to size} yield {
               val subResults = model.transform(splitJsonFields(f,i), mergeJsonFields(f,i))
-              println(s"rendering form: $f , original: ${result}")
               apply(f, subResults, subforms).render
             }
           }

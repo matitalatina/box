@@ -93,11 +93,13 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         case None => REST.insert(m.kind,m.name, jsons.toMap.asJson)
       }
       saveAction.map{_ =>
-
         val newState = ModelTableState(model.subProp(_.kind).get,model.subProp(_.name).get)
         io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
 
-      }.recover{ case e => e.printStackTrace() }
+      }.recover{ case e =>
+        e.getStackTrace.foreach(x => println(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
+        e.printStackTrace()
+      }
     }
   }
 
