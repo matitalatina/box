@@ -71,7 +71,8 @@ case class JsonActionHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
       KeyList(
         last,
         query.page,
-        data.map{_.keys(keys).asString}
+        data.map{_.keys(keys).asString},
+        count.count
       )
     }
   }

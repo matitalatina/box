@@ -3,6 +3,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.client.utils.Session
 import ch.wsl.box.client.views.components.FieldsRenderer
 import ch.wsl.box.model.shared._
 import io.udash._
@@ -87,12 +88,9 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
   }
 
   def saveKeys(query:JSONQuery):Future[Boolean] = {
-    import io.circe._
-    import io.circe.syntax._
-    import io.circe.generic.auto._
-    org.scalajs.dom.window.sessionStorage.setItem("query",query.asJson.toString())
+    Session.setQuery(query)
     REST.keysList(model.get.kind,model.get.name,query).map{ x =>
-      org.scalajs.dom.window.sessionStorage.setItem("keys",x.asJson.toString())
+      Session.setKeys(x)
       true
     }
   }

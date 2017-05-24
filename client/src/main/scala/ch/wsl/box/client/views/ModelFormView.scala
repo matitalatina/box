@@ -2,11 +2,12 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
+import ch.wsl.box.client.utils.{IDSequence, Navigation, Session}
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
-import io.udash.bootstrap.UdashBootstrap
+import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
 import io.udash.bootstrap.label.UdashLabel
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
@@ -19,11 +20,10 @@ import scala.util.Try
   * Created by andre on 4/24/2017.
   */
 
-
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONForm], results:Seq[Json], error:String,subforms:Seq[JSONForm])
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONForm], results:Seq[Json], error:String,subforms:Seq[JSONForm],navigation: Navigation)
 
 object ModelFormModel{
-  def empty = ModelFormModel("","",None,None,Seq(),"",Seq())
+  def empty = ModelFormModel("","",None,None,Seq(),"",Seq(),Navigation(false,false,0,0))
 }
 
 case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
@@ -45,7 +45,6 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
     model.set(ModelFormModel.empty)
     model.subProp(_.name).set(state.model)
     model.subProp(_.id).set(state.id)
-    println(state)
 
 
     {for{
@@ -70,8 +69,11 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         form = Some(form),
         results,
         "",
-        subforms
+        subforms,
+        Navigation(false,false,1,1)
       ))
+
+      setNavigation()
 
     }}.recover{ case e => e.printStackTrace() }
 
@@ -104,6 +106,21 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   }
 
 
+  def setNavigation() = {
+    IDSequence(model.get.id).navigation().map{ nav =>
+      model.subProp(_.navigation).set(nav)
+    }
+  }
+
+
+
+  def next() = IDSequence(model.get.id).next(model.get.kind,model.get.name).map(_.map(goTo))
+  def prev() = IDSequence(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
+
+  def goTo(id:String) = {
+    val newState = ModelFormState(model.subProp(_.kind).get,model.subProp(_.name).get,Some(id))
+    io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
+  }
 
 
 }
@@ -122,6 +139,15 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         val subTitle = id.map(" - " + _).getOrElse("")
         small(subTitle).render
       }),
+      div(
+        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), "Previous").render },
+        span(
+          bind(model.subProp(_.navigation.current)),
+          " of ",
+          bind(model.subProp(_.navigation.count))
+        ),
+        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),"Next").render }
+      ),
       produce(model.subProp(_.error)){ error =>
         div(
           if(error.length > 0) {

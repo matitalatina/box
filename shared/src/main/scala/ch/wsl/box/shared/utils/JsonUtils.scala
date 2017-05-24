@@ -26,7 +26,10 @@ object JsonUtils {
     def seq(field:String):Seq[Json] = el.hcursor.get[Seq[Json]](field).right.getOrElse(Seq())
 
     def get(field: String) = el.hcursor.get[Json](field).fold(
-      { x => println(s"error getting $field on $el: $x"); "" }, { x => x.string }
+      { x =>
+        //println(s"error getting $field on $el: $x");
+        ""
+      }, { x => x.string }
     )
 
     def keys(fields:Seq[String]) :JSONKeys = {
