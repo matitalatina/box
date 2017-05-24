@@ -91,6 +91,18 @@ trait RouteForm {
             }
           }
         } ~
+        path("keysList") {
+          post {
+            entity(as[JSONQuery]) { query =>
+              complete {
+                for{
+                  f <- form
+                  result <- TablesRegistry.actions(f.table).keyList(query,f.table)
+                } yield result
+              }
+            }
+          }
+        } ~
         path("count") {
           get {
             complete {

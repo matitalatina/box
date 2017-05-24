@@ -8,9 +8,12 @@ import ch.wsl.box.model.shared._
 import io.udash._
 import io.udash.bootstrap.form.{InputGroupSize, UdashInputGroup}
 import io.udash.bootstrap.table.UdashTable
+
 import scalacss.ScalatagsCss._
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.{Element, Event, KeyboardEvent}
+
+import scala.concurrent.Future
 
 
 /**
@@ -48,10 +51,15 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
   override def handleState(state: ModelTableState): Unit = {
     model.set(ModelTableModel.empty)
     model.subProp(_.name).set(state.model)
+    model.subProp(_.kind).set(state.kind)
+
+    val query = JSONQuery.limit(30)
+
     for{
-      csv <- REST.csv(state.kind,state.model,JSONQuery.limit(30))
+      csv <- REST.csv(state.kind,state.model,query)
       emptyFieldsForm <- REST.form(state.kind,state.model)
       form <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm)
+      _ <- saveKeys(query)
     } yield {
 
 
@@ -78,6 +86,17 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 
+  def saveKeys(query:JSONQuery):Future[Boolean] = {
+    import io.circe._
+    import io.circe.syntax._
+    import io.circe.generic.auto._
+    org.scalajs.dom.window.sessionStorage.setItem("query",query.asJson.toString())
+    REST.keysList(model.get.kind,model.get.name,query).map{ x =>
+      org.scalajs.dom.window.sessionStorage.setItem("keys",x.asJson.toString())
+      true
+    }
+  }
+
   def reloadRows() = {
 
     val metadata = model.subProp(_.metadata).get
@@ -87,7 +106,9 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
 
     for {
       csv <- REST.csv(model.subProp(_.kind).get,model.subProp(_.name).get,query)
+      _ <- saveKeys(query)
     } yield model.subProp(_.rows).set(csv.map(Row(_)))
+
   }
 
   def filterByKey(key:JSONKeys) = {

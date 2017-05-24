@@ -26,6 +26,7 @@ object REST {
     result.split("\r\n").toSeq.map{x => x.substring(1,x.length-1).split("\",\"").toSeq}
   }
   def keys(kind:String,model:String): Future[Seq[String]] = client.get[Seq[String]](s"/$kind/$model/keys")
+  def keysList(kind:String,model:String,q:JSONQuery): Future[KeyList] = client.post[JSONQuery,KeyList](s"/$kind/$model/keysList",q)
   def schema(kind:String,model:String): Future[JSONSchema] = client.get[JSONSchema](s"/$kind/$model/schema")
   def form(kind:String,model:String): Future[JSONForm] = client.get[JSONForm](s"/$kind/$model/form")
   def subforms(model:String): Future[Seq[JSONForm]] = client.get[Seq[JSONForm]](s"/form/$model/subform")

@@ -9,7 +9,7 @@ import ch.wsl.box.rest.logic._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import slick.driver.PostgresDriver.api._
 import akka.http.scaladsl.model._
-
+import ch.wsl.box.model.TablesRegistry
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -81,6 +81,15 @@ trait RouteTable {
       path("keys") {
         get {
           complete{ JSONSchemas.keysOf(name) }
+        }
+      } ~
+      path("keysList") {
+        post {
+          entity(as[JSONQuery]) { query =>
+            complete {
+              TablesRegistry.actions(name).keyList(query,name)
+            }
+          }
         }
       } ~
       path("count") {
