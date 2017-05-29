@@ -90,6 +90,18 @@ object JSONSchemaRenderer {
   }
 
 
+  def checkBox(label:String,model:Property[Json]) = {
+    def jsToBool(json:Json):Boolean = json.asNumber.flatMap(_.toInt).exists(_ == 1)
+    def boolToJson(v:Boolean):Json = v match {
+      case true => 1.asJson
+      case false => 0.asJson
+    }
+    val booleanModel = model.transform[Boolean](jsToBool(_),boolToJson(_))
+    div(
+      Checkbox(booleanModel), " ", label
+    )
+  }
+
   def fieldRenderer(field:JSONField,model:Property[Json],keys:Seq[String],showLabel:Boolean = true, subforms:Seq[JSONForm] = Seq()):Modifier = {
     val label = showLabel match {
       case true => field.title.getOrElse(field.key)
@@ -106,6 +118,7 @@ object JSONSchemaRenderer {
         UdashForm.textInput()(label)(stringModel,disabled := true)
       }
       case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
+      case ("number",Some(WidgetsNames.checkbox),_,_,_) => checkBox(label,model)
       case ("number",_,_,_,_) => UdashForm.numberInput()(label)(stringModel)
       case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,stringModel,timePickerFormat)
       case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(label,stringModel,datePickerFormat)
