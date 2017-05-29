@@ -64,8 +64,8 @@ case class JsonActionHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
       keys <- JSONSchemas.keysOf(table)
       count <- count()
     } yield {
-      println(data.toString().take(100))
-      println(keys)
+      //println(data.toString().take(100))
+      //println(keys)
       val last = query.page*query.count >= count.count
       import ch.wsl.box.shared.utils.JsonUtils._
       KeyList(

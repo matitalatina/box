@@ -16,7 +16,7 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](ta
 
   def find(query:JSONQuery)(implicit db:Database):Future[JSONResult[M]] = {
     val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) =>
-      println(jsFilter)
+      //println(jsFilter)
       query.filter(x => operator(jsFilter.operator.getOrElse(Filter.EQUALS))(x.col(jsFilter.column),jsFilter.value))
     }
 
@@ -33,7 +33,11 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](ta
     val qPaged:Rep[Seq[T#TableElementType]] = qSorted.drop((query.page - 1) * query.count).take(query.count)
 
     for {
-      result <- db.run { val r = qPaged.result; r.statements.foreach(println); r}
+      result <- db.run {
+        val r = qPaged.result;
+        //r.statements.foreach(println);
+        r
+      }
       count <- db.run{ qSorted.length.result }
     } yield JSONResult(count,result.toList) // to list because json4s does't like generics types for serialization
   }
@@ -50,7 +54,7 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](ta
     for{
       result <- db.run{
         val action = filter(i).take(1).result
-        println(action.statements)
+        //println(action.statements)
         action
       }
     } yield result.head
@@ -61,18 +65,18 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](ta
     for{
       result <- db.run{
         val action = filter(i).delete
-        println(action.statements)
+        //println(action.statements)
         action
       }
     } yield result
   }
 
   def updateById(i:JSONKeys,e:M)(implicit db:Database):Future[Int] = {
-    println (e)
+    //println (e)
     for{
       result <- db.run {
         val action = filter(i).update(e)
-        println (action.statements)
+        //println (action.statements)
         action
       }
     } yield result

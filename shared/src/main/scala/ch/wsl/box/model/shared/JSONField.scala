@@ -10,7 +10,8 @@ case class JSONField(
                       options:Option[JSONFieldOptions] = None,
                       placeholder:Option[String] = None,
                       widget: Option[String] = None,
-                      subform: Option[Subform] = None
+                      subform: Option[Subform] = None,
+                      default: Option[String] = None
                     )
 
 
@@ -19,5 +20,5 @@ case class JSONFieldOptions(refModel:String, map:JSONFieldMap, options:Map[Strin
 
 case class JSONFieldMap(valueProperty:String, textProperty:String)
 
-case class Subform(id:Int,localFields:String,subFields:String)
+case class Subform(id:Int,localFields:String,subFields:String,subFilter:Seq[JSONQueryFilter])
 

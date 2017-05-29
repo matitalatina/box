@@ -25,12 +25,15 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
 
 
   private def createQuery(model:Json,subform: Subform):JSONQuery = {
-    val filters = for{
+    val parentFilter = for{
       (local,remote) <- subform.localFields.split(",").zip(subform.subFields.split(","))
     } yield {
-      JSONQueryFilter(remote,Some(Filter.EQUALS),model.hcursor.get[Json](local).right.get.toString())
+      JSONQueryFilter(remote,Some(Filter.EQUALS),model.get(local))
     }
-    JSONQuery(50,1,List(),filters.toList)
+
+    val filters = parentFilter.toSeq ++ subform.subFilter
+
+    JSONQuery(50,1,List(),filters.toList.distinct)
   }
 
   private def getSubform(model:Json, field:JSONField,form:JSONForm,subform:Subform):Future[Json] = {
@@ -48,9 +51,10 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
   private def toJson(json:Json):Future[Json] = {
 
     val values = form.fields.map{ field =>
-      field.subform match {
-        case None => Future.successful(field.key -> json.hcursor.get[Json](field.key).right.get)
-        case Some(subform) => for{
+      (field.`type`,field.subform) match {
+        case ("static",_) => Future.successful(field.key -> field.default.asJson)
+        case (_,None) => Future.successful(field.key -> json.js(field.key))
+        case (_,Some(subform)) => for{
           form <- Forms(subform.id,form.lang)
           result <- getSubform(json,field,form,subform)
         } yield field.key -> result
@@ -59,10 +63,12 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
     Future.sequence(values).map(_.toMap.asJson)
   }
 
-  private def extractSeq(query:JSONQuery):Future[Seq[Json]] = for{
-    elements <- TablesRegistry.actions(form.table).getModel(query)
-    result <- Future.sequence(elements.map(toJson))
-  } yield result
+  private def extractSeq(query:JSONQuery):Future[Seq[Json]] = {
+    for{
+      elements <- TablesRegistry.actions(form.table).getModel(query)
+      result <- Future.sequence(elements.map(toJson))
+    } yield result
+  }.recover{ case t => t.printStackTrace(); Seq() }
 
   def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(_.headOption.asJson)
