@@ -1,6 +1,7 @@
 package ch.wsl.box.client.views.components
 
 
+import ch.wsl.box.client.styles.BootstrapCol
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import ch.wsl.box.shared.utils.JsonUtils._
@@ -154,14 +155,16 @@ object JSONSchemaRenderer {
 
         val sizeModel = Property(model.get.size)
 
-        div(
-          h4(f.name),
-          produce(sizeModel) { size =>
-            for{i <- 0 to size} yield {
-              val subResults = model.transform(splitJsonFields(f,i), mergeJsonFields(f,i))
-              apply(f, subResults, subforms).render
+        div(BootstrapStyles.Panel.panel)(
+          div(BootstrapStyles.Panel.panelBody,BootstrapStyles.Panel.panelDefault)(
+            h4(f.name),
+            produce(sizeModel) { size =>
+              for{i <- 0 to size} yield {
+                val subResults = model.transform(splitJsonFields(f,i), mergeJsonFields(f,i))
+                apply(f, subResults, subforms).render
+              }
             }
-          }
+          )
         )
       }
     }
@@ -177,17 +180,27 @@ object JSONSchemaRenderer {
       if(i == j) n else e
     }
 
-    div(BootstrapStyles.row)(
-      div(BootstrapStyles.Grid.colMd6)(
-        for((field,i) <- form.fields.zipWithIndex) yield {
-          div(
-            UdashForm(
-                fieldRenderer(field,results.transform(seqJsonToJson(i),jsonToSeqJson(i)),form.keys, subforms = subforms)
-            ).render
+    val resultMap:Seq[(String,Property[Json])] = for((field,i) <- form.fields.zipWithIndex) yield {
+      field.key -> results.transform(seqJsonToJson(i),jsonToSeqJson(i))
+    }
+
+
+    div(UdashForm(
+      div(BootstrapStyles.row)(
+        form.layout.blocks.map{ block =>
+          div(BootstrapCol.md(block.width))(
+            block.title.map{title => h3(title)},
+            for{
+              key <- block.fields
+              result <- resultMap.toMap.lift(key)
+              field <- form.fields.find(_.key == key)
+            } yield {
+              fieldRenderer(field,result,form.keys, subforms = subforms)
+            }
           )
         }
       )
-    )
+    ).render)
   }
 
 }
