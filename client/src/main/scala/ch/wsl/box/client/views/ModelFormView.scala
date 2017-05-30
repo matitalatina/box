@@ -13,7 +13,6 @@ import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 
 import scala.concurrent.Future
-import scala.util.Try
 
 
 /**
@@ -42,7 +41,8 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   import ch.wsl.box.client.Context._
 
   override def handleState(state: ModelFormState): Unit = {
-    model.set(ModelFormModel.empty)
+    println(s"handle state: $state")
+    //model.set(ModelFormModel.empty)
     model.subProp(_.name).set(state.model)
     model.subProp(_.id).set(state.id)
 
@@ -108,6 +108,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
   def setNavigation() = {
     IDSequence(model.get.id).navigation().map{ nav =>
+      println(s"nav: $nav")
       model.subProp(_.navigation).set(nav)
     }
   }
@@ -119,6 +120,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
   def goTo(id:String) = {
     val newState = ModelFormState(model.subProp(_.kind).get,model.subProp(_.name).get,Some(id))
+    println(s"newstate: ${newState.url}")
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 
