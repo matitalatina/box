@@ -34,6 +34,10 @@ trait RouteForm {
 
 
       val form = Forms(name)
+      val tableForm = form.map{ f =>
+        val filteredFields = f.fields.filter(field => f.tableFields.contains(field.key))
+        f.copy(fields = filteredFields)
+      }
 
       pathPrefix("id") {
         path(Segment) { id =>
@@ -116,7 +120,7 @@ trait RouteForm {
           post {
             entity(as[JSONQuery]) { query =>
               println("list")
-              complete(shaper(form){ fs =>
+              complete(shaper(tableForm){ fs =>
                 fs.extractArray(query).map{arr =>
                   HttpEntity(ContentTypes.`text/plain(UTF-8)`,arr)
                 }
@@ -128,7 +132,7 @@ trait RouteForm {
           post {
             entity(as[JSONQuery]) { query =>
               println("csv")
-              complete(shaper(form){ fs =>
+              complete(shaper(tableForm){ fs =>
                 fs.csv(query).map{csv =>
                   HttpEntity(ContentTypes.`text/plain(UTF-8)`,csv)
                 }

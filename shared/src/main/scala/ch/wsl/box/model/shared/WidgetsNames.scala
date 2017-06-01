@@ -10,4 +10,6 @@ object WidgetsNames {
   val datetimePicker = "datetimePicker"
   val select = "selectWidget"
   val checkbox = "checkbox"
+  val hidden = "hidden"
+  val nolabel = "nolabel"
 }

@@ -38,13 +38,15 @@ object FieldsRenderer {
       case None => p(value)
     }
 
-    val editing = Property(false)
-    val model = Property(value.asJson)
+//    val editing = Property(false)
+//    val model = Property(value.asJson)
+//
+//    div(onclick :+= ((ev: Event) => toggleEdit(editing), true),
+//      showIf(editing.transform(x => !x))(contentFixed.render),
+//      showIf(editing)(div(JSONSchemaRenderer.fieldRenderer(field,model,keys.keys.map(_.key),false)).render)
+//    )
 
-    div(onclick :+= ((ev: Event) => toggleEdit(editing), true),
-      showIf(editing.transform(x => !x))(contentFixed.render),
-      showIf(editing)(div(JSONSchemaRenderer.fieldRenderer(field,model,keys.keys.map(_.key),false)).render)
-    )
+    div(contentFixed)
 
 
   }

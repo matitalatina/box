@@ -115,16 +115,19 @@ object JSONSchemaRenderer {
     }
     val stringModel = model.transform[String](jsToString(_),strToJson(_))
     (field.`type`,field.widget,field.options,keys.contains(field.key),field.subform) match {
+      case (_,Some(WidgetsNames.hidden),_,_,_) => { }
       case (_,_,_,true,_) => {
         UdashForm.textInput()(label)(stringModel,disabled := true)
       }
       case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
       case ("number",Some(WidgetsNames.checkbox),_,_,_) => checkBox(label,model)
+      case ("number",Some(WidgetsNames.nolabel),_,_,_) => UdashForm.numberInput()()(stringModel)
       case ("number",_,_,_,_) => UdashForm.numberInput()(label)(stringModel)
       case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,stringModel,timePickerFormat)
       case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(label,stringModel,datePickerFormat)
       case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(label,stringModel)
       case ("subform",_,_,_,Some(sub)) => subform(model,label,sub,subforms)
+      case (_,Some(WidgetsNames.nolabel),_,_,_) => UdashForm.textInput()()(stringModel)
       case (_,_,_,_,_) => UdashForm.textInput()(label)(stringModel)
     }
   }

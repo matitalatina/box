@@ -84,11 +84,14 @@ object Forms {
         JSONField("string",key)
       }
 
+      println(s"Missing Key fields $missingKeyFields")
+
       val definedTableFields = form.tableFields.toSeq.flatMap(_.split(","))
       val missingKeyTableFields = keys.filterNot(k => definedTableFields.contains(k))
       val tableFields = missingKeyTableFields ++ definedTableFields
 
       val jsonFields = {missingKeyFields ++ fieldsToJsonFields(fields)}.distinct
+
       val layout = form.layout.map { l =>
         parse(l).fold({ f =>
           println(f.getMessage())
@@ -103,6 +106,9 @@ object Forms {
           )
         })
       }.flatten.getOrElse(Layout.fromFields(jsonFields))
+
+
+
       val result = JSONForm(form.id.get,form.name,jsonFields,layout,form.table,lang,tableFields,keys)
       println(s"resulting form: $result")
       result

@@ -59,7 +59,9 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     for{
       csv <- REST.csv(state.kind,state.model,query)
       emptyFieldsForm <- REST.form(state.kind,state.model)
-      form <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm)
+      fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tableFields.contains(field.key))
+      filteredForm = emptyFieldsForm.copy(fields = fields)
+      form <- Enhancer.populateOptionsValuesInFields(filteredForm)
       _ <- saveKeys(query)
     } yield {
 
