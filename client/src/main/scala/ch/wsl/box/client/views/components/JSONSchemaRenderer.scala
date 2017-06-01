@@ -126,51 +126,14 @@ object JSONSchemaRenderer {
       case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,stringModel,timePickerFormat)
       case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(label,stringModel,datePickerFormat)
       case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(label,stringModel)
-      case ("subform",_,_,_,Some(sub)) => subform(model,label,sub,subforms)
+      case ("subform",_,_,_,Some(sub)) => SubformRenderer(model,label,sub,subforms).render()
       case (_,Some(WidgetsNames.nolabel),_,_,_) => UdashForm.textInput()()(stringModel)
       case (_,_,_,_,_) => UdashForm.textInput()(label)(stringModel)
     }
   }
 
   def subform(result:Property[Json],label:String,subform:Subform,subforms:Seq[JSONForm]):Modifier = {
-    def splitJson(js:Json):Seq[Json] = {
-      js.as[Seq[Json]].right.getOrElse(Seq())
-    }
-    def mergeJson(longJs:Seq[Json]):Json = {
-      longJs.asJson
-    }
 
-    val model = result.transform(splitJson,mergeJson)
-
-    def splitJsonFields(form:JSONForm,i:Int)(js:Seq[Json]):Seq[Json] = form.fields.map{ field =>
-      js.lift(i).map(_.hcursor.get[Json](field.key).right.get).getOrElse(Json.Null)
-    }
-    def mergeJsonFields(form:JSONForm,i:Int)(longJs:Seq[Json]):Seq[Json] = for{
-      (m,j) <- model.get.zipWithIndex
-    } yield{
-      if(i == j) form.fields.map(_.key).zip(longJs).toMap.asJson else m
-    }
-
-    subforms.find(_.id == subform.id) match {
-      case None => p("subform not found")
-      case Some(f) => {
-
-
-        val sizeModel = Property(model.get.size)
-
-        div(BootstrapStyles.Panel.panel)(
-          div(BootstrapStyles.Panel.panelBody,BootstrapStyles.Panel.panelDefault)(
-            h4(f.name),
-            produce(sizeModel) { size =>
-              for{i <- 0 to size} yield {
-                val subResults = model.transform(splitJsonFields(f,i), mergeJsonFields(f,i))
-                apply(f, subResults, subforms).render
-              }
-            }
-          )
-        )
-      }
-    }
 
   }
 

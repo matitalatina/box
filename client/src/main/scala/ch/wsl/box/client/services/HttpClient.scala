@@ -17,37 +17,39 @@ case class HttpClient(endpoint:String,user:String, password:String) {
   import io.circe.parser.decode
   import io.circe.syntax._
 
-  def get[T](url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = {
+  def get[T](url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = ask[T]("GET",url)
+  def delete[T](url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = ask[T]("DELETE",url)
+
+  def post[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("POST",url,obj)
+  def put[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("PUT",url,obj)
+
+
+  private def ask[T](method:String,url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = {
     val promise = Promise[T]()
 
 
 
-    xhr.open("GET",endpoint+url,true)
+    xhr.open(method,endpoint+url,true)
     xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
-          decode[T](xhr.responseText) match {
-            case Left(fail) => promise.failure(fail)
-            case Right(result) => promise.success(result)
-          }
+        decode[T](xhr.responseText) match {
+          case Left(fail) => promise.failure(fail)
+          case Right(result) => promise.success(result)
+        }
       } else {
         promise.failure(new Exception("HTTP status" + xhr.status))
       }
     }
 
     xhr.onerror = { (e: dom.Event) =>
-        promise.failure(new Exception("Error HTTP status" + xhr.status))
+      promise.failure(new Exception("Error HTTP status" + xhr.status))
     }
 
     xhr.send()
 
     promise.future
-
   }
-
-  def post[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("POST",url,obj)
-  def put[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("PUT",url,obj)
-
 
 
 
