@@ -6,6 +6,7 @@ import slick.lifted.{ColumnOrdered, Query, Rep, TableQuery}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 /**
   * Created by andreaminetti on 15/03/16.
@@ -49,15 +50,18 @@ class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](ta
   }
 
 
-  def getById(i:JSONKeys)(implicit db:Database):Future[T#TableElementType] = {
-
-    for{
-      result <- db.run{
-        val action = filter(i).take(1).result
-        //println(action.statements)
-        action
-      }
-    } yield result.head
+  def getById(i:JSONKeys)(implicit db:Database):Future[Option[T#TableElementType]] = {
+    println(s"GET BY ID $i")
+    Try(filter(i)).toOption match {
+      case Some(f) => for {
+        result <- db.run {
+          val action = f.take(1).result
+          println(action.statements)
+          action
+        }
+      } yield result.headOption
+      case None => Future.successful(None)
+    }
   }
 
   def deleteById(i:JSONKeys)(implicit db:Database):Future[Int] = {

@@ -22,3 +22,8 @@ case class JSONFieldMap(valueProperty:String, textProperty:String)
 
 case class Subform(id:Int,localFields:String,subFields:String,subFilter:Seq[JSONQueryFilter])
 
+object JSONTypes{
+  val NUMBER = "number"
+  val STRING = "string"
+  val SUBFORM = "subform"
+}

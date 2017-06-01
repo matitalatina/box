@@ -103,7 +103,7 @@ object JSONSchemaRenderer {
     )
   }
 
-  def fieldRenderer(field:JSONField,model:Property[Json],keys:Seq[String],showLabel:Boolean = true, subforms:Seq[JSONForm] = Seq()):Modifier = {
+  def fieldRenderer(field:JSONField,model:Property[Json],keys:Seq[String],showLabel:Boolean = true, subforms:Seq[JSONForm] = Seq(), subformRenderer: SubformRenderer):Modifier = {
     val label = showLabel match {
       case true => field.title.getOrElse(field.key)
       case false => ""
@@ -126,7 +126,7 @@ object JSONSchemaRenderer {
       case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,stringModel,timePickerFormat)
       case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(label,stringModel,datePickerFormat)
       case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(label,stringModel)
-      case ("subform",_,_,_,Some(sub)) => SubformRenderer(model,label,sub,subforms).render()
+      case ("subform",_,_,_,Some(sub)) => subformRenderer.render(model,label,sub)
       case (_,Some(WidgetsNames.nolabel),_,_,_) => UdashForm.textInput()()(stringModel)
       case (_,_,_,_,_) => UdashForm.textInput()(label)(stringModel)
     }
@@ -137,19 +137,20 @@ object JSONSchemaRenderer {
 
   }
 
-  def apply(form:JSONForm,results: Property[Seq[Json]],subforms:Seq[JSONForm]):TypedTag[Element] = {
+  def apply(form:JSONForm,results: Property[Seq[(String,Json)]],subforms:Seq[JSONForm]):TypedTag[Element] = {
 
-    def seqJsonToJson(i:Int)(seq:Seq[Json]):Json = seq.lift(i).getOrElse(Json.Null)
-    def jsonToSeqJson(i:Int)(n:Json):Seq[Json] = for{
+    def seqJsonToJson(i:Int)(seq:Seq[(String,Json)]):Json = seq.lift(i).map(_._2).getOrElse(Json.Null)
+    def jsonToSeqJson(i:Int,key:String)(n:Json):Seq[(String,Json)] = for{
       (e,j) <- results.get.zipWithIndex
     } yield {
-      if(i == j) n else e
+      if(i == j) key -> n else e
     }
 
     val resultMap:Seq[(String,Property[Json])] = for((field,i) <- form.fields.zipWithIndex) yield {
-      field.key -> results.transform(seqJsonToJson(i),jsonToSeqJson(i))
+      field.key -> results.transform(seqJsonToJson(i),jsonToSeqJson(i,field.key))
     }
 
+    val subformRenderer = SubformRenderer(results.get,subforms)
 
     div(UdashForm(
       div(BootstrapStyles.row)(
@@ -161,7 +162,7 @@ object JSONSchemaRenderer {
               result <- resultMap.toMap.lift(key)
               field <- form.fields.find(_.key == key)
             } yield {
-              fieldRenderer(field,result,form.keys, subforms = subforms)
+              fieldRenderer(field,result,form.keys, subforms = subforms, subformRenderer = subformRenderer)
             }
           )
         }

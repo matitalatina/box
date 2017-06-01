@@ -64,17 +64,20 @@ object Enhancer {
     throw t
   }
 
-  def extract(current:Json,form:JSONForm):Seq[Json] = form.fields.map{ field =>
+  def extract(current:Json,form:JSONForm):Seq[(String,Json)] = form.fields.map{ field =>
 
-    val result = current.js(field.key)
+    val value = current.js(field.key)
 
-    field.options match {
+    val result = field.options match {
       case Some(opts) if !form.keys.contains(field.key) => {
         val resultString = current.get(field.key)
         opts.options.lift(resultString).getOrElse(resultString).asJson
       }
-      case _ => result
+      case _ => value
     }
+
+    field.key -> result
+
 
   }
 

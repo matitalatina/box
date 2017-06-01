@@ -24,8 +24,10 @@ object Boot extends App with RouteRoot {
 
   // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
   val bindingFuture = Http().bindAndHandle(route, host, port)
-  println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-  StdIn.readLine() // let it run until user presses return
+  println(s"Server online at http://localhost:8080/\nPress Q to stop...")
+  while(StdIn.readLine() != "q"){
+    println()
+  } // let it run until user presses return
   bindingFuture
     .flatMap(_.unbind()) // trigger unbinding from the port
     .onComplete(_ => system.terminate()) // and shutdown when done

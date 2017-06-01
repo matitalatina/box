@@ -52,7 +52,7 @@ trait RouteForm {
               entity(as[Json]) { e =>
                 complete {
                   shaper(form){ fs =>
-                    fs.updateAll(JSONKeys.fromString(id),e)
+                    fs.updateAll(e)
                   }
                 }
               }

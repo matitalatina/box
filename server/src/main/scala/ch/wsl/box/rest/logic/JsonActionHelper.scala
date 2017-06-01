@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ModelJsonActions {
   def getModel(query:JSONQuery)(implicit db:Database):Future[Seq[Json]]
-  def getById(query: JSONKeys)(implicit db:Database): Future[Json]
+  def getById(query: JSONKeys)(implicit db:Database): Future[Option[Json]]
   def update(keys:JSONKeys,json: Json)(implicit db:Database):Future[Int]
   def insert(json: Json)(implicit db:Database):Future[Json]
   def count()(implicit db:Database):Future[JSONCount]
@@ -27,7 +27,7 @@ case class JsonActionHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
   val utils = new RouteHelper[T,M](table)
 
   override def getModel(query: JSONQuery)(implicit db:Database): Future[Seq[Json]] = utils.find(query).map(_.data.toSeq.map(_.asJson))
-  override def getById(query: JSONKeys)(implicit db:Database): Future[Json] = utils.getById(query).map(_.asJson)
+  override def getById(query: JSONKeys)(implicit db:Database): Future[Option[Json]] = utils.getById(query).map(_.map(_.asJson))
 
 
   override def count()(implicit db:Database) = {
@@ -41,19 +41,19 @@ case class JsonActionHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
   override def update(keys:JSONKeys,json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Int] = {
     for{
       current <- getById(keys)
-      merged = current.deepMerge(json)
+      merged = current.get.deepMerge(json)
       result <- utils.updateById(keys,merged.as[M].right.get)
     } yield result
   }
 
   override def insert(json: Json)(implicit db:Database): Future[Json] = {
-    println(json)
     val data:M = json.as[M].fold({ fail =>
       println(fail.toString())
       println(fail.history)
       throw new Exception(fail.toString())
     },
     { x => x})
+    println(s"JSON to save on $table: \n $data")
     val result: Future[M] = db.run { table.returning(table) += data }
     result.map(_.asJson)
   }

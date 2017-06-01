@@ -19,7 +19,7 @@ import scala.concurrent.Future
   * Created by andre on 4/24/2017.
   */
 
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONForm], results:Seq[Json], error:String,subforms:Seq[JSONForm],navigation: Navigation)
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONForm], results:Seq[(String,Json)], error:String,subforms:Seq[JSONForm],navigation: Navigation)
 
 object ModelFormModel{
   def empty = ModelFormModel("","",None,None,Seq(),"",Seq(),Navigation(false,false,0,0))
@@ -60,7 +60,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 
       //initialise an array of n strings, where n is the number of fields
-      val results:Seq[Json] = Enhancer.extract(current,form)
+      val results:Seq[(String,Json)] = Enhancer.extract(current,form)
 
       model.set(ModelFormModel(
         name = state.model,
@@ -87,7 +87,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
     m.form.foreach{ form =>
       val jsons = for {
         (field, i) <- form.fields.zipWithIndex
-      } yield Enhancer.parse(field, m.results.lift(i),form.keys){ t =>
+      } yield Enhancer.parse(field, m.results.lift(i).map(_._2),form.keys){ t =>
         model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
       }
       val saveAction = m.id match {

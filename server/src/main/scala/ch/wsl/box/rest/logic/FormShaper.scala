@@ -84,23 +84,32 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
     CSV.of(strings)
   }
 
-  def updateAll(key:JSONKeys,e:Json):Future[Int] = {
-    println(s"updateAll for table: ${form.table} and keys ${key.asString} with content $e")
+  def updateAll(e:Json):Future[Int] = {
+
     val subforms = form.fields.filter(_.subform.isDefined).map { field =>
       for {
         form <- Forms(field.subform.get.id, form.lang)
         subJson = e.seq(field.key)
         result <- Future.sequence{
-          println(subJson)
           subJson.map{ json =>
-            println(s"saving json $json")
-            FormShaper(form).updateAll(json.keys(form.keys),json).recover{case t => t.printStackTrace(); 1}
+            FormShaper(form).updateAll(json).recover{case t => t.printStackTrace(); 1}
         }}
       } yield result
     }
+    val key = e.keys(form.keys)
+    val table = TablesRegistry.actions(form.table)
     for{
       _ <- Future.sequence(subforms)
-      result <- TablesRegistry.actions(form.table).update(key,e)
+      existing <- table.getById(key).recover{ case t => println("recovered future with none"); None }
+      result <- {
+        if(existing.isDefined) {
+          println(s"update $key")
+          table.update(key,e)
+        } else {
+          println("insert")
+          table.insert(e).map(_ => 1)
+        }
+      }
     } yield result
 
   }
