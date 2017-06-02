@@ -1,5 +1,6 @@
 package ch.wsl.box.codegen
 
+import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
 import slick.ast.ColumnOption
 import slick.codegen.OutputHelpers
@@ -24,7 +25,7 @@ object CustomizedCodeGenerator {
     println("Generating " + args(0))
 
 
-    val dbConf = com.typesafe.config.ConfigFactory.load().as[com.typesafe.config.Config]("db")
+    val dbConf: Config = com.typesafe.config.ConfigFactory.load().as[com.typesafe.config.Config]("db")
 
     def db = PostgresDriver.api.Database.forURL(dbConf.as[String]("url"),
       driver="org.postgresql.Driver",
@@ -89,7 +90,7 @@ object CustomizedCodeGenerator {
     }
 
 
-    val gen = codegen(dbModel)
+    val gen = codegen(dbModel,dbConf)
 
 //    println("codegen created")
 //    println(gen)
@@ -159,7 +160,7 @@ package object tables {
       }
     }
 
-    def codegen(model:Model) = new slick.codegen.SourceCodeGenerator(model) with MyOutputHelper {
+    def codegen(model:Model,conf:Config) = new slick.codegen.SourceCodeGenerator(model) with MyOutputHelper {
 
       tables.head.EntityType.name
 
@@ -354,12 +355,27 @@ package object tables {
             singleKey || multipleKey
           }
 
-          override def asOption: Boolean =  primaryKey match {
+
+          def completeName = s"${model.table.table}.${model.name}"
+
+          val providedExceptions = conf.getStringList("generator.keys.provided")
+          val managedExceptions = conf.getStringList("generator.keys.managed")
+          val keyStrategy = conf.getString("generator.keys.default.strategy")
+
+          private def managed:Boolean = {
+            keyStrategy match {
+              case "managed" if primaryKey => !providedExceptions.contains(completeName)
+              case "provided" if primaryKey => managedExceptions.contains(completeName)
+              case _ => false
+            }
+          }
+
+          override def asOption: Boolean =  managed match {
             case true => true
             case false => super.asOption
           }
 
-          override def options: Iterable[String] = primaryKey match {
+          override def options: Iterable[String] = managed match {
             case false => super.options
             case true => {super.options.toSeq ++ Seq("O.AutoInc")}.distinct
           }
