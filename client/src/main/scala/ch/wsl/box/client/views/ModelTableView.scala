@@ -6,6 +6,7 @@ import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.Session
 import ch.wsl.box.client.views.components.FieldsRenderer
 import ch.wsl.box.model.shared._
+import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.form.{InputGroupSize, UdashInputGroup}
 import io.udash.bootstrap.table.UdashTable
@@ -61,7 +62,8 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
       emptyFieldsForm <- REST.form(state.kind,state.model)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tableFields.contains(field.key))
       filteredForm = emptyFieldsForm.copy(fields = fields)
-      form <- Enhancer.populateOptionsValuesInFields(filteredForm)
+      models <- Enhancer.fetchModels(Seq(filteredForm))
+      form = Enhancer.populateOptionsValuesInFields(models,filteredForm,Seq())
       _ <- saveKeys(query)
     } yield {
 

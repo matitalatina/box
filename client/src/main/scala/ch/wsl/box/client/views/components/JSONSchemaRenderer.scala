@@ -90,6 +90,15 @@ object JSONSchemaRenderer {
     )
   }
 
+  def fixedLookupRenderer(modelLabel:String, options:JSONFieldOptions,model:Property[String]):Modifier = {
+    val value:String = options.options.lift(model.get).getOrElse(model.get)
+    div(
+      label(modelLabel),
+      br,
+      value
+    )
+  }
+
 
   def checkBox(label:String,model:Property[Json]) = {
     def jsToBool(json:Json):Boolean = json.asNumber.flatMap(_.toInt).exists(_ == 1)
@@ -116,10 +125,11 @@ object JSONSchemaRenderer {
     val stringModel = model.transform[String](jsToString(_),strToJson(_))
     (field.`type`,field.widget,field.options,keys.contains(field.key),field.subform) match {
       case (_,Some(WidgetsNames.hidden),_,_,_) => { }
+      case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
+      //case (_,_,Some(options),true,_) => fixedLookupRenderer(label,options,stringModel)
       case (_,_,_,true,_) => {
         UdashForm.textInput()(label)(stringModel,disabled := true)
       }
-      case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
       case ("number",Some(WidgetsNames.checkbox),_,_,_) => checkBox(label,model)
       case ("number",Some(WidgetsNames.nolabel),_,_,_) => UdashForm.numberInput()()(stringModel)
       case ("number",_,_,_,_) => UdashForm.numberInput()(label)(stringModel)

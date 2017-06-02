@@ -39,6 +39,7 @@ case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Presenter[ModelFormState] {
 
   import ch.wsl.box.client.Context._
+  import ch.wsl.box.shared.utils.JsonUtils._
 
   override def handleState(state: ModelFormState): Unit = {
     println(s"handle state: $state")
@@ -47,17 +48,22 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
     model.subProp(_.id).set(state.id)
 
 
+    val ids = state.id.map(JSONKeys.fromString)
+
     {for{
-      emptyFieldsForm <- REST.form(state.kind,state.model)
-      form <- Enhancer.populateOptionsValuesInFields(emptyFieldsForm)
-      ids = state.id.map(JSONKeys.fromString)
       current <- state.id match {
         case Some(id) => REST.get(state.kind,state.model,ids.get)
         case None => Future.successful(Json.Null)
       }
-      subforms <- if(state.kind == "form") REST.subforms(state.model) else Future.successful(Seq())
+      emptyFieldsForm <- REST.form(state.kind,state.model)
+      emptySubforms <- if(state.kind == "form") REST.subforms(state.model) else Future.successful(Seq())
+      models <- Enhancer.fetchModels(emptySubforms ++ Seq(emptyFieldsForm))
     } yield {
 
+      val form = Enhancer.populateOptionsValuesInFields(models,emptyFieldsForm,Seq(current))
+      val subforms = emptySubforms.map{ f =>
+        Enhancer.populateOptionsValuesInFields(models,f,current.seq(form.fields.find(_.subform.exists(_.id == f.id)).get.key))
+      }
 
       //initialise an array of n strings, where n is the number of fields
       val results:Seq[(String,Json)] = Enhancer.extract(current,form)

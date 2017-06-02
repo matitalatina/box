@@ -22,6 +22,7 @@ object REST {
 
   def models(kind:String):Future[Seq[String]] = client.get[Seq[String]](s"/${kind}s")
   def list(kind:String,model:String,limit:Int): Future[Seq[Json]] = client.post[JSONQuery,JSONResult[Json]](s"/$kind/$model/list",JSONQuery.limit(limit)).map(_.data)
+  def list(kind:String,model:String,query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,JSONResult[Json]](s"/$kind/$model/list",query).map(_.data)
   def csv(kind:String,model:String,q:JSONQuery): Future[Seq[Seq[String]]] = client.postString[JSONQuery](s"/$kind/$model/csv",q).map{ result =>
     result.split("\r\n").toSeq.map{x => x.substring(1,x.length-1).split("\",\"").toSeq}
   }
