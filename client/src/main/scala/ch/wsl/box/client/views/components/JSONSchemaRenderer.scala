@@ -132,11 +132,6 @@ object JSONSchemaRenderer {
     }
   }
 
-  def subform(result:Property[Json],label:String,subform:Subform,subforms:Seq[JSONForm]):Modifier = {
-
-
-  }
-
   def apply(form:JSONForm,results: Property[Seq[(String,Json)]],subforms:Seq[JSONForm]):TypedTag[Element] = {
 
     def seqJsonToJson(i:Int)(seq:Seq[(String,Json)]):Json = seq.lift(i).map(_._2).getOrElse(Json.Null)

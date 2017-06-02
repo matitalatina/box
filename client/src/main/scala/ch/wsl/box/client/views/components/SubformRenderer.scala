@@ -43,18 +43,17 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm])
     if(i == j) longJs.toMap.asJson else m
   }
 
-  def removeItem(model:Property[Seq[Json]],sizeModel:Property[Int],subform:Subform) = {
+  def removeItem(model:Property[Seq[Json]],itemToRemove:Json,sizeModel:Property[Int],subform:Subform) = {
     println("removeItem")
     if(org.scalajs.dom.window.confirm("Are you sure?")) {
       for {
         form <- subforms.find(_.id == subform.id)
-        itemToRemove <- model.get.lastOption
       } yield {
         for {
           result <- REST.delete("model", form.table, itemToRemove.keys(form.keys))
         } yield {
           if (result.count > 0) {
-            model.set(model.get.init)
+            model.set(model.get.filterNot(_ == itemToRemove))
             sizeModel.set(sizeModel.get - 1)
           }
         }
@@ -99,11 +98,11 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm])
             produce(sizeModel) { size =>
               for {i <- 0 until size} yield {
                 val subResults = model.transform(splitJsonFields(f, i), mergeJsonFields(model,f, i))
-                JSONSchemaRenderer(f, subResults, subforms).render
+                div(
+                  JSONSchemaRenderer(f, subResults, subforms),
+                  a(onclick :+= ((e:Event) => removeItem(model,model.get(i),sizeModel,subform)),"Remove")
+                ).render
               }
-            },
-            showIf(sizeModel.transform(_ > 0)) {
-              a(onclick :+= ((e:Event) => removeItem(model,sizeModel,subform)),"Remove").render
             },
             br,
             a(onclick :+= ((e:Event) => addItem(model,sizeModel,subform,f)),"Add")
