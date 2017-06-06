@@ -4,7 +4,9 @@ package ch.wsl.box.client.views
   * Created by andre on 4/3/2017.
   */
 
+import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.styles.BootstrapCol
 import ch.wsl.box.client.{ModelFormState, ModelTableState, ModelsState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
@@ -15,7 +17,7 @@ import org.scalajs.dom.{Element, Event}
 
 case class Models(list:Seq[String], model:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
 
-case object ModelsViewPresenter extends ViewPresenter[ModelsState] {
+case class ModelsViewPresenter(kind:String,modelName:String,sidebarWidth:Int) extends ViewPresenter[ModelsState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -24,8 +26,9 @@ case object ModelsViewPresenter extends ViewPresenter[ModelsState] {
     val model = ModelProperty{
       Models(Seq(),None,None,"",Seq())
     }
+    val routes = Routes(kind,modelName)
     val presenter = new ModelsPresenter(model)
-    val view = new ModelsView(model,presenter)
+    val view = new ModelsView(model,presenter,sidebarWidth,routes)
     (view,presenter)
   }
 }
@@ -54,9 +57,12 @@ class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState
 
 }
 
-class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter) extends View {
+class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter, sidebarWidth:Int,routes:Routes) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+
+  val sidebarGrid = BootstrapCol.md(sidebarWidth)
+  val contentGrid = BootstrapCol.md(12-sidebarWidth)
 
   override def renderChild(view: View): Unit = {
 
@@ -70,18 +76,20 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter) extends
 
   private val child: Element = div().render
 
+  private def sidebar: Element = div(sidebarGrid)(
+    UdashForm.textInput()("Search model")(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateModelsList(), true)),
+    produce(model.subProp(_.search)) { q =>
+      ul(
+        repeat(model.subSeq(_.filteredList)){m =>
+          li(a(href := routes.table().url)(m.get)).render
+        }
+      ).render
+    }
+  ).render
+
   override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.row)(
-    div(BootstrapStyles.Grid.colMd2)(
-      UdashForm.textInput()("Search model")(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateModelsList(), true)),
-      produce(model.subProp(_.search)) { q =>
-        ul(
-          repeat(model.subSeq(_.filteredList)){m =>
-            li(a(href := ModelTableState(model.subProp(_.kind).get.getOrElse(""),m.get).url)(m.get)).render
-          }
-        ).render
-      }
-    ),
-    div(BootstrapStyles.Grid.colMd10)(
+    sidebar,
+    div(contentGrid)(
       produce(model)( m =>
         m.model match {
           case None => div(
@@ -89,8 +97,8 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter) extends
             p("select your model")
           ).render
           case Some(model) => div(
-            a(href := ModelFormState(m.kind.getOrElse(""),model,None).url)("New " + model),
-            a(href := ModelTableState(m.kind.getOrElse(""),model).url)("Table " + model)
+            a(href := routes.add().url)("New " + model),
+            a(href := routes.table().url)("Table " + model)
           ).render
         }
       ),

@@ -1,5 +1,6 @@
 package ch.wsl.box.client.views.components
 
+import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.model.shared.{JSONField, JSONKeys}
 import io.circe.Json
@@ -26,14 +27,14 @@ object FieldsRenderer {
     editing.set(!editing.get)
   }
 
-  def apply(value:String, field:JSONField, keys:JSONKeys):TypedTag[Element] = {
+  def apply(value:String, field:JSONField, keys:JSONKeys, routes:Routes):TypedTag[Element] = {
 
 
     val contentFixed = field.options match {
       case Some(opts) => {
         val label: String = opts.options.lift(value).getOrElse(value)
         val finalLabel = if(label.trim.length > 0) label else value
-        a(href := ModelFormState("model",opts.refModel,Some(JSONKeys.fromMap(Map(field.key -> value)).asString)).url,finalLabel)
+        a(href := routes.edit(JSONKeys.fromMap(Map(field.key -> value)).asString).url,finalLabel)
       }
       case None => p(value)
     }

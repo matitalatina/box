@@ -18,5 +18,6 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
     case "/box" /:/ kind /:/ model /:/ "update" /:/ id => ModelFormState(kind,model,Some(id))
     case "/box" /:/ kind /:/ model /:/ "child" /:/ childModel => MasterChildState(kind,model,childModel)
     case "/box" /:/ kind /:/ model => ModelTableState(kind,model)
+    case "/fire" => FireState
   }
 }

@@ -1,5 +1,6 @@
 package ch.wsl.box.client.views
 
+import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{MasterChildState, ModelTableState}
 import ch.wsl.box.model.shared.{Filter, JSONField, JSONKeys}
 import io.udash.ViewPresenter
@@ -19,7 +20,7 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
   override def create(): (View, Presenter[MasterChildState]) = {
 
-    val (childView,childPresenter) = ModelTableViewPresenter().create()
+    val (childView,childPresenter) = ModelTableViewPresenter(Routes("model",child)).create()
 
     def onChangeMaster(rows:Seq[(JSONField,String)]):Unit = {
       println("change master")
@@ -40,7 +41,7 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
     }
 
-    val (masterView,masterPresenter) = ModelTableViewPresenter(onChangeMaster).create()
+    val (masterView,masterPresenter) = ModelTableViewPresenter(Routes("model",master),onChangeMaster).create()
 
 
     (MasterChildView(masterView,childView),MasterChildPresenter(masterPresenter,childPresenter))

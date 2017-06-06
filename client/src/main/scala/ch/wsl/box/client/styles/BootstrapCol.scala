@@ -7,6 +7,7 @@ import io.udash.bootstrap.BootstrapStyles
   */
 object BootstrapCol {
   def md(i:Int) = i match {
+    case 0 => BootstrapStyles.hide
     case 1 => BootstrapStyles.Grid.colMd1
     case 2 => BootstrapStyles.Grid.colMd2
     case 3 => BootstrapStyles.Grid.colMd3

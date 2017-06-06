@@ -1,5 +1,6 @@
 package ch.wsl.box.client.views
 
+import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.utils.{IDSequence, Navigation, Session}
@@ -25,18 +26,18 @@ object ModelFormModel{
   def empty = ModelFormModel("","",None,None,Seq(),"",Seq(),Navigation(false,false,0,0))
 }
 
-case object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
+case class ModelFormViewPresenter(routes:Routes) extends ViewPresenter[ModelFormState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def create(): (View, Presenter[ModelFormState]) = {
     val model = ModelProperty{ModelFormModel.empty}
-    val presenter = ModelFormPresenter(model)
+    val presenter = ModelFormPresenter(model,routes)
     (ModelFormView(model,presenter),presenter)
   }
 }
 
-case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Presenter[ModelFormState] {
+case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes) extends Presenter[ModelFormState] {
 
   import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JsonUtils._
@@ -101,7 +102,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         case None => REST.insert(m.kind,m.name, jsons.toMap.asJson)
       }
       saveAction.map{_ =>
-        val newState = ModelTableState(model.subProp(_.kind).get,model.subProp(_.name).get)
+        val newState = routes.table()
         io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
 
       }.recover{ case e =>
@@ -125,7 +126,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   def prev() = IDSequence(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
 
   def goTo(id:String) = {
-    val newState = ModelFormState(model.subProp(_.kind).get,model.subProp(_.name).get,Some(id))
+    val newState = routes.edit(id)
     println(s"newstate: ${newState.url}")
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }

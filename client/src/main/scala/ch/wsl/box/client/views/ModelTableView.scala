@@ -1,5 +1,6 @@
 package ch.wsl.box.client.views
 
+import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.styles.GlobalStyles
@@ -32,20 +33,22 @@ object ModelTableModel{
   def empty = ModelTableModel("","",Seq(),Seq(),None,None)
 }
 
-case class ModelTableViewPresenter(onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
+case class ModelTableViewPresenter(routes:Routes,onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+
 
   override def create(): (View, Presenter[ModelTableState]) = {
 
     val model = ModelProperty(ModelTableModel.empty)
 
-    val presenter = ModelTablePresenter(model,onSelect)
-    (ModelTableView(model,presenter),presenter)
+    val presenter = ModelTablePresenter(model,onSelect,routes)
+    (ModelTableView(model,presenter,routes),presenter)
   }
 }
 
-case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Seq[(JSONField,String)] => Unit) extends Presenter[ModelTableState]{
+case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[ModelTableState]{
 
   import ch.wsl.box.client.Context._
   import Enhancer._
@@ -87,7 +90,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
 
   def edit(el:Row) = {
     val k = key(el)
-    val newState = ModelFormState(model.subProp(_.kind).get,model.subProp(_.name).get,Some(k.asString))
+    val newState = routes.edit(k.asString)
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 
@@ -165,7 +168,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
   }
 }
 
-case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTablePresenter) extends View {
+case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTablePresenter,routes:Routes) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
@@ -239,7 +242,8 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
                   td(GlobalStyles.smallCells)(FieldsRenderer(
                     value,
                     metadata.field,
-                    key
+                    key,
+                    routes
                   )).render
                 }
               }
