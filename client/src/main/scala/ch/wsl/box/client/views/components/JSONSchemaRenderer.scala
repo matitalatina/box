@@ -12,6 +12,7 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.bootstrap.form.{UdashForm, UdashInputGroup}
 
+import scala.scalajs.js
 import scala.scalajs.js.Date
 import scalatags.JsDom.TypedTag
 
@@ -32,9 +33,9 @@ object JSONSchemaRenderer {
   import io.circe.syntax._
 
 
-  final val dateTimePickerFormat = "YYYY-MM-DD HH:mm"
+  final val dateTimePickerFormat = "YYYY-MM-DD hh:mm"
   final val datePickerFormat = "YYYY-MM-DD"
-  final val timePickerFormat = "HH:mm"
+  final val timePickerFormat = "hh:mm"
 
   def datetimepicker(modelLabel:String, model:Property[String],format:String = dateTimePickerFormat):Modifier = {
     val pickerOptions = ModelProperty(UdashDatePicker.DatePickerOptions(
@@ -48,10 +49,36 @@ object JSONSchemaRenderer {
       if(str == "") return null;
       format match {
         case `timePickerFormat` => {
-          val string = "1970-01-01 " + str
-          new java.util.Date(Date.parse(string).toLong)
+          val year = 1970
+          val month = 1
+          val day = 1
+          val timeTokens = str.split(":")
+          val hours =  timeTokens(0).toInt
+          val minutes = timeTokens(1).toInt
+          new java.util.Date(year-1900,month,day,hours,minutes)
         }
-        case _ => new java.util.Date(Date.parse(str).toLong)
+        case `dateTimePickerFormat` => {
+          val tokens = str.split(" ")
+          val dateTokens = tokens(0).split("-")
+          val timeTokens = tokens(1).split(":")
+          val year = dateTokens(0).toInt
+          val month = dateTokens(1).toInt
+          val day = dateTokens(2).toInt
+          val hours = timeTokens(0).toInt
+          val minutes = timeTokens(1).toInt
+          val result = new java.util.Date(year-1900,month,day,hours,minutes)
+          println(s"original $str, result: $result")
+          result
+        }
+        case `datePickerFormat` => {
+          val dateTokens = str.split("-")
+          val year = dateTokens(0).toInt
+          val month = dateTokens(1).toInt
+          val day = dateTokens(2).toInt
+          val result = new java.util.Date(year-1900,month,day)
+          println(s"original $str, result: $result")
+          result
+        }
       }
 
     }
