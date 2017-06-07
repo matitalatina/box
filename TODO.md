@@ -1,18 +1,14 @@
 TODO
 ====
 
-Working on
----------------------
 
-1. Time jQuery plugin (not rendering, why?)
-1. Restore debug
-1. Select widget
+1. 2nd Level layout (subgrid)
+1. subform with primary keys
+1. limit subform number
+1. Files uploads
+1. custom Search mask
+1. Translations
+1. Login page
+1. Reduced interface for users
 
-
-Nexts
------
-1. Master-child tables
-1. Form builder
-1. Mobile support
-1. Export support
 
