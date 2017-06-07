@@ -111,9 +111,15 @@ object JSONSchemaRenderer {
   }
 
   def optionsRenderer(modelLabel:String, options:JSONFieldOptions,model:Property[String]):Modifier = {
+
+    def value2Label(org:String):String = options.options.find(_._1 == org).map(_._2).getOrElse("Val not found")
+    def label2Value(v:String):String = options.options.find(_._2 == v).map(_._1).getOrElse("")
+
+    val selectModel = model.transform(value2Label,label2Value)
+
     div(BootstrapStyles.Form.formGroup)(
       label(modelLabel),
-      Select(model,options.options.values.toSeq,BootstrapStyles.Form.formControl)
+      Select(selectModel,options.options.values.toSeq,BootstrapStyles.Form.formControl)
     )
   }
 
