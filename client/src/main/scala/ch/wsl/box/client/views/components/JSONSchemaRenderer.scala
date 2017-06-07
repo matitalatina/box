@@ -11,6 +11,7 @@ import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.bootstrap.form.{UdashForm, UdashInputGroup}
+import org.scalajs.dom.html.Div
 
 import scala.scalajs.js
 import scala.scalajs.js.Date
@@ -190,18 +191,37 @@ object JSONSchemaRenderer {
 
     val subformRenderer = SubformRenderer(results.get,subforms)
 
+
+    def blockRenderer(block:LayoutBlock) = (block.fields,block.subBlock) match {
+      case (Some(f),None) => fieldsRenderer(f)
+      case (None,Some(sub)) => subBlock(sub)
+      case (_,_) => throw new Exception(s"Invalid layout $block")
+    }
+
+    def subBlock(sub:Seq[SubLayoutBlock]) = div(BootstrapStyles.row)(
+      sub.map{ block =>
+        div(BootstrapCol.md(block.width))(
+          fieldsRenderer(block.fields)
+        )
+      }
+    )
+
+    def fieldsRenderer(fields:Seq[String]) = div(
+      for{
+        key <- fields
+        result <- resultMap.toMap.lift(key)
+        field <- form.fields.find(_.key == key)
+      } yield {
+        fieldRenderer(field,result,form.keys, subforms = subforms, subformRenderer = subformRenderer)
+      }
+    )
+
     div(UdashForm(
       div(BootstrapStyles.row)(
         form.layout.blocks.map{ block =>
           div(BootstrapCol.md(block.width))(
             block.title.map{title => h3(title)},
-            for{
-              key <- block.fields
-              result <- resultMap.toMap.lift(key)
-              field <- form.fields.find(_.key == key)
-            } yield {
-              fieldRenderer(field,result,form.keys, subforms = subforms, subformRenderer = subformRenderer)
-            }
+            blockRenderer(block)
           )
         }
       )

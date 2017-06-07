@@ -2,8 +2,6 @@ TODO
 ====
 
 
-1. 2nd Level layout (subgrid)
-1. subform with primary keys
 1. limit subform number
 1. Files uploads
 1. custom Search mask
