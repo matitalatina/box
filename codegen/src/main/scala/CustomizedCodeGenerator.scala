@@ -36,6 +36,7 @@ object CustomizedCodeGenerator {
     val views:Seq[String] = dbConf.as[Seq[String]]("generator.views")
 
     val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes")
+    val excludeFields:Seq[String] = dbConf.as[Seq[String]]("generator.excludeFields")
 
     val tablesAndViews = tables ++ views
 
@@ -74,26 +75,16 @@ object CustomizedCodeGenerator {
     }, 200 seconds)
 
 
-    val allColumns = dbModel.tables.flatMap(_.columns.map(_.name))
-
-    dbModel.tables.foreach{ t =>
-      val dup = t.columns.map(_.name).diff(t.columns.map(_.name).distinct).distinct
-      if(dup.size > 0) {
-        println(t.name.table)
-        println(dup)
-        println("")
-        println("")
-        println(t.columns.filter(_.name == dup.head))
-        println("")
-        println("")
-      }
+    println(excludeFields)
+    val filteredColumnsTables = dbModel.tables.map{ table =>
+      table.copy(columns = table.columns.filterNot{c =>
+        excludeFields.contains(c.name)
+      })
     }
 
+    val model = dbModel.copy(tables = filteredColumnsTables)
 
-    val gen = codegen(dbModel,dbConf)
-
-//    println("codegen created")
-//    println(gen)
+    val gen = codegen(model,dbConf)
 
     gen.writeToFile(
       "slick.driver.PostgresDriver",

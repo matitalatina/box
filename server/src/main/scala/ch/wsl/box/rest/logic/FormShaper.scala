@@ -106,7 +106,7 @@ case class FormShaper(form:JSONForm)(implicit db:Database) extends UglyDBFilters
           println(s"update $key")
           table.update(key,e)
         } else {
-          println("insert")
+          println(s"insert $e")
           table.insert(e).map(_ => 1)
         }
       }
