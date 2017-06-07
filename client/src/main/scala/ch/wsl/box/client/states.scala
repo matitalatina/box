@@ -8,6 +8,8 @@ sealed abstract class RoutingState(override val parentState: RoutingState) exten
 }
 
 
+case object LoginState extends RoutingState(null)
+
 case object RootState extends RoutingState(null)
 
 case object ErrorState extends RoutingState(RootState)

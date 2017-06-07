@@ -1,16 +1,28 @@
 package ch.wsl.box.client
 
+import ch.wsl.box.client.utils.Session
 import io.udash._
 import io.udash.utils.Bidirectional
 
 class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
-  def matchUrl(url: Url): RoutingState =
-    url2State.applyOrElse(url.value.stripSuffix("/"), (x: String) => ErrorState)
+  def matchUrl(url: Url): RoutingState = {
+    println(s"match URL ${Session.isset(Session.USER)}")
+    Session.isset(Session.USER) match {
+      case true => loggedInUrl2State.applyOrElse (url.value.stripSuffix ("/"), (x: String) => ErrorState)
+      case false => loggedOutUrl2State.applyOrElse (url.value.stripSuffix ("/"), (x: String) => ErrorState)
+    }
+  }
 
-  def matchState(state: RoutingState): Url =
-    Url(state2Url.apply(state))
+  def matchState(state: RoutingState): Url = {
+    println(s"match STATE ${Session.isset(Session.USER)}")
+    Session.isset(Session.USER) match {
+      case true => Url(loggedInState2Url.apply(state))
+      case false => Url(loggedOutState2Url.apply(state))
+    }
+  }
 
-  private val (url2State, state2Url) = Bidirectional[String, RoutingState] {
+
+  private val (loggedInUrl2State, loggedInState2Url) = Bidirectional[String, RoutingState] {
     case "" => IndexState
     case "/models" => ModelsState("model","")
     case "/forms" => ModelsState("form","")
@@ -21,5 +33,9 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
     case "/fire" => FireState
     case "/fire/insert" => FireFormState(None)
     case "/fire" /:/ id => FireFormState(Some(id))
+  }
+
+  private val (loggedOutUrl2State, loggedOutState2Url) = Bidirectional[String, RoutingState] {
+    case "" => LoginState
   }
 }

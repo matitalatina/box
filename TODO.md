@@ -2,7 +2,6 @@ TODO
 ====
 
 
-1. limit subform number
 1. Files uploads
 1. custom Search mask
 1. Translations

@@ -1,5 +1,6 @@
 package ch.wsl.box.client.services
 
+import ch.wsl.box.client.utils.Session
 import org.scalajs.dom
 
 import scala.concurrent.{Future, Promise}
@@ -10,8 +11,7 @@ import scala.concurrent.{Future, Promise}
 case class HttpClient(endpoint:String,user:String, password:String) {
   private val xhr = new dom.XMLHttpRequest()
 
-  import ch.wsl.box.client.utils.Base64._
-  private def basicAuthToken(username: String, password: String):String = "Basic " + (username + ":" + password).getBytes.toBase64
+
 
 
   import io.circe.parser.decode
@@ -30,7 +30,7 @@ case class HttpClient(endpoint:String,user:String, password:String) {
 
 
     xhr.open(method,endpoint+url,true)
-    xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
+    xhr.setRequestHeader("Authorization",Session.authToken())
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
         decode[T](xhr.responseText) match {
@@ -57,7 +57,7 @@ case class HttpClient(endpoint:String,user:String, password:String) {
     val promise = Promise[R]()
 
     xhr.open(method,endpoint+url,true)
-    xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
+    xhr.setRequestHeader("Authorization",Session.authToken())
     xhr.setRequestHeader("Content-Type","application/json")
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
@@ -85,7 +85,7 @@ case class HttpClient(endpoint:String,user:String, password:String) {
 
 
     xhr.open("POST",endpoint+url,true)
-    xhr.setRequestHeader("Authorization",basicAuthToken(user,password))
+    xhr.setRequestHeader("Authorization",Session.authToken())
     xhr.setRequestHeader("Content-Type","application/json")
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
