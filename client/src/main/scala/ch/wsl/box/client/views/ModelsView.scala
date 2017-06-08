@@ -81,7 +81,7 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter, sidebar
     produce(model.subProp(_.search)) { q =>
       ul(
         repeat(model.subSeq(_.filteredList)){m =>
-          li(a(href := routes.table().url)(m.get)).render
+          li(a(href := routes.table(m.get).url)(m.get)).render
         }
       ).render
     }

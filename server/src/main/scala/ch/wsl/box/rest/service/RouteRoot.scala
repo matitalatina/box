@@ -39,7 +39,11 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
             complete(StatusCodes.OK)
           } ~ postgresBasicAuth {  userProfile =>
               implicit val db = userProfile.db
-
+                path("checkLogin"){
+                  get {
+                    complete("Ok")
+                  }
+                } ~
                 path("file") {
                     post {
                       fileUpload("file") { case (metadata, byteSource) =>

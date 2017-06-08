@@ -1,8 +1,11 @@
 package ch.wsl.box.client.utils
 
+import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.{IndexState, LoginState}
 import org.scalajs.dom
 import ch.wsl.box.model.shared.{JSONQuery, KeyList}
 
+import scala.concurrent.Future
 import scala.util.Try
 
 /**
@@ -10,6 +13,7 @@ import scala.util.Try
   */
 object Session {
 
+  import ch.wsl.box.client.Context._
   import io.circe._
   import io.circe.syntax._
   import io.circe.generic.auto._
@@ -40,15 +44,29 @@ object Session {
   import Base64._
   private def basicAuthToken(username: String, password: String):String = "Basic " + Base64.Encoder((username + ":" + password).getBytes).toBase64
 
-  def login(username:String,password:String) = {
+  def login(username:String,password:String):Future[Boolean] = {
     dom.window.sessionStorage.setItem(USER,username)
     dom.window.sessionStorage.setItem(AUTH_TOKEN,basicAuthToken(username,password))
+    REST.loginCheck().map{ result =>
+      io.udash.routing.WindowUrlChangeProvider.changeUrl(IndexState.url)
+      dom.window.location.reload()
+      true
+    }.recover{ case t =>
+      dom.window.sessionStorage.removeItem(USER)
+      dom.window.sessionStorage.removeItem(AUTH_TOKEN)
+      t.printStackTrace()
+      false
+    }
   }
 
   def logout() = {
     dom.window.sessionStorage.removeItem(USER)
     dom.window.sessionStorage.removeItem(AUTH_TOKEN)
+    io.udash.routing.WindowUrlChangeProvider.changeUrl(LoginState.url)
+    dom.window.location.reload()
   }
+
+  def isLogged() = isset(USER)
 
   def authToken() = dom.window.sessionStorage.getItem(AUTH_TOKEN)
 

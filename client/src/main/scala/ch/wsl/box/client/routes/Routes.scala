@@ -10,6 +10,7 @@ trait Routes{
   def add():RoutingState
   def edit(id:String):RoutingState
   def table():RoutingState
+  def table(modelName:String):RoutingState
 }
 
 object Routes {
@@ -18,6 +19,7 @@ object Routes {
     def add() = ModelFormState(kind,model,None)
     def edit(id:String) = ModelFormState(kind,model,Some(id))
     def table() = ModelTableState(kind,model)
+    def table(modelName:String) = ModelTableState(kind,modelName)
   }
 
 }

@@ -18,6 +18,8 @@ object Fire {
     override def add(): RoutingState = FireFormState(None)
     override def edit(id: String): RoutingState = FireFormState(Some(id))
     override def table(): RoutingState = FireState
+
+    override def table(modelName: String): RoutingState = FireState
   }
 
   val tableState = ModelTableState("form", "fire")

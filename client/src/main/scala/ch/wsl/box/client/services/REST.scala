@@ -40,4 +40,5 @@ object REST {
     client.delete[JSONCount](s"/$kind/$model/id/${keys.asString}")
   }
   def update(kind:String,model:String,keys:JSONKeys,data:Json):Future[Json] = client.put[Json,Json](s"/$kind/$model/id/${keys.asString}",data)
+  def loginCheck() = client.get[String]("/checkLogin")
 }

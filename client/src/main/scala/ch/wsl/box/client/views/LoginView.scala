@@ -13,14 +13,14 @@ import org.scalajs.dom.Event
   */
 
 
-case class LoginData(username:String,password:String)
+case class LoginData(username:String,password:String,message:String)
 
 case object LoginViewPresenter extends ViewPresenter[LoginState.type] {
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def create(): (View, Presenter[LoginState.type]) = {
     val model = ModelProperty{
-      LoginData("","")
+      LoginData("","","")
     }
     val presenter = LoginPresenter(model)
     (LoginView(model,presenter),presenter)
@@ -33,8 +33,11 @@ case class LoginPresenter(model:ModelProperty[LoginData]) extends Presenter[Logi
   override def handleState(state: LoginState.type): Unit = {}
 
   def login() = {
-    Session.login(model.get.username,model.get.password)
-    io.udash.routing.WindowUrlChangeProvider.changeUrl(IndexState.url)
+    Session.login(model.get.username,model.get.password).map{ _ match {
+        case true => Unit
+        case false => model.subProp(_.message).set("Login failed")
+      }
+    }
   }
 }
 
@@ -54,6 +57,8 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
           )
         ),
         div(BootstrapStyles.Panel.panelBody)(
+          strong(bind(model.subProp(_.message))),
+          br,
           UdashForm.textInput()("Username")(model.subProp(_.username)),
           UdashForm.passwordInput()("Password")(model.subProp(_.password)),
           button(`type` := "submit",BootstrapStyles.Button.btn,onclick :+= ((e:Event) => presenter.login()),"Login")
