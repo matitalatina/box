@@ -1,5 +1,6 @@
 package ch.wsl.box.client.services
 
+import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
@@ -66,7 +67,7 @@ object Enhancer {
     Future.sequence {
       models.distinct.map { model: String =>
         println(s"fetching Model: $model")
-        REST.list("model", model, 6000).map(r => model -> r)
+        REST.list("model",Session.lang(), model, 6000).map(r => model -> r)
       }
     }
   }

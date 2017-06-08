@@ -59,7 +59,7 @@ case class IDSequence(idOpt:Option[String]) {
 
   def prevPage(kind:String,model:String,query: JSONQuery):Future[Option[String]] = {
     val newQuery = query.copy(page = query.page - 1)
-    REST.keysList(kind,model,newQuery).map{ keys =>
+    REST.keysList(kind,Session.lang(),model,newQuery).map{ keys =>
       Session.setQuery(newQuery)
       Session.setKeys(keys)
       keys.keys.lastOption
@@ -68,7 +68,7 @@ case class IDSequence(idOpt:Option[String]) {
 
   def nextPage(kind:String,model:String,query: JSONQuery):Future[Option[String]] = {
     val newQuery = query.copy(page = query.page + 1)
-    REST.keysList(kind,model,newQuery).map{ keys =>
+    REST.keysList(kind,Session.lang(),model,newQuery).map{ keys =>
       Session.setQuery(newQuery)
       Session.setKeys(keys)
       keys.keys.headOption

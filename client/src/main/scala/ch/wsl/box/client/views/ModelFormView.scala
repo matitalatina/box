@@ -53,11 +53,11 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes)
 
     {for{
       current <- state.id match {
-        case Some(id) => REST.get(state.kind,state.model,ids.get)
+        case Some(id) => REST.get(state.kind,Session.lang(),state.model,ids.get)
         case None => Future.successful(Json.Null)
       }
-      emptyFieldsForm <- REST.form(state.kind,state.model)
-      emptySubforms <- if(state.kind == "form") REST.subforms(state.model) else Future.successful(Seq())
+      emptyFieldsForm <- REST.form(state.kind,Session.lang(),state.model)
+      emptySubforms <- if(state.kind == "form") REST.subforms(state.model,Session.lang()) else Future.successful(Seq())
       models <- Enhancer.fetchModels(emptySubforms ++ Seq(emptyFieldsForm))
     } yield {
 
@@ -98,8 +98,8 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes)
         model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
       }
       val saveAction = m.id match {
-        case Some(id) => REST.update(m.kind,m.name,JSONKeys.fromString(id),jsons.toMap.asJson)
-        case None => REST.insert(m.kind,m.name, jsons.toMap.asJson)
+        case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONKeys.fromString(id),jsons.toMap.asJson)
+        case None => REST.insert(m.kind,Session.lang(),m.name, jsons.toMap.asJson)
       }
       saveAction.map{_ =>
         val newState = routes.table()

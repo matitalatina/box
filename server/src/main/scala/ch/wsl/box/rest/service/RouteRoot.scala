@@ -58,7 +58,9 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                     }
                 } ~
                 pathPrefix("model") {
-                  generatedRoutes()
+                  pathPrefix(Segment) { lang =>
+                    generatedRoutes()
+                  }
                 } ~
                 path("models") {
                   get {
@@ -72,9 +74,11 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                   }
                 } ~
                 pathPrefix("form") {
-                  pathPrefix(Segment) { name =>
-                    println(s"getting form:$name")
-                    formRoutes(name)
+                  pathPrefix(Segment) { lang =>
+                    pathPrefix(Segment) { name =>
+                      println(s"getting form:$name")
+                      formRoutes(name,lang)
+                    }
                   }
                 }
             }

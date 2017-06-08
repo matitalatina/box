@@ -23,6 +23,7 @@ object Session {
   final val KEYS = "keys"
   final val USER = "user"
   final val AUTH_TOKEN = "auth_token"
+  final val LANG = "lang"
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
     println(s"Setting $key")
@@ -76,4 +77,10 @@ object Session {
 
   def getKeys():Option[KeyList] = get[KeyList](KEYS)
   def setKeys(list:KeyList) = set(KEYS,list)
+
+  def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).getOrElse("en")
+  def setLang(lang:String) = {
+    dom.window.sessionStorage.setItem(LANG,lang)
+    dom.window.location.reload()
+  }
 }

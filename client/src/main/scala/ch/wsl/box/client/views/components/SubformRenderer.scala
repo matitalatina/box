@@ -1,6 +1,7 @@
 package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared.{JSONForm, Subform}
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
@@ -50,7 +51,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm])
         form <- subforms.find(_.id == subform.id)
       } yield {
         for {
-          result <- REST.delete("model", form.table, itemToRemove.keys(form.keys))
+          result <- REST.delete("model",Session.lang(), form.table, itemToRemove.keys(form.keys))
         } yield {
           if (result.count > 0) {
             model.set(model.get.filterNot(_ == itemToRemove))

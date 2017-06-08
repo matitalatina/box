@@ -61,8 +61,8 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     val query = JSONQuery.limit(30)
 
     for{
-      csv <- REST.csv(state.kind,state.model,query)
-      emptyFieldsForm <- REST.form(state.kind,state.model)
+      csv <- REST.csv(state.kind,Session.lang(),state.model,query)
+      emptyFieldsForm <- REST.form(state.kind,Session.lang(),state.model)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tableFields.contains(field.key))
       filteredForm = emptyFieldsForm.copy(fields = fields)
       models <- Enhancer.fetchModels(Seq(filteredForm))
@@ -96,7 +96,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
 
   def saveKeys(query:JSONQuery):Future[Boolean] = {
     Session.setQuery(query)
-    REST.keysList(model.get.kind,model.get.name,query).map{ x =>
+    REST.keysList(model.get.kind,Session.lang(),model.get.name,query).map{ x =>
       Session.setKeys(x)
       true
     }
@@ -110,7 +110,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     val query = JSONQuery(20, 1, sort, filter)
 
     for {
-      csv <- REST.csv(model.subProp(_.kind).get,model.subProp(_.name).get,query)
+      csv <- REST.csv(model.subProp(_.kind).get,Session.lang(),model.subProp(_.name).get,query)
       _ <- saveKeys(query)
     } yield model.subProp(_.rows).set(csv.map(Row(_)))
 

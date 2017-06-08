@@ -23,7 +23,7 @@ trait RouteForm {
     f(formShaper)
   }
 
-  def formRoutes(name:String)(implicit db:Database) = {
+  def formRoutes(name:String,lang:String)(implicit db:Database) = {
 
     import JSONSupport._
     import Directives._
@@ -33,7 +33,7 @@ trait RouteForm {
     import akka.http.scaladsl.model._
 
 
-      val form = Forms(name)
+      val form = Forms(name,lang)
       val tableForm = form.map{ f =>
         val filteredFields = f.fields.filter(field => f.tableFields.contains(field.key))
         f.copy(fields = filteredFields)

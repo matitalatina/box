@@ -56,7 +56,7 @@ object Forms {
     getForm(formQuery,lang)
   }
   
-  def apply(name:String, lang:String = "en"):Future[JSONForm] = {
+  def apply(name:String, lang:String):Future[JSONForm] = {
     val formQuery: Query[Form, Form_row, Seq] = for {
       form <- Form.table if form.name === name
     } yield form

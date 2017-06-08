@@ -25,6 +25,7 @@ object Header {
     a(href := l.state.url)(span(l.name)).render
 
 
+  def langs = Seq("it","de","fr","en")
 
 
   def navbar(title:String, links:Seq[MenuLink]) = {
@@ -38,7 +39,10 @@ object Header {
         },
         if(Session.isLogged()) {
           a(onclick :+= ((e:Event) => Session.logout() ),"Logout")
-        } else frag()
+        } else frag(),
+        langs.map{ l =>
+          a(onclick :+= ((e:Event) => Session.setLang(l) ),l)
+        }
       )
     ).render
   }
