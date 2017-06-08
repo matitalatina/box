@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.model.tables._
-import ch.wsl.box.rest.logic.Forms
+import ch.wsl.box.rest.logic.{Forms, LangHelper}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -78,6 +78,12 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                     pathPrefix(Segment) { name =>
                       println(s"getting form:$name")
                       formRoutes(name,lang)
+                    }
+                  }
+                } ~ pathPrefix("labels"){
+                  path(Segment) { lang =>
+                    get{
+                      complete(LangHelper(lang).translationTable)
                     }
                   }
                 }

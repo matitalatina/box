@@ -2,6 +2,7 @@ package ch.wsl.box.client.views.components
 
 
 import ch.wsl.box.client.styles.BootstrapCol
+import ch.wsl.box.client.utils.Labels
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import ch.wsl.box.shared.utils.JsonUtils._
@@ -220,7 +221,7 @@ object JSONSchemaRenderer {
       div(BootstrapStyles.row)(
         form.layout.blocks.map{ block =>
           div(BootstrapCol.md(block.width))(
-            block.title.map{title => h3(title)},
+            block.title.map{title => h3(Labels(title))},
             blockRenderer(block)
           )
         }

@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.styles.GlobalStyles
-import ch.wsl.box.client.utils.Session
+import ch.wsl.box.client.utils.{Labels, Session}
 import ch.wsl.box.client.views.components.FieldsRenderer
 import ch.wsl.box.model.shared._
 import io.circe.Json
@@ -202,7 +202,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
         UdashTable()(model.subSeq(_.rows))(
           headerFactory = Some(() => {
               tr(
-                th(GlobalStyles.smallCells)("Actions"),
+                th(GlobalStyles.smallCells)(Labels.table.actions),
                 produce(model.subProp(_.form)) { form =>
                   for {
                     key <- form.toSeq.flatMap(_.tableFields)
@@ -234,7 +234,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
               td(GlobalStyles.smallCells)(a(
                 cls := "primary",
                 onclick :+= ((ev: Event) => presenter.edit(el.get), true)
-              )("Edit")),
+              )(Labels.table.edit)),
               produce(model.subSeq(_.metadata)) { metadatas =>
                 for {(metadata, i) <- metadatas.zipWithIndex} yield {
 

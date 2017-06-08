@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 
 import ch.wsl.box.client.{IndexState, LoginState}
-import ch.wsl.box.client.utils.Session
+import ch.wsl.box.client.utils.{Labels, Session}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
@@ -35,7 +35,7 @@ case class LoginPresenter(model:ModelProperty[LoginData]) extends Presenter[Logi
   def login() = {
     Session.login(model.get.username,model.get.password).map{ _ match {
         case true => Unit
-        case false => model.subProp(_.message).set("Login failed")
+        case false => model.subProp(_.message).set(Labels.login.failed)
       }
     }
   }
@@ -53,15 +53,15 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
       div(BootstrapStyles.Panel.panelDefault)(
         div(BootstrapStyles.Panel.panelHeading)(
           h3(BootstrapStyles.Panel.panelTitle)(
-            strong("Sign In")
+            strong(Labels.login.title)
           )
         ),
         div(BootstrapStyles.Panel.panelBody)(
           strong(bind(model.subProp(_.message))),
           br,
-          UdashForm.textInput()("Username")(model.subProp(_.username)),
-          UdashForm.passwordInput()("Password")(model.subProp(_.password)),
-          button(`type` := "submit",BootstrapStyles.Button.btn,onclick :+= ((e:Event) => presenter.login()),"Login")
+          UdashForm.textInput()(Labels.login.username)(model.subProp(_.username)),
+          UdashForm.passwordInput()(Labels.login.password)(model.subProp(_.password)),
+          button(`type` := "submit",BootstrapStyles.Button.btn,onclick :+= ((e:Event) => presenter.login()),Labels.login.button)
         )
       )
     )

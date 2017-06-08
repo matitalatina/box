@@ -1,6 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.utils.Labels
 import io.udash._
 import ch.wsl.box.client.{IndexState, ModelsState, RootState}
 import org.scalajs.dom.Element
@@ -39,9 +40,9 @@ class RootView() extends View {
 
   private def content = div(BootstrapStyles.containerFluid)(
     Header.navbar("box client",Seq(
-      MenuLink("Home",IndexState),
-      MenuLink("Models",ModelsState("model","")),
-      MenuLink("Forms",ModelsState("form",""))
+      MenuLink(Labels.header.home,IndexState),
+      MenuLink(Labels.header.models,ModelsState("model","")),
+      MenuLink(Labels.header.forms,ModelsState("form",""))
     )),
     main()(
       div()(

@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.services.REST
-import ch.wsl.box.client.utils.Session
+import ch.wsl.box.client.utils.{Labels, Session}
 import ch.wsl.box.model.shared.{JSONForm, Subform}
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
@@ -46,7 +46,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm])
 
   def removeItem(model:Property[Seq[Json]],itemToRemove:Json,sizeModel:Property[Int],subform:Subform) = {
     println("removeItem")
-    if(org.scalajs.dom.window.confirm("Are you sure?")) {
+    if(org.scalajs.dom.window.confirm(Labels.messages.confirm)) {
       for {
         form <- subforms.find(_.id == subform.id)
       } yield {
@@ -101,12 +101,12 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm])
                 val subResults = model.transform(splitJsonFields(f, i), mergeJsonFields(model,f, i))
                 div(
                   JSONSchemaRenderer(f, subResults, subforms),
-                  a(onclick :+= ((e:Event) => removeItem(model,model.get(i),sizeModel,subform)),"Remove")
+                  a(onclick :+= ((e:Event) => removeItem(model,model.get(i),sizeModel,subform)),Labels.subform.remove)
                 ).render
               }
             },
             br,
-            a(onclick :+= ((e:Event) => addItem(model,sizeModel,subform,f)),"Add")
+            a(onclick :+= ((e:Event) => addItem(model,sizeModel,subform,f)),Labels.subform.add)
 
           )
         )

@@ -24,6 +24,7 @@ object Session {
   final val USER = "user"
   final val AUTH_TOKEN = "auth_token"
   final val LANG = "lang"
+  final val LABELS = "labels"
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
     println(s"Setting $key")

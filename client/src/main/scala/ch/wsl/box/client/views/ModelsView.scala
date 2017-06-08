@@ -7,6 +7,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.BootstrapCol
+import ch.wsl.box.client.utils.Labels
 import ch.wsl.box.client.{ModelFormState, ModelTableState, ModelsState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
@@ -77,7 +78,7 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter, sidebar
   private val child: Element = div().render
 
   private def sidebar: Element = div(sidebarGrid)(
-    UdashForm.textInput()("Search model")(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateModelsList(), true)),
+    UdashForm.textInput()(Labels.models.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateModelsList(), true)),
     produce(model.subProp(_.search)) { q =>
       ul(
         repeat(model.subSeq(_.filteredList)){m =>
@@ -93,12 +94,12 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter, sidebar
       produce(model)( m =>
         m.model match {
           case None => div(
-            h1("Models"),
-            p("select your model")
+            h1(Labels.models.title),
+            p(Labels.models.select)
           ).render
           case Some(model) => div(
-            a(href := routes.add().url)("New " + model),
-            a(href := routes.table().url)("Table " + model)
+            a(href := routes.add().url)(Labels.models.`new` + " " + model),
+            a(href := routes.table().url)(Labels.models.table + " " + model)
           ).render
         }
       ),

@@ -3,7 +3,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
-import ch.wsl.box.client.utils.{IDSequence, Navigation, Session}
+import ch.wsl.box.client.utils.{IDSequence, Labels, Navigation, Session}
 import ch.wsl.box.client.views.components.JSONSchemaRenderer
 import ch.wsl.box.model.shared._
 import io.circe.Json
@@ -149,13 +149,13 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         small(subTitle).render
       }),
       div(
-        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), "Previous").render },
+        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), Labels.navigation.previous).render },
         span(
           bind(model.subProp(_.navigation.current)),
           " of ",
           bind(model.subProp(_.navigation.count))
         ),
-        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),"Next").render }
+        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),Labels.navigation.next).render }
       ),
       produce(model.subProp(_.error)){ error =>
         div(
@@ -175,7 +175,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
       button(
         cls := "primary",
         onclick :+= ((ev: Event) => presenter.save(), true)
-      )("Save")
+      )(Labels.form.save)
     )
   }
 }
