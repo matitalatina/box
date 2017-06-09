@@ -21,9 +21,9 @@ import scala.util.{Failure, Success}
 
 trait RouteTable {
 
-  var models = Set[String]()
+  var tables = Set[String]()
 
-  def model[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](name:String, table:TableQuery[T])
+  def table[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](name:String, table:TableQuery[T])
                                                             (implicit
                                                              mat:Materializer,
                                                              unmarshaller: FromRequestUnmarshaller[M],
@@ -32,9 +32,9 @@ trait RouteTable {
                                                              jsonmarshaller:ToResponseMarshaller[JSONResult[M]],
                                                              db:Database):Route = {
 
-    models = Set(name) ++ models
+    tables = Set(name) ++ tables
 
-    val utils = new RouteHelper[T,M](table)
+    val utils = new DbActions[T,M](table)
     import JSONSupport._
     import io.circe.generic.auto._
 
@@ -48,7 +48,7 @@ trait RouteTable {
         path(Segment) { id =>
           get {
             onComplete(utils.getById(JSONKeys.fromString(id))) {
-              case Success(entity) => complete(entity)
+              case Success(result) => complete(result)
               case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
             }
           } ~
@@ -73,17 +73,17 @@ trait RouteTable {
           complete{ JSONSchemas.of(name,db) }
         }
       } ~
-      path("form") {
+      path("metadata") {
         get {
-          complete{ JSONForms.of(name,db,"en") }
+          complete{ JSONModelMetadata.of(name,db,"en") }   //can set "en" hardcoded, since base table JSONForm do not change with language
         }
       } ~
-      path("keys") {
+      path("keys") {   //returns key fields names
         get {
           complete{ JSONSchemas.keysOf(name) }
         }
       } ~
-      path("keysList") {
+      path("keysList") {   //returns all id values in JSONKeys format filtered according to specified JSONQuery (as body of the post)
         post {
           entity(as[JSONQuery]) { query =>
             complete {
@@ -92,7 +92,7 @@ trait RouteTable {
           }
         }
       } ~
-      path("count") {
+      path("count") {     //nrows of table
         get {
           complete {
             db.run {
@@ -103,7 +103,7 @@ trait RouteTable {
           }
         }
       } ~
-      path("list") {
+      path("list") {           //all values in JSON format according to JSONQuery
         post {
           entity(as[JSONQuery]) { query =>
             println("list")
@@ -111,16 +111,15 @@ trait RouteTable {
           }
         }
       } ~
-      path("csv") {
+      path("csv") {           //all values in csv format according to JSONQuery
         post {
           entity(as[JSONQuery]) { query =>
             println("csv")
-
-            complete(utils.find(query).map(x => HttpEntity(ContentTypes.`text/plain(UTF-8)`,x.csv)))
+            complete(utils.find(query).map(x => HttpEntity(ContentTypes.`text/plain(UTF-8)`,x.csv)))    //wrap to specify return type
           }
         }
       } ~
-      pathEnd{
+      pathEnd{      //if nothing is specified  return the first 50 rows in JSON format
         get {
           val result:Future[Seq[T#TableElementType]] = db.run{table.take(50).result}
           onComplete(result) {
@@ -128,7 +127,7 @@ trait RouteTable {
             case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
           }
         } ~
-        post {
+        post {                            //inserts
           entity(as[M]) { e =>
             println("Inserting: " + e)
             val result: Future[M] = db.run { table.returning(table) += e } //returns object with id

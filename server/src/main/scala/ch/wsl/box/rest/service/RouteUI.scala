@@ -24,22 +24,12 @@ trait RouteUI extends WebJarsSupport {
         getFromFile("test.html")
       }
     } ~
-      pathPrefix("js") {
-        path(Segment) { file =>
-          getFromFile("client/target/scala-2.11/UdashStatic/WebContent/scripts/"+file)
-        }
-      } ~
-      pathPrefix("css") {
-        path(Segment) { file =>
-          getFromFile("client/target/web/sass/main/" + file)
-        }
-      } ~
-      pathPrefix("lib") {
-        path(Segment) { file =>
-          getFromFile("client/target/scala-2.11/classes/" + file)
-        }
-      } ~
-      pathPrefix("webjars") {
-        webJars
+    pathPrefix("js") {
+      path(Segment) { file =>
+        getFromFile("client/target/scala-2.11/"+file)
       }
+    } ~
+    pathPrefix("webjars") {
+      webJars
+    }
 }

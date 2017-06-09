@@ -29,8 +29,8 @@ object REST {
   def keys(kind:String,lang:String,model:String): Future[Seq[String]] = client.get[Seq[String]](s"/$kind/$lang/$model/keys")
   def keysList(kind:String,lang:String,model:String,q:JSONQuery): Future[KeyList] = client.post[JSONQuery,KeyList](s"/$kind/$lang/$model/keysList",q)
   def schema(kind:String,lang:String,model:String): Future[JSONSchema] = client.get[JSONSchema](s"/$kind/$lang/$model/schema")
-  def form(kind:String,lang:String,model:String): Future[JSONForm] = client.get[JSONForm](s"/$kind/$lang/$model/form")
-  def subforms(model:String,lang:String): Future[Seq[JSONForm]] = client.get[Seq[JSONForm]](s"/form/$lang/$model/subform")
+  def form(kind:String,lang:String,model:String): Future[JSONMetadata] = client.get[JSONMetadata](s"/$kind/$lang/$model/metadata")
+  def subforms(model:String,lang:String): Future[Seq[JSONMetadata]] = client.get[Seq[JSONMetadata]](s"/form/$lang/$model/subform")
   def count(kind:String,lang:String,model:String): Future[Int] = client.get[Int](s"/$kind/$lang/$model/count")
   def insert(kind:String,lang:String,model:String, data:Json): Future[Json] = client.post[Json,Json](s"/$kind/$lang/$model",data)
   def get(kind:String,lang:String,model:String,keys:JSONKeys):Future[Json] = {

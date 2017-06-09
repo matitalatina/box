@@ -31,7 +31,7 @@ object Build extends sbt.Build {
       libraryDependencies ++= Settings.jvmDependencies.value,
       resolvers += Resolver.jcenterRepo,
       slick <<= slickCodeGenTask, // register manual sbt command
-      sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, remove for only manual use
+      //sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
       resourceDirectory in Compile := baseDirectory.value / "../resources",
       testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
     )
@@ -72,17 +72,17 @@ object Build extends sbt.Build {
         IO.copyDirectory(sourceDirectory.value / "main/assets/images", crossTarget.value / StaticFilesDir / WebContent / "assets/images")
         val statics = compileStaticsForRelease.value
         (crossTarget.value / StaticFilesDir).***.get
-      },
-      artifactPath in(Compile, fastOptJS) :=
-        (crossTarget in(Compile, fastOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl-fast.js",
-      artifactPath in(Compile, fullOptJS) :=
-        (crossTarget in(Compile, fullOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl.js",
-      artifactPath in(Compile, packageJSDependencies) :=
-        (crossTarget in(Compile, packageJSDependencies)).value / StaticFilesDir / WebContent / "scripts" / "frontend-deps-fast.js",
-      artifactPath in(Compile, packageMinifiedJSDependencies) :=
-        (crossTarget in(Compile, packageMinifiedJSDependencies)).value / StaticFilesDir / WebContent / "scripts" / "frontend-deps.js",
-      artifactPath in(Compile, packageScalaJSLauncher) :=
-        (crossTarget in(Compile, packageScalaJSLauncher)).value / StaticFilesDir / WebContent / "scripts" / "frontend-init.js"
+      }//,
+//      artifactPath in(Compile, fastOptJS) :=
+//        (crossTarget in(Compile, fastOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl-fast.js",
+//      artifactPath in(Compile, fullOptJS) :=
+//        (crossTarget in(Compile, fullOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl.js",
+//      artifactPath in(Compile, packageJSDependencies) :=
+//        (crossTarget in(Compile, packageJSDependencies)).value / StaticFilesDir / WebContent / "scripts" / "frontend-deps-fast.js",
+//      artifactPath in(Compile, packageMinifiedJSDependencies) :=
+//        (crossTarget in(Compile, packageMinifiedJSDependencies)).value / StaticFilesDir / WebContent / "scripts" / "frontend-deps.js",
+//      artifactPath in(Compile, packageScalaJSLauncher) :=
+//        (crossTarget in(Compile, packageScalaJSLauncher)).value / StaticFilesDir / WebContent / "scripts" / "frontend-init.js"
     )
     .enablePlugins(ScalaJSPlugin)
 //    .enablePlugins(WorkbenchPlugin)
@@ -109,10 +109,6 @@ object Build extends sbt.Build {
 //    )
     //.enablePlugins(SbtWeb) uncomment to enable SASS
     .dependsOn(sharedJS)
-
-
-  lazy val serve = taskKey[Unit]("start server")
-  lazy val cleanAll = taskKey[Unit]("clean all projects")
 
 
   lazy val root: Project = (project in file("."))
@@ -143,6 +139,12 @@ object Build extends sbt.Build {
 
   lazy val sharedJS: Project = shared.js.settings(name := "sharedJS")
 
+
+
+  lazy val serve = taskKey[Unit]("start server")
+  lazy val cleanAll = taskKey[Unit]("clean all projects")
+
+
   // code generation task that calls the customized code generator
   lazy val slick = TaskKey[Seq[File]]("gen-tables")
   lazy val slickCodeGenTask = (sourceManaged, dependencyClasspath in Compile, runner in Compile, streams) map { (dir, cp, r, s) =>
@@ -151,7 +153,7 @@ object Build extends sbt.Build {
     val fname = outputDir + "/ch/wsl/box/model/Tables.scala"
     val rname = outputDir + "/ch/wsl/box/rest/service/GeneratedRoutes.scala"
     val registryname = outputDir + "/ch/wsl/box/model/TablesRegistry.scala"
-    Seq(file(fname),file(rname),file(registryname))
+    Seq(file(fname),file(rname),file(registryname))    //include the generated files in the sbt project
   }
 
 

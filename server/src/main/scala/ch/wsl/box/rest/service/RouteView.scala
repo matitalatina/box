@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.unmarshalling._
 import akka.stream.Materializer
 import ch.wsl.box.model.shared.{JSONCount, JSONQuery, JSONResult}
-import ch.wsl.box.rest.logic.{JSONForms, JSONSchemas, RouteHelper}
+import ch.wsl.box.rest.logic.{JSONModelMetadata, JSONSchemas, DbActions}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import slick.driver.PostgresDriver.api._
 import akka.http.scaladsl.Http
@@ -36,23 +36,18 @@ trait RouteView {
     import Directives._
     import io.circe.generic.auto._
 
-    val helper = new RouteHelper[T,M](table)
+    val helper = new DbActions[T,M](table)
 
     pathPrefix(name) {
-      println(s"view with name: $name")
-      path("schema") {
-        get {
-            complete{ JSONSchemas.of(name,db) }
-        }
-      } ~
-        path("form") {
+        println(s"view with name: $name")
+        path("schema") {
           get {
-            complete{ JSONForms.of(name,db,"en") }
+              complete{ JSONSchemas.of(name,db) }
           }
         } ~
-        path("keys") {
+        path("metadata") {
           get {
-            complete{ JSONSchemas.keysOf(name) }
+            complete{ JSONModelMetadata.of(name,db,"en") }
           }
         } ~
         path("count") {

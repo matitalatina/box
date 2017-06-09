@@ -20,7 +20,7 @@ import scala.concurrent.Future
   * Created by andre on 4/24/2017.
   */
 
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONForm], results:Seq[(String,Json)], error:String,subforms:Seq[JSONForm],navigation: Navigation)
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONMetadata], results:Seq[(String,Json)], error:String, subforms:Seq[JSONMetadata], navigation: Navigation)
 
 object ModelFormModel{
   def empty = ModelFormModel("","",None,None,Seq(),"",Seq(),Navigation(false,false,0,0))

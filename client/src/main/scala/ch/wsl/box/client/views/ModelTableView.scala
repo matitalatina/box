@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 case class Row(data: Seq[String])
 case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
-case class ModelTableModel(name:String,kind:String,rows:Seq[Row],metadata:Seq[Metadata],form:Option[JSONForm],selected:Option[Row])
+case class ModelTableModel(name:String, kind:String, rows:Seq[Row], metadata:Seq[Metadata], form:Option[JSONMetadata], selected:Option[Row])
 
 object ModelTableModel{
   def empty = ModelTableModel("","",Seq(),Seq(),None,None)

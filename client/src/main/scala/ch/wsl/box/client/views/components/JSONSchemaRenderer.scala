@@ -147,7 +147,7 @@ object JSONSchemaRenderer {
     )
   }
 
-  def fieldRenderer(field:JSONField,model:Property[Json],keys:Seq[String],showLabel:Boolean = true, subforms:Seq[JSONForm] = Seq(), subformRenderer: SubformRenderer):Modifier = {
+  def fieldRenderer(field:JSONField, model:Property[Json], keys:Seq[String], showLabel:Boolean = true, subforms:Seq[JSONMetadata] = Seq(), subformRenderer: SubformRenderer):Modifier = {
     val label = showLabel match {
       case true => field.title.getOrElse(field.key)
       case false => ""
@@ -177,7 +177,7 @@ object JSONSchemaRenderer {
     }
   }
 
-  def apply(form:JSONForm,results: Property[Seq[(String,Json)]],subforms:Seq[JSONForm]):TypedTag[Element] = {
+  def apply(form:JSONMetadata, results: Property[Seq[(String,Json)]], subforms:Seq[JSONMetadata]):TypedTag[Element] = {
 
     def seqJsonToJson(i:Int)(seq:Seq[(String,Json)]):Json = seq.lift(i).map(_._2).getOrElse(Json.Null)
     def jsonToSeqJson(i:Int,key:String)(n:Json):Seq[(String,Json)] = for{

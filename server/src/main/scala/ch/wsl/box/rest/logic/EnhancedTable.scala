@@ -9,7 +9,11 @@ case class Col(rep:Rep[_],`type`:String)
 
 /**
  * Created by andreaminetti on 16/02/16.
+  *
+  * to retrieve the instance of a column
  */
+
+
 object EnhancedTable {
 
   implicit class EnTable[T](t: Table[_]) {

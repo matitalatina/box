@@ -3,8 +3,8 @@ package ch.wsl.box.rest.service
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives
 import ch.wsl.box.model.TablesRegistry
-import ch.wsl.box.model.shared.{JSONForm, JSONKeys, JSONQuery}
-import ch.wsl.box.rest.logic.{FormShaper, Forms, JSONSchemas}
+import ch.wsl.box.model.shared.{JSONMetadata, JSONKeys, JSONQuery}
+import ch.wsl.box.rest.logic.{FormShaper, JSONFormMetadata, JSONSchemas}
 import io.circe.Json
 
 import scala.concurrent.Future
@@ -16,7 +16,7 @@ import slick.driver.PostgresDriver.api._
   */
 trait RouteForm {
 
-  def shaper[T](futForm:Future[JSONForm])(f:FormShaper => T)(implicit db:Database):Future[T] = for{
+  def shaper[T](futForm:Future[JSONMetadata])(f:FormShaper => T)(implicit db:Database):Future[T] = for{
     form <- futForm
     formShaper = FormShaper(form)
   } yield {
@@ -33,7 +33,7 @@ trait RouteForm {
     import akka.http.scaladsl.model._
 
 
-      val form = Forms(name,lang)
+      val form = JSONFormMetadata(name,lang)
       val tableForm = form.map{ f =>
         val filteredFields = f.fields.filter(field => f.tableFields.contains(field.key))
         f.copy(fields = filteredFields)
@@ -62,11 +62,6 @@ trait RouteForm {
             }
         }
       } ~
-        path("identity") {
-          get {
-            complete(name)
-          }
-        } ~
         path("schema") {
           get {
             complete {
@@ -74,7 +69,7 @@ trait RouteForm {
             }
           }
         } ~
-        path("form") {
+        path("metadata") {
           get {
             complete {
               form
@@ -84,7 +79,7 @@ trait RouteForm {
         path("subform") {
           get {
             complete {
-              form.flatMap{ f => Forms.subforms(f)}
+              form.flatMap{ f => JSONFormMetadata.subforms(f)}
             }
           }
         } ~

@@ -21,11 +21,12 @@ object JsonUtils {
       result
     }
 
+    //return JSON value of the gieven field
     def js(field:String):Json = el.hcursor.get[Json](field).right.getOrElse(Json.Null)
 
     def seq(field:String):Seq[Json] = el.hcursor.get[Seq[Json]](field).right.getOrElse(Seq())
 
-    def get(field: String) = el.hcursor.get[Json](field).fold(
+    def get(field: String):String = el.hcursor.get[Json](field).fold(
       { x =>
         //println(s"error getting $field on $el: $x");
         ""
@@ -34,9 +35,9 @@ object JsonUtils {
 
     def keys(fields:Seq[String]) :JSONKeys = {
       val values = fields map { field =>
-        get(field)
+        field -> get(field)
       }
-      JSONKeys.fromMap(fields.zip(values).toMap)
+      JSONKeys.fromMap(values.toMap)
     }
   }
 }

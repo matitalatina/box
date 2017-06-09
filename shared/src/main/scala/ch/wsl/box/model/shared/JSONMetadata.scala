@@ -6,10 +6,10 @@ import io.circe.syntax._
 /**
   * Created by andre on 5/16/2017.
   */
-case class JSONForm(id:Int,name:String,fields:Seq[JSONField],layout:Layout, table:String,lang:String, tableFields:Seq[String],keys:Seq[String])
+case class JSONMetadata(id:Int, name:String, fields:Seq[JSONField], layout:Layout, table:String, lang:String, tableFields:Seq[String], keys:Seq[String])
 
-object JSONForm{
-  def jsonPlaceholder(form:JSONForm,subforms:Seq[JSONForm] = Seq()):Map[String,Json] = {
+object JSONMetadata{
+  def jsonPlaceholder(form:JSONMetadata, subforms:Seq[JSONMetadata] = Seq()):Map[String,Json] = {
     form.fields.flatMap{ field =>
       val value:Option[Json] = (field.default,field.`type`) match {
         case (Some("auto"),_) => None

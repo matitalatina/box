@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.utils.{Labels, Session}
-import ch.wsl.box.model.shared.{JSONForm, Subform}
+import ch.wsl.box.model.shared.{JSONMetadata, Subform}
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
@@ -14,7 +14,7 @@ import scalatags.JsDom.all._
 /**
   * Created by andre on 6/1/2017.
   */
-case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm]) {
+case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetadata]) {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
@@ -32,13 +32,13 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm])
 
 
 
-  def splitJsonFields(form:JSONForm,i:Int)(js:Seq[Json]):Seq[(String,Json)] = form.fields.flatMap{ field =>
+  def splitJsonFields(form:JSONMetadata, i:Int)(js:Seq[Json]):Seq[(String,Json)] = form.fields.flatMap{ field =>
     for{
       json <- js.lift(i)
       result <- json.hcursor.get[Json](field.key).right.toOption
     } yield field.key -> result
   }
-  def mergeJsonFields(model:Property[Seq[Json]],form:JSONForm,i:Int)(longJs:Seq[(String,Json)]):Seq[Json] = for{
+  def mergeJsonFields(model:Property[Seq[Json]], form:JSONMetadata, i:Int)(longJs:Seq[(String,Json)]):Seq[Json] = for{
     (m,j) <- model.get.zipWithIndex
   } yield{
     if(i == j) longJs.toMap.asJson else m
@@ -63,7 +63,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm])
   }
 
 
-  def addItem(model:Property[Seq[Json]],sizeModel:Property[Int],subform:Subform,form:JSONForm) = {
+  def addItem(model:Property[Seq[Json]],sizeModel:Property[Int],subform:Subform,form:JSONMetadata) = {
     println("addItem")
 
 
@@ -74,7 +74,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONForm])
       sub -> parentData.find(_._1 == local).map(_._2).getOrElse(Json.Null)
     }
     keys.toMap
-    val placeholder:Map[String,Json] = JSONForm.jsonPlaceholder(form,subforms) ++ keys.toMap
+    val placeholder:Map[String,Json] = JSONMetadata.jsonPlaceholder(form,subforms) ++ keys.toMap
 
     println(placeholder)
 

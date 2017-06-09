@@ -15,8 +15,10 @@ import io.circe.syntax._
 
 /**
   * Created by andreaminetti on 10/03/16.
+  *
+  * mapping from form specs in box schema into JSONForm
   */
-object Forms {
+object JSONFormMetadata {
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Form.table.result
   }.map{_.map(_.name)}
@@ -49,14 +51,14 @@ object Forms {
   }
 
 
-  def apply(id:Int,lang:String):Future[JSONForm] = {
+  def apply(id:Int,lang:String):Future[JSONMetadata] = {
     val formQuery: Query[Form, Form_row, Seq] = for {
       form <- Form.table if form.id === id
     } yield form
     getForm(formQuery,lang)
   }
   
-  def apply(name:String, lang:String):Future[JSONForm] = {
+  def apply(name:String, lang:String):Future[JSONMetadata] = {
     val formQuery: Query[Form, Form_row, Seq] = for {
       form <- Form.table if form.name === name
     } yield form
@@ -79,7 +81,7 @@ object Forms {
     } yield {
 
 
-
+      //to force adding primary keys if not specified by the user
       val missingKeyFields = keys.filterNot(k => fields.map(_._1.key).contains(k)).map{ key =>
         JSONField("string",key)
       }
@@ -109,14 +111,14 @@ object Forms {
 
 
 
-      val result = JSONForm(form.id.get,form.name,jsonFields,layout,form.table,lang,tableFields,keys)
+      val result = JSONMetadata(form.id.get,form.name,jsonFields,layout,form.table,lang,tableFields,keys)
       println(s"resulting form: $result")
       result
     }
 
   }
 
-  def subforms(form:JSONForm):Future[Seq[JSONForm]] = {
+  def subforms(form:JSONMetadata):Future[Seq[JSONMetadata]] = {
     val result = Future.sequence{
       form.fields.flatMap(_.subform).map{ subform =>
         apply(subform.id,form.lang)

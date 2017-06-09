@@ -13,7 +13,7 @@ object Context {
   private val routingRegistry = new RoutingRegistryDef
   private val viewPresenterRegistry = new StatesToViewPresenterDef
 
-  implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry, RootState)
+  implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry, RootState)   //udash application
 }
 
 object Init extends JSApp with StrictLogging {

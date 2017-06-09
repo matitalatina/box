@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.model.tables._
-import ch.wsl.box.rest.logic.{Forms, LangHelper}
+import ch.wsl.box.rest.logic.{JSONFormMetadata, LangHelper}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -33,30 +33,38 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
       //Serving REST-API
       pathPrefix("api" / "v1") {
         //version 1
-        cors() {
+        //cors() {
           // enable cross domain usage
-          options {
-            complete(StatusCodes.OK)
-          } ~ postgresBasicAuth {  userProfile =>
+//          options {
+//            complete(StatusCodes.OK)
+//          } ~
+            pathPrefix("labels"){
+              path(Segment) { lang =>
+                get{
+                  complete(LangHelper(lang).translationTable)
+                }
+              }
+            } ~
+            postgresBasicAuth {  userProfile =>
               implicit val db = userProfile.db
-                path("checkLogin"){
+                path("checkLogin"){    //dummy request to see if user can log in
                   get {
                     complete("Ok")
                   }
                 } ~
-                path("file") {
-                    post {
-                      fileUpload("file") { case (metadata, byteSource) =>
-                        val result = byteSource.runFold(Seq[Byte]()) { (acc, n) => acc ++ n.toSeq }.map(_.toArray).flatMap { bytea =>
-                          import slick.driver.PostgresDriver.api._
-                          db.run {
-                            Files += Files_row(name = Some("test"), file = Some(bytea))
-                          }.map(_ => "ok")
-                        }
-                        complete(result)
-                      }
-                    }
-                } ~
+//                path("file") {
+//                    post {
+//                      fileUpload("file") { case (metadata, byteSource) =>
+//                        val result = byteSource.runFold(Seq[Byte]()) { (acc, n) => acc ++ n.toSeq }.map(_.toArray).flatMap { bytea =>
+//                          import slick.driver.PostgresDriver.api._
+//                          db.run {
+//                            Files += Files_row(name = Some("test"), file = Some(bytea))
+//                          }.map(_ => "ok")
+//                        }
+//                        complete(result)
+//                      }
+//                    }
+//                } ~
                 pathPrefix("model") {
                   pathPrefix(Segment) { lang =>
                     generatedRoutes()
@@ -64,13 +72,13 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                 } ~
                 path("models") {
                   get {
-                    val allmodels = models ++ views
+                    val allmodels = tables ++ views
                     complete(allmodels.toSeq.sorted)
                   }
                 } ~
                 path("forms") {
                   get {
-                    complete(Forms.list)
+                    complete(JSONFormMetadata.list)
                   }
                 } ~
                 pathPrefix("form") {
@@ -80,15 +88,9 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                       formRoutes(name,lang)
                     }
                   }
-                } ~ pathPrefix("labels"){
-                  path(Segment) { lang =>
-                    get{
-                      complete(LangHelper(lang).translationTable)
-                    }
-                  }
                 }
             }
         }
-      }
+      //}
   }
 }

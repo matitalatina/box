@@ -26,8 +26,10 @@ object CustomizedCodeGenerator {
 
 
     val dbConf: Config = com.typesafe.config.ConfigFactory.load().as[com.typesafe.config.Config]("db")
+    val dbPath = dbConf.as[String]("url")
+    val dbSchema = dbConf.as[String]("schema")
 
-    def db = PostgresDriver.api.Database.forURL(dbConf.as[String]("url"),
+    def db = PostgresDriver.api.Database.forURL(s"$dbPath?currentSchema=$dbSchema",
       driver="org.postgresql.Driver",
       user=dbConf.as[String]("user"),
       password=dbConf.as[String]("password"))
@@ -41,7 +43,7 @@ object CustomizedCodeGenerator {
     val tablesAndViews = tables ++ views
 
     val enabledTables = Await.result(db.run{
-      MTable.getTables(None, None, None, Some(Seq("TABLE")))
+      MTable.getTables(None, None, None, Some(Seq("TABLE")))   //slick method to retrieve db structure
     }, 200 seconds)
       .filter { t =>
         if(excludes.exists(e => t.name.name == e)) {
@@ -71,20 +73,27 @@ object CustomizedCodeGenerator {
     //println(enabledModels.map(_.name.name))
 
     val dbModel = Await.result(db.run{
-      PostgresDriver.createModelBuilder(enabledModels,true).buildModel
+      PostgresDriver.createModelBuilder(enabledModels,true).buildModel   //create model based on specific db (here postgres)
     }, 200 seconds)
 
 
+    //exclude fields
     println(excludeFields)
-    val filteredColumnsTables = dbModel.tables.map{ table =>
+    val cleanedTables = dbModel.tables.filter{t =>
+      dbSchema match {
+        case "public" => t.name.schema.isEmpty
+        case _ => t.name.schema == Some(dbSchema)
+      }
+    }.map{ table =>
+
       table.copy(columns = table.columns.filterNot{c =>
         excludeFields.contains(c.name)
       })
     }
 
-    val model = dbModel.copy(tables = filteredColumnsTables)
+    val model = dbModel.copy(tables = cleanedTables)
 
-    val gen = codegen(model,dbConf)
+    val gen = codegen(model,dbConf)                 //generate tables, routes and registry according to customized codegen
 
     gen.writeToFile(
       "slick.driver.PostgresDriver",
@@ -97,8 +106,8 @@ object CustomizedCodeGenerator {
 
 
 
-    val calculatedViews = enabledModels.filter(_.tableType == "VIEW").map(_.name.name)
-    val calculatedTables= enabledModels.filter(_.tableType == "TABLE").map(_.name.name)
+    val calculatedViews = enabledViews.map(_.name.name)
+    val calculatedTables= enabledTables.map(_.name.name)
     val routeGen = gen.RoutesGenerator(calculatedViews,calculatedTables)
 
     routeGen.writeToFile(
@@ -151,20 +160,19 @@ package object tables {
       }
     }
 
+    //exteded code generator (add route and registry generation)
     def codegen(model:Model,conf:Config) = new slick.codegen.SourceCodeGenerator(model) with MyOutputHelper {
-
-      tables.head.EntityType.name
-
       case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String]) {
+
         def singleRoute(method:String,model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
           s"""$method[${table.TableClass.name},${table.EntityType.name}]("${table.model.name.table}",${table.TableClass.name})"""
         }
 
         def composeRoutes():String = {
           (
-            tableList.flatMap(t => singleRoute("model",t)) ++
+            tableList.flatMap(t => singleRoute("table",t)) ++
             viewList.flatMap(v => singleRoute("view",v))
-          ).mkString(" ~ \n")
+          ).mkString(" ~ \n    ")
         }
 
         def generate(pkg:String,name:String,modelPackages:String):String =
@@ -193,7 +201,7 @@ package object tables {
       case class RegistryModelsGenerator(viewList:Seq[String],tableList:Seq[String]) {
 
         def mapModel(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
-          s"""   "${table.model.name.table}" -> JsonActionHelper[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name})"""
+          s"""   "${table.model.name.table}" -> JsonActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name})"""
         }
 
         def implicits(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
@@ -205,7 +213,7 @@ package object tables {
         def generate(pkg:String):String =
           s"""package ${pkg}
              |
-             |import ch.wsl.box.rest.logic.{JsonActionHelper, ModelJsonActions}
+             |import ch.wsl.box.rest.logic.{JsonActions, ModelJsonActions}
              |import tables._
              |
              |object TablesRegistry {
@@ -349,14 +357,14 @@ package object tables {
 
           def completeName = s"${model.table.table}.${model.name}"
 
-          val providedExceptions = conf.getStringList("generator.keys.provided")
-          val managedExceptions = conf.getStringList("generator.keys.managed")
+          val dbKeysExceptions = conf.getStringList("generator.keys.db")
+          val appKeysExceptions = conf.getStringList("generator.keys.app")
           val keyStrategy = conf.getString("generator.keys.default.strategy")
 
           private def managed:Boolean = {
             keyStrategy match {
-              case "managed" if primaryKey => !providedExceptions.contains(completeName)
-              case "provided" if primaryKey => managedExceptions.contains(completeName)
+              case "db" if primaryKey => !dbKeysExceptions.contains(completeName)
+              case "app" if primaryKey => appKeysExceptions.contains(completeName)
               case _ => false
             }
           }

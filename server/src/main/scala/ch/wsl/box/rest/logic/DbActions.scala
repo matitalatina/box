@@ -11,7 +11,7 @@ import scala.util.Try
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class RouteHelper[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T]) extends UglyDBFilters {
+class DbActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T]) extends UglyDBFilters {
 
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 

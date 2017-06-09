@@ -32,8 +32,9 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
+set schema 'box';
 
-SET search_path = public, pg_catalog;
+SET search_path = box, pg_catalog;
 
 SET default_tablespace = '';
 

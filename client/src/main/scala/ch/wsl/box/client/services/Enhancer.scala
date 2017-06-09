@@ -58,7 +58,7 @@ object Enhancer {
 //    }
 //  }
 
-  def fetchModels(forms:Seq[JSONForm]):Future[Seq[(String,Seq[Json])]] = {
+  def fetchModels(forms:Seq[JSONMetadata]):Future[Seq[(String,Seq[Json])]] = {
     val models = for{
       form <- forms
       field <- form.fields
@@ -72,7 +72,7 @@ object Enhancer {
     }
   }
 
-  def populateOptionsValuesInFields(models:Seq[(String,Seq[Json])],form:JSONForm,data:Seq[Json]):JSONForm = {
+  def populateOptionsValuesInFields(models:Seq[(String,Seq[Json])], form:JSONMetadata, data:Seq[Json]):JSONMetadata = {
 
       val fields = form.fields.map { field =>
         field.options match {
@@ -116,7 +116,7 @@ object Enhancer {
     throw t
   }
 
-  def extract(current:Json,form:JSONForm):Seq[(String,Json)] = form.fields.map{ field =>
+  def extract(current:Json,form:JSONMetadata):Seq[(String,Json)] = form.fields.map{ field =>
 
     val value = current.js(field.key)
 

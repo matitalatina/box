@@ -19,6 +19,8 @@ case object IndexState extends RoutingState(RootState)
 case class ModelsState(kind:String,model:String) extends RoutingState(RootState)
 
 case class ModelTableState(kind:String,model:String) extends RoutingState(ModelsState(kind,model))
+
+
 case class MasterChildState(kind:String,parentModel:String, childModel:String) extends RoutingState(ModelsState(kind,parentModel))
 
 case class ModelFormState(

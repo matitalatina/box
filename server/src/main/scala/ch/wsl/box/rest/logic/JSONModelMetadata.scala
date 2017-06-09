@@ -9,7 +9,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-object JSONForms {
+object JSONModelMetadata {
 
   import StringHelper._
   
@@ -23,7 +23,7 @@ object JSONForms {
     tableFieldTitles.as[Option[String]]("default").getOrElse("name")
   }
 
-  def of(table:String,db:slick.driver.PostgresDriver.api.Database,lang:String):Future[JSONForm] = {
+  def of(table:String,db:slick.driver.PostgresDriver.api.Database,lang:String):Future[JSONMetadata] = {
 
     val schema = new PgInformationSchema(table, db)
 
@@ -68,16 +68,10 @@ object JSONForms {
       fields <- Future.sequence(c.map(field2form))
       keys <- JSONSchemas.keysOf(table)
     } yield {
-      JSONForm(1,table,fields,Layout.fromFields(fields),table,lang,fields.map(_.key),keys)
+      JSONMetadata(1,table,fields,Layout.fromFields(fields),table,lang,fields.map(_.key),keys)
     }
 
 
   }
-  
-  
-  
-  
-  
-  
-  
+
 }
