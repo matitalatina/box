@@ -65,22 +65,22 @@ object Build extends sbt.Build {
       // Compile tests to JS using fast-optimisation
       scalaJSStage in Test := FastOptStage,
       fullClasspath in Test ~= { _.filter(_.data.exists) },
-      scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) },
+      //scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) },
       compile <<= (compile in Compile).dependsOn(compileStatics),
       compileStatics := {
         IO.copyDirectory(sourceDirectory.value / "main/assets/fonts", crossTarget.value / StaticFilesDir / WebContent / "assets/fonts")
         IO.copyDirectory(sourceDirectory.value / "main/assets/images", crossTarget.value / StaticFilesDir / WebContent / "assets/images")
         val statics = compileStaticsForRelease.value
         (crossTarget.value / StaticFilesDir).***.get
-      }//,
+      },
 //      artifactPath in(Compile, fastOptJS) :=
 //        (crossTarget in(Compile, fastOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl-fast.js",
 //      artifactPath in(Compile, fullOptJS) :=
 //        (crossTarget in(Compile, fullOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl.js",
-//      artifactPath in(Compile, packageJSDependencies) :=
-//        (crossTarget in(Compile, packageJSDependencies)).value / StaticFilesDir / WebContent / "scripts" / "frontend-deps-fast.js",
-//      artifactPath in(Compile, packageMinifiedJSDependencies) :=
-//        (crossTarget in(Compile, packageMinifiedJSDependencies)).value / StaticFilesDir / WebContent / "scripts" / "frontend-deps.js",
+      artifactPath in(Compile, packageJSDependencies) :=
+        (crossTarget in(Compile, packageJSDependencies)).value / "client-jsdeps.js",
+      artifactPath in(Compile, packageMinifiedJSDependencies) :=
+        (crossTarget in(Compile, packageMinifiedJSDependencies)).value / "client-jsdeps.js"
 //      artifactPath in(Compile, packageScalaJSLauncher) :=
 //        (crossTarget in(Compile, packageScalaJSLauncher)).value / StaticFilesDir / WebContent / "scripts" / "frontend-init.js"
     )

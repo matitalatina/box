@@ -47,7 +47,7 @@ trait RouteForm {
             complete(shaper(form){ fs =>
               fs.extractOne(JSONKeys.fromString(id).query).map{record =>
                 println(record)
-                HttpEntity(ContentTypes.`text/plain(UTF-8)`,record)
+                HttpEntity(ContentTypes.`application/json`,record)
               }
             })
           } ~

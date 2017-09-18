@@ -191,7 +191,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
       }
     )
 
-    Select(filterHandler,Filter.options(metadata.field.`type`))
+    Select(filterHandler,Filter.options(metadata.field.`type`),Select.defaultLabel)()
 
   }
 

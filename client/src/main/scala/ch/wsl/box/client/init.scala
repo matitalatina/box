@@ -2,6 +2,7 @@ package ch.wsl.box.client
 
 import ch.wsl.box.client.utils.{Labels, Session}
 import io.udash._
+import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.wrappers.jquery._
 import org.scalajs.dom.{Element, document}
 
@@ -37,6 +38,7 @@ object Init extends JSApp with StrictLogging {
           import ch.wsl.box.client.styles.partials.FooterStyles
           jQ(GlobalStyles.render[TypedTag[org.scalajs.dom.raw.HTMLStyleElement]].render).insertBefore(appRoot.get)
           jQ(FooterStyles.render[TypedTag[org.scalajs.dom.raw.HTMLStyleElement]].render).insertBefore(appRoot.get)
+          jQ(UdashDatePicker.loadBootstrapDatePickerStyles()).insertBefore(appRoot.get)
         }
       })
     }

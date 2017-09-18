@@ -16,6 +16,7 @@ import org.scalajs.dom.html.Div
 
 import scala.scalajs.js
 import scala.scalajs.js.Date
+import scala.util.Try
 import scalatags.JsDom.TypedTag
 
 
@@ -41,16 +42,10 @@ object JSONSchemaRenderer {
 
   def datetimepicker(modelLabel:String, model:Property[Json], format:String = dateTimePickerFormat):Modifier = {
 
-    val pickerOptions = ModelProperty(UdashDatePicker.DatePickerOptions(
-      format = format,
-      locale = Some("en_GB"),
-      showClear = true
-    ))
 
-
-    def toDate(jsonDate:Json):java.util.Date = {
+    def toDate(jsonDate:Json):Option[java.util.Date] = Try{
       val str = jsonDate.string.trim
-      if(str == "") return null
+      if(str == "") return None
       format match {
         case `timePickerFormat` => {
           val year = 1970
@@ -71,7 +66,6 @@ object JSONSchemaRenderer {
           val hours = timeTokens(0).toInt
           val minutes = timeTokens(1).toInt
           val result = new java.util.Date(year-1900,month-1,day,hours,minutes)
-          println(s"original datetime $str, result: $result, year: $year, month: $month, day: $day, hours: $hours")
           result
         }
         case `datePickerFormat` => {
@@ -80,18 +74,17 @@ object JSONSchemaRenderer {
           val month = dateTokens(1).toInt
           val day = dateTokens(2).toInt
           val result = new java.util.Date(year-1900,month-1,day)
-          println(s"original $str, result: $result")
           result
         }
       }
 
-    }
+    }.toOption
 
-    def fromDate(dt:java.util.Date):Json = {
-      if (dt == null)
+    def fromDate(dt:Option[java.util.Date]):Json = Try{
+      if (!dt.isDefined)
         Json.Null
       else {
-        val date = new Date(dt.getTime)
+        val date = new Date(dt.get.getTime)
         if (date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return Json.Null
         val result = format match {
           case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
@@ -100,16 +93,20 @@ object JSONSchemaRenderer {
         }
         result.asJson
       }
-    }
+    }.getOrElse(Json.Null)
 
 
     val date = model.transform(toDate,fromDate)
 
-
+    val pickerOptions = ModelProperty(UdashDatePicker.DatePickerOptions(
+      format = format,
+      locale = Some("en_GB"),
+      showClear = true,
+      useStrict = false
+    ))
     val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
 
     div(BootstrapStyles.Form.formGroup)(
-      UdashDatePicker.loadBootstrapDatePickerStyles(),
       label(modelLabel),
       UdashInputGroup()(
         UdashInputGroup.input(picker.render),
@@ -127,7 +124,7 @@ object JSONSchemaRenderer {
 
     div(BootstrapStyles.Form.formGroup)(
       label(modelLabel),
-      Select(selectModel,options.options.values.toSeq,BootstrapStyles.Form.formControl)
+      Select(selectModel,options.options.values.toSeq,Select.defaultLabel)(BootstrapStyles.Form.formControl)
     )
   }
 

@@ -26,25 +26,33 @@ object ModelFormModel{
   def empty = ModelFormModel("","",None,None,Seq(),"",Seq(),Navigation(false,false,0,0))
 }
 
-case class ModelFormViewPresenter(routes:Routes) extends ViewPresenter[ModelFormState] {
+object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def create(): (View, Presenter[ModelFormState]) = {
     val model = ModelProperty{ModelFormModel.empty}
-    val presenter = ModelFormPresenter(model,routes)
+    val presenter = ModelFormPresenter(model)
     (ModelFormView(model,presenter),presenter)
   }
 }
 
-case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes) extends Presenter[ModelFormState] {
+case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Presenter[ModelFormState] {
 
   import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JsonUtils._
 
   override def handleState(state: ModelFormState): Unit = {
-    println(s"handle state: $state")
-    //model.set(ModelFormModel.empty)
+
+
+    val reloadMetadata = {
+      val currentModel = model.get
+      !(currentModel.kind == state.kind &&
+        currentModel.name == state.model &&
+        currentModel.form.isDefined)
+    }
+
+
     model.subProp(_.name).set(state.model)
     model.subProp(_.id).set(state.id)
 
@@ -56,19 +64,13 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes)
         case Some(id) => REST.get(state.kind,Session.lang(),state.model,ids.get)
         case None => Future.successful(Json.Null)
       }
-      form <- REST.form(state.kind, Session.lang(), state.model)
-      subforms <- if(state.kind == "form") REST.subforms(state.model,Session.lang()) else Future.successful(Seq())
-      //lookupData <- Enhancer.fetchModels(emptySubforms ++ Seq(emptyFieldsForm))
+      form <- if(reloadMetadata) REST.form(state.kind, Session.lang(), state.model) else Future.successful(model.get.form.get)
+      subforms <- if(state.kind == "form" && reloadMetadata) REST.subforms(state.model,Session.lang()) else Future.successful(Seq())
     } yield {
 
-//      val form = Enhancer.populateOptionsValuesInFields(lookupData, emptyFieldsForm)
-//      val subforms = emptySubforms.map{ f =>
-//        Enhancer.populateOptionsValuesInFields(lookupData, f)
-//      }
 
       //initialise an array of n strings, where n is the number of fields
       val results:Seq[(String,Json)] = Enhancer.extract(currentData,form)
-
 
       model.set(ModelFormModel(
         name = state.model,
@@ -91,7 +93,6 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes)
 
   def save() = {
     val m = model.get
-    println(m.results)
     m.form.foreach{ form =>
       val jsons = for {
         (field, i) <- form.fields.zipWithIndex
@@ -103,7 +104,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes)
         case None => REST.insert(m.kind,Session.lang(),m.name, jsons.toMap.asJson)
       }
       saveAction.map{_ =>
-        val newState = routes.table()
+        val newState = Routes(m.kind,m.name).table()
         io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
 
       }.recover{ case e =>
@@ -116,7 +117,6 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes)
 
   def setNavigation() = {
     IDSequence(model.get.id).navigation().map{ nav =>
-      println(s"nav: $nav")
       model.subProp(_.navigation).set(nav)
     }
   }
@@ -127,8 +127,8 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes)
   def prev() = IDSequence(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
 
   def goTo(id:String) = {
-    val newState = routes.edit(id)
-    println(s"newstate: ${newState.url}")
+    val m = model.get
+    val newState = Routes(m.kind,m.name).edit(id)
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 

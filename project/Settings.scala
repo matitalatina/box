@@ -66,8 +66,8 @@ object Settings {
     //js
     val bootstrap =  "3.3.1-1"
 
-    val udash = "0.4.0"
-    val udashJQuery = "1.0.0"
+    val udash = "0.5.0"
+    val udashJQuery = "1.1.0"
 
 
   }
