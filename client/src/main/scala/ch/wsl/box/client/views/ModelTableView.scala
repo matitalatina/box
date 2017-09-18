@@ -5,7 +5,7 @@ import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.{Labels, Session}
-import ch.wsl.box.client.views.components.FieldsRenderer
+import ch.wsl.box.client.views.components.TableFieldsRenderer
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
@@ -66,7 +66,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tableFields.contains(field.key))
       filteredForm = emptyFieldsForm.copy(fields = fields)
       models <- Enhancer.fetchModels(Seq(filteredForm))
-      form = Enhancer.populateOptionsValuesInFields(models,filteredForm,Seq())
+      form = Enhancer.populateOptionsValuesInFields(models,filteredForm)
       _ <- saveKeys(query)
     } yield {
 
@@ -239,7 +239,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
                 for {(metadata, i) <- metadatas.zipWithIndex} yield {
 
                   val value = el.get.data.lift(i).getOrElse("")
-                  td(GlobalStyles.smallCells)(FieldsRenderer(
+                  td(GlobalStyles.smallCells)(TableFieldsRenderer(
                     value,
                     metadata.field,
                     key,

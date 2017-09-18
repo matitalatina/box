@@ -33,7 +33,9 @@ trait RouteForm {
     import akka.http.scaladsl.model._
 
 
-      val form = JSONFormMetadata(name,lang)
+
+      val jsonFormMetadata = JSONFormMetadata()
+      val form = jsonFormMetadata.get(name,lang)
       val tableForm = form.map{ f =>
         val filteredFields = f.fields.filter(field => f.tableFields.contains(field.key))
         f.copy(fields = filteredFields)
@@ -44,6 +46,7 @@ trait RouteForm {
           get {
             complete(shaper(form){ fs =>
               fs.extractOne(JSONKeys.fromString(id).query).map{record =>
+                println(record)
                 HttpEntity(ContentTypes.`text/plain(UTF-8)`,record)
               }
             })
@@ -79,7 +82,7 @@ trait RouteForm {
         path("subform") {
           get {
             complete {
-              form.flatMap{ f => JSONFormMetadata.subforms(f)}
+              form.flatMap{ f => jsonFormMetadata.subforms(f)}
             }
           }
         } ~

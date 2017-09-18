@@ -32,6 +32,7 @@ trait RouteTable {
                                                              jsonmarshaller:ToResponseMarshaller[JSONResult[M]],
                                                              db:Database):Route = {
 
+    println(s"adding table: $name" )
     tables = Set(name) ++ tables
 
     val utils = new DbActions[T,M](table)
@@ -48,7 +49,9 @@ trait RouteTable {
         path(Segment) { id =>
           get {
             onComplete(utils.getById(JSONKeys.fromString(id))) {
-              case Success(result) => complete(result)
+              case Success(result) => {
+                complete(result)
+              }
               case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
             }
           } ~

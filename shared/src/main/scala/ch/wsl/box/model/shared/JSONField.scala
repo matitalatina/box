@@ -7,7 +7,7 @@ case class JSONField(
                       `type`:String,
                       key:String,
                       title:Option[String] = None,
-                      options:Option[JSONFieldOptions] = None,
+                      lookup:Option[JSONFieldOptions] = None,
                       placeholder:Option[String] = None,
                       widget: Option[String] = None,
                       subform: Option[Subform] = None,

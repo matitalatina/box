@@ -12,7 +12,7 @@ import scalatags.JsDom.TypedTag
 /**
   * Created by andre on 5/2/2017.
   */
-object FieldsRenderer {
+object TableFieldsRenderer {
 
   import io.circe.syntax._
 
@@ -30,7 +30,7 @@ object FieldsRenderer {
   def apply(value:String, field:JSONField, keys:JSONKeys, routes:Routes):TypedTag[Element] = {
 
 
-    val contentFixed = field.options match {
+    val contentFixed = field.lookup match {
       case Some(opts) => {
         val label: String = opts.options.lift(value).getOrElse(value)
         val finalLabel = if(label.trim.length > 0) label else value

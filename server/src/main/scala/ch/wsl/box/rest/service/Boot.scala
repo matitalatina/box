@@ -22,6 +22,9 @@ object Boot extends App with RouteRoot {
   val host = conf.as[String]("host")
   val port = conf.as[Int]("port")
 
+  //TODO need to be reworked now it's based on an hack, it call generated root to populate models
+  generatedRoutes()(Auth.adminDB,materializer)
+
   // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
   val bindingFuture = Http().bindAndHandle(route, host, port)     //attache the root route
   println(s"Server online at http://localhost:8080/\nPress Q to stop...")

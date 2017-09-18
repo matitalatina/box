@@ -8,6 +8,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by andreaminetti on 10/03/16.
+  *
+  * retrieves schema information from database (based query on information schema table  (catalog))
   */
 object JSONSchemas {
 

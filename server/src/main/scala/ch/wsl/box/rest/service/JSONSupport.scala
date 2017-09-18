@@ -11,6 +11,9 @@ import io.circe.Decoder.Result
 
 /**
   * Created by andreaminetti on 12/10/16.
+  *
+  * this contains the serializer between the JSON and the Scala objects  (in the server)
+  *
   */
 object JSONSupport extends CirceSupport{
   implicit def printer: Json => String = Printer.noSpaces.copy(dropNullKeys = true).pretty
@@ -18,7 +21,7 @@ object JSONSupport extends CirceSupport{
 
   implicit val DateFormat : Encoder[java.sql.Date] with Decoder[java.sql.Date] = new Encoder[java.sql.Date] with Decoder[java.sql.Date] {
 
-    val dateFormatter = new SimpleDateFormat("yyyy-mm-dd")
+    val dateFormatter = new SimpleDateFormat("yyyy-MM-dd")
 
     override def apply(a: java.sql.Date): Json = {
       Encoder.encodeString.apply(dateFormatter.format(a))
@@ -32,7 +35,7 @@ object JSONSupport extends CirceSupport{
 
   implicit val TimestampFormat : Encoder[Timestamp] with Decoder[Timestamp] = new Encoder[Timestamp] with Decoder[Timestamp] {
 
-    val timestampFormatter = new SimpleDateFormat("yyyy-mm-dd HH:mm")
+    val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm")  //attention the format is different to that in the client for datetimepicker
 
     override def apply(a: Timestamp): Json = Encoder.encodeString.apply(timestampFormatter.format(a))
 

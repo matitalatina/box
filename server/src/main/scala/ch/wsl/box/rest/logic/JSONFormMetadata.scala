@@ -1,5 +1,6 @@
 package ch.wsl.box.rest.logic
 
+import ch.wsl.box.model.TablesRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.model.Field.{Field_i18n_row, Field_row}
 import ch.wsl.box.rest.model.Form.{Form, Form_row}
@@ -18,19 +19,33 @@ import io.circe.syntax._
   *
   * mapping from form specs in box schema into JSONForm
   */
-object JSONFormMetadata {
+case class JSONFormMetadata(implicit db:Database) {
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Form.table.result
   }.map{_.map(_.name)}
 
+  import ch.wsl.box.shared.utils.JsonUtils._
 
-  private def fieldsToJsonFields(fields:Seq[(Field_row,Field_i18n_row)]) = {
-    fields.map{ case (field,fieldI18n) =>
+  private def fieldsToJsonFields(fields:Seq[(Field_row,Field_i18n_row)], lang:String): Future[Seq[JSONField]] = {
+    val jsonFields = fields.map{ case (field,fieldI18n) =>
       val options = for{
         model <- field.refModel
         value <- field.refValueProperty
-        text <- fieldI18n.refTextProperty
-      } yield JSONFieldOptions(model,JSONFieldMap(value,text))
+        text = fieldI18n.refTextProperty.getOrElse(lang)
+      } yield {
+
+        TablesRegistry.actions(model).getModel(JSONQuery.limit(100)).map{ lookupData =>
+          val options = lookupData.map{ lookupRow =>
+            (lookupRow.get(value),lookupRow.get(text))
+          }.toMap
+          JSONFieldOptions(model, JSONFieldMap(value,text),options)
+        }
+
+
+
+      }
+
+
 
       import io.circe.generic.auto._
       val queryFilter:Seq[JSONQueryFilter] = {for{
@@ -46,19 +61,32 @@ object JSONFormMetadata {
         remote <- field.subFields
       } yield Subform(id,local,remote,queryFilter)
 
-      JSONField(field.`type`,field.key,fieldI18n.title,options,fieldI18n.placeholder,field.widget,subform,field.default)
+      options match {
+        case Some(opt) => opt.map{ o =>
+          JSONField(field.`type`, field.key, fieldI18n.title,Some(o), fieldI18n.placeholder, field.widget, subform, field.default)
+        }
+        case None => Future.successful{
+          JSONField(field.`type`, field.key, fieldI18n.title,None, fieldI18n.placeholder, field.widget, subform, field.default)
+        }
+      }
+
+
+
     }
+
+    Future.sequence(jsonFields)
+
   }
 
 
-  def apply(id:Int,lang:String):Future[JSONMetadata] = {
+  def get(id:Int,lang:String):Future[JSONMetadata] = {
     val formQuery: Query[Form, Form_row, Seq] = for {
       form <- Form.table if form.id === id
     } yield form
     getForm(formQuery,lang)
   }
   
-  def apply(name:String, lang:String):Future[JSONMetadata] = {
+  def get(name:String, lang:String):Future[JSONMetadata] = {
     val formQuery: Query[Form, Form_row, Seq] = for {
       form <- Form.table if form.name === name
     } yield form
@@ -78,6 +106,7 @@ object JSONFormMetadata {
       form <- Auth.boxDB.run( formQuery.result ).map(_.head)
       fields <- Auth.boxDB.run{fieldQuery(form.id.get).result}
       keys <- JSONSchemas.keysOf(form.table)
+      jsonFieldsPartial <- fieldsToJsonFields(fields, lang)
     } yield {
 
 
@@ -92,7 +121,7 @@ object JSONFormMetadata {
       val missingKeyTableFields = keys.filterNot(k => definedTableFields.contains(k))
       val tableFields = missingKeyTableFields ++ definedTableFields
 
-      val jsonFields = {missingKeyFields ++ fieldsToJsonFields(fields)}.distinct
+      val jsonFields = {missingKeyFields ++ jsonFieldsPartial}.distinct
 
       val layout = form.layout.map { l =>
         parse(l).fold({ f =>
@@ -121,7 +150,7 @@ object JSONFormMetadata {
   def subforms(form:JSONMetadata):Future[Seq[JSONMetadata]] = {
     val result = Future.sequence{
       form.fields.flatMap(_.subform).map{ subform =>
-        apply(subform.id,form.lang)
+        get(subform.id,form.lang)
       }
     }
     val subresults = result.map(x => Future.sequence(x.map(subforms)))

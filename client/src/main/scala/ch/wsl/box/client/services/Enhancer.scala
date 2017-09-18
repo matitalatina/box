@@ -24,7 +24,7 @@ object Enhancer {
       val label:String = value.get(opts.map.textProperty)
       (key,label)
     }.toMap
-    field.copy(options = Some(field.options.get.copy(options = Map("" -> "") ++ options)))
+    field.copy(lookup = Some(field.lookup.get.copy(options = Map("" -> "") ++ options)))
   }
 
 //  def fetchLookup(field:JSONField,opts:JSONFieldOptions,data:Seq[Json]):Future[JSONField] = {
@@ -62,24 +62,25 @@ object Enhancer {
     val models = for{
       form <- forms
       field <- form.fields
-      option <- field.options
+      option <- field.lookup   //fields without lookup are an empty list
     } yield option.refModel
+
     Future.sequence {
       models.distinct.map { model: String =>
         println(s"fetching Model: $model")
-        REST.list("model",Session.lang(), model, 6000).map(r => model -> r)
+        REST.list("model", Session.lang(), model, 6000).map(r => model -> r)
       }
     }
   }
 
-  def populateOptionsValuesInFields(models:Seq[(String,Seq[Json])], form:JSONMetadata, data:Seq[Json]):JSONMetadata = {
+  def populateOptionsValuesInFields(models:Seq[(String,Seq[Json])], form:JSONMetadata):JSONMetadata = {
 
       val fields = form.fields.map { field =>
-        field.options match {
+        field.lookup match {
           //case Some(opts) if form.keys.contains(field.key) => fetchLookup(field, opts, data)
           case Some(opts) => {
             val data = models.find(_._1 == opts.refModel).map(_._2).getOrElse(Seq())
-            fetchLookupOptions(data,field, opts)
+            fetchLookupOptions(data, field, opts)
           }
           case _ => field
         }
@@ -105,7 +106,7 @@ object Enhancer {
       case None => Json.Null
       case Some(v) => v
     }
-    val data = (field.`type`,field.options) match {
+    val data = (field.`type`,field.lookup) match {
       case (_,Some(options)) if !keys.contains(field.key) => parseOption(options,valueToSave)
       case (_,_) => valueToSave
     }

@@ -39,7 +39,8 @@ object JSONSchemaRenderer {
   final val datePickerFormat = "YYYY-MM-DD"
   final val timePickerFormat = "hh:mm"
 
-  def datetimepicker(modelLabel:String, model:Property[String],format:String = dateTimePickerFormat):Modifier = {
+  def datetimepicker(modelLabel:String, model:Property[Json], format:String = dateTimePickerFormat):Modifier = {
+
     val pickerOptions = ModelProperty(UdashDatePicker.DatePickerOptions(
       format = format,
       locale = Some("en_GB"),
@@ -47,8 +48,9 @@ object JSONSchemaRenderer {
     ))
 
 
-    def toDate(str:String):java.util.Date = {
-      if(str == "") return null;
+    def toDate(jsonDate:Json):java.util.Date = {
+      val str = jsonDate.string.trim
+      if(str == "") return null
       format match {
         case `timePickerFormat` => {
           val year = 1970
@@ -57,7 +59,7 @@ object JSONSchemaRenderer {
           val timeTokens = str.split(":")
           val hours =  timeTokens(0).toInt
           val minutes = timeTokens(1).toInt
-          new java.util.Date(year-1900,month,day,hours,minutes)
+          new java.util.Date(year-1900,month-1,day,hours,minutes)
         }
         case `dateTimePickerFormat` => {
           val tokens = str.split(" ")
@@ -68,8 +70,8 @@ object JSONSchemaRenderer {
           val day = dateTokens(2).toInt
           val hours = timeTokens(0).toInt
           val minutes = timeTokens(1).toInt
-          val result = new java.util.Date(year-1900,month,day,hours,minutes)
-          println(s"original $str, result: $result")
+          val result = new java.util.Date(year-1900,month-1,day,hours,minutes)
+          println(s"original datetime $str, result: $result, year: $year, month: $month, day: $day, hours: $hours")
           result
         }
         case `datePickerFormat` => {
@@ -77,7 +79,7 @@ object JSONSchemaRenderer {
           val year = dateTokens(0).toInt
           val month = dateTokens(1).toInt
           val day = dateTokens(2).toInt
-          val result = new java.util.Date(year-1900,month,day)
+          val result = new java.util.Date(year-1900,month-1,day)
           println(s"original $str, result: $result")
           result
         }
@@ -85,15 +87,19 @@ object JSONSchemaRenderer {
 
     }
 
-    def fromDate(dt:java.util.Date):String = {
-      val date = new Date(dt.getTime)
-      if(date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return ""
-      val result = format match {
-        case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth()+1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
-        case `datePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth()+1) + "-" + "%02d".format(date.getDate())
-        case `timePickerFormat` => "%02d".format(date.getHours()) + ":" +  "%02d".format(date.getMinutes())
+    def fromDate(dt:java.util.Date):Json = {
+      if (dt == null)
+        Json.Null
+      else {
+        val date = new Date(dt.getTime)
+        if (date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return Json.Null
+        val result = format match {
+          case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
+          case `datePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate())
+          case `timePickerFormat` => "%02d".format(date.getHours()) + ":" + "%02d".format(date.getMinutes())
+        }
+        result.asJson
       }
-      result
     }
 
 
@@ -112,7 +118,7 @@ object JSONSchemaRenderer {
     ).render
   }
 
-  def optionsRenderer(modelLabel:String, options:JSONFieldOptions,model:Property[String]):Modifier = {
+  def optionsRenderer(modelLabel:String, options:JSONFieldOptions, model:Property[String]):Modifier = {
 
     def value2Label(org:String):String = options.options.find(_._1 == org).map(_._2).getOrElse("Val not found")
     def label2Value(v:String):String = options.options.find(_._2 == v).map(_._1).getOrElse("")
@@ -152,13 +158,18 @@ object JSONSchemaRenderer {
       case true => field.title.getOrElse(field.key)
       case false => ""
     }
-    def jsToString(json:Json):String = json.string
+    def jsonToString(json:Json):String = json.string
     def strToJson(str:String):Json = field.`type` match {
       case "number" => str.toDouble.asJson
       case _ => str.asJson
     }
-    val stringModel = model.transform[String](jsToString(_),strToJson(_))
-    (field.`type`,field.widget,field.options,keys.contains(field.key),field.subform) match {
+
+    //transforma an udash property of Json to property of String
+    val stringModel = model.transform[String](jsonToString(_),strToJson(_))
+
+
+    (field.`type`, field.widget, field.lookup, keys.contains(field.key), field.subform) match {
+
       case (_,Some(WidgetsNames.hidden),_,_,_) => { }
       case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
       //case (_,_,Some(options),true,_) => fixedLookupRenderer(label,options,stringModel)
@@ -168,9 +179,9 @@ object JSONSchemaRenderer {
       case ("number",Some(WidgetsNames.checkbox),_,_,_) => checkBox(label,model)
       case ("number",Some(WidgetsNames.nolabel),_,_,_) => UdashForm.numberInput()()(stringModel)
       case ("number",_,_,_,_) => UdashForm.numberInput()(label)(stringModel)
-      case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,stringModel,timePickerFormat)
-      case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(label,stringModel,datePickerFormat)
-      case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(label,stringModel)
+      case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,model,timePickerFormat)
+      case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(label,model,datePickerFormat)
+      case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(label,model)
       case ("subform",_,_,_,Some(sub)) => subformRenderer.render(model,label,sub)
       case (_,Some(WidgetsNames.nolabel),_,_,_) => UdashForm.textInput()()(stringModel)
       case (_,_,_,_,_) => UdashForm.textInput()(label)(stringModel)

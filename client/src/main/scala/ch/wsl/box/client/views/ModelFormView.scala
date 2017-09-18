@@ -52,22 +52,23 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel],routes:Routes)
     val ids = state.id.map(JSONKeys.fromString)
 
     {for{
-      current <- state.id match {
+      currentData <- state.id match {
         case Some(id) => REST.get(state.kind,Session.lang(),state.model,ids.get)
         case None => Future.successful(Json.Null)
       }
-      emptyFieldsForm <- REST.form(state.kind,Session.lang(),state.model)
-      emptySubforms <- if(state.kind == "form") REST.subforms(state.model,Session.lang()) else Future.successful(Seq())
-      models <- Enhancer.fetchModels(emptySubforms ++ Seq(emptyFieldsForm))
+      form <- REST.form(state.kind, Session.lang(), state.model)
+      subforms <- if(state.kind == "form") REST.subforms(state.model,Session.lang()) else Future.successful(Seq())
+      //lookupData <- Enhancer.fetchModels(emptySubforms ++ Seq(emptyFieldsForm))
     } yield {
 
-      val form = Enhancer.populateOptionsValuesInFields(models,emptyFieldsForm,Seq(current))
-      val subforms = emptySubforms.map{ f =>
-        Enhancer.populateOptionsValuesInFields(models,f,current.seq(form.fields.find(_.subform.exists(_.id == f.id)).get.key))
-      }
+//      val form = Enhancer.populateOptionsValuesInFields(lookupData, emptyFieldsForm)
+//      val subforms = emptySubforms.map{ f =>
+//        Enhancer.populateOptionsValuesInFields(lookupData, f)
+//      }
 
       //initialise an array of n strings, where n is the number of fields
-      val results:Seq[(String,Json)] = Enhancer.extract(current,form)
+      val results:Seq[(String,Json)] = Enhancer.extract(currentData,form)
+
 
       model.set(ModelFormModel(
         name = state.model,
@@ -168,7 +169,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         div(
           form match {
             case None => p("Loading form")
-            case Some(f) => JSONSchemaRenderer(f,model.subSeq(_.results),model.subProp(_.subforms).get)
+            case Some(f) => JSONSchemaRenderer(f, model.subSeq(_.results), model.subProp(_.subforms).get)
           }
         ).render
       },

@@ -24,16 +24,16 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
     def onChangeMaster(rows:Seq[(JSONField,String)]):Unit = {
       println("change master")
-      val keys = rows.filter(_._1.options.exists(_.refModel == child))
+      val keys = rows.filter(_._1.lookup.exists(_.refModel == child))
       val childTable = childPresenter.asInstanceOf[ModelTablePresenter]
       if(keys.length > 0)
         childTable.filterByKey(JSONKeys.fromMap(keys.map(x => x._1.key -> x._2).toMap))
 
-      val childForeignMetadata = childTable.model.get.metadata.find(_.field.options.exists(_.refModel == master))
+      val childForeignMetadata = childTable.model.get.metadata.find(_.field.lookup.exists(_.refModel == master))
       println(childForeignMetadata)
       for{
         metadata <- childForeignMetadata
-        value <- rows.find(_._1.key == metadata.field.options.get.map.valueProperty)
+        value <- rows.find(_._1.key == metadata.field.lookup.get.map.valueProperty)
       } yield {
         childTable.filter(metadata.copy(filter = value._2,filterType = Filter.EQUALS),value._2)
       }

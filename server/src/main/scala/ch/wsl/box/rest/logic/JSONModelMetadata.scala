@@ -48,7 +48,7 @@ object JSONModelMetadata {
               key = field.column_name.slickfy,
               placeholder = Some(fk.referencingTable + " Lookup"),
               //widget = Some(WidgetsNames.select),
-              options = Some(
+              lookup = Some(
                 JSONFieldOptions(fk.referencingTable, JSONFieldMap(fk.referencingKeys.head, title))
               )
             )

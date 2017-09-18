@@ -31,7 +31,7 @@ object Build extends sbt.Build {
       libraryDependencies ++= Settings.jvmDependencies.value,
       resolvers += Resolver.jcenterRepo,
       slick <<= slickCodeGenTask, // register manual sbt command
-      //sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
+      sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
       resourceDirectory in Compile := baseDirectory.value / "../resources",
       testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
     )

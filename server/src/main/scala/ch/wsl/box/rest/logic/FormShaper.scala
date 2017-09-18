@@ -25,6 +25,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
+  def jsonFormMetadata = JSONFormMetadata()
 
   private def createQuery(model:Json,subform: Subform):JSONQuery = {
     val parentFilter = for{
@@ -56,7 +57,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
         case ("static",_) => Future.successful(field.key -> field.default.asJson)  //set default value
         case (_,None) => Future.successful(field.key -> json.js(field.key))        //use given value
         case (_,Some(subform)) => for{
-          form <- JSONFormMetadata(subform.id,form.lang)
+          form <- jsonFormMetadata.get(subform.id,form.lang)
           result <- getSubform(json,field,form,subform)
         } yield field.key -> result
       }
@@ -89,7 +90,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
 
     def subforms = form.fields.filter(_.subform.isDefined).map { field =>
       for {
-        form <- JSONFormMetadata(field.subform.get.id, form.lang)
+        form <- jsonFormMetadata.get(field.subform.get.id, form.lang)
         subJson = e.seq(field.key)
         result <- Future.sequence{
           subJson.map{ json =>
@@ -118,7 +119,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
   def insertAll(e:Json):Future[Json] = {
     form.fields.filter(_.subform.isDefined).foreach { field =>
       for {
-        form <- JSONFormMetadata(field.subform.get.id, form.lang)
+        form <- jsonFormMetadata.get(field.subform.get.id, form.lang)
         rows = e.seq(field.key)
         result <- Future.sequence(rows.map(row => FormShaper(form).insertAll(row)))
       } yield result

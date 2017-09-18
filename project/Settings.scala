@@ -47,7 +47,7 @@ object Settings {
     //Testing
     val specs2 = "3.8.6"
     val junit = "4.12"
-    val scalatest = "3.0.0"
+    val scalatest = "3.0.1"
     val selenium = "2.53.1"
 
     //logs
@@ -109,6 +109,7 @@ object Settings {
     "io.udash"                 %% "udash-rpc-backend" % versions.udash,
     "org.webjars"              % "webjars-locator"   % "0.32",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
+    "org.scalatest"            %% "scalatest"        % versions.scalatest % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test",
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka % "test",

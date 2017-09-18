@@ -38,7 +38,7 @@ class PgInformationSchema(table:String, db:Database) {
     columnsQuery.result
   }
 
-  private val pkQ:Rep[Seq[String]] = for{
+  val pkQ:Rep[Seq[String]] = for{
     constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === PRIMARYKEY
     usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
   } yield usage.column_name

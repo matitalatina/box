@@ -78,7 +78,7 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                 } ~
                 path("forms") {
                   get {
-                    complete(JSONFormMetadata.list)
+                    complete(JSONFormMetadata().list)
                   }
                 } ~
                 pathPrefix("form") {
