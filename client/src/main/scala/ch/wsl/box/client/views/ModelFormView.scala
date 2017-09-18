@@ -20,10 +20,10 @@ import scala.concurrent.Future
   * Created by andre on 4/24/2017.
   */
 
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONMetadata], results:Seq[(String,Json)], error:String, subforms:Seq[JSONMetadata], navigation: Navigation)
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONMetadata], results:Seq[(String,Json)], error:String, subforms:Seq[JSONMetadata], navigation: Navigation,loading:Boolean)
 
 object ModelFormModel{
-  def empty = ModelFormModel("","",None,None,Seq(),"",Seq(),Navigation(false,false,0,0))
+  def empty = ModelFormModel("","",None,None,Seq(),"",Seq(),Navigation(false,false,0,0),true)
 }
 
 object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
@@ -80,7 +80,8 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         results,
         "",
         subforms,
-        Navigation(false,false,1,1)
+        Navigation(false,false,1,1),
+        false
       ))
 
       setNavigation()
@@ -127,6 +128,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   def prev() = IDSequence(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
 
   def goTo(id:String) = {
+    model.subProp(_.loading).set(true)
     val m = model.get
     val newState = Routes(m.kind,m.name).edit(id)
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
@@ -145,10 +147,17 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
   override def getTemplate: scalatags.generic.Modifier[Element] = {
 
     div(
-      h1(bind(model.subProp(_.name)),produce(model.subProp(_.id)){ id =>
-        val subTitle = id.map(" - " + _).getOrElse("")
-        small(subTitle).render
-      }),
+      h1(
+        bind(model.subProp(_.name)),
+        showIf(model.subProp(_.loading)) {
+          small(" - Caricamento...").render
+        },
+        produce(model.subProp(_.id)){ id =>
+          val subTitle = id.map(" - " + _).getOrElse("")
+          small(subTitle).render
+        }
+
+      ),
       div(
         showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), Labels.navigation.previous).render },
         span(
