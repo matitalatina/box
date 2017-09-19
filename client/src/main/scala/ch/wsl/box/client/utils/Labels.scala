@@ -41,10 +41,13 @@ object Labels {
   object navigation{
     def next = get("navigation.next")
     def previous = get("navigation.previous")
+    def loading = get("navigation.loading")
   }
 
   object form{
     def save = get("form.save")
+    def addDate = get("form.add_date")
+    def removeDate = get("form.remove_date")
   }
 
   object models{

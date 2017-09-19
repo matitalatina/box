@@ -150,7 +150,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
       h1(
         bind(model.subProp(_.name)),
         showIf(model.subProp(_.loading)) {
-          small(" - Caricamento...").render
+          small(" - " + Labels.navigation.loading).render
         },
         produce(model.subProp(_.id)){ id =>
           val subTitle = id.map(" - " + _).getOrElse("")

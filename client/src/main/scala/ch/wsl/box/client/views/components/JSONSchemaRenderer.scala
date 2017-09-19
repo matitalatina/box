@@ -7,7 +7,7 @@ import ch.wsl.box.model.shared._
 import io.circe.Json
 import ch.wsl.box.shared.utils.JsonUtils._
 import io.udash.properties.single.Property
-import org.scalajs.dom.Element
+import org.scalajs.dom.{Element, Event}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.datepicker.UdashDatePicker
@@ -108,10 +108,17 @@ object JSONSchemaRenderer {
 
     div(BootstrapStyles.Form.formGroup)(
       label(modelLabel),
-      UdashInputGroup()(
-        UdashInputGroup.input(picker.render),
-        UdashInputGroup.addon("")
-      ).render
+      showIf(model.transform(_ != Json.Null)) {
+        UdashInputGroup()(
+          UdashInputGroup.input(picker.render),
+          UdashInputGroup.addon(
+            a(Labels.form.removeDate, onclick :+= ((e:Event) => model.set(Json.Null)))
+          )
+        ).render
+      },
+      showIf(model.transform(_ == Json.Null)) {
+        div(a(Labels.form.addDate, onclick :+= ((e:Event) => model.set(fromDate(Some(new java.util.Date)))))).render
+      }
     ).render
   }
 
