@@ -12,6 +12,7 @@ object REST {
 
 
   import io.circe.generic.auto._
+  import ch.wsl.box.shared.utils.Formatters._
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   def username = "postgres"

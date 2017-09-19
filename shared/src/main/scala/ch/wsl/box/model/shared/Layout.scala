@@ -9,7 +9,7 @@ case class Layout(blocks: Seq[LayoutBlock])
 
 object Layout{
   def fromFields(fields:Seq[JSONField]) = Layout(Seq(
-    LayoutBlock(None,12,Some(fields.map(x => s"${x.key}")),None)
+    LayoutBlock(None,12,fields.map(x => Left(x.key)))
   ))
 }
 
@@ -22,11 +22,12 @@ object Layout{
 case class LayoutBlock(
                    title: Option[String],
                    width:Int,
-                   fields:Option[Seq[String]],
-                   subBlock:Option[Seq[SubLayoutBlock]]
+                   fields:Seq[Either[String,SubLayoutBlock]]
                  )
 
+
+
 case class SubLayoutBlock(
-                         width:Int,
-                         fields:Seq[String]
+                         fieldsWidth:Seq[Int],
+                         fields:Seq[Either[String,SubLayoutBlock]]
                          )

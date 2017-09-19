@@ -28,6 +28,7 @@ trait RouteForm {
     import JSONSupport._
     import Directives._
     import io.circe.generic.auto._
+    import ch.wsl.box.shared.utils.Formatters._
     import akka.http.scaladsl.server.Directives._
 
     import akka.http.scaladsl.model._

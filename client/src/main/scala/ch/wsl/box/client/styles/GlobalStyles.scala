@@ -4,6 +4,7 @@ package ch.wsl.box.client.styles
 
 import scala.language.postfixOps
 import scalacss.Defaults._
+import scalacss.internal.LengthUnit.px
 
 object GlobalStyles extends StyleSheet.Inline {
   import dsl._
@@ -15,8 +16,19 @@ object GlobalStyles extends StyleSheet.Inline {
       padding(10 px),
       borderBottom(1 px,solid,black),
       marginBottom(20 px)
+    ),
+
+    unsafeRoot(".form-control")(
+      paddingTop(1 px),
+      paddingBottom(1 px),
+      paddingRight(5 px),
+      textAlign.right,
+      lineHeight(14 px),
+      borderRadius.`0`,
+      height(21 px)
     )
   )
+
 
   val smallCells = style(
     padding(3 px).important,
@@ -26,6 +38,22 @@ object GlobalStyles extends StyleSheet.Inline {
     )
   )
 
+  val noPadding = style( padding.`0` )
+
+  val subBlock = style(
+    padding.`0`
+  )
+
+  val block = style(
+    padding.`0`,
+    paddingRight(10 px),
+    paddingLeft(10 px)
+  )
+
+  val field = style(
+    padding.`0`,
+    marginBottom(5 px)
+  )
 
 
 }

@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views.components
 
 
-import ch.wsl.box.client.styles.BootstrapCol
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.Labels
 import ch.wsl.box.model.shared._
 import io.circe.Json
@@ -34,11 +34,29 @@ object JSONSchemaRenderer {
   import scalatags.JsDom.all._
   import io.circe._
   import io.circe.syntax._
+  import scalacss.ScalatagsCss._
 
 
   final val dateTimePickerFormat = "YYYY-MM-DD hh:mm"
   final val datePickerFormat = "YYYY-MM-DD"
   final val timePickerFormat = "hh:mm"
+
+
+  def numberInput(model:Property[String],labelString:Option[String] = None) = {
+
+    div(BootstrapCol.md(12),GlobalStyles.noPadding,
+      if(labelString.exists(_.length > 0)) label(labelString) else {},
+      NumberInput(model,BootstrapStyles.pullRight,textAlign.right)
+    )
+  }
+
+  def textInput(model:Property[String],labelString:Option[String],xs:Modifier*) = {
+
+    div(BootstrapCol.md(12),GlobalStyles.noPadding,
+      if(labelString.exists(_.length > 0)) label(labelString) else {},
+      TextInput(model,BootstrapStyles.pullRight,xs)
+    )
+  }
 
   def datetimepicker(modelLabel:String, model:Property[Json], format:String = dateTimePickerFormat):Modifier = {
 
@@ -106,14 +124,12 @@ object JSONSchemaRenderer {
     ))
     val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
 
-    div(BootstrapStyles.Form.formGroup)(
-      label(modelLabel),
+    div(
+      if(modelLabel.length >0) label(modelLabel) else {},
       showIf(model.transform(_ != Json.Null)) {
-        UdashInputGroup()(
-          UdashInputGroup.input(picker.render),
-          UdashInputGroup.addon(
-            a(Labels.form.removeDate, onclick :+= ((e:Event) => model.set(Json.Null)))
-          )
+        div(
+          picker.render,
+          a(Labels.form.removeDate, onclick :+= ((e:Event) => model.set(Json.Null)))
         ).render
       },
       showIf(model.transform(_ == Json.Null)) {
@@ -129,16 +145,16 @@ object JSONSchemaRenderer {
 
     val selectModel = model.transform(value2Label,label2Value)
 
-    div(BootstrapStyles.Form.formGroup)(
-      label(modelLabel),
-      Select(selectModel,options.options.values.toSeq,Select.defaultLabel)(BootstrapStyles.Form.formControl)
+    div(BootstrapCol.md(12),GlobalStyles.noPadding)(
+      if(modelLabel.length >0) label(modelLabel) else {},
+      Select(selectModel,options.options.values.toSeq,Select.defaultLabel)(BootstrapStyles.pullRight)
     )
   }
 
   def fixedLookupRenderer(modelLabel:String, options:JSONFieldOptions,model:Property[String]):Modifier = {
     val value:String = options.options.lift(model.get).getOrElse(model.get)
     div(
-      label(modelLabel),
+      if(modelLabel.length >0) label(modelLabel) else {},
       br,
       value
     )
@@ -171,24 +187,23 @@ object JSONSchemaRenderer {
     //transforma an udash property of Json to property of String
     val stringModel = model.transform[String](jsonToString(_),strToJson(_))
 
-
     (field.`type`, field.widget, field.lookup, keys.contains(field.key), field.subform) match {
 
       case (_,Some(WidgetsNames.hidden),_,_,_) => { }
       case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
       //case (_,_,Some(options),true,_) => fixedLookupRenderer(label,options,stringModel)
       case (_,_,_,true,_) => {
-        UdashForm.textInput()(label)(stringModel,disabled := true)
+        textInput(stringModel,Some(label),disabled := true, textAlign.right)
       }
       case ("number",Some(WidgetsNames.checkbox),_,_,_) => checkBox(label,model)
-      case ("number",Some(WidgetsNames.nolabel),_,_,_) => UdashForm.numberInput()()(stringModel)
-      case ("number",_,_,_,_) => UdashForm.numberInput()(label)(stringModel)
+      case ("number",Some(WidgetsNames.nolabel),_,_,_) => numberInput(stringModel)
+      case ("number",_,_,_,_) => numberInput(stringModel,Some(label))
       case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,model,timePickerFormat)
       case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(label,model,datePickerFormat)
       case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(label,model)
       case ("subform",_,_,_,Some(sub)) => subformRenderer.render(model,label,sub)
-      case (_,Some(WidgetsNames.nolabel),_,_,_) => UdashForm.textInput()()(stringModel)
-      case (_,_,_,_,_) => UdashForm.textInput()(label)(stringModel)
+      case (_,Some(WidgetsNames.nolabel),_,_,_) => textInput(stringModel,None)
+      case (_,_,_,_,_) => textInput(stringModel,Some(label))
     }
   }
 
@@ -207,37 +222,37 @@ object JSONSchemaRenderer {
 
     val subformRenderer = SubformRenderer(results.get,subforms)
 
-
-    def blockRenderer(block:LayoutBlock) = (block.fields,block.subBlock) match {
-      case (Some(f),None) => fieldsRenderer(f)
-      case (None,Some(sub)) => subBlock(sub)
-      case (_,_) => throw new Exception(s"Invalid layout $block")
-    }
-
-    def subBlock(sub:Seq[SubLayoutBlock]) = div(BootstrapStyles.row)(
-      sub.map{ block =>
-        div(BootstrapCol.md(block.width))(
-          fieldsRenderer(block.fields)
-        )
-      }
+    def subBlock(block:SubLayoutBlock) = div(BootstrapCol.md(12),GlobalStyles.subBlock)(
+          fieldsRenderer(block.fields,Stream.continually(block.fieldsWidth.toStream).flatten)
     )
 
-    def fieldsRenderer(fields:Seq[String]) = div(
-      for{
-        key <- fields
-        result <- resultMap.toMap.lift(key)
-        field <- form.fields.find(_.key == key)
-      } yield {
-        fieldRenderer(field,result,form.keys, subforms = subforms, subformRenderer = subformRenderer)
+
+    def fieldsRenderer(fields:Seq[Either[String,SubLayoutBlock]],widths:Stream[Int] = Stream.continually(12)): TypedTag[Div] = div(
+      fields.zip(widths).map{ case (field,width) =>
+
+        div(BootstrapCol.md(width),GlobalStyles.field,
+          field match {
+            case Left(key) => {
+              for {
+                result <- resultMap.toMap.lift(key)
+                field <- form.fields.find(_.key == key)
+              } yield {
+                fieldRenderer(field, result, form.keys, subforms = subforms, subformRenderer = subformRenderer)
+              }
+            }.getOrElse(div())
+            case Right(subForm) => subBlock(subForm)
+          }
+        )
       }
+
     )
 
     div(UdashForm(
       div(BootstrapStyles.row)(
         form.layout.blocks.map{ block =>
-          div(BootstrapCol.md(block.width))(
+          div(BootstrapCol.md(block.width),GlobalStyles.block)(
             block.title.map{title => h3(Labels(title))},
-            blockRenderer(block)
+            fieldsRenderer(block.fields)
           )
         }
       )

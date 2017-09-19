@@ -16,6 +16,7 @@ import io.circe.Decoder.Result
   *
   */
 object JSONSupport extends CirceSupport{
+
   implicit def printer: Json => String = Printer.noSpaces.copy(dropNullKeys = true).pretty
 
 

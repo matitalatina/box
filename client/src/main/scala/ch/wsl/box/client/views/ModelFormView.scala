@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.utils.{IDSequence, Labels, Navigation, Session}
-import ch.wsl.box.client.views.components.JSONSchemaRenderer
+import ch.wsl.box.client.views.components.{Debug, JSONSchemaRenderer}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
@@ -140,6 +140,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelFormPresenter) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.circe.generic.auto._
 
   override def renderChild(view: View): Unit = {}
 
@@ -174,6 +175,8 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
           }
         ).render
       },
+      br,
+      hr,
       produce(model.subProp(_.form)){ form =>
         div(
           form match {
@@ -185,7 +188,8 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
       button(
         cls := "primary",
         onclick :+= ((ev: Event) => presenter.save(), true)
-      )(Labels.form.save)
+      )(Labels.form.save),br,br,
+      Debug(model)
     )
   }
 }

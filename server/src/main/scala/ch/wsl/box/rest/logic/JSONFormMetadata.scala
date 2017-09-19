@@ -96,6 +96,7 @@ case class JSONFormMetadata(implicit db:Database) {
   def getForm(formQuery: Query[Form,Form_row,Seq],lang:String) = {
 
     import io.circe.generic.auto._
+    import ch.wsl.box.shared.utils.Formatters._
 
     def fieldQuery(formId:Int) = for{
       field <- Field.table if field.form_id === formId
