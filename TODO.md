@@ -12,5 +12,6 @@ TODO
 
 BUGS
 ===
+1. select void value
 1. subform values
 1. subform remove

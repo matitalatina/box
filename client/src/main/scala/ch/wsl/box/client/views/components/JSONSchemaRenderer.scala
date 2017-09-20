@@ -43,7 +43,6 @@ object JSONSchemaRenderer {
 
 
   def numberInput(model:Property[String],labelString:Option[String] = None) = {
-
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
       if(labelString.exists(_.length > 0)) label(labelString) else {},
       NumberInput(model,BootstrapStyles.pullRight,textAlign.right)
@@ -51,10 +50,16 @@ object JSONSchemaRenderer {
   }
 
   def textInput(model:Property[String],labelString:Option[String],xs:Modifier*) = {
-
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
       if(labelString.exists(_.length > 0)) label(labelString) else {},
       TextInput(model,BootstrapStyles.pullRight,xs)
+    )
+  }
+
+  def textArea(model:Property[String],labelString:Option[String],xs:Modifier*) = {
+    div(BootstrapCol.md(12),GlobalStyles.noPadding,
+      if(labelString.exists(_.length > 0)) label(labelString) else {},
+      TextArea(model,BootstrapStyles.pullRight,xs)
     )
   }
 
@@ -127,7 +132,7 @@ object JSONSchemaRenderer {
     div(
       if(modelLabel.length >0) label(modelLabel) else {},
       showIf(model.transform(_ != Json.Null)) {
-        div(
+        div(BootstrapStyles.pullRight,
           picker.render,
           a(Labels.form.removeDate, onclick :+= ((e:Event) => model.set(Json.Null)))
         ).render
@@ -203,6 +208,8 @@ object JSONSchemaRenderer {
       case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(label,model)
       case ("subform",_,_,_,Some(sub)) => subformRenderer.render(model,label,sub)
       case (_,Some(WidgetsNames.nolabel),_,_,_) => textInput(stringModel,None)
+      case (_,Some(WidgetsNames.twoLines),_,_,_) => textArea(stringModel,Some(label),rows := 2)
+      case (_,Some(WidgetsNames.textarea),_,_,_) => textArea(stringModel,Some(label))
       case (_,_,_,_,_) => textInput(stringModel,Some(label))
     }
   }

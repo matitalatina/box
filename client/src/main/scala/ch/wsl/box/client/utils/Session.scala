@@ -79,7 +79,10 @@ object Session {
   def getKeys():Option[KeyList] = get[KeyList](KEYS)
   def setKeys(list:KeyList) = set(KEYS,list)
 
-  def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).getOrElse("en")
+  def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).toOption match {
+    case Some(lang) if Labels.langs.contains(lang)  => lang
+    case _ => "en"
+  }
   def setLang(lang:String) = {
     dom.window.sessionStorage.setItem(LANG,lang)
     dom.window.location.reload()

@@ -57,11 +57,17 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
           )
         ),
         div(BootstrapStyles.Panel.panelBody)(
+          label(Labels.login.choseLang),br,
+          Labels.langs.map{ l =>
+            span(a(onclick :+= ((e:Event) => Session.setLang(l) ),l)," ")
+          },br,
           strong(bind(model.subProp(_.message))),
           br,
-          UdashForm.textInput()(Labels.login.username)(model.subProp(_.username)),
-          UdashForm.passwordInput()(Labels.login.password)(model.subProp(_.password)),
-          button(`type` := "submit",BootstrapStyles.Button.btn,onclick :+= ((e:Event) => presenter.login()),Labels.login.button)
+          label(Labels.login.username),br,
+          TextInput(model.subProp(_.username)),br,
+          label(Labels.login.password),br,
+          PasswordInput(model.subProp(_.password)),br,br,
+          button(`type` := "submit",onclick :+= ((e:Event) => presenter.login()),Labels.login.button)
         )
       )
     )

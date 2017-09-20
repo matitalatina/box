@@ -9,6 +9,9 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
   * Created by andre on 6/8/2017.
   */
 object Labels {
+
+  def langs = Seq("it","de","fr","en")
+
   private var labels:Map[String,String] = Map()
   def loadLabels(lang:String) = REST.labels(lang).map{ table =>
     labels = table
@@ -36,6 +39,7 @@ object Labels {
     def username = get("login.username")
     def password = get("login.password")
     def button = get("login.button")
+    def choseLang = get("login.chose_lang")
   }
 
   object navigation{
@@ -67,5 +71,6 @@ object Labels {
     def home = get("header.home")
     def models = get("header.models")
     def forms = get("header.forms")
+    def lang = get("header.lang")
   }
 }

@@ -9,7 +9,22 @@ import scalacss.internal.LengthUnit.px
 object GlobalStyles extends StyleSheet.Inline {
   import dsl._
 
+  val inputDefaultWidth = width(70 %%)
+
   val global = style(
+
+    unsafeRoot("select")(
+      inputDefaultWidth
+    ),
+
+    unsafeRoot("input")(
+      inputDefaultWidth
+    ),
+
+    unsafeRoot("textarea")(
+      inputDefaultWidth
+    ),
+
     unsafeRoot("header")(
       clear.both,
       height(50 px),
@@ -19,6 +34,7 @@ object GlobalStyles extends StyleSheet.Inline {
     ),
 
     unsafeRoot(".form-control")(
+      inputDefaultWidth,
       paddingTop(1 px),
       paddingBottom(1 px),
       paddingRight(5 px),
