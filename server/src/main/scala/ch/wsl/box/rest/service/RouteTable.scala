@@ -77,7 +77,7 @@ trait RouteTable {
       } ~
       path("schema") {
         get {
-          complete{ JSONSchemas.of(name,db) }
+          complete{ JSONSchemas.of(name) }
         }
       } ~
       path("metadata") {

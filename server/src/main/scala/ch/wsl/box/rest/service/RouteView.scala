@@ -42,7 +42,7 @@ trait RouteView {
         println(s"view with name: $name")
         path("schema") {
           get {
-              complete{ JSONSchemas.of(name,db) }
+              complete{ JSONSchemas.of(name) }
           }
         } ~
         path("metadata") {
