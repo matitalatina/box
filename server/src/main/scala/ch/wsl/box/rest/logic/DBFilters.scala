@@ -1,5 +1,8 @@
 package ch.wsl.box.rest.logic
 
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+
 import ch.wsl.box.model.shared.Filter
 import slick.driver.PostgresDriver.api._
 
@@ -27,6 +30,8 @@ trait DBFilters {
 
 trait UglyDBFilters extends DBFilters {
 
+  val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
+
 
   def ==(col:Col,value:Any):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
 
@@ -39,11 +44,13 @@ trait UglyDBFilters extends DBFilters {
           case "scala.Long" => c.asInstanceOf[Rep[Long]] === v.asInstanceOf[String].toLong
           case "String" => c.asInstanceOf[Rep[String]] === v.asInstanceOf[String]
           case "scala.Boolean" => c.asInstanceOf[Rep[Boolean]] === v.asInstanceOf[String].toBoolean
+          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] === new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case "scala.Option[scala.Short]" =>  c.asInstanceOf[Rep[Option[Short]]] === v.asInstanceOf[String].toShort
           case "scala.Option[scala.Int]" | "scala.Option[java.lang.Integer]" => c.asInstanceOf[Rep[Option[Int]]] === v.asInstanceOf[String].toInt
           case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] === v.asInstanceOf[String].toLong
           case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] === v.asInstanceOf[String]
           case "scala.Option[scala.Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] === v.asInstanceOf[String].toBoolean
+          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] === new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
                 println("Type mapping for: " + col.`type`+ " not found")
                 None
@@ -62,11 +69,13 @@ trait UglyDBFilters extends DBFilters {
           case "scala.Long" => c.asInstanceOf[Rep[Long]] =!= v.asInstanceOf[String].toLong
           case "String" => c.asInstanceOf[Rep[String]] =!= v.asInstanceOf[String]
           case "scala.Boolean" => c.asInstanceOf[Rep[Boolean]] =!= v.asInstanceOf[String].toBoolean
+          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] =!= new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] =!= v.asInstanceOf[String].toShort
           case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] =!= v.asInstanceOf[String].toInt
           case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] =!= v.asInstanceOf[String].toLong
           case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] =!= v.asInstanceOf[String]
           case "scala.Option[scala.Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.asInstanceOf[String].toBoolean
+          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] =!= new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
             println("Type mapping for: " + col.`type` + " not found")
             None
@@ -83,9 +92,11 @@ trait UglyDBFilters extends DBFilters {
           case "scala.Short" => c.asInstanceOf[Rep[Short]] > v.asInstanceOf[String].toShort
           case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] > v.asInstanceOf[String].toInt
           case "scala.Long" => c.asInstanceOf[Rep[Long]] > v.asInstanceOf[String].toLong
+          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] > new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] > v.asInstanceOf[String].toShort
           case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] > v.asInstanceOf[String].toInt
           case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] > v.asInstanceOf[String].toLong
+          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] > new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
               println("Type mapping for: " + col.`type` + " not found")
               None
@@ -105,9 +116,11 @@ trait UglyDBFilters extends DBFilters {
           case "scala.Short" => c.asInstanceOf[Rep[Short]] < v.asInstanceOf[String].toShort
           case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] < v.asInstanceOf[String].toInt
           case "scala.Long" => c.asInstanceOf[Rep[Long]] < v.asInstanceOf[String].toLong
+          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] < new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] < v.asInstanceOf[String].toShort
           case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] < v.asInstanceOf[String].toInt
           case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] < v.asInstanceOf[String].toLong
+          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] < new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
             println("Type mapping for: " + col.`type` + " not found")
             None

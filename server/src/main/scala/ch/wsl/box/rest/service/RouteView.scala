@@ -47,7 +47,7 @@ trait RouteView {
         } ~
         path("metadata") {
           get {
-            complete{ JSONModelMetadata.of(name,db,"en") }
+            complete{ JSONModelMetadata.of(name, "en") }
           }
         } ~
         path("count") {

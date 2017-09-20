@@ -28,7 +28,7 @@ case class JSONFormMetadata(implicit db:Database) {
 
   private def fieldsToJsonFields(fields:Seq[(Field_row,Field_i18n_row)], lang:String): Future[Seq[JSONField]] = {
     val jsonFields = fields.map{ case (field,fieldI18n) =>
-      val options = for{
+      val options: Option[Future[JSONFieldOptions]] = for{
         model <- field.refModel
         value <- field.refValueProperty
         text = fieldI18n.refTextProperty.getOrElse(lang)
@@ -40,9 +40,6 @@ case class JSONFormMetadata(implicit db:Database) {
           }.toMap
           JSONFieldOptions(model, JSONFieldMap(value,text),options)
         }
-
-
-
       }
 
 

@@ -15,7 +15,7 @@ object JSONSchemas {
 
   import StringHelper._
 
-  def of(table:String,db:slick.driver.PostgresDriver.api.Database):Future[JSONSchema] = {
+  def of(table:String)(implicit db:slick.driver.PostgresDriver.api.Database):Future[JSONSchema] = {
 
     println("Getting JSONSchema of:" + table)
 

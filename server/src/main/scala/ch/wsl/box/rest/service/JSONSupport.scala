@@ -36,7 +36,7 @@ object JSONSupport extends CirceSupport{
 
   implicit val TimestampFormat : Encoder[Timestamp] with Decoder[Timestamp] = new Encoder[Timestamp] with Decoder[Timestamp] {
 
-    val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm")  //attention the format is different to that in the client for datetimepicker
+    val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
 
     override def apply(a: Timestamp): Json = Encoder.encodeString.apply(timestampFormatter.format(a))
 
@@ -46,7 +46,7 @@ object JSONSupport extends CirceSupport{
 
   implicit val TimeFormat : Encoder[Time] with Decoder[Time] = new Encoder[Time] with Decoder[Time] {
 
-    val timeFormatter = new SimpleDateFormat("HH:mm")
+    val timeFormatter = new SimpleDateFormat("HH:mm:ss.S")
 
     override def apply(a: Time): Json = Encoder.encodeString.apply(timeFormatter.format(a))
 

@@ -15,11 +15,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
+import ch.wsl.box.shared.utils.Formatters._
+
 /**
  * Created by andreaminetti on 16/02/16.
  */
 
 trait RouteTable {
+
+
 
   var tables = Set[String]()
 
@@ -78,7 +82,7 @@ trait RouteTable {
       } ~
       path("metadata") {
         get {
-          complete{ JSONModelMetadata.of(name,db,"en") }   //can set "en" hardcoded, since base table JSONForm do not change with language
+          complete{ JSONModelMetadata.of(name, "en") }   //can set "en" hardcoded, since base table JSONForm do not change with language
         }
       } ~
       path("keys") {   //returns key fields names
