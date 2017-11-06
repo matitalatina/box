@@ -38,7 +38,7 @@ object JSONModelMetadata {
           if (constraints.contains(fk.contraintName)) {
             println("error: " + fk.contraintName)
             println(field.column_name)
-            Future.successful(JSONField(JSONSchemas.typesMapping(field.data_type), key = field.column_name.slickfy))
+            Future.successful(JSONField(JSONSchemas.typesMapping(field.data_type), key = field.column_name.slickfy,nullable = field.nullable))
           } else {
             constraints = fk.contraintName :: constraints
 
@@ -47,7 +47,7 @@ object JSONModelMetadata {
             val value = fk.referencingKeys.head
 
             import ch.wsl.box.shared.utils.JsonUtils._
-            TablesRegistry.actions(model).getModel(JSONQuery.limit(100)).map{ lookupData =>
+            TablesRegistry.actions(model).getModel(JSONQuery.baseQuery).map{ lookupData =>
               val options = lookupData.map{ lookupRow =>
                 (lookupRow.get(value),lookupRow.get(text))
               }.toMap
@@ -55,6 +55,7 @@ object JSONModelMetadata {
               JSONField(
                 JSONSchemas.typesMapping(field.data_type),
                 key = field.column_name.slickfy,
+                nullable = field.nullable,
                 placeholder = Some(fk.referencingTable + " Lookup"),
                 //widget = Some(WidgetsNames.select),
                 lookup = Some(JSONFieldOptions(model, JSONFieldMap(value,text),options))
@@ -66,6 +67,7 @@ object JSONModelMetadata {
         case _ => Future.successful(JSONField(
           JSONSchemas.typesMapping(field.data_type),
           key = field.column_name.slickfy,
+          nullable = field.nullable,
           widget = JSONSchemas.widgetMapping(field.data_type)
         ))
       }

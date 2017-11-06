@@ -19,6 +19,8 @@ import org.scalajs.dom.{Element, Event, KeyboardEvent}
 import scala.concurrent.Future
 
 
+
+
 /**
   * Created by andre on 4/24/2017.
   */
@@ -35,7 +37,7 @@ object ModelTableModel{
 
 case class ModelTableViewPresenter(routes:Routes,onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
+  import ch.wsl.box.client.Context._
 
 
 
@@ -112,7 +114,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     val metadata = model.subProp(_.metadata).get
     val sort = metadata.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.key, s.sort)).toList
     val filter = metadata.filter(_.filter != "").map(f => JSONQueryFilter(f.field.key,Some(f.filterType),f.filter)).toList
-    val query = JSONQuery(Conf.pageLength, 1, sort, filter)    //todo: underwstand why 20
+    val query = JSONQuery(Conf.pageLength, 1, sort, filter)
 
     for {
       csv <- REST.csv(model.subProp(_.kind).get,Session.lang(),model.subProp(_.name).get,query)

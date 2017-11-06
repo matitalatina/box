@@ -15,8 +15,7 @@ trait DBFilters {
   
   def operator(op:String)(c:Col,v:Any) ={
     
-    println("operator: " + op)
-    
+
     op match{
       case Filter.EQUALS      => ==(c, v)
       case Filter.NOT    => not(c, v)

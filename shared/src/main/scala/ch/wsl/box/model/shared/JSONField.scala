@@ -6,6 +6,7 @@ package ch.wsl.box.model.shared
 case class JSONField(
                       `type`:String,
                       key:String,
+                      nullable: Boolean,
                       title:Option[String] = None,
                       lookup:Option[JSONFieldOptions] = None,
                       placeholder:Option[String] = None,

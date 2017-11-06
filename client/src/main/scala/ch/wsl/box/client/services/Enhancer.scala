@@ -91,13 +91,7 @@ object Enhancer {
 
   import io.circe.syntax._
 
-  def parseOption(options:JSONFieldOptions,valueToSave:Json):Json = {
-    options.options.find(_._2 == valueToSave.string)
-      .map(x =>
-        if(x._2 == "") return Json.Null else
-          Try(x._1.toInt.asJson).getOrElse(x._1.asJson)
-      ).getOrElse(Json.Null)
-  }
+
 
   def parse(field: JSONField,value:Option[Json], keys:Seq[String])(onError:(Throwable => Unit)):(String,Json) = try{
     println(s"parsing ${field.key} with value $value")
@@ -106,12 +100,9 @@ object Enhancer {
       case None => Json.Null
       case Some(v) => v
     }
-    val data = (field.`type`,field.lookup) match {
-      case (_,Some(options)) if !keys.contains(field.key) => parseOption(options,valueToSave)
-      case (_,_) => valueToSave
-    }
 
-    (field.key,data)
+
+    (field.key,valueToSave)
   } catch { case t: Throwable =>
     onError(t)
     throw t

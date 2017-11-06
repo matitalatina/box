@@ -189,7 +189,8 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         cls := "primary",
         onclick :+= ((ev: Event) => presenter.save(), true)
       )(Labels.form.save),br,br,
-      Debug(model)
+      Debug(model.subProp(_.form)),
+      Debug(model.subProp(_.results))
     )
   }
 }

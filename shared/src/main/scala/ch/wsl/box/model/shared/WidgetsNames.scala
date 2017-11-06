@@ -14,4 +14,5 @@ object WidgetsNames {
   val hidden = "hidden"
   val nolabel = "nolabel"
   val twoLines = "twoLines"
+  val popup = "popup"
 }

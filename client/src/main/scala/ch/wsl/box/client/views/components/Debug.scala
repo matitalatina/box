@@ -11,7 +11,7 @@ object Debug {
 
   import ch.wsl.box.client.Context._
 
-  def apply[T](model: ModelProperty[T])(implicit enc:io.circe.Encoder[T]) = {
+  def apply[T](model: Property[T])(implicit enc:io.circe.Encoder[T]) = {
     val show = Property{false}
 
     val out = model.transform{ m =>

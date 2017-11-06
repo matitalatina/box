@@ -26,15 +26,15 @@ case class JSONFormMetadata(implicit db:Database) {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
-  private def fieldsToJsonFields(fields:Seq[(Field_row,Field_i18n_row)], lang:String): Future[Seq[JSONField]] = {
-    val jsonFields = fields.map{ case (field,fieldI18n) =>
+  private def fieldsToJsonFields(fields:Seq[((Field_row,Field_i18n_row),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
+    val jsonFields = fields.map{ case ((field,fieldI18n),pgColumn) =>
       val options: Option[Future[JSONFieldOptions]] = for{
         model <- field.refModel
         value <- field.refValueProperty
         text = fieldI18n.refTextProperty.getOrElse(lang)
       } yield {
 
-        TablesRegistry.actions(model).getModel(JSONQuery.baseQuery.copy()).map{ lookupData =>   //JSONQuery.limit(100)
+        TablesRegistry.actions(model).getModel(JSONQuery.baseQuery).map{ lookupData =>   //JSONQuery.limit(100)
           val options = lookupData.map{ lookupRow =>
             (lookupRow.get(value),lookupRow.get(text))
           }.toMap
@@ -58,12 +58,15 @@ case class JSONFormMetadata(implicit db:Database) {
         remote <- field.subFields
       } yield Subform(id,local,remote,queryFilter)
 
+
+      val nullable = pgColumn.map(_.nullable).getOrElse(true)
+
       options match {
         case Some(opt) => opt.map{ o =>
-          JSONField(field.`type`, field.key, fieldI18n.title,Some(o), fieldI18n.placeholder, field.widget, subform, field.default)
+          JSONField(field.`type`, field.key, nullable, fieldI18n.title,Some(o), fieldI18n.placeholder, field.widget, subform, field.default)
         }
         case None => Future.successful{
-          JSONField(field.`type`, field.key, fieldI18n.title,None, fieldI18n.placeholder, field.widget, subform, field.default)
+          JSONField(field.`type`, field.key, nullable, fieldI18n.title,None, fieldI18n.placeholder, field.widget, subform, field.default)
         }
       }
 
@@ -90,6 +93,13 @@ case class JSONFormMetadata(implicit db:Database) {
     getForm(formQuery,lang)
   }
 
+  def columns(form:Form_row,field:Field_row): Future[Option[PgColumn]] = {
+    val pgColumns = TableQuery[PgColumns]
+    Auth.adminDB.run{
+      pgColumns.filter(row => row.column_name === field.key && row.table_name === form.table).result
+    }.map(_.headOption)
+  }
+
   def getForm(formQuery: Query[Form,Form_row,Seq],lang:String) = {
 
     import io.circe.generic.auto._
@@ -103,14 +113,15 @@ case class JSONFormMetadata(implicit db:Database) {
     for{
       form <- Auth.boxDB.run( formQuery.result ).map(_.head)
       fields <- Auth.boxDB.run{fieldQuery(form.id.get).result}
+      columns <- Future.sequence(fields.map(f => columns(form,f._1)))
       keys <- JSONSchemas.keysOf(form.table)
-      jsonFieldsPartial <- fieldsToJsonFields(fields, lang)
+      jsonFieldsPartial <- fieldsToJsonFields(fields.zip(columns), lang)
     } yield {
 
 
       //to force adding primary keys if not specified by the user
       val missingKeyFields = keys.filterNot(k => fields.map(_._1.key).contains(k)).map{ key =>
-        JSONField("string",key)
+        JSONField("string",key,false)
       }
 
       println(s"Missing Key fields $missingKeyFields")

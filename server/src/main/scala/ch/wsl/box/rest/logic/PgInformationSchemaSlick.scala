@@ -15,7 +15,9 @@ case class PgColumn(
   table_name:String,
   table_schema:String,
   ordinal_position:Int
-)
+) {
+  def nullable = is_nullable == "YES"
+}
 
 class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema"), "columns") {
 

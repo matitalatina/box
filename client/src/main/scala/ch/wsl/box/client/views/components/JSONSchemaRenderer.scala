@@ -143,16 +143,35 @@ object JSONSchemaRenderer {
     ).render
   }
 
-  def optionsRenderer(modelLabel:String, options:JSONFieldOptions, model:Property[String]):Modifier = {
+  def optionsRenderer(modelLabel:String, options:JSONFieldOptions, model:Property[Json],field:JSONField):Modifier = {
+
+    def value2Label(org:Json):String = options.options.find(_._1 == org.string).map(_._2).getOrElse("")
+    def label2Value(v:String):Json = options.options.find(_._2 == v).map(_._1.asJson).getOrElse(Json.Null)
+
+    val selectModel = model.transform(value2Label,label2Value)
+
+    val opts = if(field.nullable) {
+      Seq("") ++ options.options.values.toSeq
+    } else {
+      options.options.values.toSeq
+    }
+
+    div(BootstrapCol.md(12),GlobalStyles.noPadding)(
+      if(modelLabel.length >0) label(modelLabel) else {},
+      Select(selectModel,opts,Select.defaultLabel)(BootstrapStyles.pullRight)
+    )
+  }
+
+  def popup(modelLabel:String, options:JSONFieldOptions, model:Property[String],field:JSONField):Modifier = {
 
     def value2Label(org:String):String = options.options.find(_._1 == org).map(_._2).getOrElse("Val not found")
     def label2Value(v:String):String = options.options.find(_._2 == v).map(_._1).getOrElse("")
 
-    val selectModel = model.transform(value2Label,label2Value)
+    val selectModel: Property[String] = model.transform(value2Label,label2Value)
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       if(modelLabel.length >0) label(modelLabel) else {},
-      Select(selectModel,options.options.values.toSeq,Select.defaultLabel)(BootstrapStyles.pullRight)
+      span(bind(selectModel),button("Change", onclick :+= ((e:Event) => println(e))))
     )
   }
 
@@ -195,7 +214,8 @@ object JSONSchemaRenderer {
     (field.`type`, field.widget, field.lookup, keys.contains(field.key), field.subform) match {
 
       case (_,Some(WidgetsNames.hidden),_,_,_) => { }
-      case (_,_,Some(options),_,_) => optionsRenderer(label,options,stringModel)
+      case (_,Some(WidgetsNames.popup),Some(options),_,_) => popup(label,options,stringModel,field)
+      case (_,_,Some(options),_,_) => optionsRenderer(label,options,model,field)
       //case (_,_,Some(options),true,_) => fixedLookupRenderer(label,options,stringModel)
       case (_,_,_,true,_) => {
         textInput(stringModel,Some(label),disabled := true, textAlign.right)

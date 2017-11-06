@@ -9,6 +9,8 @@ import io.circe._
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import io.circe.Decoder.Result
 
+import scala.util.Try
+
 /**
   * Created by andreaminetti on 12/10/16.
   *
@@ -37,10 +39,18 @@ object JSONSupport extends CirceSupport{
   implicit val TimestampFormat : Encoder[Timestamp] with Decoder[Timestamp] = new Encoder[Timestamp] with Decoder[Timestamp] {
 
     val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
+    val timestampFormatterMin = new SimpleDateFormat("yyyy-MM-dd HH:mm")  //attention the format is different to that in the client for datetimepicker
 
-    override def apply(a: Timestamp): Json = Encoder.encodeString.apply(timestampFormatter.format(a))
+    override def apply(a: Timestamp): Json = {
+      Try {
+        Encoder.encodeString.apply(timestampFormatter.format(a))
+      }.getOrElse(Json.Null)
+    }
 
-    override def apply(c: HCursor): Result[Timestamp] = Decoder.decodeString.map(s => new Timestamp(timestampFormatter.parse(s).getTime)).apply(c)
+    override def apply(c: HCursor): Result[Timestamp] = Decoder.decodeString.map{s =>
+      val timestamp = Try{timestampFormatter.parse(s).getTime}.getOrElse(timestampFormatterMin.parse(s).getTime)
+      new Timestamp(timestamp)
+    }.apply(c)
   }
 
 
