@@ -66,11 +66,14 @@ case class JsonActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Produc
     } yield {
       //println(data.toString().take(100))
       //println(keys)
-      val last = query.page*query.count >= count.count
+      val last = query.paging match {
+        case None => true
+        case Some(paging) =>  paging.page*paging.count >= count.count
+      }
       import ch.wsl.box.shared.utils.JsonUtils._
       KeyList(
         last,
-        query.page,
+        query.paging.map(_.page).getOrElse(1),
         data.map{_.keys(keys).asString},
         count.count
       )

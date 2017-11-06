@@ -43,4 +43,5 @@ object REST {
   def update(kind:String,lang:String,model:String,keys:JSONKeys,data:Json):Future[Json] = client.put[Json,Json](s"/$kind/$lang/$model/id/${keys.asString}",data)
   def loginCheck() = client.get[String]("/checkLogin")
   def labels(lang:String):Future[Map[String,String]] = client.get[Map[String,String]](s"/labels/$lang")
+  def conf():Future[Map[String,String]] = client.get[Map[String,String]](s"/conf")
 }

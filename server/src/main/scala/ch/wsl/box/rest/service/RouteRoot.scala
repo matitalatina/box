@@ -1,10 +1,12 @@
 package ch.wsl.box.rest.service
 
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.server.{Directives, ExceptionHandler, Route}
 import akka.stream.Materializer
 import ch.wsl.box.model.tables._
 import ch.wsl.box.rest.logic.{JSONFormMetadata, LangHelper}
+import ch.wsl.box.rest.model.Conf
+import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -16,9 +18,14 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
 
   implicit val materializer:Materializer
 
+
+
   /**
     * Base of all HTTP calls
     */
+
+
+
   val route:Route = {
 
     import JSONSupport._
@@ -26,7 +33,6 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
     import ch.megard.akka.http.cors.CorsDirectives._
     import io.circe.generic.auto._
     import ch.wsl.box.rest.service.Auth.PostgresAuthenticator._
-
 
     //Serving UI
     clientFiles ~
@@ -43,6 +49,16 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                 get{
                   complete(LangHelper(lang).translationTable)
                 }
+              }
+            } ~
+            path("conf"){
+              get{
+                complete(Auth.boxDB.run {
+                    Conf.table.result
+                  }.map { result =>
+                    result.map(x => x.key -> x.value).toMap
+                  }
+                )
               }
             } ~
             postgresBasicAuth {  userProfile =>

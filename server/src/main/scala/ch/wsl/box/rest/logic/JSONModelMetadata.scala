@@ -78,7 +78,7 @@ object JSONModelMetadata {
       fields <- Future.sequence(c.map(field2form))
       keys <- JSONSchemas.keysOf(table)
     } yield {
-      JSONMetadata(1,table,fields, Layout.fromFields(fields),table,lang,fields.map(_.key),keys)
+      JSONMetadata(1,table,fields, Layout.fromFields(fields),table,lang,fields.map(_.key),keys, None)
     }
 
 

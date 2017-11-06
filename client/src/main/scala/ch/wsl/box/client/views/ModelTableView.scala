@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.styles.GlobalStyles
-import ch.wsl.box.client.utils.{Labels, Session}
+import ch.wsl.box.client.utils.{Conf, Labels, Session}
 import ch.wsl.box.client.views.components.TableFieldsRenderer
 import ch.wsl.box.model.shared._
 import io.circe.Json
@@ -58,15 +58,20 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     model.subProp(_.name).set(state.model)
     model.subProp(_.kind).set(state.kind)
 
-    val query = JSONQuery.limit(30)
+   val defaultJsonQuery = JSONQuery.limit(Conf.pageLength)
 
     for{
-      csv <- REST.csv(state.kind,Session.lang(),state.model,query)
+
       emptyFieldsForm <- REST.form(state.kind,Session.lang(),state.model)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tableFields.contains(field.key))
       filteredForm = emptyFieldsForm.copy(fields = fields)
       models <- Enhancer.fetchModels(Seq(filteredForm))
       form = Enhancer.populateOptionsValuesInFields(models,filteredForm)
+      query = form.query match {
+        case None => defaultJsonQuery
+        case Some(jsonquery) => jsonquery.copy(paging = defaultJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
+      }
+      csv <- REST.csv(state.kind,Session.lang(),state.model,query)
       _ <- saveKeys(query)
     } yield {
 
@@ -107,7 +112,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     val metadata = model.subProp(_.metadata).get
     val sort = metadata.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.key, s.sort)).toList
     val filter = metadata.filter(_.filter != "").map(f => JSONQueryFilter(f.field.key,Some(f.filterType),f.filter)).toList
-    val query = JSONQuery(20, 1, sort, filter)
+    val query = JSONQuery(Conf.pageLength, 1, sort, filter)    //todo: underwstand why 20
 
     for {
       csv <- REST.csv(model.subProp(_.kind).get,Session.lang(),model.subProp(_.name).get,query)

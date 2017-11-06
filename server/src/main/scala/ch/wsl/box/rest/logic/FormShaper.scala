@@ -36,7 +36,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
 
     val filters = parentFilter.toSeq ++ subform.subFilter
 
-    JSONQuery(50,1,List(),filters.toList.distinct)
+    JSONQuery(None,List(),filters.toList.distinct)
   }
 
   private def getSubform(model:Json, field:JSONField, form:JSONMetadata, subform:Subform):Future[Json] = {
@@ -73,7 +73,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
   }.recover{ case t => t.printStackTrace(); Seq() }
 
   def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)     //todo adapt JSONQuery to select only fields in form
-  def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(_.headOption.asJson)
+  def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single key") else x.headOption.asJson)
 
   def csv(query:JSONQuery):Future[String] = for {
     results <- extractSeq(query)

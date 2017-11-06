@@ -6,7 +6,7 @@ import io.circe.syntax._
 /**
   * Created by andre on 5/16/2017.
   */
-case class JSONMetadata(id:Int, name:String, fields:Seq[JSONField], layout:Layout, table:String, lang:String, tableFields:Seq[String], keys:Seq[String])
+case class JSONMetadata(id:Int, name:String, fields:Seq[JSONField], layout:Layout, table:String, lang:String, tableFields:Seq[String], keys:Seq[String], query:Option[JSONQuery])
 
 object JSONMetadata{
   def jsonPlaceholder(form:JSONMetadata, subforms:Seq[JSONMetadata] = Seq()):Map[String,Json] = {

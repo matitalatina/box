@@ -34,7 +34,7 @@ case class JSONFormMetadata(implicit db:Database) {
         text = fieldI18n.refTextProperty.getOrElse(lang)
       } yield {
 
-        TablesRegistry.actions(model).getModel(JSONQuery.limit(100)).map{ lookupData =>
+        TablesRegistry.actions(model).getModel(JSONQuery.baseQuery.copy()).map{ lookupData =>   //JSONQuery.limit(100)
           val options = lookupData.map{ lookupRow =>
             (lookupRow.get(value),lookupRow.get(text))
           }.toMap
@@ -119,6 +119,13 @@ case class JSONFormMetadata(implicit db:Database) {
       val missingKeyTableFields = keys.filterNot(k => definedTableFields.contains(k))
       val tableFields = missingKeyTableFields ++ definedTableFields
 
+      val defaultQuery: Option[JSONQuery] = for{
+        q <- form.query
+        json <- parse(q).right.toOption
+        jsonQuery <- json.as[JSONQuery].right.toOption
+      } yield jsonQuery
+
+
       val jsonFields = {missingKeyFields ++ jsonFieldsPartial}.distinct
 
       val layout = form.layout.map { l =>
@@ -138,8 +145,8 @@ case class JSONFormMetadata(implicit db:Database) {
 
 
 
-      val result = JSONMetadata(form.id.get,form.name,jsonFields,layout,form.table,lang,tableFields,keys)
-      println(s"resulting form: $result")
+      val result = JSONMetadata(form.id.get,form.name,jsonFields,layout,form.table,lang,tableFields,keys,defaultQuery)
+      //println(s"resulting form: $result")
       result
     }
 

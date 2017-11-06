@@ -2,6 +2,8 @@ package ch.wsl.box.rest.service
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.ExceptionHandler
 import akka.io.IO
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
@@ -18,6 +20,15 @@ object Boot extends App with RouteRoot {
   // needed for the future flatMap/onComplete in the end
   implicit val executionContext = system.dispatcher
 
+
+  val myExceptionHandler = ExceptionHandler {
+    case e: Exception => {
+      e.printStackTrace();
+      complete("Internal server error")
+    }
+  }
+
+
   val conf: Config = ConfigFactory.load().as[Config]("serve")
   val host = conf.as[String]("host")
   val port = conf.as[Int]("port")
@@ -26,8 +37,10 @@ object Boot extends App with RouteRoot {
   generatedRoutes()(Auth.adminDB,materializer)
 
   // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
-  val bindingFuture = Http().bindAndHandle(route, host, port)     //attache the root route
-  println(s"Server online at http://localhost:8080/\nPress Q to stop...")
+  val bindingFuture = Http().bindAndHandle(handleExceptions(myExceptionHandler) {
+    route
+  }, host, port)     //attache the root route
+  println(s"Server online at http://localhost:8080/\nPress qresultingre to stop...")
   while(StdIn.readLine() != "q"){       //endless loop until q in sbt console is pressed
     println()
   } // let it run until user presses return

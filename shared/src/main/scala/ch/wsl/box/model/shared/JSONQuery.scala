@@ -3,17 +3,25 @@ package ch.wsl.box.model.shared
 /**
   * Created by andreaminetti on 24/04/15.
   *
-  * @param count how many rows
-  * @param page page n of count rows
+  * @param paging paging information
   * @param sort sort results by JSONSort object
   * @param filter result by JSONQueryFilter object
   */
 case class JSONQuery(
-                      count:Int,
-                      page:Int,
+                      paging:Option[JSONQueryPaging],
                       sort:List[JSONSort],
                       filter:List[JSONQueryFilter]
-                    )
+                    ){
+  def page = paging.map(_.page).getOrElse(1)
+}
+
+/**
+  * Apply paging
+  *
+  * @param count
+  * @param page
+  */
+case class JSONQueryPaging(count:Int, page:Int=1)
 
 /**
   * Apply operator to column/value
@@ -36,17 +44,19 @@ case class JSONSort(column:String,order:String)
   * Created by andreaminetti on 16/03/16.
   */
 object JSONQuery{
+
+  def apply(count:Int, page:Int, sort:List[JSONSort], filter:List[JSONQueryFilter]):JSONQuery =
+    JSONQuery(paging = Some(JSONQueryPaging(count = count, page = page)), sort, filter)
   /**
     * Generic query
     */
   val baseQuery = JSONQuery(
-    count = 30,
-    page = 1,
+    paging = None,
     sort = List(),
     filter = List()
   )
 
-  def limit(limit:Int) = baseQuery.copy(count = limit)
+  def limit(limit:Int) = baseQuery.copy(paging= Some(JSONQueryPaging(count = limit)))
 }
 
 object Sort{

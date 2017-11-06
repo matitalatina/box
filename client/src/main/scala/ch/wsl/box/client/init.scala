@@ -1,6 +1,6 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.utils.{Labels, Session}
+import ch.wsl.box.client.utils.{Conf, Labels, Session}
 import io.udash._
 import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.wrappers.jquery._
@@ -23,7 +23,10 @@ object Init extends JSApp with StrictLogging {
   @JSExport
   override def main(): Unit = {
 
-    Labels.loadLabels(Session.lang()).map{ _ =>
+    for {
+      _ <- Conf.load()
+      _ <- Labels.load(Session.lang())
+    } yield {
       jQ(document).ready((_: Element) => {
         val appRoot = jQ("#application").get(0)
         if (appRoot.isEmpty) {

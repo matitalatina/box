@@ -31,7 +31,10 @@ class DbActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](tabl
       }
     }
 
-    val qPaged:Rep[Seq[T#TableElementType]] = qSorted.drop((query.page - 1) * query.count).take(query.count)
+    val qPaged:Rep[Seq[T#TableElementType]] = query.paging match {
+      case None => qSorted
+      case Some(paging) => qSorted.drop ((paging.page - 1) * paging.count).take (paging.count)
+    }
 
     for {
       result <- db.run {

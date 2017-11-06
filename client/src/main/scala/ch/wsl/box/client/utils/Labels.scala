@@ -13,7 +13,7 @@ object Labels {
   def langs = Seq("it","de","fr","en")
 
   private var labels:Map[String,String] = Map()
-  def loadLabels(lang:String) = REST.labels(lang).map{ table =>
+  def load(lang:String) = REST.labels(lang).map{ table =>
     labels = table
   }
 

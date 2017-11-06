@@ -8,7 +8,7 @@ case class JSONKeys(keys:Vector[JSONKey]) {
 
   def values: Vector[String] = keys.map(_.value)
 
-  def query:JSONQuery = JSONQuery(1,1,List(),keys.map(_.filter).toList)
+  def query:JSONQuery = JSONQuery(None,List(),keys.map(_.filter).toList)
 
 }
 
