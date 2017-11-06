@@ -34,7 +34,7 @@ case class JSONFormMetadata(implicit db:Database) {
         text = fieldI18n.refTextProperty.getOrElse(lang)
       } yield {
 
-        TablesRegistry.actions(model).getModel(JSONQuery.limit(100)).map{ lookupData =>
+        TablesRegistry.actions(model).getModel(JSONQuery.limit(1000000)).map{ lookupData =>
           val options = lookupData.map{ lookupRow =>
             (lookupRow.get(value),lookupRow.get(text))
           }.toMap

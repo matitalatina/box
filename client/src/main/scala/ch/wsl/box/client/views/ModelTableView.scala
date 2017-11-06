@@ -19,6 +19,8 @@ import org.scalajs.dom.{Element, Event, KeyboardEvent}
 import scala.concurrent.Future
 
 
+
+
 /**
   * Created by andre on 4/24/2017.
   */
@@ -35,7 +37,7 @@ object ModelTableModel{
 
 case class ModelTableViewPresenter(routes:Routes,onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
+  import ch.wsl.box.client.Context._
 
 
 

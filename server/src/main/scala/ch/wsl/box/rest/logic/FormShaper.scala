@@ -53,13 +53,16 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
   private def expandJson(json:Json):Future[Json] = {
 
     val values = form.fields.map{ field =>
-      (field.`type`,field.subform) match {
+      {(field.`type`,field.subform) match {
         case ("static",_) => Future.successful(field.key -> field.default.asJson)  //set default value
         case (_,None) => Future.successful(field.key -> json.js(field.key))        //use given value
         case (_,Some(subform)) => for{
           form <- jsonFormMetadata.get(subform.id,form.lang)
           result <- getSubform(json,field,form,subform)
         } yield field.key -> result
+      }}.recover{ case t =>
+        t.printStackTrace()
+        field.key -> Json.Null
       }
     }
     Future.sequence(values).map(_.toMap.asJson)
@@ -70,7 +73,10 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
       elements <- TablesRegistry.actions(form.table).getModel(query)
       result <- Future.sequence(elements.map(expandJson))
     } yield result
-  }.recover{ case t => t.printStackTrace(); Seq() }
+  }.recover{ case t =>
+    t.printStackTrace()
+    Seq()
+  }
 
   def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)     //todo adapt JSONQuery to select only fields in form
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(_.headOption.asJson)

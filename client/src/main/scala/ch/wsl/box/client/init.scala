@@ -3,6 +3,7 @@ package ch.wsl.box.client
 import ch.wsl.box.client.utils.{Labels, Session}
 import io.udash._
 import io.udash.bootstrap.datepicker.UdashDatePicker
+import io.udash.properties.PropertyCreator
 import io.udash.wrappers.jquery._
 import org.scalajs.dom.{Element, document}
 
@@ -15,6 +16,9 @@ object Context {
   private val viewPresenterRegistry = new StatesToViewPresenterDef
 
   implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry, RootState)   //udash application
+
+  implicit val pc: PropertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]]
+
 }
 
 object Init extends JSApp with StrictLogging {
