@@ -1,5 +1,8 @@
 package ch.wsl.box.model.shared
 
+import ch.wsl.box.shared.utils.JsonUtils._
+import io.circe.Json
+
 /**
   * Created by andreaminetti on 18/03/16.
   */
@@ -24,6 +27,10 @@ object JSONKeys {
   def fromMap(keys:Map[String,String]) = {
     val jsonKeys = keys.map{ case (k,v) => JSONKey(k,v)}
     JSONKeys(jsonKeys.toVector)
+  }
+
+  def fromMap(keys:Seq[(String,Json)]):JSONKeys = {
+    JSONKeys(keys.map{ case (k,v) => JSONKey(k,v.string)}.toVector)
   }
 
 }

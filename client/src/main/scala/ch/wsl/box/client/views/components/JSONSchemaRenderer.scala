@@ -37,36 +37,40 @@ object JSONSchemaRenderer {
   import scalacss.ScalatagsCss._
 
 
-  final val dateTimePickerFormat = "YYYY-MM-DD hh:mm"
+  final val dateTimePickerFormat = "YYYY-MM-DD HH:mm"
   final val datePickerFormat = "YYYY-MM-DD"
-  final val timePickerFormat = "hh:mm"
+  final val timePickerFormat = "HH:mm"
 
 
   def numberInput(model:Property[String],labelString:Option[String] = None) = {
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
       if(labelString.exists(_.length > 0)) label(labelString) else {},
-      NumberInput(model,BootstrapStyles.pullRight,textAlign.right)
+      NumberInput(model,BootstrapStyles.pullRight,textAlign.right),
+      div(BootstrapStyles.Visibility.clearfix)
     )
   }
 
   def textInput(model:Property[String],labelString:Option[String],xs:Modifier*) = {
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
       if(labelString.exists(_.length > 0)) label(labelString) else {},
-      TextInput(model,BootstrapStyles.pullRight,xs)
+      TextInput(model,BootstrapStyles.pullRight,xs),
+      div(BootstrapStyles.Visibility.clearfix)
     )
   }
 
   def textArea(model:Property[String],labelString:Option[String],xs:Modifier*) = {
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
       if(labelString.exists(_.length > 0)) label(labelString) else {},
-      TextArea(model,BootstrapStyles.pullRight,xs)
+      TextArea(model,BootstrapStyles.pullRight,xs),
+      div(BootstrapStyles.Visibility.clearfix)
     )
   }
 
-  def datetimepicker(modelLabel:String, model:Property[Json], format:String = dateTimePickerFormat):Modifier = {
+  def datetimepicker(key:Property[String],modelLabel:String, model:Property[Json], format:String = dateTimePickerFormat):Modifier = {
 
 
     def toDate(jsonDate:Json):Option[java.util.Date] = Try{
+      if(jsonDate == Json.Null) return None
       val str = jsonDate.string.trim
       if(str == "") return None
       format match {
@@ -103,20 +107,22 @@ object JSONSchemaRenderer {
 
     }.toOption
 
-    def fromDate(dt:Option[java.util.Date]):Json = Try{
-      if (!dt.isDefined)
-        Json.Null
-      else {
-        val date = new Date(dt.get.getTime)
-        if (date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return Json.Null
-        val result = format match {
-          case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
-          case `datePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate())
-          case `timePickerFormat` => "%02d".format(date.getHours()) + ":" + "%02d".format(date.getMinutes())
+    def fromDate(dt:Option[java.util.Date]):Json = {
+      Try{
+        if (!dt.isDefined)
+          Json.Null
+        else {
+          val date = new Date(dt.get.getTime)
+          if (date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return Json.Null
+          val result = format match {
+            case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
+            case `datePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate())
+            case `timePickerFormat` => "%02d".format(date.getHours()) + ":" + "%02d".format(date.getMinutes())
+          }
+          result.asJson
         }
-        result.asJson
-      }
-    }.getOrElse(Json.Null)
+      }.getOrElse(Json.Null)
+    }
 
 
     val date = model.transform(toDate,fromDate)
@@ -127,20 +133,19 @@ object JSONSchemaRenderer {
       showClear = true,
       useStrict = false
     ))
-    val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
 
-    div(
-      if(modelLabel.length >0) label(modelLabel) else {},
-      showIf(model.transform(_ != Json.Null)) {
+
+
+    produce(key) { k =>
+      val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
+      div(
+        if (modelLabel.length > 0) label(modelLabel) else {},
         div(BootstrapStyles.pullRight,
-          picker.render,
-          a(Labels.form.removeDate, onclick :+= ((e:Event) => model.set(Json.Null)))
-        ).render
-      },
-      showIf(model.transform(_ == Json.Null)) {
-        div(a(Labels.form.addDate, onclick :+= ((e:Event) => model.set(fromDate(Some(new java.util.Date)))))).render
-      }
-    ).render
+          picker.render
+        ),
+        div(BootstrapStyles.Visibility.clearfix)
+      ).render
+    }
   }
 
   def optionsRenderer(modelLabel:String, options:JSONFieldOptions, model:Property[Json],field:JSONField):Modifier = {
@@ -158,7 +163,8 @@ object JSONSchemaRenderer {
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       if(modelLabel.length >0) label(modelLabel) else {},
-      Select(selectModel,opts,Select.defaultLabel)(BootstrapStyles.pullRight)
+      Select(selectModel,opts,Select.defaultLabel)(BootstrapStyles.pullRight),
+      div(BootstrapStyles.Visibility.clearfix)
     )
   }
 
@@ -197,7 +203,7 @@ object JSONSchemaRenderer {
     )
   }
 
-  def fieldRenderer(field:JSONField, model:Property[Json], keys:Seq[String], showLabel:Boolean = true, subforms:Seq[JSONMetadata] = Seq(), subformRenderer: SubformRenderer):Modifier = {
+  def fieldRenderer(key:Property[String], field:JSONField, model:Property[Json], keys:Seq[String], showLabel:Boolean = true, subforms:Seq[JSONMetadata] = Seq(), subformRenderer: SubformRenderer):Modifier = {
     val label = showLabel match {
       case true => field.title.getOrElse(field.key)
       case false => ""
@@ -223,9 +229,9 @@ object JSONSchemaRenderer {
       case ("number",Some(WidgetsNames.checkbox),_,_,_) => checkBox(label,model)
       case ("number",Some(WidgetsNames.nolabel),_,_,_) => numberInput(stringModel)
       case ("number",_,_,_,_) => numberInput(stringModel,Some(label))
-      case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(label,model,timePickerFormat)
-      case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(label,model,datePickerFormat)
-      case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(label,model)
+      case ("string",Some(WidgetsNames.timepicker),_,_,_) => datetimepicker(key,label,model,timePickerFormat)
+      case ("string",Some(WidgetsNames.datepicker),_,_,_) => datetimepicker(key,label,model,datePickerFormat)
+      case ("string",Some(WidgetsNames.datetimePicker),_,_,_) => datetimepicker(key,label,model)
       case ("subform",_,_,_,Some(sub)) => subformRenderer.render(model,label,sub)
       case (_,Some(WidgetsNames.nolabel),_,_,_) => textInput(stringModel,None)
       case (_,Some(WidgetsNames.twoLines),_,_,_) => textArea(stringModel,Some(label),rows := 2)
@@ -235,6 +241,16 @@ object JSONSchemaRenderer {
   }
 
   def apply(form:JSONMetadata, results: Property[Seq[(String,Json)]], subforms:Seq[JSONMetadata]):TypedTag[Element] = {
+
+    val key:Property[String] = Property("")
+
+    results.listen{ res =>
+      val keys = res.filter(r => form.keys.contains(r._1))
+      val currentKey = JSONKeys.fromMap(keys).asString
+      if(currentKey != key.get) {
+        key.set(currentKey)
+      }
+    }
 
     def seqJsonToJson(i:Int)(seq:Seq[(String,Json)]):Json = seq.lift(i).map(_._2).getOrElse(Json.Null)
     def jsonToSeqJson(i:Int,key:String)(n:Json):Seq[(String,Json)] = for{
@@ -250,11 +266,11 @@ object JSONSchemaRenderer {
     val subformRenderer = SubformRenderer(results.get,subforms)
 
     def subBlock(block:SubLayoutBlock) = div(BootstrapCol.md(12),GlobalStyles.subBlock)(
-          fieldsRenderer(block.fields,Stream.continually(block.fieldsWidth.toStream).flatten)
+          fieldsRenderer(key,block.fields,Stream.continually(block.fieldsWidth.toStream).flatten)
     )
 
 
-    def fieldsRenderer(fields:Seq[Either[String,SubLayoutBlock]],widths:Stream[Int] = Stream.continually(12)): TypedTag[Div] = div(
+    def fieldsRenderer(keyProp:Property[String],fields:Seq[Either[String,SubLayoutBlock]],widths:Stream[Int] = Stream.continually(12)): TypedTag[Div] = div(
       fields.zip(widths).map{ case (field,width) =>
 
         div(BootstrapCol.md(width),GlobalStyles.field,
@@ -264,7 +280,7 @@ object JSONSchemaRenderer {
                 result <- resultMap.toMap.lift(key)
                 field <- form.fields.find(_.key == key)
               } yield {
-                fieldRenderer(field, result, form.keys, subforms = subforms, subformRenderer = subformRenderer)
+                fieldRenderer(keyProp, field, result, form.keys, subforms = subforms, subformRenderer = subformRenderer)
               }
             }.getOrElse(div())
             case Right(subForm) => subBlock(subForm)
@@ -279,7 +295,7 @@ object JSONSchemaRenderer {
         form.layout.blocks.map{ block =>
           div(BootstrapCol.md(block.width),GlobalStyles.block)(
             block.title.map{title => h3(Labels(title))},
-            fieldsRenderer(block.fields)
+            fieldsRenderer(key,block.fields)
           )
         }
       )
