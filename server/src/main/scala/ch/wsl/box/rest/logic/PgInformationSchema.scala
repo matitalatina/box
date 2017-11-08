@@ -29,7 +29,7 @@ class PgInformationSchema(table:String, db:Database) {
 
   val dbConf: Config = ConfigFactory.load().as[Config]("db")
 
-  private val columnsQuery:Rep[Seq[PgColumns#TableElementType]] = pgColumns
+  private val columnsQuery = pgColumns
     .filter(e => e.table_name === table && e.table_schema === dbConf.as[String]("schema"))
     .sortBy(_.ordinal_position)
 
@@ -38,7 +38,7 @@ class PgInformationSchema(table:String, db:Database) {
     columnsQuery.result
   }
 
-  val pkQ:Rep[Seq[String]] = for{
+  val pkQ = for{
     constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === PRIMARYKEY
     usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
   } yield usage.column_name
@@ -49,13 +49,13 @@ class PgInformationSchema(table:String, db:Database) {
     action
   }
 
-  private val fkQ1:Rep[Seq[(PgConstraintReferences#TableElementType,PgConstraints#TableElementType)]] = for{
+  private val fkQ1 = for{
     constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === FOREIGNKEY
     constraintBind <- pgConstraintsReference if constraint.constraint_name === constraintBind.constraint_name
     referencingContraint <- pgConstraints if referencingContraint.constraint_name === constraintBind.referencing_constraint_name
   } yield (constraintBind,referencingContraint)
 
-  private def fkQ2(c:PgConstraintReferences#TableElementType,ref:PgConstraints#TableElementType):Rep[Seq[(String,String)]] = for{
+  private def fkQ2(c:PgConstraintReferences#TableElementType,ref:PgConstraints#TableElementType) = for{
     usageRef <- pgContraintsUsage if usageRef.constraint_name === c.constraint_name && usageRef.table_name === ref.table_name
     usage <- pgKeyUsage if usage.constraint_name === c.constraint_name && usage.table_name === table
   } yield (usage.column_name,usageRef.column_name)

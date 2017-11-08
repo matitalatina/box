@@ -58,7 +58,7 @@ object Settings {
 
     //database
     val postgres = "9.4.1211"
-    val slick = "3.2.0-M2"
+    val slick = "3.2.1"
 
     //frontend
     val scalaCss = "0.5.3-RC1"

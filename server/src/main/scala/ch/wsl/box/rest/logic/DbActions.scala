@@ -1,8 +1,7 @@
 package ch.wsl.box.rest.logic
 
 import ch.wsl.box.model.shared._
-import slick.driver.PostgresDriver.api._
-import slick.lifted.{ColumnOrdered, Query, Rep, TableQuery}
+import slick.lifted.{ColumnOrdered, TableQuery}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -11,8 +10,8 @@ import scala.util.Try
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class DbActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T]) extends UglyDBFilters {
-
+class DbActions[T <: ch.wsl.box.model.tables.profile.api.Table[M],M <: Product](table:TableQuery[T]) extends UglyDBFilters {
+  import ch.wsl.box.model.tables.profile.api._
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
   def find(query:JSONQuery)(implicit db:Database):Future[JSONResult[M]] = {
@@ -23,7 +22,7 @@ class DbActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](tabl
 
     val qSorted = query.sort.foldRight[Query[T,M,Seq]](qFiltered){case (sort,query) =>
       query.sortBy{ x =>
-        val c:slick.driver.PostgresDriver.api.Rep[_] = x.col(sort.column).rep
+        val c:Rep[_] = x.col(sort.column).rep
         sort.order.toLowerCase() match {
           case Sort.ASC => ColumnOrdered(c,new slick.ast.Ordering)
           case Sort.DESC => ColumnOrdered(c,new slick.ast.Ordering(direction=slick.ast.Ordering.Desc))
@@ -31,7 +30,7 @@ class DbActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](tabl
       }
     }
 
-    val qPaged:Rep[Seq[T#TableElementType]] = query.paging match {
+    val qPaged:Query[T, M, Seq] = query.paging match {
       case None => qSorted
       case Some(paging) => qSorted.drop ((paging.page - 1) * paging.count).take (paging.count)
     }

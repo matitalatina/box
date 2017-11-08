@@ -6,7 +6,6 @@ import slick.ast.ColumnOption
 import slick.codegen.OutputHelpers
 import slick.jdbc.meta.MTable
 import slick.model.Model
-import slick.driver.PostgresDriver
 import slick.jdbc.PostgresProfile
 import slick.sql.SqlProfile
 
@@ -29,7 +28,7 @@ object CustomizedCodeGenerator {
     val dbPath = dbConf.as[String]("url")
     val dbSchema = dbConf.as[String]("schema")
 
-    def db = PostgresDriver.api.Database.forURL(s"$dbPath?currentSchema=$dbSchema",
+    def db = PostgresProfile.api.Database.forURL(s"$dbPath?currentSchema=$dbSchema",
       driver="org.postgresql.Driver",
       user=dbConf.as[String]("user"),
       password=dbConf.as[String]("password"))
@@ -73,7 +72,7 @@ object CustomizedCodeGenerator {
     //println(enabledModels.map(_.name.name))
 
     val dbModel = Await.result(db.run{
-      PostgresDriver.createModelBuilder(enabledModels,true).buildModel   //create model based on specific db (here postgres)
+      PostgresProfile.createModelBuilder(enabledModels,true).buildModel   //create model based on specific db (here postgres)
     }, 200 seconds)
 
 
@@ -150,7 +149,7 @@ package ${pkg}
 package object tables {
 
 
-      val profile = slick.driver.PostgresDriver
+      val profile = slick.jdbc.PostgresProfile
 
       import profile._
 

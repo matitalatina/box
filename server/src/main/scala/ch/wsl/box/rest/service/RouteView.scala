@@ -79,7 +79,7 @@ trait RouteView {
         pathEnd{
           get { ctx =>
             ctx.complete {
-              val q:Rep[Seq[T#TableElementType]] = table.take(50)
+              val q = table.take(50)
               val result: Future[Seq[M]] = db.run{ q.result }
               result
             }
