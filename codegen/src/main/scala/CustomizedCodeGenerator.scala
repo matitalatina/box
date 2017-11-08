@@ -361,11 +361,15 @@ package object tables {
           val keyStrategy = conf.getString("generator.keys.default.strategy")
 
           private def managed:Boolean = {
-            keyStrategy match {
+            val result = keyStrategy match {
               case "db" if primaryKey => !dbKeysExceptions.contains(completeName)
               case "app" if primaryKey => appKeysExceptions.contains(completeName)
               case _ => false
             }
+            if(result) {
+              println(s"$completeName managed: $result")
+            }
+            result
           }
 
           override def asOption: Boolean =  managed match {

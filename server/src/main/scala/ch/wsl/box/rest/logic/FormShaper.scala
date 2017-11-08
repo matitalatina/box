@@ -78,7 +78,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     Seq()
   }
 
-  def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)     //todo adapt JSONQuery to select only fields in form
+  def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)     // todo adapt JSONQuery to select only fields in form
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single key") else x.headOption.asJson)
 
   def csv(query:JSONQuery):Future[String] = for {
@@ -92,12 +92,21 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     CSV.of(strings)
   }
 
+  def attachArrayIndex(jsonToInsert:Seq[Json],form:JSONMetadata):Seq[Json] = {
+    jsonToInsert.zipWithIndex.map{ case (jsonRow,i) =>
+      val values = form.fields.filter(_.default.contains("arrayIndex")).map{ fieldToAdd =>
+        fieldToAdd.key -> i
+      }.toMap
+      jsonRow.deepMerge(values.asJson) //overwrite field value with array index
+    }
+  }
+
   def updateAll(e:Json):Future[Int] = {
 
     def subforms = form.fields.filter(_.subform.isDefined).map { field =>
       for {
         form <- jsonFormMetadata.get(field.subform.get.id, form.lang)
-        subJson = e.seq(field.key)
+        subJson = attachArrayIndex(e.seq(field.key),form)
         result <- Future.sequence{
           subJson.map{ json =>
             FormShaper(form).updateAll(json).recover{case t => t.printStackTrace(); 1}
@@ -114,7 +123,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
           println(s"update $key")
           table.update(key,e)
         } else {
-          println(s"insert $e")
+          println(s"insert into ${form.table} with key $key")
           table.insert(e).map(_ => 1)
         }
       }
@@ -126,7 +135,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     form.fields.filter(_.subform.isDefined).foreach { field =>
       for {
         form <- jsonFormMetadata.get(field.subform.get.id, form.lang)
-        rows = e.seq(field.key)
+        rows = attachArrayIndex(e.seq(field.key),form)
         result <- Future.sequence(rows.map(row => FormShaper(form).insertAll(row)))
       } yield result
     }

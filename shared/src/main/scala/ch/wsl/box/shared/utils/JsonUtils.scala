@@ -24,7 +24,11 @@ object JsonUtils {
     //return JSON value of the gieven field
     def js(field:String):Json = el.hcursor.get[Json](field).right.getOrElse(Json.Null)
 
-    def seq(field:String):Seq[Json] = el.hcursor.get[Seq[Json]](field).right.getOrElse(Seq())
+    def seq(field:String):Seq[Json] = {
+      val result = el.hcursor.get[Seq[Json]](field)
+      println(s"getting seq of $field, result: $result")
+      result.right.getOrElse(Seq())
+    }
 
     def get(field: String):String = el.hcursor.get[Json](field).fold(
       { x =>

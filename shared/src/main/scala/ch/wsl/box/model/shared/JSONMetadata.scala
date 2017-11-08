@@ -9,9 +9,10 @@ import io.circe.syntax._
 case class JSONMetadata(id:Int, name:String, fields:Seq[JSONField], layout:Layout, table:String, lang:String, tableFields:Seq[String], keys:Seq[String], query:Option[JSONQuery])
 
 object JSONMetadata{
-  def jsonPlaceholder(form:JSONMetadata, subforms:Seq[JSONMetadata] = Seq()):Map[String,Json] = {
+  def jsonPlaceholder(form:JSONMetadata,subforms:Seq[JSONMetadata] = Seq()):Map[String,Json] = {
     form.fields.flatMap{ field =>
       val value:Option[Json] = (field.default,field.`type`) match {
+        case (Some("arrayIndex"),_) => None
         case (Some("auto"),_) => None
         case (Some(d),JSONTypes.NUMBER) => Some(d.toDouble.asJson)
         case (Some(d),_) => Some(d.asJson)

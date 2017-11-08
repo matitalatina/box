@@ -46,6 +46,8 @@ class DbActions[T <: ch.wsl.box.model.tables.profile.api.Table[M],M <: Product](
   }
 
   private def filter(i:JSONKeys):Query[T, M, Seq]  = {
+    if(i.keys.isEmpty) throw new Exception("No key is defined")
+
     def fil(t: Query[T,M,Seq],key: JSONKey):Query[T,M,Seq] =  t.filter(x => super.==(x.col(key.key),key.value))
 
     i.keys.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) => fil(query,jsFilter)}

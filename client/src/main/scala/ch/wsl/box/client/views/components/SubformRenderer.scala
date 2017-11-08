@@ -44,7 +44,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
     if(i == j) longJs.toMap.asJson else m
   }
 
-  def removeItem(model:Property[Seq[Json]],itemToRemove:Json,sizeModel:Property[Int],subform:Subform) = {
+  def removeItem(model:Property[Seq[Json]],itemToRemove:Json,subform:Subform) = {
     println("removeItem")
     if(org.scalajs.dom.window.confirm(Labels.messages.confirm)) {
       for {
@@ -55,7 +55,6 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
         } yield {
           if (result.count > 0) {
             model.set(model.get.filterNot(_ == itemToRemove))
-            sizeModel.set(sizeModel.get - 1)
           }
         }
       }
@@ -79,13 +78,14 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
     println(placeholder)
 
     model.set(model.get ++ Seq(placeholder.asJson))
-    sizeModel.set(sizeModel.get + 1)
   }
 
   def render(result:Property[Json],label:String,subform:Subform) = {
 
     val model: Property[Seq[Json]] = result.transform(splitJson,mergeJson)
     val sizeModel: Property[Int] = Property(model.get.size)
+
+    model.listen(seq => sizeModel.set(seq.size))
 
     subforms.find(_.id == subform.id) match {
       case None => p("subform not found")
@@ -101,7 +101,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
                 val subResults = model.transform(splitJsonFields(f, i), mergeJsonFields(model,f, i))
                 div(
                   JSONSchemaRenderer(f, subResults, subforms),
-                  a(onclick :+= ((e:Event) => removeItem(model,model.get(i),sizeModel,subform)),Labels.subform.remove)
+                  a(onclick :+= ((e:Event) => removeItem(model,model.get(i),subform)),Labels.subform.remove)
                 ).render
               }
             },
