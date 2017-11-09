@@ -3,6 +3,7 @@ package ch.wsl.box.rest.logic
 import ch.wsl.box.model.shared.{JSONCount, JSONKeys, JSONQuery, KeyList}
 import io.circe._
 import io.circe.syntax._
+import slick.driver.PostgresDriver
 import slick.lifted.TableQuery
 import slick.driver.PostgresDriver.api._
 
@@ -17,6 +18,7 @@ trait ModelJsonActions {
   def getModel(query:JSONQuery)(implicit db:Database):Future[Seq[Json]]
   def getById(query: JSONKeys)(implicit db:Database): Future[Option[Json]]
   def update(keys:JSONKeys,json: Json)(implicit db:Database):Future[Int]
+  def delete(keys:JSONKeys)(implicit db:Database):Future[Int]
   def insert(json: Json)(implicit db:Database):Future[Json]
   def count()(implicit db:Database):Future[JSONCount]
   def keyList(query:JSONQuery,table:String)(implicit db:Database):Future[KeyList]
@@ -79,4 +81,6 @@ case class JsonActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Produc
       )
     }
   }
+
+  override def delete(keys: JSONKeys)(implicit db: PostgresDriver.api.Database) = utils.deleteById(keys)
 }

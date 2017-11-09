@@ -50,13 +50,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
       for {
         form <- subforms.find(_.id == subform.id)
       } yield {
-        for {
-          result <- REST.delete("model",Session.lang(), form.table, itemToRemove.keys(form.keys))
-        } yield {
-          if (result.count > 0) {
-            model.set(model.get.filterNot(_ == itemToRemove))
-          }
-        }
+          model.set(model.get.filterNot(_ == itemToRemove))
       }
     }
   }
@@ -90,8 +84,6 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
     subforms.find(_.id == subform.id) match {
       case None => p("subform not found")
       case Some(f) => {
-
-
 
         div(BootstrapStyles.Panel.panel)(
           div(BootstrapStyles.Panel.panelBody, BootstrapStyles.Panel.panelDefault)(

@@ -363,7 +363,7 @@ package object tables {
           private def managed:Boolean = {
             val result = keyStrategy match {
               case "db" if primaryKey => !dbKeysExceptions.contains(completeName)
-              case "app" if primaryKey => appKeysExceptions.contains(completeName)
+              case "app" if primaryKey => dbKeysExceptions.contains(completeName)
               case _ => false
             }
             if(result) {

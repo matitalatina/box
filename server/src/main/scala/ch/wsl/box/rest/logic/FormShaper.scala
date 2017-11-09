@@ -39,11 +39,11 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     JSONQuery(None,List(),filters.toList.distinct)
   }
 
-  private def getSubform(model:Json, field:JSONField, form:JSONMetadata, subform:Subform):Future[Json] = {
+  private def getSubform(model:Json, field:JSONField, form:JSONMetadata, subform:Subform):Future[Seq[Json]] = {
     val query = createQuery(model,subform)
 
     for {
-      result <- FormShaper(form).extractArray(query)
+      result <- FormShaper(form).extractSeq(query)
     } yield result
 
   }
@@ -59,7 +59,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
         case (_,Some(subform)) => for{
           form <- jsonFormMetadata.get(subform.id,form.lang)
           result <- getSubform(json,field,form,subform)
-        } yield field.key -> result
+        } yield field.key -> result.asJson
       }}.recover{ case t =>
         t.printStackTrace()
         field.key -> Json.Null
@@ -101,12 +101,24 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     }
   }
 
+  def deleteSubforms(subform:JSONMetadata, recivedJson:Seq[Json],dbJson:Seq[Json]) = {
+    val receivedKeys = recivedJson.map(_.keys(subform.keys))
+    val dbKeys = dbJson.map(_.keys(subform.keys))
+    println()
+    dbKeys.filterNot(k => receivedKeys.contains(k)).map{ keysToDelete =>
+      println(s"Deleting subform ${subform.name}, with key: $keysToDelete")
+      TablesRegistry.actions(subform.table).delete(keysToDelete)
+    }
+  }
+
   def updateAll(e:Json):Future[Int] = {
 
     def subforms = form.fields.filter(_.subform.isDefined).map { field =>
       for {
         form <- jsonFormMetadata.get(field.subform.get.id, form.lang)
+        dbSubforms <- getSubform(e,field,form,field.subform.get)
         subJson = attachArrayIndex(e.seq(field.key),form)
+        deleted = deleteSubforms(form,subJson,dbSubforms)
         result <- Future.sequence{
           subJson.map{ json =>
             FormShaper(form).updateAll(json).recover{case t => t.printStackTrace(); 1}
