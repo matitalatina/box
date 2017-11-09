@@ -9,8 +9,8 @@ import ch.wsl.box.client.views.components.TableFieldsRenderer
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
-import io.udash.bootstrap.form.{InputGroupSize, UdashInputGroup}
 import io.udash.bootstrap.table.UdashTable
+import org.scalajs.dom
 
 import scalacss.ScalatagsCss._
 import org.scalajs.dom.ext.KeyCode
@@ -29,10 +29,10 @@ import scala.concurrent.Future
 
 case class Row(data: Seq[String])
 case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
-case class ModelTableModel(name:String, kind:String, rows:Seq[Row], metadata:Seq[Metadata], form:Option[JSONMetadata], selected:Option[Row])
+case class ModelTableModel(name:String, kind:String, rows:Seq[Row], metadata:Seq[Metadata], form:Option[JSONMetadata], selected:Option[Row], keyList: KeyList, pages:Int)
 
 object ModelTableModel{
-  def empty = ModelTableModel("","",Seq(),Seq(),None,None)
+  def empty = ModelTableModel("","",Seq(),Seq(),None,None,KeyList(true,1,Seq(),0),1)
 }
 
 case class ModelTableViewPresenter(routes:Routes,onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
@@ -74,7 +74,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
         case Some(jsonquery) => jsonquery.copy(paging = defaultJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
       }
       csv <- REST.csv(state.kind,Session.lang(),state.model,query)
-      _ <- saveKeys(query)
+      keyList <- REST.keysList(model.get.kind,Session.lang(),model.get.name,query)
     } yield {
 
 
@@ -86,8 +86,12 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
           Metadata(field,Sort.IGNORE,"",Filter.default(field.`type`))
         },
         form = Some(form),
-        None
+        None,
+        keyList,
+        math.ceil(keyList.count / Conf.pageLength).toInt
       )
+
+      saveKeys(keyList,query)
 
       model.set(m)
     }
@@ -101,25 +105,27 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 
-  def saveKeys(query:JSONQuery):Future[Boolean] = {
+  def saveKeys(keyList: KeyList,query:JSONQuery) = {
     Session.setQuery(query)
-    REST.keysList(model.get.kind,Session.lang(),model.get.name,query).map{ x =>
-      Session.setKeys(x)
-      true
-    }
+    Session.setKeys(keyList)
   }
 
-  def reloadRows() = {
+  def reloadRows(page:Int) = {
 
     val metadata = model.subProp(_.metadata).get
     val sort = metadata.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.key, s.sort)).toList
     val filter = metadata.filter(_.filter != "").map(f => JSONQueryFilter(f.field.key,Some(f.filterType),f.filter)).toList
-    val query = JSONQuery(Conf.pageLength, 1, sort, filter)
+    val query = JSONQuery(Conf.pageLength, page, sort, filter)
 
     for {
       csv <- REST.csv(model.subProp(_.kind).get,Session.lang(),model.subProp(_.name).get,query)
-      _ <- saveKeys(query)
-    } yield model.subProp(_.rows).set(csv.map(Row(_)))
+      keyList <- REST.keysList(model.get.kind,Session.lang(),model.get.name,query)
+    } yield {
+      model.subProp(_.rows).set(csv.map(Row(_)))
+      model.subProp(_.keyList).set(keyList)
+      model.subProp(_.pages).set(math.ceil(keyList.count / Conf.pageLength).toInt)
+      saveKeys(keyList,query)
+    }
 
   }
 
@@ -131,7 +137,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
       }
     }
     model.subProp(_.metadata).set(newMetadata)
-    reloadRows()
+    reloadRows(1)
   }
 
   def filter(metadata: Metadata,filter:String) = {
@@ -143,7 +149,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
       }
     }
     model.subProp(_.metadata).set(newMetadata)
-    reloadRows()
+    reloadRows(1)
   }
 
   def filterType(metadata:Metadata,filterType:String) = {
@@ -154,7 +160,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
       }
     }
     model.subProp(_.metadata).set(newMetadata)
-    reloadRows()
+    reloadRows(1)
   }
 
   def sort(metadata: Metadata) = {
@@ -166,12 +172,23 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
       }
     }
     model.subProp(_.metadata).set(newMetadata)
-    reloadRows()
+    reloadRows(1)
   }
 
   def selected(row: Row) = {
     onSelect(model.get.metadata.map(_.field).zip(row.data))
     model.subProp(_.selected).set(Some(row))
+  }
+
+  def nextPage() = {
+    if(!model.subProp(_.keyList.last).get) {
+      reloadRows(model.subProp(_.keyList.page).get + 1)
+    }
+  }
+  def prevPage() = {
+    if(model.subProp(_.keyList.page).get > 1) {
+      reloadRows(model.subProp(_.keyList.page).get - 1)
+    }
   }
 }
 
@@ -203,6 +220,24 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
   }
 
   override def getTemplate: scalatags.generic.Modifier[Element] = {
+
+    val pagination = {
+
+      div(
+        showIf(model.subProp(_.keyList.page).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.keyList.page).get -1), true), Labels.navigation.previous).render },
+        span(
+          " Page: ",
+          bind(model.subProp(_.keyList.page)),
+          " of ",
+          bind(model.subProp(_.pages)),
+          " "
+        ),
+        showIf(model.subProp(_.keyList.last).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.keyList.page).get + 1), true),Labels.navigation.next).render },
+        br,br
+      )
+    }
+
+
     div(
       h1(bind(model.subProp(_.name))),
       div(id := "box-table",
@@ -257,6 +292,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
             ).render
           }
         ).render,
+        pagination.render,
         showIf(model.subProp(_.metadata).transform(_.size == 0)){ p("loading...").render }
       )
     )
