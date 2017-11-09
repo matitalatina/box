@@ -5,7 +5,7 @@ TODO
 1. Files uploads, doc table as subform
 1. custom Search mask
 1. Reduced interface for users
-
+1. popup widget
 
 #####Details
 1. Back to table always go to the first page of the table
