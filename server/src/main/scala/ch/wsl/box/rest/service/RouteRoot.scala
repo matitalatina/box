@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.{Directives, ExceptionHandler, Route}
 import akka.stream.Materializer
 import ch.wsl.box.model.tables._
 import ch.wsl.box.rest.logic.{JSONFormMetadata, LangHelper}
-import ch.wsl.box.rest.model.Conf
+import ch.wsl.box.rest.model.{Conf, DBFile}
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -73,13 +73,14 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                     post {
                       fileUpload("file") { case (metadata, byteSource) =>
                         val result = byteSource.runFold(Seq[Byte]()) { (acc, n) => acc ++ n.toSeq }.map(_.toArray).flatMap { bytea =>
-                          db.run {
-                            File += File_row(name = metadata.fileName, file = bytea, mime = metadata.contentType.mediaType.toString())
+                          val row = DBFile.Row(name = metadata.fileName, file = bytea, mime = metadata.contentType.mediaType.toString(), insert_by = userProfile.name)
+                          Auth.boxDB.run {
+                            DBFile.table returning DBFile.table.map(_.file_id) += row
                           }.map(f => f)
                         }
                         complete(result)
                       }
-                    }
+                    } 
                 } ~
                 pathPrefix("model") {
                   pathPrefix(Segment) { lang =>

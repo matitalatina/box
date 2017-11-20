@@ -1,20 +1,16 @@
 package ch.wsl.box.rest.model
 
 
-import slick.driver.PostgresDriver.api._
-import slick.model.ForeignKeyAction
-import slick.collection.heterogeneous._
-import slick.collection.heterogeneous.syntax._
-
 /**
   * Created by andre on 5/15/2017.
   */
 object Field {
 
 
-  val profile = slick.driver.PostgresDriver
+  val profile = slick.jdbc.PostgresProfile
 
   import profile._
+  import api._
 
   /** Entity class storing rows of table Field
     *  @param id Database column id SqlType(serial), AutoInc, PrimaryKey
