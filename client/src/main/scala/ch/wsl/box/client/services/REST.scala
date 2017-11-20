@@ -2,6 +2,7 @@ package ch.wsl.box.client.services
 
 import ch.wsl.box.model.shared._
 import io.circe.Json
+import org.scalajs.dom.File
 
 import scala.concurrent.Future
 
@@ -15,16 +16,14 @@ object REST {
   import ch.wsl.box.shared.utils.Formatters._
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  def username = "postgres"
-  def password = ""
 
-  private def client = HttpClient("http://localhost:8080/api/v1",username,password)
+  private def client = HttpClient("http://localhost:8080/api/v1")
 
-
+  def sendFile(file:File) = client.sendFile[Int]("/file",file)
   def models(kind:String):Future[Seq[String]] = client.get[Seq[String]](s"/${kind}s")
   def list(kind:String,lang:String,model:String,limit:Int): Future[Seq[Json]] = client.post[JSONQuery,JSONResult[Json]](s"/$kind/$lang/$model/list",JSONQuery.limit(limit)).map(_.data)
   def list(kind:String,lang:String,model:String,query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,JSONResult[Json]](s"/$kind/$lang/$model/list",query).map(_.data)
-  def csv(kind:String,lang:String,model:String,q:JSONQuery): Future[Seq[Seq[String]]] = client.postString[JSONQuery](s"/$kind/$lang/$model/csv",q).map{ result =>
+  def csv(kind:String,lang:String,model:String,q:JSONQuery): Future[Seq[Seq[String]]] = client.post[JSONQuery,String](s"/$kind/$lang/$model/csv",q).map{ result =>
     result.split("\r\n").toSeq.map{x => x.substring(1,x.length-1).split("\",\"").toSeq}
   }
   def keys(kind:String,lang:String,model:String): Future[Seq[String]] = client.get[Seq[String]](s"/$kind/$lang/$model/keys")

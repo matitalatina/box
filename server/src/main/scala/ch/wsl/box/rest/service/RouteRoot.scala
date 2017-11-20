@@ -1,5 +1,6 @@
 package ch.wsl.box.rest.service
 
+
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.{Directives, ExceptionHandler, Route}
 import akka.stream.Materializer
@@ -68,19 +69,18 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                     complete("Ok")
                   }
                 } ~
-//                path("file") {
-//                    post {
-//                      fileUpload("file") { case (metadata, byteSource) =>
-//                        val result = byteSource.runFold(Seq[Byte]()) { (acc, n) => acc ++ n.toSeq }.map(_.toArray).flatMap { bytea =>
-//                          import slick.driver.PostgresDriver.api._
-//                          db.run {
-//                            Files += Files_row(name = Some("test"), file = Some(bytea))
-//                          }.map(_ => "ok")
-//                        }
-//                        complete(result)
-//                      }
-//                    }
-//                } ~
+                path("file") {
+                    post {
+                      fileUpload("file") { case (metadata, byteSource) =>
+                        val result = byteSource.runFold(Seq[Byte]()) { (acc, n) => acc ++ n.toSeq }.map(_.toArray).flatMap { bytea =>
+                          db.run {
+                            File += File_row(name = metadata.fileName, file = bytea, mime = metadata.contentType.mediaType.toString())
+                          }.map(f => f)
+                        }
+                        complete(result)
+                      }
+                    }
+                } ~
                 pathPrefix("model") {
                   pathPrefix(Segment) { lang =>
                     generatedRoutes()

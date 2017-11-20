@@ -2,6 +2,7 @@ package ch.wsl.box.client.views
 
 import io.udash._
 import ch.wsl.box.client._
+import ch.wsl.box.client.services.REST
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.GlobalStyles
 
@@ -14,12 +15,11 @@ class IndexView extends View {
   import scalatags.JsDom.all._
 
   import org.scalajs.dom.File
-  val acceptMultipleFiles: Property[Boolean] = Property(false)
+
   val selectedFiles: SeqProperty[File] = SeqProperty(Seq.empty)
 
-  val fileUploader = new FileUploader(new Url("/test"))
 
-  val input = FileInput("file", acceptMultipleFiles, selectedFiles)()
+  val input = FileInput("file", Property(false), selectedFiles)()
 
 
   private val content = div(
@@ -31,7 +31,7 @@ class IndexView extends View {
         li(file.get.name).render
       })
     ),
-    button(onclick :+= ((e:Event) => fileUploader.upload(input)),"Send")
+    button(onclick :+= ((e:Event) => selectedFiles.get.foreach(REST.sendFile)),"Send")
   )
 
 
