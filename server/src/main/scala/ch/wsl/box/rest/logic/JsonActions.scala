@@ -62,22 +62,21 @@ case class JsonActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Produc
 
   override def keyList(query:JSONQuery,table:String)(implicit db:Database):Future[KeyList] = {
     for{
-      data <- getModel(query)
+      data <- utils.find(query)
       keys <- JSONSchemas.keysOf(table)
-      count <- count()
     } yield {
       //println(data.toString().take(100))
       //println(keys)
       val last = query.paging match {
         case None => true
-        case Some(paging) =>  paging.page*paging.count >= count.count
+        case Some(paging) =>  paging.page*paging.count >= data.count
       }
       import ch.wsl.box.shared.utils.JsonUtils._
       KeyList(
         last,
         query.paging.map(_.page).getOrElse(1),
-        data.map{_.keys(keys).asString},
-        count.count
+        data.data.map{_.asJson.keys(keys).asString},
+        data.count
       )
     }
   }

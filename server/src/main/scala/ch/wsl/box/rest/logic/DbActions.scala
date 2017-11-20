@@ -14,34 +14,43 @@ class DbActions[T <: ch.wsl.box.model.tables.profile.api.Table[M],M <: Product](
   import ch.wsl.box.model.tables.profile.api._
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
-  def find(query:JSONQuery)(implicit db:Database):Future[JSONResult[M]] = {
-    val qFiltered = query.filter.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) =>
-      //println(jsFilter)
-      query.filter(x => operator(jsFilter.operator.getOrElse(Filter.EQUALS))(x.col(jsFilter.column),jsFilter.value))
+  implicit class QueryBuilder(base:Query[T,M,Seq]) {
+    def where(filters: Seq[JSONQueryFilter]): Query[T, M, Seq] = {
+      filters.foldRight[Query[T, M, Seq]](base) { case (jsFilter, query) =>
+        //println(jsFilter)
+        query.filter(x => operator(jsFilter.operator.getOrElse(Filter.EQUALS))(x.col(jsFilter.column), jsFilter.value))
+      }
     }
 
-    val qSorted = query.sort.foldRight[Query[T,M,Seq]](qFiltered){case (sort,query) =>
-      query.sortBy{ x =>
-        val c:Rep[_] = x.col(sort.column).rep
-        sort.order.toLowerCase() match {
-          case Sort.ASC => ColumnOrdered(c,new slick.ast.Ordering)
-          case Sort.DESC => ColumnOrdered(c,new slick.ast.Ordering(direction=slick.ast.Ordering.Desc))
+    def sort(sorting: Seq[JSONSort]): Query[T, M, Seq] = {
+      sorting.foldRight[Query[T, M, Seq]](base) { case (sort, query) =>
+        query.sortBy { x =>
+          val c: Rep[_] = x.col(sort.column).rep
+          sort.order.toLowerCase() match {
+            case Sort.ASC => ColumnOrdered(c, new slick.ast.Ordering)
+            case Sort.DESC => ColumnOrdered(c, new slick.ast.Ordering(direction = slick.ast.Ordering.Desc))
+          }
         }
       }
     }
 
-    val qPaged:Query[T, M, Seq] = query.paging match {
-      case None => qSorted
-      case Some(paging) => qSorted.drop ((paging.page - 1) * paging.count).take (paging.count)
+    def page(paging:Option[JSONQueryPaging]): Query[T, M, Seq] = paging match {
+      case None => base
+      case Some(paging) => base.drop ((paging.page - 1) * paging.count).take (paging.count)
     }
+  }
+
+  def find(query:JSONQuery)(implicit db:Database):Future[JSONResult[M]] = {
+    val slickQuery = table.where(query.filter).sort(query.sort).page(query.paging)
+
 
     for {
       result <- db.run {
-        val r = qPaged.result;
+        val r = slickQuery.result;
         //r.statements.foreach(println);
         r
       }
-      count <- db.run{ qSorted.length.result }
+      count <- db.run{ slickQuery.length.result }
     } yield JSONResult(count,result.toList) // to list because json4s does't like generics types for serialization
   }
 
