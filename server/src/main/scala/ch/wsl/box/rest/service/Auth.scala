@@ -43,7 +43,7 @@ object Auth {
     password=boxDbConf.as[String]("password"))
 
 
-  case class UserProfile(name: String, db: Database)
+  case class UserProfile(name: String, db: Database, box:Database)
 
   /**
     * check if this is a valid user on your system and return his profile,
@@ -61,10 +61,15 @@ object Auth {
         user=name,
         password=password)
 
+      val box:Database = Database.forURL(s"$boxDbPath?currentSchema=$boxDbSchema",
+      driver="org.postgresql.Driver",
+      user=name,
+      password=password)
+
       db.run{
         sql"""select 1""".as[Int]
       }.map{ _ =>
-        UserProfile(name,db)
+        UserProfile(name,db,box)
       }
 
 

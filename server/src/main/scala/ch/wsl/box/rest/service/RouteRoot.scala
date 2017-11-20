@@ -1,9 +1,12 @@
 package ch.wsl.box.rest.service
 
 
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.impl.util.Renderable
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.ContentDispositionTypes
 import akka.http.scaladsl.server.{Directives, ExceptionHandler, Route}
 import akka.stream.Materializer
+import akka.util.ByteString
 import ch.wsl.box.model.tables._
 import ch.wsl.box.rest.logic.{JSONFormMetadata, LangHelper}
 import ch.wsl.box.rest.model.{Conf, DBFile}
@@ -69,18 +72,34 @@ trait RouteRoot extends RouteTable with RouteView with RouteUI with RouteForm wi
                     complete("Ok")
                   }
                 } ~
-                path("file") {
-                    post {
-                      fileUpload("file") { case (metadata, byteSource) =>
-                        val result = byteSource.runFold(Seq[Byte]()) { (acc, n) => acc ++ n.toSeq }.map(_.toArray).flatMap { bytea =>
-                          val row = DBFile.Row(name = metadata.fileName, file = bytea, mime = metadata.contentType.mediaType.toString(), insert_by = userProfile.name)
-                          Auth.boxDB.run {
-                            DBFile.table returning DBFile.table.map(_.file_id) += row
-                          }.map(f => f)
+                pathPrefix("file") {
+                    pathEnd {
+                      post {
+                        fileUpload("file") { case (metadata, byteSource) =>
+                          val result = byteSource.runFold(Seq[Byte]()) { (acc, n) => acc ++ n.toSeq }.map(_.toArray).flatMap { bytea =>
+                            val row = DBFile.Row(name = metadata.fileName, file = bytea, mime = metadata.contentType.mediaType.toString(), insert_by = userProfile.name)
+                            userProfile.box.run {
+                              DBFile.table returning DBFile.table.map(_.file_id) += row
+                            }.map(f => f)
+                          }
+                          complete(result)
                         }
-                        complete(result)
                       }
-                    } 
+                    }~
+                    path(Segment) { file_id =>
+                      complete {
+                        userProfile.box.run {
+                          DBFile.table.filter(_.file_id === file_id.toInt).result
+                        }.map {
+                          _.headOption.map { result =>
+                            val contentType = ContentType.parse(result.mime).right.getOrElse(ContentTypes.`application/octet-stream`)
+                            val entity = HttpEntity(contentType, result.file)
+                            val contentDistribution:HttpHeader = headers.`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> result.name,"size" -> result.file.length.toString))
+                            HttpResponse(entity = entity,headers = scala.collection.immutable.Seq(contentDistribution))
+                          }
+                        }
+                      }
+                    }
                 } ~
                 pathPrefix("model") {
                   pathPrefix(Segment) { lang =>
