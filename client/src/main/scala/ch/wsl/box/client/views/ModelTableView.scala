@@ -83,18 +83,27 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
         kind = state.kind,
         rows = csv.map{ Row(_)},
         metadata = form.fields.map{ field =>
-          Metadata(field,Sort.IGNORE,"",Filter.default(field.`type`))
+          Metadata(
+            field = field,
+            sort = form.query.flatMap(_.sort.find(_.column == field.key).map(_.order)).getOrElse(Sort.IGNORE),
+            filter = form.query.flatMap(_.filter.find(_.column == field.key).map(_.value)).getOrElse(""),
+            filterType = form.query.flatMap(_.filter.find(_.column == field.key).flatMap(_.operator)).getOrElse(Filter.default(field.`type`))
+          )
         },
         form = Some(form),
         None,
         keyList,
-        math.ceil(keyList.count / Conf.pageLength).toInt
+        pageCount(keyList)
       )
 
       saveKeys(keyList,query)
 
       model.set(m)
     }
+  }
+
+  private def pageCount(keyList: KeyList):Int = {
+    math.ceil(keyList.count.toDouble / Conf.pageLength.toDouble).toInt
   }
 
   def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.form).get.toSeq.flatMap(_.tableFields),model.subProp(_.form).get.toSeq.flatMap(_.keys))
@@ -123,7 +132,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
       model.subProp(_.keyList).set(keyList)
-      model.subProp(_.pages).set(math.ceil(keyList.count / Conf.pageLength).toInt)
+      model.subProp(_.pages).set(pageCount(keyList))
       saveKeys(keyList,query)
     }
 
