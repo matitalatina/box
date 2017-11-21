@@ -2,6 +2,7 @@ package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.utils.{Labels, Session}
+import ch.wsl.box.client.views.components.widget.Widget
 import ch.wsl.box.model.shared.{JSONMetadata, Subform}
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
@@ -29,8 +30,6 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
   def mergeJson(longJs:Seq[Json]):Json = {
     longJs.asJson
   }
-
-
 
   def splitJsonFields(form:JSONMetadata, i:Int)(js:Seq[Json]):Seq[(String,Json)] = form.fields.flatMap{ field =>
     for{
@@ -74,34 +73,37 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
     model.set(model.get ++ Seq(placeholder.asJson))
   }
 
-  def render(result:Property[Json],label:String,subform:Subform) = {
+  case class SubformWidget(subform:Subform) extends Widget {
 
-    val model: Property[Seq[Json]] = result.transform(splitJson,mergeJson)
-    val sizeModel: Property[Int] = Property(model.get.size)
+    override def render(key: Property[String], label: String, prop: Property[Json]):WidgetContent =  {
 
-    model.listen(seq => sizeModel.set(seq.size))
+      val model: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
+      val sizeModel: Property[Int] = Property(model.get.size)
 
-    subforms.find(_.id == subform.id) match {
-      case None => p("subform not found")
-      case Some(f) => {
+      model.listen(seq => sizeModel.set(seq.size))
 
-        div(BootstrapStyles.Panel.panel)(
-          div(BootstrapStyles.Panel.panelBody, BootstrapStyles.Panel.panelDefault)(
-            h4(f.name),
-            produce(sizeModel) { size =>
-              for {i <- 0 until size} yield {
-                val subResults = model.transform(splitJsonFields(f, i), mergeJsonFields(model,f, i))
-                div(
-                  JSONSchemaRenderer(f, subResults, subforms),
-                  a(onclick :+= ((e:Event) => removeItem(model,model.get(i),subform)),Labels.subform.remove)
-                ).render
-              }
-            },
-            br,
-            a(onclick :+= ((e:Event) => addItem(model,sizeModel,subform,f)),Labels.subform.add)
+      subforms.find(_.id == subform.id) match {
+        case None => p("subform not found")
+        case Some(f) => {
 
+          div(BootstrapStyles.Panel.panel)(
+            div(BootstrapStyles.Panel.panelBody, BootstrapStyles.Panel.panelDefault)(
+              h4(f.name),
+              produce(sizeModel) { size =>
+                for {i <- 0 until size} yield {
+                  val subResults = model.transform(splitJsonFields(f, i), mergeJsonFields(model, f, i))
+                  div(
+                    JSONSchemaRenderer(f, subResults, subforms),
+                    a(onclick :+= ((e: Event) => removeItem(model, model.get(i), subform)), Labels.subform.remove)
+                  ).render
+                }
+              },
+              br,
+              a(onclick :+= ((e: Event) => addItem(model, sizeModel, subform, f)), Labels.subform.add)
+
+            )
           )
-        )
+        }
       }
     }
   }
