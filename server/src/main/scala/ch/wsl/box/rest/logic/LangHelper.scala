@@ -1,8 +1,8 @@
 package ch.wsl.box.rest.logic
 
 import ch.wsl.box.rest.model.Labels
-import ch.wsl.box.rest.service.Auth
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.utils.Auth
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global

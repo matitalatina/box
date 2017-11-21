@@ -1,9 +1,6 @@
-package ch.wsl.box.rest.service
+package ch.wsl.box.rest.routes
 
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{Directives, Route}
 
 /**
   *
@@ -11,7 +8,9 @@ import akka.http.scaladsl.server.Route
   * Statically serves files
   *
   */
-trait RouteUI extends WebJarsSupport {
+object UI {
+
+  import Directives._
 
   val clientFiles:Route =
     path("") {
@@ -30,6 +29,6 @@ trait RouteUI extends WebJarsSupport {
       }
     } ~
     pathPrefix("webjars") {
-      webJars
+      WebJarsSupport.webJars
     }
 }

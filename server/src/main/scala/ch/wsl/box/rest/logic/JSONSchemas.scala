@@ -1,7 +1,7 @@
 package ch.wsl.box.rest.logic
 
 import ch.wsl.box.model.shared.{WidgetsNames, JSONSchemaL2, JSONSchema}
-import ch.wsl.box.rest.service.Auth
+import ch.wsl.box.rest.utils.Auth
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global

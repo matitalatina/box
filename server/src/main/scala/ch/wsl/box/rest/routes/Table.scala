@@ -1,52 +1,47 @@
-package ch.wsl.box.rest.service
+package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
-import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
-import ch.wsl.box.model.shared.{JSONCount, JSONKeys, JSONQuery, JSONResult}
-import ch.wsl.box.rest.logic._
-import de.heikoseeberger.akkahttpcirce.CirceSupport
-import slick.driver.PostgresDriver.api._
-import akka.http.scaladsl.model._
 import ch.wsl.box.model.TablesRegistry
+import ch.wsl.box.model.shared.{JSONCount, JSONKeys, JSONQuery, JSONResult}
+import ch.wsl.box.rest.logic.{DbActions, JSONModelMetadata, JSONSchemas}
+import ch.wsl.box.rest.utils.JSONSupport
+import slick.lifted.TableQuery
+import slick.jdbc.PostgresProfile.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-
-import ch.wsl.box.shared.utils.Formatters._
 
 /**
  * Created by andreaminetti on 16/02/16.
  */
 
-trait RouteTable {
+object Table {
 
 
 
   var tables = Set[String]()
 
-  def table[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](name:String, table:TableQuery[T])
+  def apply[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])
                                                             (implicit
                                                              mat:Materializer,
                                                              unmarshaller: FromRequestUnmarshaller[M],
                                                              marshaller:ToResponseMarshaller[M],
                                                              seqmarshaller: ToResponseMarshaller[Seq[M]],
                                                              jsonmarshaller:ToResponseMarshaller[JSONResult[M]],
-                                                             db:Database):Route = {
+                                                             db:Database,
+                                                             ec: ExecutionContext):Route = {
 
     println(s"adding table: $name" )
     tables = Set(name) ++ tables
 
     val utils = new DbActions[T,M](table)
     import JSONSupport._
-    import io.circe.generic.auto._
-
-    import akka.http.scaladsl.server.Directives._
-
-    import akka.http.scaladsl.model.headers._
     import akka.http.scaladsl.model._
+    import akka.http.scaladsl.server.Directives._
+    import io.circe.generic.auto._
 
     pathPrefix(name) {
       pathPrefix("id") {
@@ -146,4 +141,3 @@ trait RouteTable {
   }
 
 }
-

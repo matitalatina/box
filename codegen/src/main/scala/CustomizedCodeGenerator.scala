@@ -111,7 +111,7 @@ object CustomizedCodeGenerator {
 
     routeGen.writeToFile(
       args(0),
-      "ch.wsl.box.rest.service",
+      "ch.wsl.box.rest.routes",
       "GeneratedRoutes",
       "GeneratedRoutes.scala",
       "ch.wsl.box.model.tables"
@@ -169,8 +169,8 @@ package object tables {
 
         def composeRoutes():String = {
           (
-            tableList.flatMap(t => singleRoute("table",t)) ++
-            viewList.flatMap(v => singleRoute("view",v))
+            tableList.flatMap(t => singleRoute("Table",t)) ++
+            viewList.flatMap(v => singleRoute("View",v))
           ).mkString(" ~ \n    ")
         }
 
@@ -179,14 +179,15 @@ package object tables {
              |
              |import akka.http.scaladsl.server.{Directives, Route}
              |import akka.stream.Materializer
+             |import scala.concurrent.ExecutionContext
              |import $modelPackages._
              |
-             |trait $name extends RouteTable with RouteView {
-             |  import JSONSupport._
+             |object $name {
+             |  import ch.wsl.box.rest.utils.JSONSupport._
              |  import Directives._
              |  import io.circe.generic.auto._
              |
-             |  def generatedRoutes()(implicit db:slick.driver.PostgresDriver.api.Database, mat:Materializer):Route = {
+             |  def apply()(implicit db:slick.driver.PostgresDriver.api.Database, mat:Materializer, ec: ExecutionContext):Route = {
              |    ${composeRoutes()}
              |  }
              |}
@@ -219,7 +220,7 @@ package object tables {
              |
              |  import io.circe._
              |  import io.circe.generic.auto._
-             |  import ch.wsl.box.rest.service.JSONSupport._
+             |  import ch.wsl.box.rest.utils.JSONSupport._
              |
              |
              |  val actions: Map[String, ModelJsonActions] = Map(

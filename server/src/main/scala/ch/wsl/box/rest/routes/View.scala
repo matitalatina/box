@@ -1,39 +1,39 @@
-package ch.wsl.box.rest.service
+package ch.wsl.box.rest.routes
 
-import akka.http.scaladsl.marshalling._
-import akka.http.scaladsl.unmarshalling._
+import akka.http.scaladsl.marshalling.ToResponseMarshaller
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
+import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
 import ch.wsl.box.model.shared.{JSONCount, JSONQuery, JSONResult}
-import ch.wsl.box.rest.logic.{JSONModelMetadata, JSONSchemas, DbActions}
-import de.heikoseeberger.akkahttpcirce.CirceSupport
-import slick.driver.PostgresDriver.api._
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpEntity, _}
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Directives, Route}
+import ch.wsl.box.rest.logic.{DbActions, JSONModelMetadata, JSONSchemas}
+import ch.wsl.box.rest.utils.JSONSupport
+import slick.lifted.TableQuery
+import slick.jdbc.PostgresProfile.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Created by andreaminetti on 16/02/16.
  */
-trait RouteView {
+object View {
 
   var views = Set[String]()
 
-  def view[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](name:String, table:TableQuery[T])(implicit
+  def apply[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])(implicit
                                                                                               mat:Materializer,
                                                                                               unmarshaller: FromRequestUnmarshaller[M],
                                                                                               marshaller:ToResponseMarshaller[M],
                                                                                               seqmarshaller: ToResponseMarshaller[Seq[M]],
                                                                                               jsonmarshaller:ToResponseMarshaller[JSONResult[M]],
-                                                                                              db:Database):Route = {
+                                                                                              db:Database,
+                                                                                              ec: ExecutionContext
+                                                                                              ):Route = {
 
     views = Set(name) ++ views
 
-    import JSONSupport._
     import Directives._
+    import JSONSupport._
     import io.circe.generic.auto._
 
     val helper = new DbActions[T,M](table)

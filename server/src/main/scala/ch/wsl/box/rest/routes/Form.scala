@@ -1,37 +1,33 @@
-package ch.wsl.box.rest.service
+package ch.wsl.box.rest.routes
 
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.server.Directives
 import ch.wsl.box.model.TablesRegistry
-import ch.wsl.box.model.shared.{JSONMetadata, JSONKeys, JSONQuery}
+import ch.wsl.box.model.shared.{JSONKeys, JSONMetadata, JSONQuery}
 import ch.wsl.box.rest.logic.{FormShaper, JSONFormMetadata, JSONSchemas}
+import ch.wsl.box.rest.utils.JSONSupport
 import io.circe.Json
+import slick.jdbc.PostgresProfile.api._
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-import slick.driver.PostgresDriver.api._
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created by andre on 5/15/2017.
   */
-trait RouteForm {
+object Form {
 
-  def shaper[T](futForm:Future[JSONMetadata])(f:FormShaper => T)(implicit db:Database):Future[T] = for{
+  private def shaper[T](futForm:Future[JSONMetadata])(f:FormShaper => T)(implicit db:Database, ec: ExecutionContext):Future[T] = for{
     form <- futForm
     formShaper = FormShaper(form)
   } yield {
     f(formShaper)
   }
 
-  def formRoutes(name:String,lang:String)(implicit db:Database) = {
+  def apply(name:String,lang:String)(implicit db:Database, ec: ExecutionContext) = {
 
     import JSONSupport._
-    import Directives._
-    import io.circe.generic.auto._
-    import ch.wsl.box.shared.utils.Formatters._
-    import akka.http.scaladsl.server.Directives._
-
     import akka.http.scaladsl.model._
+    import akka.http.scaladsl.server.Directives._
+    import ch.wsl.box.shared.utils.Formatters._
+    import io.circe.generic.auto._
 
 
 

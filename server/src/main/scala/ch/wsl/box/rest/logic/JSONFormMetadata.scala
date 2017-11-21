@@ -5,7 +5,7 @@ import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.model.Field.{Field_i18n_row, Field_row}
 import ch.wsl.box.rest.model.Form.{Form, Form_row}
 import ch.wsl.box.rest.model.{Field, Form}
-import ch.wsl.box.rest.service.Auth
+import ch.wsl.box.rest.utils.Auth
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Future

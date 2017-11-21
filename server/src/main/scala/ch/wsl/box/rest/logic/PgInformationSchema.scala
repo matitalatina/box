@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.rest.service.Auth
+import ch.wsl.box.rest.utils.Auth
 import com.typesafe.config.{ConfigFactory, Config}
 import slick.driver.PostgresDriver
 import PostgresDriver.api._
