@@ -42,6 +42,7 @@ object Table {
     import akka.http.scaladsl.model._
     import akka.http.scaladsl.server.Directives._
     import io.circe.generic.auto._
+    import ch.wsl.box.shared.utils.Formatters._
 
     pathPrefix(name) {
       pathPrefix("id") {

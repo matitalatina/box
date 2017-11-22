@@ -17,7 +17,7 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
        |  import slick.collection.heterogeneous._
        |  import slick.collection.heterogeneous.syntax._
        |
-       |package object tables {
+       |object $container {
        |
        |
        |      val profile = slick.jdbc.PostgresProfile

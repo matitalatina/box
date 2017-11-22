@@ -10,12 +10,31 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
 
 
 
-    TablesGenerator(model,dbConf).writeToFile(
+    val modelWithoutFiles = model.copy(tables =model.tables.map { table =>
+      table.copy(columns = table.columns.filterNot { c =>
+        c.tpe == "Array[Byte]"
+      })
+    })
+
+    TablesGenerator(modelWithoutFiles,dbConf).writeToFile(
       "slick.driver.PostgresDriver",
       args(0),
       "ch.wsl.box.model",
       "Tables",
       "Tables.scala"
+    )
+
+
+    val modelWithOnlyFilesTables = model.copy(tables = model.tables.filter(_.columns.exists(_.tpe == "Array[Byte]")).map{ t =>
+      t.copy(foreignKeys = Seq())
+    })
+
+    TablesGenerator(modelWithOnlyFilesTables,dbConf).writeToFile(
+      "slick.driver.PostgresDriver",
+      args(0),
+      "ch.wsl.box.model",
+      "FileTables",
+      "FileTables.scala"
     )
 
 
@@ -30,7 +49,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "ch.wsl.box.rest.routes",
       "GeneratedRoutes",
       "GeneratedRoutes.scala",
-      "ch.wsl.box.model.tables"
+      "ch.wsl.box.model.Tables"
     )
 
     RegistryModelsGenerator(calculatedViews,calculatedTables,model).writeToFile(
@@ -44,7 +63,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "ch.wsl.box.rest.routes",
       "FileRoutes",
       "FileRoutes.scala",
-      "ch.wsl.box.model.tables"
+      "ch.wsl.box.model.FileTables"
     )
 
     println("Exit")
