@@ -12,8 +12,8 @@ import scalacss.ScalatagsCss._
 import scalatags.JsDom.all.{label => lab}
 import scalatags.JsDom.all._
 
-case class PopupWidget(options:JSONFieldOptions) extends OptionWidget {
-  override def render(key: Property[String], label: String, prop: Property[Json]) = {
+case class PopupWidget(options:JSONFieldOptions,label: String, prop: Property[Json]) extends OptionWidget {
+  override def render() = {
 
 
     val selectModel: Property[String] = prop.transform(value2Label,label2Value)

@@ -50,6 +50,12 @@ case class ModelTableViewPresenter(routes:Routes,onSelect:Seq[(JSONField,String)
   }
 }
 
+
+/*
+Failed to decode JSON on
+/model/en/v_remark_base/metadata
+with error: DecodingFailure(String, List(DownArray, DownField(fields), DownArray, DownField(blocks), DownField(layout)))
+ */
 case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[ModelTableState]{
 
   import ch.wsl.box.client.Context._

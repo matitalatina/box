@@ -25,22 +25,22 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
   }
 
-  object Text extends Widget {
-    override def render(key: Property[String], label: String, prop: Property[Json]): WidgetContent = input(Some(label)){ case y =>
+  case class Text(label: String, prop: Property[Json]) extends Widget {
+    override def render() = input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
       TextInput.apply(stringModel,None,y:_*)
     }
   }
 
-  object Textarea extends Widget {
-    override def render(key: Property[String], label: String, prop: Property[Json]): WidgetContent = input(Some(label)){ case y =>
+  case class Textarea(label: String, prop: Property[Json]) extends Widget {
+    override def render() = input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
       TextArea.apply(stringModel,None,y:_*)
     }
   }
 
-  object Number extends Widget {
-    override def render(key: Property[String], label: String, prop: Property[Json]): WidgetContent = input(Some(label)){ case y =>
+  case class Number(label: String, prop: Property[Json]) extends Widget {
+    override def render() = input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
       NumberInput.apply(stringModel,None,y:_*)
     }

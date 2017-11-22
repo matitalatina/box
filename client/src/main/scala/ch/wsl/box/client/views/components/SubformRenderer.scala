@@ -10,6 +10,7 @@ import io.udash.properties.single.Property
 import io.udash._
 import org.scalajs.dom.Event
 
+import scala.concurrent.Future
 import scalatags.JsDom.all._
 
 /**
@@ -73,9 +74,14 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
     model.set(model.get ++ Seq(placeholder.asJson))
   }
 
-  case class SubformWidget(subform:Subform) extends Widget {
+  case class SubformWidget(subform:Subform,prop:Property[Json]) extends Widget {
 
-    override def render(key: Property[String], label: String, prop: Property[Json]):WidgetContent =  {
+    override def afterSave(): Future[Unit] = afterSaveAll(subWidgets)
+    override def beforeSave(): Future[Unit] = beforeSaveAll(subWidgets)
+
+    var subWidgets:Seq[Widget] = Seq()
+
+    override def render() =  {
 
       val model: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
       val sizeModel: Property[Int] = Property(model.get.size)
@@ -90,10 +96,13 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
             div(BootstrapStyles.Panel.panelBody, BootstrapStyles.Panel.panelDefault)(
               h4(f.name),
               produce(sizeModel) { size =>
+                subWidgets = Seq()
                 for {i <- 0 until size} yield {
                   val subResults = model.transform(splitJsonFields(f, i), mergeJsonFields(model, f, i))
+                  val widget = JSONSchemaRenderer(f, subResults, subforms).widget()
+                  subWidgets = subWidgets ++ Seq(widget)
                   div(
-                    JSONSchemaRenderer(f, subResults, subforms),
+                    widget.render(),
                     a(onclick :+= ((e: Event) => removeItem(model, model.get(i), subform)), Labels.subform.remove)
                   ).render
                 }

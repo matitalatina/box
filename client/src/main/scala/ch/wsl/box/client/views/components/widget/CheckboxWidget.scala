@@ -7,8 +7,8 @@ import ch.wsl.box.client.Context._
 
 import scalatags.JsDom.all._
 
-object CheckboxWidget extends Widget {
-  override def render(key: Property[String], label: String, prop: Property[Json]) = {
+case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
+  override def render() = {
     def jsToBool(json:Json):Boolean = json.asNumber.flatMap(_.toInt).exists(_ == 1)
     def boolToJson(v:Boolean):Json = v match {
       case true => 1.asJson

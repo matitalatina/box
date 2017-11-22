@@ -10,9 +10,9 @@ import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}
 import scalacss.ScalatagsCss._
 
-case class SelectWidget(options:JSONFieldOptions,field:JSONField)extends OptionWidget {
+case class SelectWidget(options:JSONFieldOptions,field:JSONField,label: String, prop: Property[Json])extends OptionWidget {
 
-  override def render(key: Property[String], label: String, prop: Property[Json]) = {
+  override def render() = {
 
     val selectModel = prop.transform(value2Label,label2Value)
 

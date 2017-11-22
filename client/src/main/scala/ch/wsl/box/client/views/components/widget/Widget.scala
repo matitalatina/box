@@ -6,19 +6,26 @@ import io.circe.syntax._
 import io.udash.properties.single.Property
 import ch.wsl.box.shared.utils.JsonUtils._
 
+import scala.concurrent.{ExecutionContext, Future}
+import scalatags.JsDom.all._
 
 trait Widget{
-  import scalatags.JsDom.all._
-
 
   def jsonToString(json:Json):String = json.string
   def strToJson(str:String):Json = str.asJson
   def strToNumericJson(str:String):Json = str.toDouble.asJson
 
-  type WidgetContent = Modifier
 
-  def render(key:Property[String],label:String,prop:Property[Json]):WidgetContent
+  def render():Modifier
+
+  def beforeSave():Future[Unit] = Future.successful(Unit)
+  def afterSave():Future[Unit] = Future.successful(Unit)
+
+  protected def beforeSaveAll(widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave())).map(_ => Unit)
+  protected def afterSaveAll(widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave())).map(_ => Unit)
+
 }
+
 
 trait OptionWidget extends Widget{
   def options:JSONFieldOptions

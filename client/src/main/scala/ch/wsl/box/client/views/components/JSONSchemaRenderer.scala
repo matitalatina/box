@@ -15,9 +15,11 @@ import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.bootstrap.form.{UdashForm, UdashInputGroup}
 import org.scalajs.dom.html.Div
 
+import scala.concurrent.Future
 import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.util.Try
+import scalatags.JsDom
 import scalatags.JsDom.TypedTag
 
 
@@ -26,7 +28,7 @@ import scalatags.JsDom.TypedTag
   */
 
 
-class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String, Json)]], subforms: Seq[JSONMetadata]) {
+case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String, Json)]], subforms: Seq[JSONMetadata]) {
 
 
   import ch.wsl.box.client.Context._
@@ -50,25 +52,26 @@ class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String, Json
   }
   private val subformRenderer = SubformRenderer(results.get, subforms)
 
-  private def widgetSelector(field: JSONField): Widget = {
+  private def widgetSelector(key:Property[String], result: Property[Json], field: JSONField): Widget = {
 
+    val label = field.title.getOrElse(field.key)
 
     (field.`type`, field.widget, field.lookup, form.keys.contains(field.key), field.subform) match {
       case (_, Some(WidgetsNames.hidden), _, _, _) => HiddenWidget
-      case (_, Some(WidgetsNames.popup), Some(options), _, _) => PopupWidget(options)
-      case (_, _, Some(options), _, _) => SelectWidget(options, field)
-      case (_, _, _, true, _) => InputWidget(disabled := true, textAlign.right).Text
-      case ("number", Some(WidgetsNames.checkbox), _, _, _) => CheckboxWidget
-      case ("number", Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Number
-      case ("number", _, _, _, _) => InputWidget().Number
-      case ("string", Some(WidgetsNames.timepicker), _, _, _) => DateTimeWidget.Time
-      case ("string", Some(WidgetsNames.datepicker), _, _, _) => DateTimeWidget.Date
-      case ("string", Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime
-      case ("subform", _, _, _, Some(sub)) => subformRenderer.SubformWidget(sub)
-      case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text
-      case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea
-      case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea
-      case (_, _, _, _, _) => InputWidget().Text
+      case (_, Some(WidgetsNames.popup), Some(options), _, _) => PopupWidget(options,label,result)
+      case (_, _, Some(options), _, _) => SelectWidget(options, field,label,result)
+      case (_, _, _, true, _) => InputWidget(disabled := true, textAlign.right).Text(label,result)
+      case ("number", Some(WidgetsNames.checkbox), _, _, _) => CheckboxWidget(label,result)
+      case ("number", Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Number(label,result)
+      case ("number", _, _, _, _) => InputWidget().Number(label,result)
+      case ("string", Some(WidgetsNames.timepicker), _, _, _) => DateTimeWidget.Time(key,label,result)
+      case ("string", Some(WidgetsNames.datepicker), _, _, _) => DateTimeWidget.Date(key,label,result)
+      case ("string", Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime(key,label,result)
+      case ("subform", _, _, _, Some(sub)) => subformRenderer.SubformWidget(sub,result)
+      case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text(label,result)
+      case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea(label,result)
+      case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea(label,result)
+      case (_, _, _, _, _) => InputWidget().Text(label,result)
     }
 
   }
@@ -86,46 +89,70 @@ class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String, Json
 
 
 
-  private def subBlock(block: SubLayoutBlock) = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
-    fieldsRenderer(key, block.fields, Stream.continually(block.fieldsWidth.toStream).flatten)
-  )
+  private def subBlock(block: SubLayoutBlock):Widget = new Widget {
 
-  private def simpleField(fieldKey:String) = {for{
+    val widget = fieldsRenderer(key, block.fields, Stream.continually(block.fieldsWidth.toStream).flatten)
+
+    override def afterSave(): Future[Unit] = widget.afterSave()
+    override def beforeSave(): Future[Unit] = widget.beforeSave()
+
+    override def render(): JsDom.all.Modifier = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
+      widget.render()
+    )
+  }
+
+  private def simpleField(fieldKey:String):Widget = {for{
     result <- resultMap.toMap.lift(fieldKey)
     field <- form.fields.find(_.key == fieldKey)
   } yield {
-    widgetSelector(field).render(key,field.title.getOrElse(field.key),result)
-  }}.getOrElse(div())
+    widgetSelector(key,result,field)
+  }}.getOrElse(HiddenWidget)
 
 
-  private def fieldsRenderer(keyProp: Property[String], fields: Seq[Either[String, SubLayoutBlock]], widths: Stream[Int] = Stream.continually(12)): TypedTag[Div] = div(
-    fields.zip(widths).map { case (field, width) =>
-      div(BootstrapCol.md(width), GlobalStyles.field,
-        field match {
-          case Left(fieldKey) => simpleField(fieldKey)
-          case Right(subForm) => subBlock(subForm)
-        }
+  private def fieldsRenderer(keyProp: Property[String], fields: Seq[Either[String, SubLayoutBlock]], widths: Stream[Int] = Stream.continually(12)):Widget = new Widget {
+
+    val widgets:Seq[Widget] = fields.map{
+      case Left(fieldKey) => simpleField(fieldKey)
+      case Right(subForm) => subBlock(subForm)
+    }
+
+    override def afterSave(): Future[Unit] = afterSaveAll(widgets)
+    override def beforeSave(): Future[Unit] = beforeSaveAll(widgets)
+
+    override def render(): JsDom.all.Modifier = div(
+      widgets.zip(widths).map { case (widget, width) =>
+        div(BootstrapCol.md(width), GlobalStyles.field,
+          widget.render()
+        )
+      }
+
+    )
+  }
+
+
+  def widget():Widget = new Widget {
+
+    val blocks = form.layout.blocks.map { block =>
+      (
+        block.width,
+        block.title,
+        fieldsRenderer(key, block.fields)
       )
     }
 
-  )
+    override def afterSave(): Future[Unit] = afterSaveAll(blocks.map(_._3))
+    override def beforeSave(): Future[Unit] = beforeSaveAll(blocks.map(_._3))
 
-
-  def render() = {
-    div(UdashForm(
+    override def render(): JsDom.all.Modifier = div(UdashForm(
       div(BootstrapStyles.row)(
-        form.layout.blocks.map { block =>
-          div(BootstrapCol.md(block.width), GlobalStyles.block)(
-            block.title.map { title => h3(Labels(title)) },
-            fieldsRenderer(key, block.fields)
+        blocks.map{ case (width,title,widget) =>
+          div(BootstrapCol.md(width), GlobalStyles.block)(
+            title.map{ title => h3(Labels(title)) },
+            widget.render()
           )
         }
       )
     ).render)
   }
 
-}
-
-object JSONSchemaRenderer {
-  def apply(form: JSONMetadata, results: Property[Seq[(String, Json)]], subforms: Seq[JSONMetadata]): TypedTag[Element] = new JSONSchemaRenderer(form, results, subforms).render()
 }

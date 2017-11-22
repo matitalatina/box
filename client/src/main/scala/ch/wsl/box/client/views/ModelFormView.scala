@@ -4,6 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{ModelFormState, ModelTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.utils.{IDSequence, Labels, Navigation, Session}
+import ch.wsl.box.client.views.components.widget.Widget
 import ch.wsl.box.client.views.components.{Debug, JSONSchemaRenderer}
 import ch.wsl.box.model.shared._
 import io.circe.Json
@@ -14,6 +15,7 @@ import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 
 import scala.concurrent.Future
+import scalatags.JsDom
 
 
 /**
@@ -122,7 +124,15 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
     }
   }
 
+  private var widget:Widget = new Widget {
+    import scalatags.JsDom.all._
+    override def render(): JsDom.all.Modifier = div()
+  }
 
+  def loadWidgets(f:JSONMetadata) = {
+    widget = JSONSchemaRenderer(f, model.subSeq(_.results), model.subProp(_.subforms).get).widget()
+    widget
+  }
 
   def next() = IDSequence(model.get.id).next(model.get.kind,model.get.name).map(_.map(goTo))
   def prev() = IDSequence(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
@@ -181,7 +191,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         div(
           form match {
             case None => p("Loading form")
-            case Some(f) => JSONSchemaRenderer(f, model.subSeq(_.results), model.subProp(_.subforms).get)
+            case Some(f) => presenter.loadWidgets(f).render()
           }
         ).render
       },

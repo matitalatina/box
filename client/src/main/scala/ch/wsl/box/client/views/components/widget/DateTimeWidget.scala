@@ -10,7 +10,6 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.client.Context._
 
-import scala.scalajs.js.Date
 import scala.util.Try
 
 
@@ -19,16 +18,18 @@ object DateTimeWidget {
   final val datePickerFormat = "YYYY-MM-DD"
   final val timePickerFormat = "HH:mm"
 
-  object Date extends Widget {
-    override def render(key: Property[String], label: String, prop: Property[Json]): WidgetContent = datetimepicker(key,label,prop,datePickerFormat)
+  import scalatags.JsDom.all._
+
+  case class Date(key: Property[String], label: String, prop: Property[Json]) extends Widget {
+    override def render() = datetimepicker(key,label,prop,datePickerFormat)
   }
 
-  object DateTime extends Widget {
-    override def render(key: Property[String], label: String, prop: Property[Json]): WidgetContent = datetimepicker(key,label,prop,dateTimePickerFormat)
+  case class DateTime(key: Property[String], label: String, prop: Property[Json]) extends Widget {
+    override def render() = datetimepicker(key,label,prop,dateTimePickerFormat)
   }
 
-  object Time extends Widget {
-    override def render(key: Property[String], label: String, prop: Property[Json]): WidgetContent = datetimepicker(key,label,prop,timePickerFormat)
+  case class Time(key: Property[String], label: String, prop: Property[Json]) extends Widget {
+    override def render() = datetimepicker(key,label,prop,timePickerFormat)
   }
 
 
@@ -75,7 +76,7 @@ object DateTimeWidget {
       if (!dt.isDefined)
         Json.Null
       else {
-        val date = new Date(dt.get.getTime)
+        val date = new scala.scalajs.js.Date(dt.get.getTime)
         if (date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return Json.Null
         val result = format match {
           case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
