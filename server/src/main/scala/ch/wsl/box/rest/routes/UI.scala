@@ -25,7 +25,7 @@ object UI {
     } ~
     pathPrefix("js") {
       path(Segment) { file =>
-        getFromFile("client/target/scala-2.11/"+file)
+        getFromFile("client/target/scala-2.12/"+file)
       }
     } ~
     pathPrefix("webjars") {

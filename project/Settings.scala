@@ -35,7 +35,7 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.11.8"
+    val scala = "2.12.3"
     val ficus = "1.4.0"
 
     //HTTP actors
@@ -78,8 +78,6 @@ object Settings {
     */
   val sharedJVMJSDependencies = Def.setting(Seq(
     "io.udash"                 %%% "udash-core-shared" % versions.udash,
-    "io.udash"                 %%% "udash-rest-shared" % versions.udash,
-    "io.udash"                 %%% "udash-rpc-shared" % versions.udash,
     "io.circe" %%% "circe-core" % versions.circe,
     "io.circe" %%% "circe-generic" % versions.circe,
     "io.circe" %%% "circe-parser" % versions.circe
