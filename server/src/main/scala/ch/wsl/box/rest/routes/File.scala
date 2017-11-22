@@ -40,7 +40,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
 
   def upload(id:JSONKeys)(metadata:FileInfo,byteSource:Source[ByteString, Any]) = {
     for{
-      bytea <- byteSource.runFold(Seq[Byte]()) { (acc, n) => acc ++ n.toSeq }.map(_.toArray)
+      bytea <- byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray)
       row <- utils.getById(id)
       rowWithFile = handler.inject(row.get,bytea,metadata)
       result <- utils.updateById(id,rowWithFile)
