@@ -31,15 +31,9 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
 }
 
 //exteded code generator (add route and registry generation)
-case class TablesGenerator(model:Model,conf:Config) extends slick.codegen.SourceCodeGenerator(model) with MyOutputHelper {
+case class TablesGenerator(model:Model,conf:Config) extends slick.codegen.SourceCodeGenerator(model) with BoxSourceCodeGenerator with MyOutputHelper {
 
 
-
-  override def tableName = (dbName: String) => dbName.capitalize
-  /** Maps database table name to entity case class name
-    *
-    *@group Basic customization overrides */
-  override def entityName = (dbName: String) => dbName.capitalize+"_row"
 
 
   // override table generator

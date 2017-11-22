@@ -153,7 +153,8 @@ object Build extends sbt.Build {
     val fname = outputDir + "/ch/wsl/box/model/Tables.scala"
     val rname = outputDir + "/ch/wsl/box/rest/routes/GeneratedRoutes.scala"
     val registryname = outputDir + "/ch/wsl/box/model/TablesRegistry.scala"
-    Seq(file(fname),file(rname),file(registryname))    //include the generated files in the sbt project
+    val filename = outputDir + "/ch/wsl/box/rest/routes/FileRoutes.scala"
+    Seq(file(fname),file(rname),file(registryname),file(filename))    //include the generated files in the sbt project
   }
 
 

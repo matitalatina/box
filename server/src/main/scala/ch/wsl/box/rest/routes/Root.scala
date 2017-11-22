@@ -69,7 +69,7 @@ trait Root {
                     complete("Ok")
                   }
                 } ~
-                File(userProfile) ~
+                FileRoutes.route ~
                 pathPrefix("model") {
                   pathPrefix(Segment) { lang =>
                     GeneratedRoutes()

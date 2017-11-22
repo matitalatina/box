@@ -3,7 +3,9 @@ package ch.wsl.box.codegen
 import com.typesafe.config.Config
 import slick.model.Model
 
-case class RegistryModelsGenerator(viewList:Seq[String],tableList:Seq[String],model:Model) extends slick.codegen.SourceCodeGenerator(model) with slick.codegen.OutputHelpers {
+case class RegistryModelsGenerator(viewList:Seq[String],tableList:Seq[String],model:Model) extends slick.codegen.SourceCodeGenerator(model)
+  with BoxSourceCodeGenerator
+  with slick.codegen.OutputHelpers {
 
 
     def mapModel(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>

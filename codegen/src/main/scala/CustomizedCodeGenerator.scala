@@ -39,6 +39,14 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "TablesRegistry.scala"
     )
 
+    FileAccessGenerator(model,dbConf).writeToFile(
+      args(0),
+      "ch.wsl.box.rest.routes",
+      "FileRoutes",
+      "FileRoutes.scala",
+      "ch.wsl.box.model.tables"
+    )
+
     println("Exit")
 
 

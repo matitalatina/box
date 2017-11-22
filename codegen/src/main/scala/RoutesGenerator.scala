@@ -2,7 +2,9 @@ package ch.wsl.box.codegen
 
 import slick.model.Model
 
-case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Model) extends slick.codegen.SourceCodeGenerator(model) with slick.codegen.OutputHelpers {
+case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Model) extends slick.codegen.SourceCodeGenerator(model)
+  with BoxSourceCodeGenerator
+  with slick.codegen.OutputHelpers {
 
   def singleRoute(method:String,model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
     s"""$method[${table.TableClass.name},${table.EntityType.name}]("${table.model.name.table}",${table.TableClass.name})"""
