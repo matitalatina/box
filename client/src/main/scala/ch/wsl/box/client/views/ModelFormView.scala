@@ -103,15 +103,18 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       } yield Enhancer.parse(field, m.results.lift(i).map(_._2),form.keys){ t =>
         model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
       }
+
+      val result:Json = jsons.toMap.asJson
+
       def saveAction() = m.id match {
-        case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONKeys.fromString(id),jsons.toMap.asJson)
-        case None => REST.insert(m.kind,Session.lang(),m.name, jsons.toMap.asJson)
+        case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONKeys.fromString(id),result)
+        case None => REST.insert(m.kind,Session.lang(),m.name, result)
       }
 
       {for{
-        _ <- widget.beforeSave()
-        _ <- saveAction()
-        _ <- widget.afterSave()
+        _ <- widget.beforeSave(result,form)
+        resultSaved <- saveAction()
+        _ <- widget.afterSave(resultSaved,form)
       } yield {
         val newState = Routes(m.kind,m.name).table()
         io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)

@@ -25,6 +25,8 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
+
+  val actions = TablesRegistry.actions(form.table)
   def jsonFormMetadata = JSONFormMetadata()
 
   private def createQuery(model:Json,subform: Subform):JSONQuery = {
@@ -78,6 +80,8 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     Seq()
   }
 
+  def getAllById(key:JSONKeys) = extractOne(key.query)
+
   def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)     // todo adapt JSONQuery to select only fields in form
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single key") else x.headOption.asJson)
 
@@ -107,11 +111,11 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     println()
     dbKeys.filterNot(k => receivedKeys.contains(k)).map{ keysToDelete =>
       println(s"Deleting subform ${subform.name}, with key: $keysToDelete")
-      TablesRegistry.actions(subform.table).delete(keysToDelete)
+      actions.delete(keysToDelete)
     }
   }
 
-  def updateAll(e:Json):Future[Int] = {
+  def updateAll(e:Json):Future[Json] = {
 
     def subforms = form.fields.filter(_.subform.isDefined).map { field =>
       for {
@@ -121,37 +125,37 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
         deleted = deleteSubforms(form,subJson,dbSubforms)
         result <- Future.sequence{
           subJson.map{ json =>
-            FormShaper(form).updateAll(json).recover{case t => t.printStackTrace(); 1}
+            FormShaper(form).updateAll(json).recover{case t => t.printStackTrace(); Json.Null}
         }}
       } yield result
     }
     val key = e.keys(form.keys)
-    val table = TablesRegistry.actions(form.table)
     for{
       _ <- Future.sequence(subforms)
-      existing <- table.getById(key).recover{ case t => println("recovered future with none"); None }   //existing record in db
+      existing <- actions.getById(key).recover{ case t => println("recovered future with none"); None }   //existing record in db
       result <- {
         if(existing.isDefined) {
           println(s"update $key")
-          table.update(key,e)
+          actions.update(key,e)
         } else {
           println(s"insert into ${form.table} with key $key")
-          table.insert(e).map(_ => 1)
+          actions.insert(e)
         }
       }
     } yield result
 
   }
 
-  def insertAll(e:Json):Future[Json] = {
-    form.fields.filter(_.subform.isDefined).foreach { field =>
+  def insertAll(e:Json):Future[Json] = for{
+    _ <- Future.sequence(form.fields.filter(_.subform.isDefined).map { field =>
       for {
         form <- jsonFormMetadata.get(field.subform.get.id, form.lang)
         rows = attachArrayIndex(e.seq(field.key),form)
         result <- Future.sequence(rows.map(row => FormShaper(form).insertAll(row)))
       } yield result
-    }
-    TablesRegistry.actions(form.table).insert(e)
-  }
+    })
+    inserted <- actions.insert(e)
+    result <- getAllById(inserted.keys(form.keys))
+  } yield result
 
 }

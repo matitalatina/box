@@ -76,8 +76,18 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
 
   case class SubformWidget(subform:Subform,prop:Property[Json]) extends Widget {
 
-    override def afterSave(): Future[Unit] = afterSaveAll(subWidgets)
-    override def beforeSave(): Future[Unit] = beforeSaveAll(subWidgets)
+    val metadata = subforms.find(_.id == subform.id)
+
+    private def propagate(result:Json,f:Widget => ((Json,JSONMetadata) => Future[Unit])) = {
+      Future.sequence(subWidgets.map{ w =>
+        Future.sequence(result.seq(subform.key).map{ subFormResult =>
+          f(w)(subFormResult,metadata.get)
+        })
+      }).map(_ => ())
+    }
+
+    override def afterSave(result:Json,form:JSONMetadata): Future[Unit] = propagate(result,_.afterSave)
+    override def beforeSave(result:Json,form:JSONMetadata): Future[Unit] = propagate(result,_.beforeSave)
 
     var subWidgets:Seq[Widget] = Seq()
 
@@ -88,7 +98,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
 
       model.listen(seq => sizeModel.set(seq.size))
 
-      subforms.find(_.id == subform.id) match {
+      metadata match {
         case None => p("subform not found")
         case Some(f) => {
 

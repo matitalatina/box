@@ -56,7 +56,7 @@ case class JSONFormMetadata(implicit db:Database) {
         id <- field.subform
         local <- field.localFields
         remote <- field.subFields
-      } yield Subform(id,local,remote,queryFilter)
+      } yield Subform(id,field.key,local,remote,queryFilter)
 
 
       val nullable = pgColumn.map(_.nullable).getOrElse(true)

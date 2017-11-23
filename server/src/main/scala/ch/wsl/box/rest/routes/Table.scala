@@ -58,7 +58,7 @@ object Table {
             put {
               entity(as[M]) { e =>
                 onComplete(utils.updateById(JSONKeys.fromString(id),e)) {
-                  case Success(entity) => complete("Ok")
+                  case Success(entity) => complete(e)
                   case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                 }
               }

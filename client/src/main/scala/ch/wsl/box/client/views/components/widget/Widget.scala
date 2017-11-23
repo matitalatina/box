@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 
-import ch.wsl.box.model.shared.JSONFieldOptions
+import ch.wsl.box.model.shared.{JSONFieldOptions, JSONMetadata}
 import io.circe._
 import io.circe.syntax._
 import io.udash.properties.single.Property
@@ -18,11 +18,11 @@ trait Widget{
 
   def render():Modifier
 
-  def beforeSave():Future[Unit] = Future.successful(Unit)
-  def afterSave():Future[Unit] = Future.successful(Unit)
+  def beforeSave(result:Json,form:JSONMetadata):Future[Unit] = Future.successful(Unit)
+  def afterSave(result:Json,form:JSONMetadata):Future[Unit] = Future.successful(Unit)
 
-  protected def beforeSaveAll(widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave())).map(_ => Unit)
-  protected def afterSaveAll(widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave())).map(_ => Unit)
+  protected def beforeSaveAll(result:Json,form:JSONMetadata,widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave(result,form))).map(_ => Unit)
+  protected def afterSaveAll(result:Json,form:JSONMetadata,widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(result,form))).map(_ => Unit)
 
 }
 

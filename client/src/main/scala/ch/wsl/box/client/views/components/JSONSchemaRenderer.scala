@@ -71,6 +71,7 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String,
       case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text(label,result)
       case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea(label,result)
       case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea(label,result)
+      case ("file", _, _, _, _) => FileWidget(result,field,label)
       case (_, _, _, _, _) => InputWidget().Text(label,result)
     }
 
@@ -93,8 +94,8 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String,
 
     val widget = fieldsRenderer(key, block.fields, Stream.continually(block.fieldsWidth.toStream).flatten)
 
-    override def afterSave(): Future[Unit] = widget.afterSave()
-    override def beforeSave(): Future[Unit] = widget.beforeSave()
+    override def afterSave(result:Json,form:JSONMetadata): Future[Unit] = widget.afterSave(result,form)
+    override def beforeSave(result:Json,form:JSONMetadata): Future[Unit] = widget.beforeSave(result,form)
 
     override def render(): JsDom.all.Modifier = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
       widget.render()
@@ -116,8 +117,8 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String,
       case Right(subForm) => subBlock(subForm)
     }
 
-    override def afterSave(): Future[Unit] = afterSaveAll(widgets)
-    override def beforeSave(): Future[Unit] = beforeSaveAll(widgets)
+    override def afterSave(result:Json,form:JSONMetadata): Future[Unit] = afterSaveAll(result,form,widgets)
+    override def beforeSave(result:Json,form:JSONMetadata): Future[Unit] = beforeSaveAll(result,form,widgets)
 
     override def render(): JsDom.all.Modifier = div(
       widgets.zip(widths).map { case (widget, width) =>
@@ -140,8 +141,8 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String,
       )
     }
 
-    override def afterSave(): Future[Unit] = afterSaveAll(blocks.map(_._3))
-    override def beforeSave(): Future[Unit] = beforeSaveAll(blocks.map(_._3))
+    override def afterSave(result:Json,form:JSONMetadata): Future[Unit] = afterSaveAll(result,form,blocks.map(_._3))
+    override def beforeSave(result:Json,form:JSONMetadata): Future[Unit] = beforeSaveAll(result,form,blocks.map(_._3))
 
     override def render(): JsDom.all.Modifier = div(UdashForm(
       div(BootstrapStyles.row)(

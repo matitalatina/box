@@ -24,14 +24,7 @@ class IndexView extends View {
 
   private val content = div(
     h2("Postgres Box Client"),
-    input,
-    h4("Selected files"),
-    ul(
-      repeat(selectedFiles)(file => {
-        li(file.get.name).render
-      })
-    ),
-    button(onclick :+= ((e:Event) => selectedFiles.get.foreach(REST.sendFile)),"Send")
+
   )
 
 

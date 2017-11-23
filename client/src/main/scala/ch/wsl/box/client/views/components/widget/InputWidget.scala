@@ -28,8 +28,6 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
   case class Text(label: String, prop: Property[Json]) extends Widget {
 
-    override def beforeSave(): Future[Unit] = Future.successful( println("TextBeforeSave") )
-
     override def render() = input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
       TextInput.apply(stringModel,None,y:_*)

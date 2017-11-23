@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait ModelJsonActions {
   def getModel(query:JSONQuery)(implicit db:Database):Future[Seq[Json]]
   def getById(query: JSONKeys)(implicit db:Database): Future[Option[Json]]
-  def update(keys:JSONKeys,json: Json)(implicit db:Database):Future[Int]
+  def update(keys:JSONKeys,json: Json)(implicit db:Database):Future[Json]
   def delete(keys:JSONKeys)(implicit db:Database):Future[Int]
   def insert(json: Json)(implicit db:Database):Future[Json]
   def count()(implicit db:Database):Future[JSONCount]
@@ -40,12 +40,12 @@ case class JsonActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Produc
     }
   }
 
-  override def update(keys:JSONKeys,json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Int] = {
+  override def update(keys:JSONKeys,json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Json] = {
     for{
       current <- getById(keys)                    //retrieve values in db
       merged = current.get.deepMerge(json)        //merge old and new json
       result <- utils.updateById(keys,merged.as[M].right.get)
-    } yield result
+    } yield json
   }
 
   override def insert(json: Json)(implicit db:Database): Future[Json] = {

@@ -23,7 +23,7 @@ case class FieldFile(file:String,name:String,thumbnail:Option[String])
 
 case class JSONFieldMap(valueProperty:String, textProperty:String)
 
-case class Subform(id:Int,localFields:String,subFields:String,subFilter:Seq[JSONQueryFilter])
+case class Subform(id:Int,key:String,localFields:String,subFields:String,subFilter:Seq[JSONQueryFilter])
 
 object JSONTypes{
   val NUMBER = "number"

@@ -28,6 +28,7 @@ object Form {
     import akka.http.scaladsl.server.Directives._
     import ch.wsl.box.shared.utils.Formatters._
     import io.circe.generic.auto._
+    import ch.wsl.box.shared.utils.JsonUtils._
 
 
 
@@ -42,7 +43,7 @@ object Form {
         path(Segment) { id =>
           get {
             complete(shaper(form){ fs =>
-              fs.extractOne(JSONKeys.fromString(id).query).map{record =>
+              fs.getAllById(JSONKeys.fromString(id)).map{record =>
                 println(record)
                 HttpEntity(ContentTypes.`application/json`,record)
               }
@@ -52,7 +53,10 @@ object Form {
               entity(as[Json]) { e =>
                 complete {
                   shaper(form){ fs =>
-                    fs.updateAll(e)
+                    for {
+                      _ <- fs.updateAll(e)
+                      result <- fs.getAllById(e.keys(fs.form.keys))
+                    } yield result
                   }
                 }
               }

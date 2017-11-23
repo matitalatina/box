@@ -17,9 +17,9 @@ object REST {
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
-  private def client = HttpClient("http://localhost:8080/api/v1")
+  private def client = HttpClient("/api/v1")
 
-  def sendFile(file:File) = client.sendFile[Int]("/file",file)
+  def sendFile(file:File,keys:JSONKeys,model:String) = client.sendFile[Int](s"/file/$model/${keys.asString}",file)
   def models(kind:String):Future[Seq[String]] = client.get[Seq[String]](s"/${kind}s")
   def list(kind:String,lang:String,model:String,limit:Int): Future[Seq[Json]] = client.post[JSONQuery,JSONResult[Json]](s"/$kind/$lang/$model/list",JSONQuery.limit(limit)).map(_.data)
   def list(kind:String,lang:String,model:String,query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,JSONResult[Json]](s"/$kind/$lang/$model/list",query).map(_.data)

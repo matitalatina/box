@@ -27,36 +27,6 @@ object Enhancer {
     field.copy(lookup = Some(field.lookup.get.copy(options = Map("" -> "") ++ options)))
   }
 
-//  def fetchLookup(field:JSONField,opts:JSONFieldOptions,data:Seq[Json]):Future[JSONField] = {
-//    println(s"fetchLookup for field $field")
-//    val values = data.flatMap{row =>
-//      row.get(field.key) match {
-//        case "" => None
-//        case s => Some{
-//          JSONQueryFilter(opts.map.valueProperty, Some(Filter.EQUALS), s)
-//        }
-//      }
-//    }
-//
-//    if(values.length > 0) {
-//      val query = JSONQuery(
-//        count = 1,
-//        page = 1,
-//        sort = List(),
-//        filter = values.toList
-//      )
-//      REST.list("model", opts.refModel, query).map { values =>
-//        val options: Map[String, String] = values.map { value =>
-//          val key: String = value.get(opts.map.valueProperty)
-//          val label: String = value.get(opts.map.textProperty)
-//          (key, label)
-//        }.toMap
-//        field.copy(options = Some(field.options.get.copy(options = options)))
-//      }
-//    } else {
-//      Future.successful(field)
-//    }
-//  }
 
   def fetchModels(forms:Seq[JSONMetadata]):Future[Seq[(String,Seq[Json])]] = {
     val models = for{
@@ -112,13 +82,6 @@ object Enhancer {
 
     val value = current.js(field.key)
 
-//    val result = field.options match {
-//      case Some(opts) if !form.keys.contains(field.key) => {
-//        val resultString = current.get(field.key)
-//        opts.options.lift(resultString).getOrElse(resultString).asJson
-//      }
-//      case _ => value
-//    }
 
     field.key -> value
 
