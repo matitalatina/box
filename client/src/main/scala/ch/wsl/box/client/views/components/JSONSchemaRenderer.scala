@@ -28,7 +28,7 @@ import scalatags.JsDom.TypedTag
   */
 
 
-case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String, Json)]], subforms: Seq[JSONMetadata]) {
+case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subforms: Seq[JSONMetadata]) {
 
 
   import ch.wsl.box.client.Context._
@@ -37,22 +37,22 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String,
   import io.circe.syntax._
   import scalacss.ScalatagsCss._
 
+  private def keysFromResult(res:Json) = {
+    res.keys(form.keys).asString
+  }
 
-  private val key: Property[String] = Property("")
+  private val key: Property[String] = Property(keysFromResult(results.get))
   results.listen { res =>
-    val keys = res.filter(r => form.keys.contains(r._1))
-    val currentKey = JSONKeys.fromMap(keys).asString
+    val currentKey = keysFromResult(res)
     if (currentKey != key.get) {
       key.set(currentKey)
     }
   }
 
-  private val resultMap: Seq[(String, Property[Json])] = for ((field, i) <- form.fields.zipWithIndex) yield {
-    field.key -> results.transform(seqJsonToJson(i), jsonToSeqJson(i, field.key))
-  }
-  private val subformRenderer = SubformRenderer(results.get, subforms)
 
-  private def widgetSelector(key:Property[String], result: Property[Json], field: JSONField): Widget = {
+  private val subformRenderer = SubformRenderer(results, subforms)
+
+  private def widgetSelector(key:Property[String],result:Property[Json],field: JSONField): Widget = {
 
     val label = field.title.getOrElse(field.key)
 
@@ -71,23 +71,11 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String,
       case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text(label,result)
       case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea(label,result)
       case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea(label,result)
-      case ("file", _, _, _, _) => FileWidget(result,field,label)
+      case ("file", _, _, _, _) => FileWidget(key,result,field,label)
       case (_, _, _, _, _) => InputWidget().Text(label,result)
     }
 
   }
-
-
-
-
-  private def seqJsonToJson(i: Int)(seq: Seq[(String, Json)]): Json = seq.lift(i).map(_._2).getOrElse(Json.Null)
-
-  private def jsonToSeqJson(i: Int, key: String)(n: Json): Seq[(String, Json)] = for {
-    (e, j) <- results.get.zipWithIndex
-  } yield {
-    if (i == j) key -> n else e
-  }
-
 
 
   private def subBlock(block: SubLayoutBlock):Widget = new Widget {
@@ -103,10 +91,19 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Seq[(String,
   }
 
   private def simpleField(fieldKey:String):Widget = {for{
-    result <- resultMap.toMap.lift(fieldKey)
     field <- form.fields.find(_.key == fieldKey)
   } yield {
-    widgetSelector(key,result,field)
+
+    def toSingle(all:Json):Json = {
+      val result = all.js(field.key)
+      //println(s"all: $all \n\n result: $result")
+      result
+    }
+    def toAll(single:Json):Json = results.get.deepMerge(Json.obj((field.key,single)))
+    //results.listen(js => println("result changed"))
+
+    widgetSelector(key,results.transform(toSingle,toAll),field)
+
   }}.getOrElse(HiddenWidget)
 
 

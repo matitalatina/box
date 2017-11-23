@@ -16,7 +16,7 @@ import scalatags.JsDom.all._
 /**
   * Created by andre on 6/1/2017.
   */
-case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetadata]) {
+case class SubformRenderer(parentData:Property[Json],subforms:Seq[JSONMetadata]) {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
@@ -32,16 +32,11 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
     longJs.asJson
   }
 
-  def splitJsonFields(form:JSONMetadata, i:Int)(js:Seq[Json]):Seq[(String,Json)] = form.fields.flatMap{ field =>
-    for{
-      json <- js.lift(i)
-      result <- json.hcursor.get[Json](field.key).right.toOption
-    } yield field.key -> result
-  }
-  def mergeJsonFields(model:Property[Seq[Json]], form:JSONMetadata, i:Int)(longJs:Seq[(String,Json)]):Seq[Json] = for{
+  def splitJsonFields(form:JSONMetadata, i:Int)(js:Seq[Json]):Json = js.lift(i).getOrElse(Json.Null)
+  def mergeJsonFields(model:Property[Seq[Json]], form:JSONMetadata, i:Int)(longJs:Json):Seq[Json] = for{
     (m,j) <- model.get.zipWithIndex
   } yield{
-    if(i == j) longJs.toMap.asJson else m
+    if(i == j) longJs else m
   }
 
   def removeItem(model:Property[Seq[Json]],itemToRemove:Json,subform:Subform) = {
@@ -64,7 +59,7 @@ case class SubformRenderer(parentData:Seq[(String,Json)],subforms:Seq[JSONMetada
       (local,sub) <- subform.localFields.split(",").zip(subform.subFields.split(","))
     } yield {
       println(s"local:$local sub:$sub")
-      sub -> parentData.find(_._1 == local).map(_._2).getOrElse(Json.Null)
+      sub -> parentData.get.js(local)
     }
     keys.toMap
     val placeholder:Map[String,Json] = JSONMetadata.jsonPlaceholder(form,subforms) ++ keys.toMap

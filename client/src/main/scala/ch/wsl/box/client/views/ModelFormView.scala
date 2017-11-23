@@ -12,6 +12,7 @@ import io.udash._
 import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
 import io.udash.bootstrap.label.UdashLabel
 import io.udash.core.Presenter
+import io.udash.properties.single.Property
 import org.scalajs.dom.{Element, Event}
 
 import scala.concurrent.Future
@@ -22,10 +23,10 @@ import scalatags.JsDom
   * Created by andre on 4/24/2017.
   */
 
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONMetadata], results:Seq[(String,Json)], error:String, subforms:Seq[JSONMetadata], navigation: Navigation,loading:Boolean)
+case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONMetadata], result:Json, error:String, subforms:Seq[JSONMetadata], navigation: Navigation,loading:Boolean)
 
 object ModelFormModel{
-  def empty = ModelFormModel("","",None,None,Seq(),"",Seq(),Navigation(false,false,0,0),true)
+  def empty = ModelFormModel("","",None,None,Json.Null,"",Seq(),Navigation(false,false,0,0),true)
 }
 
 object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
@@ -79,7 +80,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         kind = state.kind,
         id = state.id,
         form = Some(form),
-        results,
+        currentData,
         "",
         subforms,
         Navigation(false,false,1,1),
@@ -98,13 +99,13 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
     val m = model.get
     m.form.foreach{ form =>
-      val jsons = for {
-        (field, i) <- form.fields.zipWithIndex
-      } yield Enhancer.parse(field, m.results.lift(i).map(_._2),form.keys){ t =>
-        model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
-      }
+//      val jsons = for {
+//        (field, i) <- form.fields.zipWithIndex
+//      } yield Enhancer.parse(field, m.results.lift(i).map(_._2),form.keys){ t =>
+//        model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
+//      }
 
-      val result:Json = jsons.toMap.asJson
+      val result:Json = m.result
 
       def saveAction() = m.id match {
         case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONKeys.fromString(id),result)
@@ -139,7 +140,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   }
 
   def loadWidgets(f:JSONMetadata) = {
-    widget = JSONSchemaRenderer(f, model.subSeq(_.results), model.subProp(_.subforms).get).widget()
+    widget = JSONSchemaRenderer(f, model.subProp(_.result), model.subProp(_.subforms).get).widget()
     widget
   }
 
@@ -200,7 +201,9 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         div(
           form match {
             case None => p("Loading form")
-            case Some(f) => presenter.loadWidgets(f).render()
+            case Some(f) => {
+              presenter.loadWidgets(f).render()
+            }
           }
         ).render
       },
@@ -209,7 +212,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
         onclick :+= ((ev: Event) => presenter.save(), true)
       )(Labels.form.save),br,br,
       Debug(model.subProp(_.form)),
-      Debug(model.subProp(_.results))
+      Debug(model.subProp(_.result))
     )
   }
 }

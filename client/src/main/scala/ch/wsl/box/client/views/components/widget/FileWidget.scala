@@ -10,7 +10,7 @@ import org.scalajs.dom.File
 
 import scala.concurrent.Future
 
-case class FileWidget(prop:Property[Json],field:JSONField, labelString:String) extends Widget {
+case class FileWidget(key:Property[String],prop:Property[Json],field:JSONField, labelString:String) extends Widget {
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
@@ -37,6 +37,7 @@ case class FileWidget(prop:Property[Json],field:JSONField, labelString:String) e
 
   override def render() = {
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
+      "Key:",bind(key),br,
       if(labelString.length > 0) label(labelString) else {},
       input,
       h4("Selected files"),
