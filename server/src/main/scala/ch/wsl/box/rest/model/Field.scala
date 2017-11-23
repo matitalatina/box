@@ -99,4 +99,25 @@ object Field {
   }
   /** Collection-like TableQuery object for table Field_i18n */
   lazy val Field_i18n = new TableQuery(tag => new Field_i18n(tag))
+
+
+
+  case class FieldFile_row(field_id: Int, file_field: String, thumbnail_field: Option[String] = None, name_field: String)
+
+
+  class FieldFile(_tableTag: Tag) extends profile.api.Table[FieldFile_row](_tableTag, "field_file") {
+    def * = (field_id,file_field,thumbnail_field,name_field) <> (FieldFile_row.tupled, FieldFile_row.unapply)
+
+    val field_id: Rep[Int] = column[Int]("field_id", O.PrimaryKey)
+    val file_field: Rep[String] = column[String]("file_field")
+    val thumbnail_field: Rep[Option[String]] = column[Option[String]]("thumbnail_field")
+    val name_field: Rep[String] = column[String]("name_field")
+
+
+    /** Foreign key referencing Form (database name fkey_form) */
+    lazy val formFk = foreignKey("field_file_fielf_id_fk", field_id, table)(r => r.id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+  }
+  /** Collection-like TableQuery object for table Field */
+  lazy val FieldFile = new TableQuery(tag => new FieldFile(tag))
+
 }

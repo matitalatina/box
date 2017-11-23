@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import ch.wsl.box.model.TablesRegistry
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.model.Field.{Field_i18n_row, Field_row}
+import ch.wsl.box.rest.model.Field.{FieldFile_row, Field_i18n_row, Field_row}
 import ch.wsl.box.rest.model.Form.{Form, Form_row}
 import ch.wsl.box.rest.model.{Field, Form}
 import ch.wsl.box.rest.utils.Auth
@@ -26,8 +26,8 @@ case class JSONFormMetadata(implicit db:Database) {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
-  private def fieldsToJsonFields(fields:Seq[((Field_row,Field_i18n_row),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
-    val jsonFields = fields.map{ case ((field,fieldI18n),pgColumn) =>
+  private def fieldsToJsonFields(fields:Seq[(((Field_row,Field_i18n_row),Option[FieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
+    val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
       val options: Option[Future[JSONFieldOptions]] = for{
         model <- field.refModel
         value <- field.refValueProperty
@@ -61,12 +61,16 @@ case class JSONFormMetadata(implicit db:Database) {
 
       val nullable = pgColumn.map(_.nullable).getOrElse(true)
 
+      val file = fieldFile.map{ ff =>
+        FieldFile(ff.file_field,ff.name_field,ff.thumbnail_field)
+      }
+
       options match {
         case Some(opt) => opt.map{ o =>
-          JSONField(field.`type`, field.key, nullable, fieldI18n.title,Some(o), fieldI18n.placeholder, field.widget, subform, field.default)
+          JSONField(field.`type`, field.key, nullable, fieldI18n.title,Some(o), fieldI18n.placeholder, field.widget, subform, field.default,file)
         }
         case None => Future.successful{
-          JSONField(field.`type`, field.key, nullable, fieldI18n.title,None, fieldI18n.placeholder, field.widget, subform, field.default)
+          JSONField(field.`type`, field.key, nullable, fieldI18n.title,None, fieldI18n.placeholder, field.widget, subform, field.default,file)
         }
       }
 
@@ -113,9 +117,14 @@ case class JSONFormMetadata(implicit db:Database) {
     for{
       form <- Auth.boxDB.run( formQuery.result ).map(_.head)
       fields <- Auth.boxDB.run{fieldQuery(form.id.get).result}
+      fieldsFile <- Future.sequence(fields.map { case (f, _) =>
+        Auth.boxDB.run {
+          Field.FieldFile.filter(_.field_id === f.id).result
+        }.map(_.headOption)
+      })
       columns <- Future.sequence(fields.map(f => columns(form,f._1)))
       keys <- JSONSchemas.keysOf(form.table)
-      jsonFieldsPartial <- fieldsToJsonFields(fields.zip(columns), lang)
+      jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
     } yield {
 
 

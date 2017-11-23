@@ -12,12 +12,14 @@ case class JSONField(
                       placeholder:Option[String] = None,
                       widget: Option[String] = None,
                       subform: Option[Subform] = None,
-                      default: Option[String] = None
+                      default: Option[String] = None,
+                      file: Option[FieldFile] = None
                     )
 
 
 case class JSONFieldOptions(refModel:String, map:JSONFieldMap, options:Map[String,String] = Map())
 
+case class FieldFile(file:String,name:String,thumbnail:Option[String])
 
 case class JSONFieldMap(valueProperty:String, textProperty:String)
 

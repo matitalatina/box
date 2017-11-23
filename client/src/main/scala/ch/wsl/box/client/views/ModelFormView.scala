@@ -95,6 +95,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   import io.circe.syntax._
 
   def save() = {
+
     val m = model.get
     m.form.foreach{ form =>
       val jsons = for {
@@ -102,15 +103,20 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
       } yield Enhancer.parse(field, m.results.lift(i).map(_._2),form.keys){ t =>
         model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
       }
-      val saveAction = m.id match {
+      def saveAction() = m.id match {
         case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONKeys.fromString(id),jsons.toMap.asJson)
         case None => REST.insert(m.kind,Session.lang(),m.name, jsons.toMap.asJson)
       }
-      saveAction.map{_ =>
+
+      {for{
+        _ <- widget.beforeSave()
+        _ <- saveAction()
+        _ <- widget.afterSave()
+      } yield {
         val newState = Routes(m.kind,m.name).table()
         io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
 
-      }.recover{ case e =>
+      }}.recover{ case e =>
         e.getStackTrace.foreach(x => println(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
         e.printStackTrace()
       }

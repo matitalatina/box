@@ -6,6 +6,7 @@ import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
 
+import scala.concurrent.Future
 import scalatags.JsDom.all._
 
 class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
@@ -26,6 +27,9 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
   }
 
   case class Text(label: String, prop: Property[Json]) extends Widget {
+
+    override def beforeSave(): Future[Unit] = Future.successful( println("TextBeforeSave") )
+
     override def render() = input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
       TextInput.apply(stringModel,None,y:_*)
