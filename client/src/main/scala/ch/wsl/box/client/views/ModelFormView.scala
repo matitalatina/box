@@ -140,7 +140,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   }
 
   def loadWidgets(f:JSONMetadata) = {
-    widget = JSONSchemaRenderer(f, model.subProp(_.result), model.subProp(_.subforms).get).widget()
+    widget = JSONSchemaRenderer(f, model.subProp(_.result), model.subProp(_.subforms).get)
     widget
   }
 

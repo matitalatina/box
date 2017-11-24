@@ -14,7 +14,8 @@ import scala.concurrent.ExecutionContext
 /**
   * Created by andreaminetti on 15/03/16.
   */
-trait Root {
+trait
+Root {
 
   implicit val materializer:Materializer
   implicit val executionContext:ExecutionContext

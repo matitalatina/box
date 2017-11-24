@@ -28,7 +28,7 @@ import scalatags.JsDom.TypedTag
   */
 
 
-case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subforms: Seq[JSONMetadata]) {
+case class JSONSchemaRenderer(form: JSONMetadata, prop: Property[Json], subforms: Seq[JSONMetadata]) extends WidgetBinded {
 
 
   import ch.wsl.box.client.Context._
@@ -41,8 +41,8 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subfo
     res.keys(form.keys).asString
   }
 
-  private val key: Property[String] = Property(keysFromResult(results.get))
-  results.listen { res =>
+  private val key: Property[String] = Property(keysFromResult(propWithSubformid.get))
+  propWithSubformid.listen { res =>
     val currentKey = keysFromResult(res)
     if (currentKey != key.get) {
       key.set(currentKey)
@@ -50,7 +50,6 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subfo
   }
 
 
-  private val subformRenderer = SubformRenderer(results, subforms)
 
   private def widgetSelector(key:Property[String],result:Property[Json],field: JSONField): Widget = {
 
@@ -67,11 +66,11 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subfo
       case ("string", Some(WidgetsNames.timepicker), _, _, _) => DateTimeWidget.Time(key,label,result)
       case ("string", Some(WidgetsNames.datepicker), _, _, _) => DateTimeWidget.Date(key,label,result)
       case ("string", Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime(key,label,result)
-      case ("subform", _, _, _, Some(sub)) => subformRenderer.SubformWidget(sub,result)
+      case ("subform", _, _, _, Some(sub)) => SubformRenderer(sub,result,propWithSubformid,subforms)
       case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text(label,result)
       case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea(label,result)
       case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea(label,result)
-      case ("file", _, _, _, _) => FileWidget(key,result,field,label)
+      case ("file", _, _, _, _) => FileWidget(key,result,field,label,form.table)
       case (_, _, _, _, _) => InputWidget().Text(label,result)
     }
 
@@ -99,10 +98,10 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subfo
       //println(s"all: $all \n\n result: $result")
       result
     }
-    def toAll(single:Json):Json = results.get.deepMerge(Json.obj((field.key,single)))
+    def toAll(single:Json):Json = propWithSubformid.get.deepMerge(Json.obj((field.key,single)))
     //results.listen(js => println("result changed"))
 
-    widgetSelector(key,results.transform(toSingle,toAll),field)
+    widgetSelector(key,propWithSubformid.transform(toSingle,toAll),field)
 
   }}.getOrElse(HiddenWidget)
 
@@ -128,7 +127,9 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subfo
   }
 
 
-  def widget():Widget = new Widget {
+
+
+
 
     val blocks = form.layout.blocks.map { block =>
       (
@@ -142,6 +143,7 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subfo
     override def beforeSave(result:Json,form:JSONMetadata): Future[Unit] = beforeSaveAll(result,form,blocks.map(_._3))
 
     override def render(): JsDom.all.Modifier = div(UdashForm(
+      "subform",Debug(prop),
       div(BootstrapStyles.row)(
         blocks.map{ case (width,title,widget) =>
           div(BootstrapCol.md(width), GlobalStyles.block)(
@@ -151,6 +153,6 @@ case class JSONSchemaRenderer(form: JSONMetadata, results: Property[Json], subfo
         }
       )
     ).render)
-  }
+
 
 }

@@ -30,7 +30,7 @@ object EnhancedTable {
         } catch {
           case e: Exception => {
             println(rm.classSymbol(t.getClass).toType.members)
-            throw new Exception("Field not found: " + field)
+            throw new Exception(s"Field not found:$field available fields: ${rm.classSymbol(t.getClass).toType.members} of table:${t.tableName}")
           }
         }
       }

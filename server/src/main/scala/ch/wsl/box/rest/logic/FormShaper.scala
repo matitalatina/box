@@ -1,9 +1,11 @@
 package ch.wsl.box.rest.logic
 
+import akka.stream.scaladsl.Source
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.model.TablesRegistry
+import ch.wsl.box.rest.utils.FutureUtils
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
 import slick.lifted.Query
@@ -108,10 +110,10 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
   def deleteSubforms(subform:JSONMetadata, recivedJson:Seq[Json],dbJson:Seq[Json]) = {
     val receivedKeys = recivedJson.map(_.keys(subform.keys))
     val dbKeys = dbJson.map(_.keys(subform.keys))
-    println()
+    println(s"subform: ${subform.name} received: ${receivedKeys} db: $dbJson")
     dbKeys.filterNot(k => receivedKeys.contains(k)).map{ keysToDelete =>
       println(s"Deleting subform ${subform.name}, with key: $keysToDelete")
-      actions.delete(keysToDelete)
+      TablesRegistry.actions(subform.table).delete(keysToDelete)
     }
   }
 
@@ -123,10 +125,9 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
         dbSubforms <- getSubform(e,field,form,field.subform.get)
         subJson = attachArrayIndex(e.seq(field.key),form)
         deleted = deleteSubforms(form,subJson,dbSubforms)
-        result <- Future.sequence{
-          subJson.map{ json =>
+        result <- FutureUtils.seqFutures(subJson){ json =>
             FormShaper(form).updateAll(json).recover{case t => t.printStackTrace(); Json.Null}
-        }}
+        }
       } yield result
     }
     val key = e.keys(form.keys)

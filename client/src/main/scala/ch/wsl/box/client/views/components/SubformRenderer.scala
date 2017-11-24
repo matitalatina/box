@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.utils.{Labels, Session}
-import ch.wsl.box.client.views.components.widget.Widget
+import ch.wsl.box.client.views.components.widget.{Widget, WidgetBinded}
 import ch.wsl.box.model.shared.{JSONMetadata, Subform}
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
@@ -11,12 +11,13 @@ import io.udash._
 import org.scalajs.dom.Event
 
 import scala.concurrent.Future
+import scala.util.Random
 import scalatags.JsDom.all._
 
 /**
   * Created by andre on 6/1/2017.
   */
-case class SubformRenderer(parentData:Property[Json],subforms:Seq[JSONMetadata]) {
+case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Property[Json],subforms:Seq[JSONMetadata]) extends Widget {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
@@ -25,8 +26,9 @@ case class SubformRenderer(parentData:Property[Json],subforms:Seq[JSONMetadata])
   import ch.wsl.box.shared.utils.JsonUtils._
 
 
+
   def splitJson(js:Json):Seq[Json] = {
-    js.as[Seq[Json]].right.getOrElse(Seq())
+    js.as[Seq[Json]].right.getOrElse(Seq())//.map{ js => js.deepMerge(Json.obj((subformInjectedId,Random.alphanumeric.take(16).mkString.asJson)))}
   }
   def mergeJson(longJs:Seq[Json]):Json = {
     longJs.asJson
@@ -51,7 +53,7 @@ case class SubformRenderer(parentData:Property[Json],subforms:Seq[JSONMetadata])
   }
 
 
-  def addItem(model:Property[Seq[Json]],sizeModel:Property[Int],subform:Subform,form:JSONMetadata) = {
+  def addItem(model:Property[Seq[Json]],subform:Subform,form:JSONMetadata) = {
     println("addItem")
 
 
@@ -66,30 +68,46 @@ case class SubformRenderer(parentData:Property[Json],subforms:Seq[JSONMetadata])
 
     println(placeholder)
 
+
     model.set(model.get ++ Seq(placeholder.asJson))
   }
 
-  case class SubformWidget(subform:Subform,prop:Property[Json]) extends Widget {
-
     val metadata = subforms.find(_.id == subform.id)
 
-    private def propagate(result:Json,f:Widget => ((Json,JSONMetadata) => Future[Unit])) = {
-      Future.sequence(subWidgets.map{ w =>
-        Future.sequence(result.seq(subform.key).map{ subFormResult =>
-          f(w)(subFormResult,metadata.get)
-        })
-      }).map(_ => ())
+    private def propagate(result:Json,form:JSONMetadata,f:(Widget => ((Json,JSONMetadata) => Future[Unit]))):Future[Unit] = {
+          val out = result.seq(subform.key).zip(subWidgets).map { case (subformJson,schemaRenderer) =>
+                //println(s"Propagate subform element: ${subform.key} with data: $subformJson")
+                f(schemaRenderer)(subformJson,subforms.find(_.id == subform.id).get)
+            }
+
+          //correct futures
+          Future.sequence(out).map(_ => ())
     }
 
-    override def afterSave(result:Json,form:JSONMetadata): Future[Unit] = propagate(result,_.afterSave)
-    override def beforeSave(result:Json,form:JSONMetadata): Future[Unit] = propagate(result,_.beforeSave)
+    override def afterSave(result:Json,form:JSONMetadata): Future[Unit] = {
+      //println(s"Propagate subform: ${subform.key} with data: $result")
+      propagate(result,form,_.afterSave)
+    }
+    override def beforeSave(result:Json,form:JSONMetadata): Future[Unit] = propagate(result,form,_.beforeSave)
 
-    var subWidgets:Seq[Widget] = Seq()
+    var subWidgets:Seq[WidgetBinded] = Seq()
+
+    def cleanSubwidget() = {
+      subWidgets = subWidgets.filter(w => model.get.exists(js => w.isOf(js)))
+    }
+    def findOrAdd(f:JSONMetadata,subResults:Property[Json],subforms: Seq[JSONMetadata]) = {
+      subWidgets.find(_.isOf(subResults.get)).getOrElse {
+        val widget = JSONSchemaRenderer(f, subResults, subforms)
+        subWidgets = subWidgets ++ Seq(widget)
+        widget
+      }
+    }
+
+
+    val model: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
+    val sizeModel: Property[Int] = Property(model.get.size)
 
     override def render() =  {
-
-      val model: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
-      val sizeModel: Property[Int] = Property(model.get.size)
 
       model.listen(seq => sizeModel.set(seq.size))
 
@@ -101,11 +119,10 @@ case class SubformRenderer(parentData:Property[Json],subforms:Seq[JSONMetadata])
             div(BootstrapStyles.Panel.panelBody, BootstrapStyles.Panel.panelDefault)(
               h4(f.name),
               produce(sizeModel) { size =>
-                subWidgets = Seq()
+                cleanSubwidget()
                 for {i <- 0 until size} yield {
                   val subResults = model.transform(splitJsonFields(f, i), mergeJsonFields(model, f, i))
-                  val widget = JSONSchemaRenderer(f, subResults, subforms).widget()
-                  subWidgets = subWidgets ++ Seq(widget)
+                  val widget = findOrAdd(f, subResults, subforms)
                   div(
                     widget.render(),
                     a(onclick :+= ((e: Event) => removeItem(model, model.get(i), subform)), Labels.subform.remove)
@@ -113,12 +130,12 @@ case class SubformRenderer(parentData:Property[Json],subforms:Seq[JSONMetadata])
                 }
               },
               br,
-              a(onclick :+= ((e: Event) => addItem(model, sizeModel, subform, f)), Labels.subform.add)
+              a(onclick :+= ((e: Event) => addItem(model, subform, f)), Labels.subform.add)
 
             )
           )
         }
       }
     }
-  }
+
 }
