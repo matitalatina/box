@@ -110,7 +110,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
   def deleteSubforms(subform:JSONMetadata, recivedJson:Seq[Json],dbJson:Seq[Json]) = {
     val receivedKeys = recivedJson.map(_.keys(subform.keys))
     val dbKeys = dbJson.map(_.keys(subform.keys))
-    println(s"subform: ${subform.name} received: ${receivedKeys} db: $dbJson")
+    println(s"subform: ${subform.name} received: ${receivedKeys.map(_.asString)} db: ${dbKeys.map(_.asString)}")
     dbKeys.filterNot(k => receivedKeys.contains(k)).map{ keysToDelete =>
       println(s"Deleting subform ${subform.name}, with key: $keysToDelete")
       TablesRegistry.actions(subform.table).delete(keysToDelete)
@@ -125,7 +125,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
         dbSubforms <- getSubform(e,field,form,field.subform.get)
         subJson = attachArrayIndex(e.seq(field.key),form)
         deleted = deleteSubforms(form,subJson,dbSubforms)
-        result <- FutureUtils.seqFutures(subJson){ json =>
+        result <- FutureUtils.seqFutures(subJson){ json => //order matters so we do it synchro
             FormShaper(form).updateAll(json).recover{case t => t.printStackTrace(); Json.Null}
         }
       } yield result
@@ -152,7 +152,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
       for {
         form <- jsonFormMetadata.get(field.subform.get.id, form.lang)
         rows = attachArrayIndex(e.seq(field.key),form)
-        result <- Future.sequence(rows.map(row => FormShaper(form).insertAll(row)))
+        result <- FutureUtils.seqFutures(rows)(row => FormShaper(form).insertAll(row))
       } yield result
     })
     inserted <- actions.insert(e)

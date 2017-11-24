@@ -5,26 +5,53 @@ import ch.wsl.box.client._
 import ch.wsl.box.client.services.REST
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.client.utils.Session
+import ch.wsl.box.model.shared.{JSONQuery, JSONSort, Sort}
+import io.circe.Json
 
 import scalacss.ScalatagsCss._
+import Context._
+import ch.wsl.box.client.views.components.Debug
 
-object IndexViewPresenter extends DefaultViewPresenterFactory[IndexState.type](() => new IndexView)
+case class IndexViewModel(news:Seq[Json])
 
-class IndexView extends View {
+object IndexViewPresenter extends ViewPresenter[IndexState.type]{
+
+  val prop = ModelProperty{IndexViewModel(Seq())}
+
+  override def create() = (new IndexView(prop),new IndexPresenter(prop))
+}
+
+class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[IndexState.type] {
+  override def handleState(state: IndexState.type): Unit = {
+    for{
+      news <- REST.list("table",Session.lang(),"news",JSONQuery(10,1,sort = List(JSONSort("news_id",Sort.DESC)),List()))
+    } yield {
+      viewModel.set(IndexViewModel(news))
+    }
+  }
+}
+
+class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.circe.generic.auto._
+  import ch.wsl.box.shared.utils.JsonUtils._
+
 
   import org.scalajs.dom.File
 
-  val selectedFiles: SeqProperty[File] = SeqProperty(Seq.empty)
-
-
-  val input = FileInput("file", Property(false), selectedFiles)()
-
 
   private val content = div(
-    h2("Postgres Box Client"),
-
+    h2("News"),
+    Debug(viewModel),
+    repeat(viewModel.subSeq(_.news)){ news =>
+      div(
+        div(news.get.get("news_id")),
+        div(pre(news.get.get(Session.lang()))),
+        br
+      ).render
+    }
   )
 
 

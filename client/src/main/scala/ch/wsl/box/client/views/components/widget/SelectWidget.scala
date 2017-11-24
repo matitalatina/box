@@ -10,7 +10,7 @@ import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}
 import scalacss.ScalatagsCss._
 
-case class SelectWidget(options:JSONFieldOptions,field:JSONField,label: String, prop: Property[Json])extends OptionWidget {
+case class SelectWidget(options:JSONFieldOptions,field:JSONField,label: String, prop: Property[Json],modifiers: Modifier*)extends OptionWidget {
 
   override def render() = {
 
@@ -22,9 +22,11 @@ case class SelectWidget(options:JSONFieldOptions,field:JSONField,label: String, 
       options.options.values.toSeq
     }
 
+    val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.pullRight)++modifiers
+
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       if(label.length >0) lab(label) else {},
-      Select(selectModel,opts,Select.defaultLabel)(BootstrapStyles.pullRight),
+      Select(selectModel,opts,Select.defaultLabel)(m),
       div(BootstrapStyles.Visibility.clearfix)
     )
   }

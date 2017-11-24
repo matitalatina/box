@@ -73,12 +73,12 @@ Root {
                 pathPrefix("file") {
                   FileRoutes.route
                 }~
-                pathPrefix("model") {
+                pathPrefix("table") {
                   pathPrefix(Segment) { lang =>
                     GeneratedRoutes()
                   }
                 } ~
-                path("models") {
+                path("tables") {
                   get {
                     val allmodels = Table.tables ++ View.views
                     complete(allmodels.toSeq.sorted)

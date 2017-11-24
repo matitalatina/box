@@ -16,11 +16,16 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
   private def input(labelString:Option[String] = None)(inputRenderer:(Seq[Modifier]) => Modifier):Modifier = {
 
-    val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight,textAlign.right)
+    val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
+
+    def withLabel = hasLabel && labelString.exists(_.length > 0)
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
-      if(hasLabel && labelString.exists(_.length > 0)) label(labelString) else {},
-      inputRenderer(inputRendererDefaultModifiers++modifiers),
+      if(withLabel) label(labelString) else {},
+      if(withLabel)
+        inputRenderer(inputRendererDefaultModifiers++modifiers)
+      else
+        inputRenderer(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct)),
       div(BootstrapStyles.Visibility.clearfix)
     )
 

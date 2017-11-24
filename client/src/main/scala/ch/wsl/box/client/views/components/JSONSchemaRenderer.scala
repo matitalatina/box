@@ -57,6 +57,7 @@ case class JSONSchemaRenderer(form: JSONMetadata, prop: Property[Json], subforms
 
     (field.`type`, field.widget, field.lookup, form.keys.contains(field.key), field.subform) match {
       case (_, Some(WidgetsNames.hidden), _, _, _) => HiddenWidget
+      case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidget(options,field,label,result,width := 100.pct)
       case (_, Some(WidgetsNames.popup), Some(options), _, _) => PopupWidget(options,label,result)
       case (_, _, Some(options), _, _) => SelectWidget(options, field,label,result)
       case (_, _, _, true, _) => InputWidget(disabled := true, textAlign.right).Text(label,result)

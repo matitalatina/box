@@ -9,7 +9,7 @@ import scalacss.internal.LengthUnit.px
 object GlobalStyles extends StyleSheet.Inline {
   import dsl._
 
-  val inputDefaultWidth = width(70 %%)
+  val inputDefaultWidth = width(50 %%)
 
   val global = style(
 
@@ -21,8 +21,24 @@ object GlobalStyles extends StyleSheet.Inline {
       inputDefaultWidth
     ),
 
+    unsafeRoot("input[type='checkbox']")(
+      width.auto
+    ),
+
+    unsafeRoot("input[type='number']")(
+      textAlign.right
+    ),
+
     unsafeRoot("textarea")(
       inputDefaultWidth
+    ),
+
+    unsafeRoot("select")(
+      direction.rtl
+    ),
+
+    unsafeRoot("option")(
+      direction.rtl
     ),
 
     unsafeRoot("header")(
@@ -34,11 +50,10 @@ object GlobalStyles extends StyleSheet.Inline {
     ),
 
     unsafeRoot(".form-control")(
-      inputDefaultWidth,
       paddingTop(1 px),
       paddingBottom(1 px),
       paddingRight(5 px),
-      textAlign.right,
+      textAlign.left,
       lineHeight(14 px),
       borderRadius.`0`,
       height(21 px)
@@ -62,7 +77,7 @@ object GlobalStyles extends StyleSheet.Inline {
 
   val block = style(
     padding.`0`,
-    paddingRight(10 px),
+    paddingRight(50 px),
     paddingLeft(10 px)
   )
 

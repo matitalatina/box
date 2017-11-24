@@ -41,7 +41,7 @@ class RootView() extends View {
   private def content = div(BootstrapStyles.containerFluid)(
     Header.navbar("box client",Seq(
       MenuLink(Labels.header.home,IndexState),
-      MenuLink(Labels.header.models,ModelsState("model","")),
+      MenuLink(Labels.header.models,ModelsState("table","")),
       MenuLink(Labels.header.forms,ModelsState("form",""))
     )),
     main()(

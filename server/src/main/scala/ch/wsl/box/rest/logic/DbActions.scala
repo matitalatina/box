@@ -93,7 +93,7 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
     for{
       result <- db.run {
         val action = filter(i).update(e)
-        //println (action.statements)
+        println (action.statements)
         action
       }
     } yield result
