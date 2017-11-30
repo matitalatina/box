@@ -40,7 +40,7 @@ object Boot extends App with Root {
   val bindingFuture = Http().bindAndHandle(handleExceptions(myExceptionHandler) {
     route
   }, host, port)     //attache the root route
-  println(s"Server online at http://localhost:8080/\nPress qresultingre to stop...")
+  println(s"Server online at http://localhost:8080/\nPress q to stop...")
   while(StdIn.readLine() != "q"){       //endless loop until q in sbt console is pressed
     println()
   } // let it run until user presses return

@@ -167,7 +167,8 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     reloadRows(1)
   }
 
-  def filterType(metadata:Metadata,filterType:String) = {
+  def filterType(metadata:Metadata, filterType:String) = {
+    println("setting filtertype " + filterType)
     val newMetadata = model.subProp(_.metadata).get.map{ m =>
       m.field.key == metadata.field.key match {
         case true => m.copy(filterType = filterType)
@@ -217,20 +218,22 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
 
 
   def filterOptions(metadata: Metadata) = {
-    val filterModel = Property(metadata.filterType)
+    val filterTypeModel = Property(metadata.filterType)
+    println(filterTypeModel.get)
+    println(Filter.>)
+    println(Filter.<)
 
-
-    //hack using model transfomation to get onChange event, using standard HTML breaks udash property model
-    val filterHandler = filterModel.transform(
+    //hack using model transformation to get onChange event, using standard HTML breaks udash property model
+    val filterTypeHandler = filterTypeModel.transform(
       (s:String) => s,
       {(s:String) =>
-        println("changed " + s);
-        presenter.filterType(metadata,s);
+        println("changed " + s)
+        presenter.filterType(metadata,s)  //aggiorna metadata
         s
       }
     )
 
-    Select(filterHandler,Filter.options(metadata.field.`type`),Select.defaultLabel)()
+    Select(filterTypeHandler, Filter.options(metadata.field.`type`), Select.defaultLabel)()
 
   }
 

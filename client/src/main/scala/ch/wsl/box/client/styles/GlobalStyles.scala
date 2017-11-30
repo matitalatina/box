@@ -38,7 +38,7 @@ object GlobalStyles extends StyleSheet.Inline {
     ),
 
     unsafeRoot("option")(
-      direction.rtl
+      direction.ltr
     ),
 
     unsafeRoot("header")(

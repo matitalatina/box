@@ -94,8 +94,9 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
   }
 
   import io.circe.syntax._
+  import ch.wsl.box.client._
 
-  def save() = {
+  def save(toState:(String, String) => RoutingState) = {
 
     val m = model.get
     m.form.foreach{ form =>
@@ -117,7 +118,8 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
         resultSaved <- saveAction()
         _ <- widget.afterSave(resultSaved,form)
       } yield {
-        val newState = Routes(m.kind,m.name).table()
+//        val newState =  Routes(m.kind,m.name).table()
+        val newState =  toState(m.kind,m.name)
         io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
 
       }}.recover{ case e =>
@@ -207,10 +209,21 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
           }
         ).render
       },
+      //save and stay on same record
       button(
         cls := "primary",
-        onclick :+= ((ev: Event) => presenter.save(), true)
-      )(Labels.form.save),br,br,
+        onclick :+= ((ev: Event) => presenter.save(Routes(_,_).edit(model.get.id.getOrElse(""))), true)
+      )(Labels.form.save),br,
+      //save and go to table view
+      button(
+        cls := "primary",
+        onclick :+= ((ev: Event) => presenter.save(Routes(_,_).table()), true)
+      )(Labels.form.save_table),br,
+      //save and go insert new record
+      button(
+        cls := "primary",
+        onclick :+= ((ev: Event) => presenter.save(Routes(_,_).add()), true)
+      )(Labels.form.save_add),br,br,
       Debug(model.subProp(_.form)),
       Debug(model.subProp(_.result))
     )

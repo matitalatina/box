@@ -50,6 +50,8 @@ object Labels {
 
   object form{
     def save = get("form.save")
+    def save_add = get("form.save_add")
+    def save_table = get("form.save_table")
     def addDate = get("form.add_date")
     def removeDate = get("form.remove_date")
   }

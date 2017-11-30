@@ -31,7 +31,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
   val actions = TablesRegistry.actions(form.table)
   def jsonFormMetadata = JSONFormMetadata()
 
-  private def createQuery(model:Json,subform: Subform):JSONQuery = {
+  private def createQuery(model:Json, subform: Subform):JSONQuery = {
     val parentFilter = for{
       (local,remote) <- subform.localFields.split(",").zip(subform.subFields.split(","))
     } yield {

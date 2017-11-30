@@ -71,23 +71,28 @@ object Sort{
   }
 }
 
+
 object Filter {
   final val NONE = "none"
   final val EQUALS = "="
   final val NOT = "not"
-  final val `>` = ">"
-  final val `<` = "<"
+  final val > = ">"
+  final val < = "<"
+  final val >= = ">="
+  final val <= = "<="
   final val LIKE = "like"
+  final val IN = "in"
+  final val BETWEEN = "between"
 
   def options(`type`:String) = `type` match {
-    case "number" => Seq(Filter.EQUALS,Filter.`>`,Filter.`<`,Filter.NOT)
-    case "string" => Seq(Filter.LIKE,Filter.EQUALS,Filter.NOT)
-    case _ => Seq(Filter.EQUALS,Filter.NOT)
+    case JSONTypes.NUMBER => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT, Filter.IN, Filter.BETWEEN)
+    case JSONTypes.STRING => Seq(Filter.LIKE, Filter.EQUALS, Filter.NOT)
+    case _ => Seq(Filter.EQUALS, Filter.NOT)
   }
 
   def default(`type`:String) = `type` match {
-    case "number" => Filter.EQUALS
-    case "string" => Filter.LIKE
+    case JSONTypes.NUMBER => Filter.EQUALS
+    case JSONTypes.STRING => Filter.LIKE
     case _ => Filter.EQUALS
   }
 }

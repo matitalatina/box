@@ -21,7 +21,7 @@ object JsonUtils {
       result
     }
 
-    //return JSON value of the gieven field
+    //return JSON value of the given field
     def js(field:String):Json = el.hcursor.get[Json](field).right.getOrElse(Json.Null)
 
     def seq(field:String):Seq[Json] = {
