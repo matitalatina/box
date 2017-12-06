@@ -3,7 +3,7 @@ package ch.wsl.box.model.shared
 /**
   * Created by andreaminetti on 18/03/16.
   */
-case class JSONModel(schema: JSONSchema, form: Seq[JSONField], keys:Seq[String]) {
+case class JSONEntity(schema: JSONSchema, form: Seq[JSONField], keys:Seq[String]) {
   def keyOf(row:Vector[(String,String)]):JSONKeys = {
     println(keys)
     JSONKeys(keys.map{ k =>
@@ -12,6 +12,6 @@ case class JSONModel(schema: JSONSchema, form: Seq[JSONField], keys:Seq[String])
   }
 }
 
-object JSONModel{
-  def empty = JSONModel(JSONSchema.empty,Seq(),Seq())
+object JSONEntity{
+  def empty = JSONEntity(JSONSchema.empty,Seq(),Seq())
 }

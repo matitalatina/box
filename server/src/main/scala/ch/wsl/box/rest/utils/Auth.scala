@@ -54,14 +54,12 @@ object Auth {
 
     println(s"Connecting to DB $dbPath with $name")
 
-
-
       val db:Database = Database.forURL(s"$dbPath?currentSchema=$dbSchema",
         driver="org.postgresql.Driver",
         user=name,
         password=password)
 
-      val box:Database = Database.forURL(s"$boxDbPath?currentSchema=$boxDbSchema",
+      val boxDb:Database = Database.forURL(s"$boxDbPath?currentSchema=$boxDbSchema",
       driver="org.postgresql.Driver",
       user=name,
       password=password)
@@ -69,7 +67,7 @@ object Auth {
       db.run{
         sql"""select 1""".as[Int]
       }.map{ _ =>
-        UserProfile(name,db,box)
+        UserProfile(name,db,boxDb)
       }
 
 

@@ -29,16 +29,16 @@ case class JSONFormMetadata(implicit db:Database) {
   private def fieldsToJsonFields(fields:Seq[(((Field_row,Field_i18n_row),Option[FieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
     val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
       val options: Option[Future[JSONFieldOptions]] = for{
-        model <- field.refModel
+        refEntity <- field.refEntity
         value <- field.refValueProperty
         text = fieldI18n.refTextProperty.getOrElse(lang)
       } yield {
 
-        TablesRegistry.actions(model).getModel(JSONQuery.baseQuery).map{ lookupData =>   //JSONQuery.limit(100)
+        TablesRegistry.actions(refEntity).getEntity(JSONQuery.baseQuery).map{ lookupData =>   //JSONQuery.limit(100)
           val options = lookupData.map{ lookupRow =>
             (lookupRow.get(value),lookupRow.get(text))
           }.toMap
-          JSONFieldOptions(model, JSONFieldMap(value,text),options)
+          JSONFieldOptions(refEntity, JSONFieldMap(value,text),options)
         }
       }
 
@@ -100,7 +100,7 @@ case class JSONFormMetadata(implicit db:Database) {
   def columns(form:Form_row,field:Field_row): Future[Option[PgColumn]] = {
     val pgColumns = TableQuery[PgColumns]
     Auth.adminDB.run{
-      pgColumns.filter(row => row.column_name === field.key && row.table_name === form.table).result
+      pgColumns.filter(row => row.column_name === field.key && row.table_name === form.entity).result
     }.map(_.headOption)
   }
 
@@ -123,7 +123,7 @@ case class JSONFormMetadata(implicit db:Database) {
         }.map(_.headOption)
       })
       columns <- Future.sequence(fields.map(f => columns(form,f._1)))
-      keys <- JSONSchemas.keysOf(form.table)
+      keys <- JSONSchemas.keysOf(form.entity)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
     } yield {
 
@@ -165,7 +165,7 @@ case class JSONFormMetadata(implicit db:Database) {
 
 
 
-      val result = JSONMetadata(form.id.get,form.name,jsonFields,layout,form.table,lang,tableFields,keys,defaultQuery)
+      val result = JSONMetadata(form.id.get,form.name,jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery)
       //println(s"resulting form: $result")
       result
     }

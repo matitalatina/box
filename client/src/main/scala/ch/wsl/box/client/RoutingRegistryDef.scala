@@ -24,12 +24,12 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
 
   private val (loggedInUrl2State, loggedInState2Url) = Bidirectional[String, RoutingState] {
     case "/home" => IndexState
-    case "/tables" => ModelsState("table","")
-    case "/forms" => ModelsState("form","")
-    case "/box" /:/ kind /:/ model /:/ "insert" => ModelFormState(kind,model,None)
-    case "/box" /:/ kind /:/ model /:/ "update" /:/ id => ModelFormState(kind,model,Some(id))
-    case "/box" /:/ kind /:/ model /:/ "child" /:/ childModel => MasterChildState(kind,model,childModel)
-    case "/box" /:/ kind /:/ model => ModelTableState(kind,model)
+    case "/entities" => EntitiesState("entity","")
+    case "/forms" => EntitiesState("form","")
+    case "/box" /:/ kind /:/ entity /:/ "insert" => EntityFormState(kind,entity,None)
+    case "/box" /:/ kind /:/ entity /:/ "update" /:/ id => EntityFormState(kind,entity,Some(id))
+    case "/box" /:/ kind /:/ entity /:/ "child" /:/ childEntity => MasterChildState(kind,entity,childEntity)
+    case "/box" /:/ kind /:/ entity => EntityTableState(kind,entity)
     case "/fire" => FireState
     case "/fire/insert" => FireFormState(None)
     case "/fire" /:/ id => FireFormState(Some(id))

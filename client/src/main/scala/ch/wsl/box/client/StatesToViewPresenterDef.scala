@@ -9,9 +9,9 @@ class StatesToViewPresenterDef extends ViewPresenterRegistry[RoutingState] {
     case RootState => RootViewPresenter
     case IndexState => IndexViewPresenter
     case LoginState => LoginViewPresenter
-    case ModelsState(kind,model) => ModelsViewPresenter(kind,model,2)
-    case ModelTableState(kind,model) => ModelTableViewPresenter(Routes(kind,model))
-    case ModelFormState(kind,model,id) => ModelFormViewPresenter
+    case EntitiesState(kind,currentEntity) => EntitiesViewPresenter(kind,currentEntity,2)
+    case EntityTableState(kind,entity) => EntityTableViewPresenter(Routes(kind,entity))
+    case EntityFormState(kind,entity,id) => EntityFormViewPresenter
     case MasterChildState(_,master,child) => MasterChildViewPresenter(master,child)
     case _ => ErrorViewPresenter
   }

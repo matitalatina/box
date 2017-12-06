@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{ModelFormState, ModelTableState}
+import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.{Conf, Labels, Session}
@@ -29,24 +29,24 @@ import scala.concurrent.Future
 
 case class Row(data: Seq[String])
 case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
-case class ModelTableModel(name:String, kind:String, rows:Seq[Row], metadata:Seq[Metadata], form:Option[JSONMetadata], selected:Option[Row], keyList: KeyList, pages:Int)
+case class EntityTableModel(name:String, kind:String, rows:Seq[Row], metadata:Seq[Metadata], form:Option[JSONMetadata], selected:Option[Row], keyList: KeyList, pages:Int)
 
-object ModelTableModel{
-  def empty = ModelTableModel("","",Seq(),Seq(),None,None,KeyList(true,1,Seq(),0),1)
+object EntityTableModel{
+  def empty = EntityTableModel("","",Seq(),Seq(),None,None,KeyList(true,1,Seq(),0),1)
 }
 
-case class ModelTableViewPresenter(routes:Routes,onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[ModelTableState] {
+case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[EntityTableState] {
 
   import ch.wsl.box.client.Context._
 
 
 
-  override def create(): (View, Presenter[ModelTableState]) = {
+  override def create(): (View, Presenter[EntityTableState]) = {
 
-    val model = ModelProperty(ModelTableModel.empty)
+    val model = ModelProperty(EntityTableModel.empty)
 
-    val presenter = ModelTablePresenter(model,onSelect,routes)
-    (ModelTableView(model,presenter,routes),presenter)
+    val presenter = EntityTablePresenter(model,onSelect,routes)
+    (EntityTableView(model,presenter,routes),presenter)
   }
 }
 
@@ -56,22 +56,22 @@ Failed to decode JSON on
 /model/en/v_remark_base/metadata
 with error: DecodingFailure(String, List(DownArray, DownField(fields), DownArray, DownField(blocks), DownField(layout)))
  */
-case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[ModelTableState]{
+case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState]{
 
   import ch.wsl.box.client.Context._
   import Enhancer._
 
-  override def handleState(state: ModelTableState): Unit = {
-    model.set(ModelTableModel.empty)
-    model.subProp(_.name).set(state.model)
+  override def handleState(state: EntityTableState): Unit = {
+    model.set(EntityTableModel.empty)
+    model.subProp(_.name).set(state.entity)
     model.subProp(_.kind).set(state.kind)
 
    val defaultJsonQuery = JSONQuery.limit(Conf.pageLength)
 
     for{
 
-      emptyFieldsForm <- REST.form(state.kind,Session.lang(),state.model)
-      fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tableFields.contains(field.key))
+      emptyFieldsForm <- REST.form(state.kind,Session.lang(),state.entity)
+      fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.entityFields.contains(field.key))
       filteredForm = emptyFieldsForm.copy(fields = fields)
       models <- Enhancer.fetchModels(Seq(filteredForm))
       form = Enhancer.populateOptionsValuesInFields(models,filteredForm)
@@ -79,13 +79,13 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
         case None => defaultJsonQuery
         case Some(jsonquery) => jsonquery.copy(paging = defaultJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
       }
-      csv <- REST.csv(state.kind,Session.lang(),state.model,query)
+      csv <- REST.csv(state.kind,Session.lang(),state.entity,query)
       keyList <- REST.keysList(model.get.kind,Session.lang(),model.get.name,query)
     } yield {
 
 
-      val m = ModelTableModel(
-        name = state.model,
+      val m = EntityTableModel(
+        name = state.entity,
         kind = state.kind,
         rows = csv.map{ Row(_)},
         metadata = form.fields.map{ field =>
@@ -112,7 +112,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
     math.ceil(keyList.count.toDouble / Conf.pageLength.toDouble).toInt
   }
 
-  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.form).get.toSeq.flatMap(_.tableFields),model.subProp(_.form).get.toSeq.flatMap(_.keys))
+  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.form).get.toSeq.flatMap(_.entityFields),model.subProp(_.form).get.toSeq.flatMap(_.keys))
 
   def edit(el:Row) = {
     val k = key(el)
@@ -208,7 +208,7 @@ case class ModelTablePresenter(model:ModelProperty[ModelTableModel], onSelect:Se
   }
 }
 
-case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTablePresenter,routes:Routes) extends View {
+case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:EntityTablePresenter, routes:Routes) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
@@ -262,10 +262,10 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
         UdashTable()(model.subSeq(_.rows))(
           headerFactory = Some(() => {
               tr(
-                th(GlobalStyles.smallCells)(Labels.table.actions),
+                th(GlobalStyles.smallCells)(Labels.entity.actions),
                 produce(model.subProp(_.form)) { form =>
                   for {
-                    key <- form.toSeq.flatMap(_.tableFields)
+                    key <- form.toSeq.flatMap(_.entityFields)
                     metadata <- model.subProp(_.metadata).get.filter(_.field.key == key)
                   } yield {
                     val title: String = metadata.field.title.getOrElse(metadata.field.key)
@@ -294,7 +294,7 @@ case class ModelTableView(model:ModelProperty[ModelTableModel],presenter:ModelTa
               td(GlobalStyles.smallCells)(a(
                 cls := "primary",
                 onclick :+= ((ev: Event) => presenter.edit(el.get), true)
-              )(Labels.table.edit)),
+              )(Labels.entity.edit)),
               produce(model.subSeq(_.metadata)) { metadatas =>
                 for {(metadata, i) <- metadatas.zipWithIndex} yield {
 

@@ -56,22 +56,22 @@ object Labels {
     def removeDate = get("form.remove_date")
   }
 
-  object models{
-    def search = get("model.search")
-    def title = get("model.title")
-    def select = get("model.select")
-    def `new` = get("model.new")
-    def table = get("model.table")
+  object entities{
+    def search = get("entity.search")
+    def title = get("entity.title")
+    def select = get("entity.select")
+    def `new` = get("entity.new")
+    def table = get("entity.table")
   }
 
-  object table{
+  object entity{
     def actions = get("table.actions")
     def edit = get("table.edit")
   }
 
   object header{
     def home = get("header.home")
-    def models = get("header.models")
+    def entities = get("header.entities")
     def forms = get("header.forms")
     def lang = get("header.lang")
   }

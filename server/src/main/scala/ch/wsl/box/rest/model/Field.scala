@@ -18,18 +18,18 @@ object Field {
     *  @param `type` Database column type SqlType(text)
     *  @param key Database column key SqlType(text), Default(None)
     *  @param widget Database column widget SqlType(text), Default(None)
-    *  @param refModel Database column refModel SqlType(text), Default(None)
+    *  @param refEntity Database column refModel SqlType(text), Default(None)
     *  @param refValueProperty Database column refValueProperty SqlType(text), Default(None)
     *  @param subform Database column subform SqlType(int4), Default(None) */
-  case class Field_row(id: Option[Int] = None, form_id: Int, `type`: String, key: String, widget: Option[String] = None, refModel: Option[String] = None, refValueProperty: Option[String] = None, subform: Option[Int] = None, localFields:Option[String] = None,subFields:Option[String] = None,subFilter:Option[String] = None,default:Option[String] = None)
+  case class Field_row(id: Option[Int] = None, form_id: Int, `type`: String, key: String, widget: Option[String] = None, refEntity: Option[String] = None, refValueProperty: Option[String] = None, subform: Option[Int] = None, localFields:Option[String] = None, subFields:Option[String] = None, subFilter:Option[String] = None, default:Option[String] = None)
   /** GetResult implicit for fetching Field_row objects using plain SQL queries */
 
   /** Table description of table field. Objects of this class serve as prototypes for rows in queries.
     *  NOTE: The following names collided with Scala keywords and were escaped: type */
   class Field(_tableTag: Tag) extends profile.api.Table[Field_row](_tableTag, "field") {
-    def * = (Rep.Some(id), form_id, `type`, key, widget, refModel, refValueProperty, subform,localFields,subFields,subFilter,default) <> (Field_row.tupled, Field_row.unapply)
+    def * = (Rep.Some(id), form_id, `type`, key, widget, refEntity, refValueProperty, subform,localFields,subFields,subFilter,default) <> (Field_row.tupled, Field_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(form_id), Rep.Some(`type`),  key, widget, refModel, refValueProperty, subform,localFields,subFields,subFilter,default).shaped.<>({r=>import r._; _1.map(_=> Field_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11,_12)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(form_id), Rep.Some(`type`),  key, widget, refEntity, refValueProperty, subform,localFields,subFields,subFilter,default).shaped.<>({ r=>import r._; _1.map(_=> Field_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11,_12)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -43,7 +43,7 @@ object Field {
     /** Database column widget SqlType(text), Default(None) */
     val widget: Rep[Option[String]] = column[Option[String]]("widget", O.Default(None))
     /** Database column refModel SqlType(text), Default(None) */
-    val refModel: Rep[Option[String]] = column[Option[String]]("refModel", O.Default(None))
+    val refEntity: Rep[Option[String]] = column[Option[String]]("refEntity", O.Default(None))
     /** Database column refValueProperty SqlType(text), Default(None) */
     val refValueProperty: Rep[Option[String]] = column[Option[String]]("refValueProperty", O.Default(None))
     /** Database column subform SqlType(int4), Default(None) */

@@ -32,7 +32,7 @@ trait BaseCodeGenerator {
     MTable.getTables(None, None, None, Some(Seq("TABLE")))   //slick method to retrieve db structure
   }, 200 seconds)
     .filter { t =>
-      if(excludes.exists(e => t.name.name == e)) {
+      if(excludes.exists(e => t.name.name matches e)) {
         false
       } else if(tables.contains("*")) {
         true
@@ -45,7 +45,7 @@ trait BaseCodeGenerator {
     MTable.getTables(None, None, None, Some(Seq("VIEW")))
   }, 200 seconds)
     .filter { t =>
-      if(excludes.exists(e => t.name.name == e)) {
+      if(excludes.exists(e => t.name.name matches e)) {
         false
       } else if(views.contains("*")) {
         true
@@ -54,18 +54,18 @@ trait BaseCodeGenerator {
       }
     }
 
-  private val enabledModels = enabledTables ++ enabledViews
+  private val enabledEntities = enabledTables ++ enabledViews
 
-  //println(enabledModels.map(_.name.name))
+  //println(enabledEntities.map(_.name.name))
 
-  private val dbModel = Await.result(db.run{
-    PostgresProfile.createModelBuilder(enabledModels,true).buildModel   //create model based on specific db (here postgres)
+  private val dbEntity = Await.result(db.run{
+    PostgresProfile.createModelBuilder(enabledEntities,true).buildModel   //create model based on specific db (here postgres)
   }, 200 seconds)
 
 
   //exclude fields
   println(excludeFields)
-  private val cleanedTables = dbModel.tables.filter{t =>
+  private val cleanedTables = dbEntity.tables.filter{t =>
     dbSchema match {
       case "public" => t.name.schema.isEmpty
       case _ => t.name.schema == Some(dbSchema)
@@ -73,9 +73,9 @@ trait BaseCodeGenerator {
   }.map{ table =>
 
     table.copy(columns = table.columns.filterNot{c =>
-      excludeFields.contains(c.name)
+      excludeFields.exists(e => c.name matches e )
     })
   }
 
-  val model = dbModel.copy(tables = cleanedTables)
+  val entity = dbEntity.copy(tables = cleanedTables)
 }

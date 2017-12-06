@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
 import ch.wsl.box.model.shared.{JSONCount, JSONQuery, JSONResult}
-import ch.wsl.box.rest.logic.{DbActions, JSONModelMetadata, JSONSchemas}
+import ch.wsl.box.rest.logic.{DbActions, JSONEntityMetadata, JSONSchemas}
 import ch.wsl.box.rest.utils.JSONSupport
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
@@ -47,7 +47,7 @@ object View {
         } ~
         path("metadata") {
           get {
-            complete{ JSONModelMetadata.of(name, "en") }
+            complete{ JSONEntityMetadata.of(name, "en") }
           }
         } ~
         path("count") {

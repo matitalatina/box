@@ -10,7 +10,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-object JSONModelMetadata {
+object JSONEntityMetadata {
 
   import StringHelper._
   
@@ -35,26 +35,26 @@ object JSONModelMetadata {
     def field2form(field: PgColumn): Future[JSONField] = schema.findFk(field.column_name).flatMap {
       _ match {
         case Some(fk) => {
-          if (constraints.contains(fk.contraintName)) {
-            println("error: " + fk.contraintName)
+          if (constraints.contains(fk.constraintName)) {
+            println("error: " + fk.constraintName)
             println(field.column_name)
-            Future.successful(JSONField(JSONSchemas.typesMapping(field.data_type), key = field.column_name.slickfy,nullable = field.nullable))
+            Future.successful(JSONField(field.jsonType, key = field.boxName, nullable = field.nullable))
           } else {
-            constraints = fk.contraintName :: constraints
+            constraints = fk.constraintName :: constraints
 
             val text = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse(defaultTableLookupField)
             val model = fk.referencingTable
             val value = fk.referencingKeys.head
 
             import ch.wsl.box.shared.utils.JsonUtils._
-            TablesRegistry.actions(model).getModel(JSONQuery.baseQuery).map{ lookupData =>
+            TablesRegistry.actions(model).getEntity(JSONQuery.baseQuery).map{ lookupData =>
               val options = lookupData.map{ lookupRow =>
                 (lookupRow.get(value),lookupRow.get(text))
               }.toMap
 
               JSONField(
-                JSONSchemas.typesMapping(field.data_type),
-                key = field.column_name.slickfy,
+                field.jsonType,
+                key = field.boxName,
                 nullable = field.nullable,
                 placeholder = Some(fk.referencingTable + " Lookup"),
                 //widget = Some(WidgetsNames.select),
@@ -65,10 +65,10 @@ object JSONModelMetadata {
           }
         }
         case _ => Future.successful(JSONField(
-          JSONSchemas.typesMapping(field.data_type),
-          key = field.column_name.slickfy,
+          field.jsonType,
+          key = field.boxName,
           nullable = field.nullable,
-          widget = JSONSchemas.widgetMapping(field.data_type)
+          widget = JSONSchemas.defaultWidgetMapping(field.data_type)
         ))
       }
     }

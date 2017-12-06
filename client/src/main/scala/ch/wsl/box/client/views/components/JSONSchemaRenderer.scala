@@ -71,7 +71,7 @@ case class JSONSchemaRenderer(form: JSONMetadata, prop: Property[Json], subforms
       case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text(label,result)
       case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea(label,result)
       case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea(label,result)
-      case ("file", _, _, _, _) => FileWidget(key,result,field,label,form.table)
+      case ("file", _, _, _, _) => FileWidget(key,result,field,label,form.entity)
       case (_, _, _, _, _) => InputWidget().Text(label,result)
     }
 

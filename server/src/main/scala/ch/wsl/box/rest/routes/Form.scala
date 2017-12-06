@@ -35,7 +35,7 @@ object Form {
       val jsonFormMetadata = JSONFormMetadata()
       val form = jsonFormMetadata.get(name,lang)
       val tableForm = form.map{ f =>
-        val filteredFields = f.fields.filter(field => f.tableFields.contains(field.key))
+        val filteredFields = f.fields.filter(field => f.entityFields.contains(field.key))
         f.copy(fields = filteredFields)
       }
 
@@ -90,7 +90,7 @@ object Form {
         path("keys") {
           get {
             complete {
-              form.map(f => JSONSchemas.keysOf(f.table) )
+              form.map(f => JSONSchemas.keysOf(f.entity) )
             }
           }
         } ~
@@ -100,7 +100,7 @@ object Form {
               complete {
                 for{
                   f <- form
-                  result <- TablesRegistry.actions(f.table).keyList(query,f.table)
+                  result <- TablesRegistry.actions(f.entity).keyList(query,f.entity)
                 } yield result
               }
             }
@@ -110,7 +110,7 @@ object Form {
           get {
             complete {
               form.map { f =>
-                TablesRegistry.actions(f.table).count()
+                TablesRegistry.actions(f.entity).count()
               }
             }
           }

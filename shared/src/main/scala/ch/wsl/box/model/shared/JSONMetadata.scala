@@ -11,9 +11,9 @@ case class JSONMetadata(
                          name:String,
                          fields:Seq[JSONField],
                          layout:Layout,
-                         table:String,
+                         entity:String,
                          lang:String,
-                         tableFields:Seq[String],
+                         entityFields:Seq[String],
                          keys:Seq[String],
                          query:Option[JSONQuery]
                        )
@@ -24,10 +24,10 @@ object JSONMetadata{
       val value:Option[Json] = (field.default,field.`type`) match {
         case (Some("arrayIndex"),_) => None
         case (Some("auto"),_) => None
-        case (Some(d),JSONTypes.NUMBER) => Some(d.toDouble.asJson)
+        case (Some(d),JSONFieldTypes.NUMBER) => Some(d.toDouble.asJson)
         case (Some(d),_) => Some(d.asJson)
-        case (None,JSONTypes.NUMBER) => Some(0.asJson)
-        case (None,JSONTypes.SUBFORM) => {
+        case (None,JSONFieldTypes.NUMBER) => Some(0.asJson)
+        case (None,JSONFieldTypes.SUBFORM) => {
           for{
           subform <- field.subform
           sub <- subforms.find(_.id == subform.id)

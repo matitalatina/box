@@ -28,14 +28,14 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
   import ch.wsl.box.shared.utils.JsonUtils._
 
 
-  val actions = TablesRegistry.actions(form.table)
+  val actions = TablesRegistry.actions(form.entity)
   def jsonFormMetadata = JSONFormMetadata()
 
-  private def createQuery(model:Json, subform: Subform):JSONQuery = {
+  private def createQuery(entity:Json, subform: Subform):JSONQuery = {
     val parentFilter = for{
       (local,remote) <- subform.localFields.split(",").zip(subform.subFields.split(","))
     } yield {
-      JSONQueryFilter(remote,Some(Filter.EQUALS),model.get(local))
+      JSONQueryFilter(remote,Some(Filter.EQUALS),entity.get(local))
     }
 
     val filters = parentFilter.toSeq ++ subform.subFilter
@@ -43,8 +43,8 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     JSONQuery(None,List(),filters.toList.distinct)
   }
 
-  private def getSubform(model:Json, field:JSONField, form:JSONMetadata, subform:Subform):Future[Seq[Json]] = {
-    val query = createQuery(model,subform)
+  private def getSubform(entity:Json, field:JSONField, form:JSONMetadata, subform:Subform):Future[Seq[Json]] = {
+    val query = createQuery(entity,subform)
 
     for {
       result <- FormShaper(form).extractSeq(query)
@@ -74,7 +74,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
 
   private def extractSeq(query:JSONQuery):Future[Seq[Json]] = {
     for{
-      elements <- TablesRegistry.actions(form.table).getModel(query)
+      elements <- TablesRegistry.actions(form.entity).getEntity(query)
       result <- Future.sequence(elements.map(expandJson))
     } yield result
   }.recover{ case t =>
@@ -91,7 +91,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     results <- extractSeq(query)
   } yield {
     val strings = results.map { row =>
-      form.tableFields.map { field =>
+      form.entityFields.map { field =>
         row.get(field)
       }
     }
@@ -113,7 +113,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
     println(s"subform: ${subform.name} received: ${receivedKeys.map(_.asString)} db: ${dbKeys.map(_.asString)}")
     dbKeys.filterNot(k => receivedKeys.contains(k)).map{ keysToDelete =>
       println(s"Deleting subform ${subform.name}, with key: $keysToDelete")
-      TablesRegistry.actions(subform.table).delete(keysToDelete)
+      TablesRegistry.actions(subform.entity).delete(keysToDelete)
     }
   }
 
@@ -139,7 +139,7 @@ case class FormShaper(form:JSONMetadata)(implicit db:Database) extends UglyDBFil
           println(s"update $key")
           actions.update(key,e)
         } else {
-          println(s"insert into ${form.table} with key $key")
+          println(s"insert into ${form.entity} with key $key")
           actions.insert(e)
         }
       }

@@ -38,7 +38,7 @@ object Enhancer {
     Future.sequence {
       models.distinct.map { model: String =>
         println(s"fetching Model: $model")
-        REST.list("model", Session.lang(), model, 6000).map(r => model -> r)
+        REST.list("entity", Session.lang(), model, 6000).map(r => model -> r)
       }
     }
   }

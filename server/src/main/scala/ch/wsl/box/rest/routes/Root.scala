@@ -73,17 +73,27 @@ Root {
                 pathPrefix("file") {
                   FileRoutes.route
                 }~
-                pathPrefix("table") {
+                pathPrefix("entity") {
                   pathPrefix(Segment) { lang =>
                     GeneratedRoutes()
                   }
                 } ~
+                  path("entities") {
+                    get {
+                      val alltables = Table.tables ++ View.views
+                      complete(alltables.toSeq.sorted)
+                    }
+                  } ~
                 path("tables") {
-                  get {
-                    val allmodels = Table.tables ++ View.views
-                    complete(allmodels.toSeq.sorted)
-                  }
-                } ~
+                    get {
+                      complete(Table.tables.toSeq.sorted)
+                    }
+                  } ~
+                path("views") {
+                    get {
+                      complete(View.views.toSeq.sorted)
+                    }
+                  } ~
                 path("forms") {
                   get {
                     complete(JSONFormMetadata().list)

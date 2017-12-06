@@ -10,7 +10,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
 
 
 
-    val modelWithoutFiles = model.copy(tables =model.tables.map { table =>
+    val modelWithoutFiles = entity.copy(tables =entity.tables.map { table =>
       table.copy(columns = table.columns.filterNot { c =>
         c.tpe == "Array[Byte]"
       })
@@ -25,7 +25,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     )
 
 
-    val modelWithOnlyFilesTables = model.copy(tables = model.tables.filter(_.columns.exists(_.tpe == "Array[Byte]")).map{ t =>
+    val modelWithOnlyFilesTables = entity.copy(tables = entity.tables.filter(_.columns.exists(_.tpe == "Array[Byte]")).map{ t =>
       t.copy(foreignKeys = Seq())
     })
 
@@ -44,7 +44,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     val calculatedTables= enabledTables.map(_.name.name)
 
 
-    RoutesGenerator(calculatedViews,calculatedTables,model).writeToFile(
+    RoutesGenerator(calculatedViews,calculatedTables,entity).writeToFile(
       args(0),
       "ch.wsl.box.rest.routes",
       "GeneratedRoutes",
@@ -52,13 +52,13 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "ch.wsl.box.model.Tables"
     )
 
-    RegistryModelsGenerator(calculatedViews,calculatedTables,model).writeToFile(
+    RegistryModelsGenerator(calculatedViews,calculatedTables,entity).writeToFile(
       args(0),
       "ch.wsl.box.model",
       "TablesRegistry.scala"
     )
 
-    FileAccessGenerator(model,dbConf).writeToFile(
+    FileAccessGenerator(entity,dbConf).writeToFile(
       args(0),
       "ch.wsl.box.rest.routes",
       "FileRoutes",

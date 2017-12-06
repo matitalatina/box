@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{ModelFormState, ModelTableState}
+import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.model.shared.{JSONField, JSONKeys}
 import io.circe.Json
 import org.scalajs.dom.{Element, Event}

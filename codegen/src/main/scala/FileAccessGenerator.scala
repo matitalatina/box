@@ -13,7 +13,8 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
 
 
   def file(conf:Config) = {
-    val table = conf.getString("table")
+    val table = conf.getString(
+      "table")
     val bytea = conf.getString("bytea")
     val filename = conf.getString("filename")
     val mime = conf.getString("mime")

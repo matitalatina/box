@@ -85,14 +85,14 @@ object Filter {
   final val BETWEEN = "between"
 
   def options(`type`:String) = `type` match {
-    case JSONTypes.NUMBER => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT, Filter.IN, Filter.BETWEEN)
-    case JSONTypes.STRING => Seq(Filter.LIKE, Filter.EQUALS, Filter.NOT)
+    case JSONFieldTypes.NUMBER => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT, Filter.IN, Filter.BETWEEN)
+    case JSONFieldTypes.STRING => Seq(Filter.LIKE, Filter.EQUALS, Filter.NOT)
     case _ => Seq(Filter.EQUALS, Filter.NOT)
   }
 
   def default(`type`:String) = `type` match {
-    case JSONTypes.NUMBER => Filter.EQUALS
-    case JSONTypes.STRING => Filter.LIKE
+    case JSONFieldTypes.NUMBER => Filter.EQUALS
+    case JSONFieldTypes.STRING => Filter.LIKE
     case _ => Filter.EQUALS
   }
 }

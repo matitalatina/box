@@ -6,7 +6,7 @@ import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
 import ch.wsl.box.model.TablesRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONKeys, JSONQuery, JSONResult}
-import ch.wsl.box.rest.logic.{DbActions, JSONModelMetadata, JSONSchemas}
+import ch.wsl.box.rest.logic.{DbActions, JSONEntityMetadata, JSONSchemas}
 import ch.wsl.box.rest.utils.JSONSupport
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
@@ -78,7 +78,7 @@ object Table {
       } ~
       path("metadata") {
         get {
-          complete{ JSONModelMetadata.of(name, "en") }   //can set "en" hardcoded, since base table JSONForm do not change with language
+          complete{ JSONEntityMetadata.of(name, "en") }   //can set "en" hardcoded, since base table JSONForm do not change with language
         }
       } ~
       path("keys") {   //returns key fields names

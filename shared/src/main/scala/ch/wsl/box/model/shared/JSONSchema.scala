@@ -6,10 +6,10 @@ package ch.wsl.box.model.shared
 
 case class JSONSchema(
                        `type`:String,
-                       title:Option[String] = None,
+                       title:Option[String] = None,           //table name
                        properties: Map[String,JSONSchemaL2] = Map(),
-                       required: Option[Seq[String]] = None,
-                       readonly: Option[Boolean] = None,
+                       required: Option[Seq[String]] = None,  //columns that are required
+                       readonly: Option[Boolean] = None,      // if all columns are readonly
                        enum: Option[Seq[String]] = None,
                        order: Option[Int] = None
                      ) {

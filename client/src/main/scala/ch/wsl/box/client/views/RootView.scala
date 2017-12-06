@@ -3,7 +3,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.utils.Labels
 import io.udash._
-import ch.wsl.box.client.{IndexState, ModelsState, RootState}
+import ch.wsl.box.client.{IndexState, EntitiesState, RootState}
 import org.scalajs.dom.Element
 
 import scalatags.JsDom.tags2.main
@@ -41,8 +41,8 @@ class RootView() extends View {
   private def content = div(BootstrapStyles.containerFluid)(
     Header.navbar("box client",Seq(
       MenuLink(Labels.header.home,IndexState),
-      MenuLink(Labels.header.models,ModelsState("table","")),
-      MenuLink(Labels.header.forms,ModelsState("form",""))
+      MenuLink(Labels.header.entities,EntitiesState("entity","")),
+      MenuLink(Labels.header.forms,EntitiesState("form",""))
     )),
     main()(
       div()(

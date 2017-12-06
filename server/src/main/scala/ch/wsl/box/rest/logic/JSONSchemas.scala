@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.model.shared.{WidgetsNames, JSONSchemaL2, JSONSchema}
+import ch.wsl.box.model.shared.{JSONSchema, JSONSchemaL2, WidgetsNames}
 import ch.wsl.box.rest.utils.Auth
 
 import scala.concurrent.Future
@@ -19,9 +19,9 @@ object JSONSchemas {
 
     println("Getting JSONSchema of:" + table)
 
-    val schema = new PgInformationSchema(table,db)
+    val schema = new PgInformationSchema(table,db,Auth.dbSchema)
 
-    val prop:Future[Map[String,JSONSchemaL2]] = schema.columns.map{ col => properties(col) }
+    val prop:Future[Map[String,JSONSchemaL2]] = schema.columns.map(_.map(properties(_)).toMap)  //first map on future, second on columns
 
     println("columns")
 
@@ -33,8 +33,8 @@ object JSONSchemas {
         `type` = "object",
         title = Some(table),
         properties = p,
-        readonly = Some(c.forall { x => x.is_updatable == "NO" }),
-        required = Some(c.filter(_.is_nullable == "NO").map(_.column_name.slickfy))
+        readonly = Some(c.forall { x => !x.updatable }),
+        required = Some(c.filter(!_.nullable).map(_.boxName))
       )
     }
   }
@@ -43,24 +43,17 @@ object JSONSchemas {
 
   def keysOf(table:String):Future[Seq[String]] = {
     println("Getting " + table + " keys")
-    new PgInformationSchema(table,Auth.adminDB).pk.map { pks =>
-      println(pks)
-      pks.map(_.slickfy)
+    new PgInformationSchema(table,Auth.adminDB).pk.map { pk =>   //map to enter the future
+      println(pk)
+      pk.boxKeys
     }
 
   }
 
 
-  def properties(columns:Seq[PgColumn]):Map[String,JSONSchemaL2] = {
+  def properties(c:PgColumn):(String, JSONSchemaL2) = {
+    (c.boxName -> JSONSchemaL2(c.jsonType,Some(c.boxName),order=Some(c.ordinal_position),readonly=Some(!c.updatable)))
 
-    val cols = {for{
-      c <- columns
-    } yield {
-      c.column_name.slickfy -> JSONSchemaL2(typesMapping(c.data_type),Some(c.column_name.slickfy),order=Some(c.ordinal_position),readonly=Some(c.is_updatable == "NO"))
-    }}.toMap
-
-
-    cols
   }
 
   val typesMapping =  Map(
@@ -81,7 +74,7 @@ object JSONSchemas {
     "time without time zone" -> "string"
   )
 
-  val widgetMapping = Map(
+  val defaultWidgetMapping = Map(
     "integer" -> None,
     "character varying" -> Some(WidgetsNames.textinput),
     "character" -> Some(WidgetsNames.textinput),

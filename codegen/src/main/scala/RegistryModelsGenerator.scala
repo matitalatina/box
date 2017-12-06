@@ -25,7 +25,7 @@ case class RegistryModelsGenerator(viewList:Seq[String],tableList:Seq[String],mo
     def generate(pkg:String):String =
       s"""package ${pkg}
          |
-         |import ch.wsl.box.rest.logic.{JsonActions, ModelJsonActions}
+         |import ch.wsl.box.rest.logic.{JsonActions, EntityJsonActions}
          |import Tables._
          |
          |object TablesRegistry {
@@ -35,7 +35,7 @@ case class RegistryModelsGenerator(viewList:Seq[String],tableList:Seq[String],mo
          |  import ch.wsl.box.rest.utils.JSONSupport._
          |
          |
-         |  val actions: Map[String, ModelJsonActions] = Map(
+         |  val actions: Map[String, EntityJsonActions] = Map(
          |  ${tableList.flatMap(mapModel).mkString(",\n")}
          |  )
          |

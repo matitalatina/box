@@ -25,7 +25,7 @@ object IndexViewPresenter extends ViewPresenter[IndexState.type]{
 class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[IndexState.type] {
   override def handleState(state: IndexState.type): Unit = {
     for{
-      news <- REST.list("table",Session.lang(),"news",JSONQuery(10,1,sort = List(JSONSort("news_id",Sort.DESC)),List()))
+      news <- REST.list("entity",Session.lang(),"news",JSONQuery(10,1,sort = List(JSONSort("news_id",Sort.DESC)),List()))
     } yield {
       viewModel.set(IndexViewModel(news))
     }

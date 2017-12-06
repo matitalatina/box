@@ -1,7 +1,7 @@
 package ch.wsl.box.rest.logic
 
 import slick.driver.PostgresDriver.api._
-
+import StringHelper._
 
 
 case class PgColumn(
@@ -17,6 +17,10 @@ case class PgColumn(
   ordinal_position:Int
 ) {
   def nullable = is_nullable == "YES"
+  def updatable = is_updatable == "YES"
+  def jsonType = JSONSchemas.typesMapping(data_type)
+  def defaultWidget = JSONSchemas.defaultWidgetMapping(data_type)
+  def boxName = column_name.slickfy
 }
 
 class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema"), "columns") {

@@ -24,7 +24,7 @@ case class FileWidget(key:Property[String],prop:Property[Json],field:JSONField, 
     val keys = result.keys(form.keys)
     for{
       _ <- Future.sequence{
-        selectedFiles.get.map(REST.sendFile(_,keys,s"${form.table}.${field.file.get.file}"))
+        selectedFiles.get.map(REST.sendFile(_,keys,s"${form.entity}.${field.file.get.file}"))
       }
     } yield Unit
   }

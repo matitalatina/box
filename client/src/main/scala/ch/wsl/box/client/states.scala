@@ -16,18 +16,18 @@ case object ErrorState extends RoutingState(RootState)
 
 case object IndexState extends RoutingState(RootState)
 
-case class ModelsState(kind:String,model:String) extends RoutingState(RootState)
+case class EntitiesState(kind:String, currentEntity:String) extends RoutingState(RootState)
 
-case class ModelTableState(kind:String,model:String) extends RoutingState(ModelsState(kind,model))
+case class EntityTableState(kind:String, entity:String) extends RoutingState(EntitiesState(kind,entity))
 
+case class EntityFormState(
+                            kind:String,
+                            entity:String,
+                            id:Option[String]
+                          ) extends RoutingState(EntitiesState(kind,entity))
 
-case class MasterChildState(kind:String,parentModel:String, childModel:String) extends RoutingState(ModelsState(kind,parentModel))
+case class MasterChildState(kind:String, parentEntity:String, childEntity:String) extends RoutingState(EntitiesState(kind,parentEntity))
 
-case class ModelFormState(
-                           kind:String,
-                           model:String,
-                           id:Option[String]
-                         ) extends RoutingState(ModelsState(kind,model))
 
 case object FireState extends RoutingState(RootState)
 

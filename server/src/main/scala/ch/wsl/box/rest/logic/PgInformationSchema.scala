@@ -1,20 +1,19 @@
 package ch.wsl.box.rest.logic
 
 import ch.wsl.box.rest.utils.Auth
-import com.typesafe.config.{ConfigFactory, Config}
 import slick.driver.PostgresDriver
 import PostgresDriver.api._
 import net.ceedubs.ficus.Ficus._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.concurrent.Future
+import StringHelper._
+import slick.lifted.ShapedValue
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class PgInformationSchema(table:String, db:Database) {
+class PgInformationSchema(table:String, db:Database, pgSchema:String="public") {
 
   private val FOREIGNKEY = "FOREIGN KEY"
   private val PRIMARYKEY = "PRIMARY KEY"
@@ -25,12 +24,17 @@ class PgInformationSchema(table:String, db:Database) {
   val pgContraintsUsage = TableQuery[PgConstraintUsages]
   val pgKeyUsage = TableQuery[PgKeyUsages]
 
-  case class ForeignKey(keys:Seq[String], referencingKeys:Seq[String], referencingTable:String, contraintName:String)
+  case class PrimaryKey(keys:Seq[String], constraintName:String){
+    def boxKeys = keys.map(_.slickfy)
+  }
+  case class ForeignKey(keys:Seq[String], referencingKeys:Seq[String], referencingTable:String, constraintName:String){
+    def boxKeys = keys.map(_.slickfy)
+    def boxReferencingKeys = referencingKeys.map(_.slickfy)
+  }
 
-  val dbConf: Config = ConfigFactory.load().as[Config]("db")
 
   private val columnsQuery = pgColumns
-    .filter(e => e.table_name === table && e.table_schema === dbConf.as[String]("schema"))
+    .filter(e => e.table_name === table && e.table_schema === pgSchema)
     .sortBy(_.ordinal_position)
 
 
@@ -41,19 +45,19 @@ class PgInformationSchema(table:String, db:Database) {
   val pkQ = for{
     constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === PRIMARYKEY
     usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
-  } yield usage.column_name
+  } yield (usage.column_name, usage.constraint_name)
 
-  def pk:Future[Seq[String]] = Auth.adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
-  val action = pkQ.result
-    println(action.statements)
-    action
+  def pk:Future[PrimaryKey] = Auth.adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
+      pkQ.result
+        .map(x => x.unzip)    //change seq of tuple into tuple od seqs
+        .map(x => PrimaryKey(x._1, x._2.headOption.getOrElse("")))   //as constraint_name take only first element (should be the same)
   }
 
   private val fkQ1 = for{
     constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === FOREIGNKEY
     constraintBind <- pgConstraintsReference if constraint.constraint_name === constraintBind.constraint_name
-    referencingContraint <- pgConstraints if referencingContraint.constraint_name === constraintBind.referencing_constraint_name
-  } yield (constraintBind,referencingContraint)
+    referencingConstraint <- pgConstraints if referencingConstraint.constraint_name === constraintBind.referencing_constraint_name
+  } yield (constraintBind,referencingConstraint)
 
   private def fkQ2(c:PgConstraintReferences#TableElementType,ref:PgConstraints#TableElementType) = for{
     usageRef <- pgContraintsUsage if usageRef.constraint_name === c.constraint_name && usageRef.table_name === ref.table_name
@@ -64,9 +68,9 @@ class PgInformationSchema(table:String, db:Database) {
 
   lazy val fk:Future[Seq[ForeignKey]] =  {
 
-    db.run(fkQ1.result).flatMap { references =>
+    Auth.adminDB.run(fkQ1.result).flatMap { references =>
       Future.sequence(references.map { case (c, ref) =>
-        db.run(fkQ2(c,ref).result).map{ keys =>
+        Auth.adminDB.run(fkQ2(c,ref).result).map{ keys =>
           ForeignKey(keys.map(_._1),keys.map(_._2),ref.table_name, c.constraint_name)
         }
       })

@@ -35,25 +35,25 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
   }
 
   def splitJsonFields(form:JSONMetadata, i:Int)(js:Seq[Json]):Json = js.lift(i).getOrElse(Json.Null)
-  def mergeJsonFields(model:Property[Seq[Json]], form:JSONMetadata, i:Int)(longJs:Json):Seq[Json] = for{
-    (m,j) <- model.get.zipWithIndex
+  def mergeJsonFields(entity:Property[Seq[Json]], form:JSONMetadata, i:Int)(longJs:Json):Seq[Json] = for{
+    (m,j) <- entity.get.zipWithIndex
   } yield{
     if(i == j) longJs else m
   }
 
-  def removeItem(model:Property[Seq[Json]],itemToRemove:Json,subform:Subform) = {
+  def removeItem(entity:Property[Seq[Json]], itemToRemove:Json, subform:Subform) = {
     println("removeItem")
     if(org.scalajs.dom.window.confirm(Labels.messages.confirm)) {
       for {
         form <- subforms.find(_.id == subform.id)
       } yield {
-          model.set(model.get.filterNot(_ == itemToRemove))
+          entity.set(entity.get.filterNot(_ == itemToRemove))
       }
     }
   }
 
 
-  def addItem(model:Property[Seq[Json]],subform:Subform,form:JSONMetadata) = {
+  def addItem(entity:Property[Seq[Json]], subform:Subform, form:JSONMetadata) = {
     println("addItem")
 
 
@@ -69,7 +69,7 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
     println(placeholder)
 
 
-    model.set(model.get ++ Seq(placeholder.asJson))
+    entity.set(entity.get ++ Seq(placeholder.asJson))
   }
 
     val metadata = subforms.find(_.id == subform.id)
@@ -93,7 +93,7 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
     var subWidgets:Seq[WidgetBinded] = Seq()
 
     def cleanSubwidget() = {
-      subWidgets = subWidgets.filter(w => model.get.exists(js => w.isOf(js)))
+      subWidgets = subWidgets.filter(w => entity.get.exists(js => w.isOf(js)))
     }
     def findOrAdd(f:JSONMetadata,subResults:Property[Json],subforms: Seq[JSONMetadata]) = {
       subWidgets.find(_.isOf(subResults.get)).getOrElse {
@@ -104,12 +104,12 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
     }
 
 
-    val model: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
-    val sizeModel: Property[Int] = Property(model.get.size)
+    val entity: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
+    val entitySize: Property[Int] = Property(entity.get.size)
 
     override def render() =  {
 
-      model.listen(seq => sizeModel.set(seq.size))
+      entity.listen(seq => entitySize.set(seq.size))
 
       metadata match {
         case None => p("subform not found")
@@ -118,19 +118,19 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
           div(BootstrapStyles.Panel.panel)(
             div(BootstrapStyles.Panel.panelBody, BootstrapStyles.Panel.panelDefault)(
               h4(f.name),
-              produce(sizeModel) { size =>
+              produce(entitySize) { size =>
                 cleanSubwidget()
                 for {i <- 0 until size} yield {
-                  val subResults = model.transform(splitJsonFields(f, i), mergeJsonFields(model, f, i))
+                  val subResults = entity.transform(splitJsonFields(f, i), mergeJsonFields(entity, f, i))
                   val widget = findOrAdd(f, subResults, subforms)
                   div(
                     widget.render(),
-                    a(onclick :+= ((e: Event) => removeItem(model, model.get(i), subform)), Labels.subform.remove)
+                    a(onclick :+= ((e: Event) => removeItem(entity, entity.get(i), subform)), Labels.subform.remove)
                   ).render
                 }
               },
               br,
-              a(onclick :+= ((e: Event) => addItem(model, subform, f)), Labels.subform.add)
+              a(onclick :+= ((e: Event) => addItem(entity, subform, f)), Labels.subform.add)
 
             )
           )

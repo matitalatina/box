@@ -8,7 +8,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.BootstrapCol
 import ch.wsl.box.client.utils.Labels
-import ch.wsl.box.client.{ModelFormState, ModelTableState, ModelsState}
+import ch.wsl.box.client.{EntityFormState, EntityTableState, EntitiesState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
@@ -16,49 +16,49 @@ import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 
 
-case class Models(list:Seq[String], model:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
+case class Entities(list:Seq[String], model:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
 
-case class ModelsViewPresenter(kind:String,modelName:String,sidebarWidth:Int) extends ViewPresenter[ModelsState] {
+case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int) extends ViewPresenter[EntitiesState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
-  override def create(): (View, Presenter[ModelsState]) = {
+  override def create(): (View, Presenter[EntitiesState]) = {
     val model = ModelProperty{
-      Models(Seq(),None,None,"",Seq())
+      Entities(Seq(),None,None,"",Seq())
     }
     val routes = Routes(kind,modelName)
-    val presenter = new ModelsPresenter(model)
-    val view = new ModelsView(model,presenter,sidebarWidth,routes)
+    val presenter = new EntitiesPresenter(model)
+    val view = new EntitiesView(model,presenter,sidebarWidth,routes)
     (view,presenter)
   }
 }
 
-class ModelsPresenter(model:ModelProperty[Models]) extends Presenter[ModelsState] {
+class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[EntitiesState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  override def handleState(state: ModelsState): Unit = {
+  override def handleState(state: EntitiesState): Unit = {
     model.subProp(_.kind).set(Some(state.kind))
-    REST.models(state.kind).map{ models =>
+    REST.entities(state.kind).map{ models =>
       model.subSeq(_.list).set(models)
       model.subSeq(_.filteredList).set(models)
     }
-    if(state.model != "") {
-      model.subProp(_.model).set(Some(state.model))
+    if(state.currentEntity != "") {
+      model.subProp(_.model).set(Some(state.currentEntity))
     } else {
       model.subProp(_.model).set(None)
     }
   }
 
 
-  def updateModelsList() = {
+  def updateEntitiesList() = {
     model.subProp(_.filteredList).set(model.subProp(_.list).get.filter(m => m.startsWith(model.get.search)))
   }
 
 }
 
-class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter, sidebarWidth:Int,routes:Routes) extends View {
+class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, sidebarWidth:Int, routes:Routes) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
@@ -78,11 +78,11 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter, sidebar
   private val child: Element = div().render
 
   private def sidebar: Element = div(sidebarGrid)(
-    UdashForm.textInput()(Labels.models.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateModelsList(), true)),
+    UdashForm.textInput()(Labels.entities.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
     produce(model.subProp(_.search)) { q =>
       ul(
         repeat(model.subSeq(_.filteredList)){m =>
-          li(a(href := routes.table(m.get).url)(m.get)).render
+          li(a(href := routes.entity(m.get).url)(m.get)).render
         }
       ).render
     }
@@ -94,12 +94,12 @@ class ModelsView(model:ModelProperty[Models],presenter: ModelsPresenter, sidebar
       produce(model)( m =>
         m.model match {
           case None => div(
-            h1(Labels.models.title),
-            p(Labels.models.select)
+            h1(Labels.entities.title),
+            p(Labels.entities.select)
           ).render
           case Some(model) => div(
-            a(href := routes.add().url)(Labels.models.`new` + " " + model),
-            a(href := routes.table().url)(Labels.models.table + " " + model)
+            a(href := routes.add().url)(Labels.entities.`new` + " " + model),
+            a(href := routes.entity().url)(Labels.entities.table + " " + model)
           ).render
         }
       ),

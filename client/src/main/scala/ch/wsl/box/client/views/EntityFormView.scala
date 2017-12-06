@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{ModelFormState, ModelTableState}
+import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.utils.{IDSequence, Labels, Navigation, Session}
 import ch.wsl.box.client.views.components.widget.Widget
@@ -23,40 +23,40 @@ import scalatags.JsDom
   * Created by andre on 4/24/2017.
   */
 
-case class ModelFormModel(name:String, kind:String, id:Option[String], form:Option[JSONMetadata], result:Json, error:String, subforms:Seq[JSONMetadata], navigation: Navigation,loading:Boolean)
+case class EntityFormModel(name:String, kind:String, id:Option[String], form:Option[JSONMetadata], result:Json, error:String, subforms:Seq[JSONMetadata], navigation: Navigation, loading:Boolean)
 
-object ModelFormModel{
-  def empty = ModelFormModel("","",None,None,Json.Null,"",Seq(),Navigation(false,false,0,0),true)
+object EntityFormModel{
+  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(),Navigation(false,false,0,0),true)
 }
 
-object ModelFormViewPresenter extends ViewPresenter[ModelFormState] {
+object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  override def create(): (View, Presenter[ModelFormState]) = {
-    val model = ModelProperty{ModelFormModel.empty}
-    val presenter = ModelFormPresenter(model)
-    (ModelFormView(model,presenter),presenter)
+  override def create(): (View, Presenter[EntityFormState]) = {
+    val model = ModelProperty{EntityFormModel.empty}
+    val presenter = EntityFormPresenter(model)
+    (EntityFormView(model,presenter),presenter)
   }
 }
 
-case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Presenter[ModelFormState] {
+case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] {
 
   import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JsonUtils._
 
-  override def handleState(state: ModelFormState): Unit = {
+  override def handleState(state: EntityFormState): Unit = {
 
 
     val reloadMetadata = {
       val currentModel = model.get
       !(currentModel.kind == state.kind &&
-        currentModel.name == state.model &&
+        currentModel.name == state.entity &&
         currentModel.form.isDefined)
     }
 
 
-    model.subProp(_.name).set(state.model)
+    model.subProp(_.name).set(state.entity)
     model.subProp(_.id).set(state.id)
 
 
@@ -64,19 +64,19 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
     {for{
       currentData <- state.id match {
-        case Some(id) => REST.get(state.kind,Session.lang(),state.model,ids.get)
+        case Some(id) => REST.get(state.kind,Session.lang(),state.entity,ids.get)
         case None => Future.successful(Json.Null)
       }
-      form <- if(reloadMetadata) REST.form(state.kind, Session.lang(), state.model) else Future.successful(model.get.form.get)
-      subforms <- if(state.kind == "form" && reloadMetadata) REST.subforms(state.model,Session.lang()) else Future.successful(Seq())
+      form <- if(reloadMetadata) REST.form(state.kind, Session.lang(), state.entity) else Future.successful(model.get.form.get)
+      subforms <- if(state.kind == "form" && reloadMetadata) REST.subforms(state.entity,Session.lang()) else Future.successful(Seq())
     } yield {
 
 
       //initialise an array of n strings, where n is the number of fields
       val results:Seq[(String,Json)] = Enhancer.extract(currentData,form)
 
-      model.set(ModelFormModel(
-        name = state.model,
+      model.set(EntityFormModel(
+        name = state.entity,
         kind = state.kind,
         id = state.id,
         form = Some(form),
@@ -159,7 +159,7 @@ case class ModelFormPresenter(model:ModelProperty[ModelFormModel]) extends Prese
 
 }
 
-case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelFormPresenter) extends View {
+case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:EntityFormPresenter) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.circe.generic.auto._
@@ -217,7 +217,7 @@ case class ModelFormView(model:ModelProperty[ModelFormModel],presenter:ModelForm
       //save and go to table view
       button(
         cls := "primary",
-        onclick :+= ((ev: Event) => presenter.save(Routes(_,_).table()), true)
+        onclick :+= ((ev: Event) => presenter.save(Routes(_,_).entity()), true)
       )(Labels.form.save_table),br,
       //save and go insert new record
       button(
