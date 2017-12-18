@@ -7,19 +7,19 @@ import io.circe.syntax._
   * Created by andre on 5/16/2017.
   */
 case class JSONMetadata(
-                         id:Int,
+                         objId:Int,
                          name:String,
                          fields:Seq[JSONField],
                          layout:Layout,
                          entity:String,
                          lang:String,
-                         entityFields:Seq[String],
+                         tabularFields:Seq[String],
                          keys:Seq[String],
                          query:Option[JSONQuery]
                        )
 
 object JSONMetadata{
-  def jsonPlaceholder(form:JSONMetadata,subforms:Seq[JSONMetadata] = Seq()):Map[String,Json] = {
+  def jsonPlaceholder(form:JSONMetadata, subforms:Seq[JSONMetadata] = Seq()):Map[String,Json] = {
     form.fields.flatMap{ field =>
       val value:Option[Json] = (field.default,field.`type`) match {
         case (Some("arrayIndex"),_) => None
@@ -27,15 +27,15 @@ object JSONMetadata{
         case (Some(d),JSONFieldTypes.NUMBER) => Some(d.toDouble.asJson)
         case (Some(d),_) => Some(d.asJson)
         case (None,JSONFieldTypes.NUMBER) => Some(0.asJson)
-        case (None,JSONFieldTypes.SUBFORM) => {
+        case (None,JSONFieldTypes.CHILD) => {
           for{
-          subform <- field.subform
-          sub <- subforms.find(_.id == subform.id)
+            child <- field.child
+            sub <- subforms.find(_.objId == child.objId)
           } yield jsonPlaceholder(sub,subforms).asJson
         }
         case (None,_) => Some("".asJson)
       }
-      value.map{ v => field.key -> v }
+      value.map{ v => field.name -> v }
     }.toMap
   }
 }

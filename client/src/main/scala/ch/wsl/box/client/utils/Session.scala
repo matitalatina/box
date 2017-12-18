@@ -3,7 +3,7 @@ package ch.wsl.box.client.utils
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.{IndexState, LoginState}
 import org.scalajs.dom
-import ch.wsl.box.model.shared.{JSONQuery, KeyList}
+import ch.wsl.box.model.shared.{JSONQuery, IDs}
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -20,7 +20,7 @@ object Session {
   import io.circe.parser._
 
   final val QUERY = "query"
-  final val KEYS = "keys"
+  final val IDS = "ids"
   final val USER = "user"
   final val AUTH_TOKEN = "auth_token"
   final val LANG = "lang"
@@ -39,7 +39,7 @@ object Session {
     } yield query
   }
 
-  def isset(key:String):Boolean = {
+  def isSet(key:String):Boolean = {
     Try(dom.window.sessionStorage.getItem(key).size > 0).isSuccess
   }
 
@@ -68,7 +68,7 @@ object Session {
     dom.window.location.reload()
   }
 
-  def isLogged() = isset(USER)
+  def isLogged() = isSet(USER)
 
   def authToken() = dom.window.sessionStorage.getItem(AUTH_TOKEN)
 
@@ -76,8 +76,8 @@ object Session {
   def getQuery():Option[JSONQuery] = get[JSONQuery](QUERY)
 
 
-  def getKeys():Option[KeyList] = get[KeyList](KEYS)
-  def setKeys(list:KeyList) = set(KEYS,list)
+  def getIDs():Option[IDs] = get[IDs](IDS)
+  def setIDs(ids:IDs) = set(IDS,ids)
 
   def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).toOption match {
     case Some(lang) if Labels.langs.contains(lang)  => lang

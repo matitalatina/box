@@ -11,7 +11,7 @@ object Debug {
 
   import ch.wsl.box.client.Context._
 
-  def apply[T](model: Property[T])(implicit enc:io.circe.Encoder[T]) = {
+  def apply[T](model: Property[T], name:String ="")(implicit enc:io.circe.Encoder[T]) = {
     val show = Property{false}
 
     val out = model.transform{ m =>
@@ -22,10 +22,10 @@ object Debug {
       produce(show) { s =>
         s match {
           case true => div(
-            a("Nascondi debug",onclick :+= ((e:Event) => show.set(false))),
+            a("Hide debug " + name,onclick :+= ((e:Event) => show.set(false))),
             pre(bind(out))
           ).render
-          case false => a("Mostra debug",onclick :+= ((e:Event) => show.set(true))).render
+          case false => a("Show debug " + name,onclick :+= ((e:Event) => show.set(true))).render
         }
 
       }

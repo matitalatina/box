@@ -42,6 +42,8 @@ class RootView() extends View {
     Header.navbar("box client",Seq(
       MenuLink(Labels.header.home,IndexState),
       MenuLink(Labels.header.entities,EntitiesState("entity","")),
+      MenuLink("Tables",EntitiesState("table","")),
+      MenuLink("Views",EntitiesState("view","")),
       MenuLink(Labels.header.forms,EntitiesState("form",""))
     )),
     main()(

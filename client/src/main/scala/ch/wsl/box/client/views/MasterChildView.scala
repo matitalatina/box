@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{MasterChildState, EntityTableState}
-import ch.wsl.box.model.shared.{Filter, JSONField, JSONKeys}
+import ch.wsl.box.model.shared.{Filter, JSONField, JSONIDs}
 import io.udash.ViewPresenter
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.{Presenter, View}
@@ -24,16 +24,16 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
     def onChangeMaster(rows:Seq[(JSONField,String)]):Unit = {
       println("change master")
-      val keys = rows.filter(_._1.lookup.exists(_.refModel == child))
+      val ids = rows.filter(_._1.lookup.exists(_.lookupEntity == child))
       val childTable = childPresenter.asInstanceOf[EntityTablePresenter]
-      if(keys.length > 0)
-        childTable.filterByKey(JSONKeys.fromMap(keys.map(x => x._1.key -> x._2).toMap))
+      if(ids.length > 0)
+        childTable.filterByKey(JSONIDs.fromMap(ids.map(x => x._1.name -> x._2).toMap))
 
-      val childForeignMetadata = childTable.model.get.metadata.find(_.field.lookup.exists(_.refModel == master))
+      val childForeignMetadata = childTable.model.get.fieldQueries.find(_.field.lookup.exists(_.lookupEntity == master))
       println(childForeignMetadata)
       for{
         metadata <- childForeignMetadata
-        value <- rows.find(_._1.key == metadata.field.lookup.get.map.valueProperty)
+        value <- rows.find(_._1.name == metadata.field.lookup.get.map.valueProperty)
       } yield {
         childTable.filter(metadata.copy(filter = value._2,filterType = Filter.EQUALS),value._2)
       }
@@ -50,7 +50,7 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
 case class MasterChildPresenter(masterPresenter:Presenter[EntityTableState], childPresenter:Presenter[EntityTableState]) extends Presenter[MasterChildState] {
   override def handleState(state: MasterChildState): Unit = {
-    masterPresenter.handleState(EntityTableState(state.kind,state.parentEntity))
+    masterPresenter.handleState(EntityTableState(state.kind,state.masterEntity))
     childPresenter.handleState(EntityTableState(state.kind,state.childEntity))
   }
 }

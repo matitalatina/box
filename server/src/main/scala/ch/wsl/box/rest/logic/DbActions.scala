@@ -36,11 +36,11 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
 
     def page(paging:Option[JSONQueryPaging]): Query[T, M, Seq] = paging match {
       case None => base
-      case Some(paging) => base.drop ((paging.page - 1) * paging.count).take (paging.count)
+      case Some(paging) => base.drop ((paging.currentPage - 1) * paging.pageLength).take (paging.pageLength)
     }
   }
 
-  def find(query:JSONQuery)(implicit db:Database):Future[JSONResult[M]] = {
+  def find(query:JSONQuery)(implicit db:Database):Future[JSONData[M]] = {
     val slickQuery = table.where(query.filter).sort(query.sort).page(query.paging)
 
 
@@ -51,19 +51,19 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
         r
       }
       count <- db.run{ slickQuery.length.result }
-    } yield JSONResult(count,result.toList) // to list because json4s does't like generics types for serialization
+    } yield JSONData(result.toList, count) // to list because json4s does't like generics types for serialization
   }
 
-  private def filter(i:JSONKeys):Query[T, M, Seq]  = {
-    if(i.keys.isEmpty) throw new Exception("No key is defined")
+  private def filter(i:JSONIDs):Query[T, M, Seq]  = {
+    if(i.ids.isEmpty) throw new Exception("No key is defined")
 
-    def fil(t: Query[T,M,Seq],key: JSONKey):Query[T,M,Seq] =  t.filter(x => super.==(x.col(key.key),key.value))
+    def fil(t: Query[T,M,Seq],key: JSONID):Query[T,M,Seq] =  t.filter(x => super.==(x.col(key.key),key.value))
 
-    i.keys.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) => fil(query,jsFilter)}
+    i.ids.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) => fil(query,jsFilter)}
   }
 
 
-  def getById(i:JSONKeys)(implicit db:Database):Future[Option[T#TableElementType]] = {
+  def getById(i:JSONIDs)(implicit db:Database):Future[Option[T#TableElementType]] = {
     println(s"GET BY ID $i")
     Try(filter(i)).toOption match {
       case Some(f) => for {
@@ -77,7 +77,7 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
     }
   }
 
-  def deleteById(i:JSONKeys)(implicit db:Database):Future[Int] = {
+  def deleteById(i:JSONIDs)(implicit db:Database):Future[Int] = {
 
     for{
       result <- db.run{
@@ -88,7 +88,7 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
     } yield result
   }
 
-  def updateById(i:JSONKeys,e:M)(implicit db:Database):Future[Int] = {
+  def updateById(i:JSONIDs, e:M)(implicit db:Database):Future[Int] = {
     //println (e)
     for{
       result <- db.run {

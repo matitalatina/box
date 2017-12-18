@@ -17,23 +17,23 @@ object Enhancer {
 
   import _root_.scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  def fetchLookupOptions(values:Seq[Json],field:JSONField,opts:JSONFieldOptions):JSONField = {
+  def fetchLookup(values:Seq[Json], field:JSONField, opts:JSONFieldLookup):JSONField = {
     println(s"fetchLookups for field $field")
     val options:Map[String,String] = values.map{ value =>
       val key:String = value.get(opts.map.valueProperty)
       val label:String = value.get(opts.map.textProperty)
       (key,label)
     }.toMap
-    field.copy(lookup = Some(field.lookup.get.copy(options = Map("" -> "") ++ options)))
+    field.copy(lookup = Some(field.lookup.get.copy(lookup = Map("" -> "") ++ options)))
   }
 
 
-  def fetchModels(forms:Seq[JSONMetadata]):Future[Seq[(String,Seq[Json])]] = {
+  def fetchLookupEntities(forms:Seq[JSONMetadata]):Future[Seq[(String,Seq[Json])]] = {
     val models = for{
       form <- forms
       field <- form.fields
-      option <- field.lookup   //fields without lookup are an empty list
-    } yield option.refModel
+      lookup <- field.lookup   //fields without lookup are an empty list
+    } yield lookup.lookupEntity
 
     Future.sequence {
       models.distinct.map { model: String =>
@@ -43,14 +43,14 @@ object Enhancer {
     }
   }
 
-  def populateOptionsValuesInFields(models:Seq[(String,Seq[Json])], form:JSONMetadata):JSONMetadata = {
+  def populateLookupValuesInFields(models:Seq[(String,Seq[Json])], form:JSONMetadata):JSONMetadata = {
 
       val fields = form.fields.map { field =>
         field.lookup match {
           //case Some(opts) if form.keys.contains(field.key) => fetchLookup(field, opts, data)
           case Some(opts) => {
-            val data = models.find(_._1 == opts.refModel).map(_._2).getOrElse(Seq())
-            fetchLookupOptions(data, field, opts)
+            val data = models.find(_._1 == opts.lookupEntity).map(_._2).getOrElse(Seq())
+            fetchLookup(data, field, opts)
           }
           case _ => field
         }
@@ -63,16 +63,15 @@ object Enhancer {
 
 
 
-  def parse(field: JSONField,value:Option[Json], keys:Seq[String])(onError:(Throwable => Unit)):(String,Json) = try{
-    println(s"parsing ${field.key} with value $value")
+  def parse(field: JSONField,value:Option[Json])(onError:(Throwable => Unit)):(String,Json) = try{
+    println(s"parsing ${field.name} with value $value")
 
     val valueToSave:Json = value match {
       case None => Json.Null
       case Some(v) => v
     }
 
-
-    (field.key,valueToSave)
+    (field.name,valueToSave)
   } catch { case t: Throwable =>
     onError(t)
     throw t
@@ -80,25 +79,22 @@ object Enhancer {
 
   def extract(current:Json,form:JSONMetadata):Seq[(String,Json)] = form.fields.map{ field =>
 
-    val value = current.js(field.key)
+    val value = current.js(field.name)
 
-
-    field.key -> value
-
-
+    field.name -> value
   }
 
 
 
 
-  def extractKeys(row:Seq[String],fields:Seq[String],keys:Seq[String]):JSONKeys = {
+  def extractIDs(row:Seq[String], fields:Seq[String], keys:Seq[String]):JSONIDs = {
     val map = for{
       key <- keys
       (field,i) <- fields.zipWithIndex if field == key
     } yield {
       key -> row.lift(i).getOrElse("")
     }
-    JSONKeys.fromMap(map.toMap)
+    JSONIDs.fromMap(map.toMap)
   }
 
 }

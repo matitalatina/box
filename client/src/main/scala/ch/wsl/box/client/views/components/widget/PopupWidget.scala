@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.model.shared.JSONFieldOptions
+import ch.wsl.box.model.shared.JSONFieldLookup
 import io.circe._
 import io.circe.syntax._
 import io.udash._
@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 
 
 
-case class PopupWidget(options:JSONFieldOptions,label: String, prop: Property[Json]) extends OptionWidget {
+case class PopupWidget(options:JSONFieldLookup, label: String, prop: Property[Json]) extends LookupWidget {
 
 import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._
@@ -23,7 +23,7 @@ import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
 
-  val sortedOptions = options.options.toSeq.sortBy(_._2)
+  val sortedOptions = options.lookup.toSeq.sortBy(_._2)
 
   override def render() = {
 

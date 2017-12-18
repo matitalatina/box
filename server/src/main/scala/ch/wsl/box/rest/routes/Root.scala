@@ -4,8 +4,8 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.ContentDispositionTypes
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
-import ch.wsl.box.rest.logic.{JSONFormMetadata, LangHelper}
-import ch.wsl.box.rest.model.{Conf, DBFile}
+import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper}
+import ch.wsl.box.rest.boxentities.Conf
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext
@@ -78,25 +78,25 @@ Root {
                     GeneratedRoutes()
                   }
                 } ~
-                  path("entities") {
+                path("entities") {
                     get {
                       val alltables = Table.tables ++ View.views
                       complete(alltables.toSeq.sorted)
                     }
-                  } ~
+                } ~
                 path("tables") {
                     get {
                       complete(Table.tables.toSeq.sorted)
                     }
-                  } ~
+                } ~
                 path("views") {
                     get {
                       complete(View.views.toSeq.sorted)
                     }
-                  } ~
+                } ~
                 path("forms") {
                   get {
-                    complete(JSONFormMetadata().list)
+                    complete(JSONFormMetadataFactory().list)
                   }
                 } ~
                 pathPrefix("form") {

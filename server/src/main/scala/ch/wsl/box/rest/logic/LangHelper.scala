@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.rest.model.Labels
+import ch.wsl.box.rest.boxentities.Labels
 import ch.wsl.box.rest.utils.Auth
 import slick.jdbc.PostgresProfile.api._
 

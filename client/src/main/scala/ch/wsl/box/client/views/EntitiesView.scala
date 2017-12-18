@@ -16,7 +16,7 @@ import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 
 
-case class Entities(list:Seq[String], model:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
+case class Entities(list:Seq[String], currentEntity:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
 
 case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int) extends ViewPresenter[EntitiesState] {
 
@@ -45,9 +45,9 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
       model.subSeq(_.filteredList).set(models)
     }
     if(state.currentEntity != "") {
-      model.subProp(_.model).set(Some(state.currentEntity))
+      model.subProp(_.currentEntity).set(Some(state.currentEntity))
     } else {
-      model.subProp(_.model).set(None)
+      model.subProp(_.currentEntity).set(None)
     }
   }
 
@@ -92,7 +92,7 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
     sidebar,
     div(contentGrid)(
       produce(model)( m =>
-        m.model match {
+        m.currentEntity match {
           case None => div(
             h1(Labels.entities.title),
             p(Labels.entities.select)

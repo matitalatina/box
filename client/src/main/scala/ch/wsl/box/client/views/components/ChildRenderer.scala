@@ -3,7 +3,7 @@ package ch.wsl.box.client.views.components
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.utils.{Labels, Session}
 import ch.wsl.box.client.views.components.widget.{Widget, WidgetBinded}
-import ch.wsl.box.model.shared.{JSONMetadata, Subform}
+import ch.wsl.box.model.shared.{JSONMetadata, Child}
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
@@ -17,7 +17,7 @@ import scalatags.JsDom.all._
 /**
   * Created by andre on 6/1/2017.
   */
-case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Property[Json],subforms:Seq[JSONMetadata]) extends Widget {
+case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[Json], masterData:Property[Json]) extends Widget {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
@@ -34,18 +34,18 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
     longJs.asJson
   }
 
-  def splitJsonFields(form:JSONMetadata, i:Int)(js:Seq[Json]):Json = js.lift(i).getOrElse(Json.Null)
-  def mergeJsonFields(entity:Property[Seq[Json]], form:JSONMetadata, i:Int)(longJs:Json):Seq[Json] = for{
+  def splitJsonFields(metadata:JSONMetadata, i:Int)(js:Seq[Json]):Json = js.lift(i).getOrElse(Json.Null)
+  def mergeJsonFields(entity:Property[Seq[Json]], metadata:JSONMetadata, i:Int)(longJs:Json):Seq[Json] = for{
     (m,j) <- entity.get.zipWithIndex
   } yield{
     if(i == j) longJs else m
   }
 
-  def removeItem(entity:Property[Seq[Json]], itemToRemove:Json, subform:Subform) = {
-    println("removeItem")
+  def removeItem(entity:Property[Seq[Json]], itemToRemove:Json, child:Child) = {
+    println("removing item")
     if(org.scalajs.dom.window.confirm(Labels.messages.confirm)) {
       for {
-        form <- subforms.find(_.id == subform.id)
+        form <- children.find(_.objId == child.objId)
       } yield {
           entity.set(entity.get.filterNot(_ == itemToRemove))
       }
@@ -53,52 +53,52 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
   }
 
 
-  def addItem(entity:Property[Seq[Json]], subform:Subform, form:JSONMetadata) = {
-    println("addItem")
+  def addItem(entity:Property[Seq[Json]], child:Child, metadata:JSONMetadata) = {
+    println("adding item")
 
 
     val keys = for {
-      (local,sub) <- subform.localFields.split(",").zip(subform.subFields.split(","))
+      (local,sub) <- child.masterFields.split(",").zip(child.childFields.split(","))
     } yield {
-      println(s"local:$local sub:$sub")
-      sub -> parentData.get.js(local)
+//      println(s"local:$local sub:$sub")
+      sub -> masterData.get.js(local)
     }
     keys.toMap
-    val placeholder:Map[String,Json] = JSONMetadata.jsonPlaceholder(form,subforms) ++ keys.toMap
+    val placeholder:Map[String,Json] = JSONMetadata.jsonPlaceholder(metadata,children) ++ keys.toMap
 
-    println(placeholder)
+//    println(placeholder)
 
 
     entity.set(entity.get ++ Seq(placeholder.asJson))
   }
 
-    val metadata = subforms.find(_.id == subform.id)
+    val metadata = children.find(_.objId == child.objId)
 
-    private def propagate(result:Json,form:JSONMetadata,f:(Widget => ((Json,JSONMetadata) => Future[Unit]))):Future[Unit] = {
-          val out = result.seq(subform.key).zip(subWidgets).map { case (subformJson,schemaRenderer) =>
+    private def propagate(data:Json,metadata:JSONMetadata,f:(Widget => ((Json,JSONMetadata) => Future[Unit]))):Future[Unit] = {
+          val out = data.seq(child.key).zip(childWidgets).map { case (childJson,widget) =>
                 //println(s"Propagate subform element: ${subform.key} with data: $subformJson")
-                f(schemaRenderer)(subformJson,subforms.find(_.id == subform.id).get)
+                f(widget)(childJson,children.find(_.objId == child.objId).get)
             }
 
           //correct futures
           Future.sequence(out).map(_ => ())
     }
 
-    override def afterSave(result:Json,form:JSONMetadata): Future[Unit] = {
+    override def afterSave(data:Json, metadata:JSONMetadata): Future[Unit] = {
       //println(s"Propagate subform: ${subform.key} with data: $result")
-      propagate(result,form,_.afterSave)
+      propagate(data,metadata,_.afterSave)
     }
-    override def beforeSave(result:Json,form:JSONMetadata): Future[Unit] = propagate(result,form,_.beforeSave)
+    override def beforeSave(data:Json, metadata:JSONMetadata): Future[Unit] = propagate(data,metadata,_.beforeSave)
 
-    var subWidgets:Seq[WidgetBinded] = Seq()
+    var childWidgets:Seq[WidgetBinded] = Seq()
 
     def cleanSubwidget() = {
-      subWidgets = subWidgets.filter(w => entity.get.exists(js => w.isOf(js)))
+      childWidgets = childWidgets.filter(w => entity.get.exists(js => w.isOf(js)))
     }
-    def findOrAdd(f:JSONMetadata,subResults:Property[Json],subforms: Seq[JSONMetadata]) = {
-      subWidgets.find(_.isOf(subResults.get)).getOrElse {
-        val widget = JSONSchemaRenderer(f, subResults, subforms)
-        subWidgets = subWidgets ++ Seq(widget)
+    def findOrAdd(f:JSONMetadata, childValues:Property[Json], children: Seq[JSONMetadata]) = {
+      childWidgets.find(_.isOf(childValues.get)).getOrElse {
+        val widget = JSONMetadataRenderer(f, childValues, children)
+        childWidgets = childWidgets ++ Seq(widget)
         widget
       }
     }
@@ -112,7 +112,7 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
       entity.listen(seq => entitySize.set(seq.size))
 
       metadata match {
-        case None => p("subform not found")
+        case None => p("child not found")
         case Some(f) => {
 
           div(BootstrapStyles.Panel.panel)(
@@ -122,15 +122,15 @@ case class SubformRenderer(subform:Subform,prop:Property[Json],parentData:Proper
                 cleanSubwidget()
                 for {i <- 0 until size} yield {
                   val subResults = entity.transform(splitJsonFields(f, i), mergeJsonFields(entity, f, i))
-                  val widget = findOrAdd(f, subResults, subforms)
+                  val widget = findOrAdd(f, subResults, children)
                   div(
                     widget.render(),
-                    a(onclick :+= ((e: Event) => removeItem(entity, entity.get(i), subform)), Labels.subform.remove)
+                    a(onclick :+= ((e: Event) => removeItem(entity, entity.get(i), child)), Labels.subform.remove)
                   ).render
                 }
               },
               br,
-              a(onclick :+= ((e: Event) => addItem(entity, subform, f)), Labels.subform.add)
+              a(onclick :+= ((e: Event) => addItem(entity, child, f)), Labels.subform.add)
 
             )
           )

@@ -5,28 +5,29 @@ package ch.wsl.box.model.shared
   */
 case class JSONField(
                       `type`:String,
-                      key:String,
+                      name:String,
                       nullable: Boolean,
-                      title:Option[String] = None,
-                      lookup:Option[JSONFieldOptions] = None,
+                      label:Option[String] = None,
+                      lookup:Option[JSONFieldLookup] = None,
                       placeholder:Option[String] = None,
                       widget: Option[String] = None,
-                      subform: Option[Subform] = None,
+                      child: Option[Child] = None,
                       default: Option[String] = None,
                       file: Option[FieldFile] = None
                     )
 
 
-case class JSONFieldOptions(refModel:String, map:JSONFieldMap, options:Map[String,String] = Map())
+case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Map[String,String] = Map())
 
 case class FieldFile(file:String,name:String,thumbnail:Option[String])
 
 case class JSONFieldMap(valueProperty:String, textProperty:String)
 
-case class Subform(id:Int,key:String,localFields:String,subFields:String,subFilter:Seq[JSONQueryFilter])
+case class Child(objId:Int, key:String, masterFields:String, childFields:String, childFilter:Seq[JSONQueryFilter])
 
 object JSONFieldTypes{
   val NUMBER = "number"
   val STRING = "string"
-  val SUBFORM = "subform"
+  val CHILD = "child"
+  val FILE = "file"
 }

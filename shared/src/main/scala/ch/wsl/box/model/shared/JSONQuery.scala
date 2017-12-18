@@ -1,5 +1,7 @@
 package ch.wsl.box.model.shared
 
+import ch.wsl.box.model.shared.JSONQuery.empty
+
 /**
   * Created by andreaminetti on 24/04/15.
   *
@@ -8,20 +10,22 @@ package ch.wsl.box.model.shared
   * @param filter result by JSONQueryFilter object
   */
 case class JSONQuery(
-                      paging:Option[JSONQueryPaging],
+                      filter:List[JSONQueryFilter],
                       sort:List[JSONSort],
-                      filter:List[JSONQueryFilter]
+                      paging:Option[JSONQueryPaging]
                     ){
-  def page = paging.map(_.page).getOrElse(1)
+  def currentPage = paging.map(_.currentPage).getOrElse(1)
+  def pageLength(n:Int) = paging.map(_.pageLength).getOrElse(n)
+  def limit(limit:Int) = copy(paging= Some(paging.getOrElse(JSONQueryPaging(1,1)).copy(pageLength = limit)))
 }
 
 /**
   * Apply paging
   *
-  * @param count
-  * @param page
+  * @param pageLength
+  * @param currentPage
   */
-case class JSONQueryPaging(count:Int, page:Int=1)
+case class JSONQueryPaging(pageLength:Int, currentPage:Int=1)
 
 /**
   * Apply operator to column/value
@@ -45,18 +49,16 @@ case class JSONSort(column:String,order:String)
   */
 object JSONQuery{
 
-  def apply(count:Int, page:Int, sort:List[JSONSort], filter:List[JSONQueryFilter]):JSONQuery =
-    JSONQuery(paging = Some(JSONQueryPaging(count = count, page = page)), sort, filter)
+  def apply(filter:List[JSONQueryFilter], sort:List[JSONSort], pages:Int, currentPage:Int ):JSONQuery =
+    JSONQuery(filter, sort, paging = Some(JSONQueryPaging(pageLength = pages, currentPage = currentPage)))
   /**
     * Generic query
     */
-  val baseQuery = JSONQuery(
-    paging = None,
+  val empty = JSONQuery(
+    filter = List(),
     sort = List(),
-    filter = List()
-  )
-
-  def limit(limit:Int) = baseQuery.copy(paging= Some(JSONQueryPaging(count = limit)))
+    paging = None
+ )
 }
 
 object Sort{

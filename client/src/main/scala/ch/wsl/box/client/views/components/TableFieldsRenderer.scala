@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.model.shared.{JSONField, JSONKeys}
+import ch.wsl.box.model.shared.{JSONField, JSONIDs}
 import io.circe.Json
 import org.scalajs.dom.{Element, Event}
 import io.udash._
@@ -27,14 +27,15 @@ object TableFieldsRenderer {
     editing.set(!editing.get)
   }
 
-  def apply(value:String, field:JSONField, keys:JSONKeys, routes:Routes):TypedTag[Element] = {
+  def apply(value:String, field:JSONField, keys:JSONIDs, routes:Routes):TypedTag[Element] = {
 
 
     val contentFixed = field.lookup match {
       case Some(opts) => {
-        val label: String = opts.options.lift(value).getOrElse(value)
+        val label: String = opts.lookup.lift(value).getOrElse(value)
         val finalLabel = if(label.trim.length > 0) label else value
-        a(href := routes.edit(JSONKeys.fromMap(Map(field.key -> value)).asString).url,finalLabel)
+        p(finalLabel)
+//        a(href := routes.edit(JSONKeys.fromMap(Map(field.key -> value)).asString).url,finalLabel)
       }
       case None => p(value)
     }

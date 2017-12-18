@@ -1,6 +1,6 @@
 package ch.wsl.box.rest
 
-import ch.wsl.box.rest.logic.{FormShaper, JSONFormMetadata}
+import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory}
 import io.circe.Json
 import ch.wsl.box.model.tables._
 import org.scalatest.FlatSpec
@@ -121,8 +121,8 @@ class UpdateFormSpec extends FlatSpec with ScalaFutures {
     val remarkQuery = Remark.filter(_.fire_id === 201612292301L)
 
     whenReady(for{
-      form <- JSONFormMetadata().get("fire","it")
-      shaper = FormShaper(form)
+      form <- JSONFormMetadataFactory().of("fire","it")
+      shaper = FormActions(form)
       i <- shaper.updateAll(json)
       remarks <- db.run(remarkQuery.result)
     } yield remarks, timeout(100000 seconds)){ remarks =>

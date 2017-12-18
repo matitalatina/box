@@ -3,9 +3,9 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
-import ch.wsl.box.client.utils.{IDSequence, Labels, Navigation, Session}
+import ch.wsl.box.client.utils.{IdNav, Labels, Navigation, Session}
 import ch.wsl.box.client.views.components.widget.Widget
-import ch.wsl.box.client.views.components.{Debug, JSONSchemaRenderer}
+import ch.wsl.box.client.views.components.{Debug, JSONMetadataRenderer}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
@@ -23,7 +23,7 @@ import scalatags.JsDom
   * Created by andre on 4/24/2017.
   */
 
-case class EntityFormModel(name:String, kind:String, id:Option[String], form:Option[JSONMetadata], result:Json, error:String, subforms:Seq[JSONMetadata], navigation: Navigation, loading:Boolean)
+case class EntityFormModel(name:String, kind:String, id:Option[String], metadata:Option[JSONMetadata], data:Json, error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean)
 
 object EntityFormModel{
   def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(),Navigation(false,false,0,0),true)
@@ -52,7 +52,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       val currentModel = model.get
       !(currentModel.kind == state.kind &&
         currentModel.name == state.entity &&
-        currentModel.form.isDefined)
+        currentModel.metadata.isDefined)
     }
 
 
@@ -60,29 +60,29 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     model.subProp(_.id).set(state.id)
 
 
-    val ids = state.id.map(JSONKeys.fromString)
+    val ids = state.id.map(JSONIDs.fromString)
 
     {for{
       currentData <- state.id match {
         case Some(id) => REST.get(state.kind,Session.lang(),state.entity,ids.get)
         case None => Future.successful(Json.Null)
       }
-      form <- if(reloadMetadata) REST.form(state.kind, Session.lang(), state.entity) else Future.successful(model.get.form.get)
-      subforms <- if(state.kind == "form" && reloadMetadata) REST.subforms(state.entity,Session.lang()) else Future.successful(Seq())
+      metadata <- if(reloadMetadata) REST.metadata(state.kind, Session.lang(), state.entity) else Future.successful(model.get.metadata.get)
+      children <- if(state.kind == "form" && reloadMetadata) REST.children(state.entity,Session.lang()) else Future.successful(Seq())
     } yield {
 
 
       //initialise an array of n strings, where n is the number of fields
-      val results:Seq[(String,Json)] = Enhancer.extract(currentData,form)
+      val results:Seq[(String,Json)] = Enhancer.extract(currentData,metadata)
 
       model.set(EntityFormModel(
         name = state.entity,
         kind = state.kind,
         id = state.id,
-        form = Some(form),
+        metadata = Some(metadata),
         currentData,
         "",
-        subforms,
+        children,
         Navigation(false,false,1,1),
         false
       ))
@@ -99,17 +99,17 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   def save(toState:(String, String) => RoutingState) = {
 
     val m = model.get
-    m.form.foreach{ form =>
+    m.metadata.foreach{ form =>
 //      val jsons = for {
 //        (field, i) <- form.fields.zipWithIndex
 //      } yield Enhancer.parse(field, m.results.lift(i).map(_._2),form.keys){ t =>
 //        model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
 //      }
 
-      val result:Json = m.result
+      val result:Json = m.data
 
       def saveAction() = m.id match {
-        case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONKeys.fromString(id),result)
+        case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONIDs.fromString(id),result)
         case None => REST.insert(m.kind,Session.lang(),m.name, result)
       }
 
@@ -131,7 +131,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
 
   def setNavigation() = {
-    IDSequence(model.get.id).navigation().map{ nav =>
+    IdNav(model.get.id).navigation().map{ nav =>
       model.subProp(_.navigation).set(nav)
     }
   }
@@ -142,12 +142,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   }
 
   def loadWidgets(f:JSONMetadata) = {
-    widget = JSONSchemaRenderer(f, model.subProp(_.result), model.subProp(_.subforms).get)
+    widget = JSONMetadataRenderer(f, model.subProp(_.data), model.subProp(_.children).get)
     widget
   }
 
-  def next() = IDSequence(model.get.id).next(model.get.kind,model.get.name).map(_.map(goTo))
-  def prev() = IDSequence(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
+  def next() = IdNav(model.get.id).next(model.get.kind,model.get.name).map(_.map(goTo))
+  def prev() = IdNav(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
 
   def goTo(id:String) = {
     model.subProp(_.loading).set(true)
@@ -199,7 +199,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       },
       br,
       hr,
-      produce(model.subProp(_.form)){ form =>
+      produce(model.subProp(_.metadata)){ form =>
         div(
           form match {
             case None => p("Loading form")
@@ -224,8 +224,9 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         cls := "primary",
         onclick :+= ((ev: Event) => presenter.save(Routes(_,_).add()), true)
       )(Labels.form.save_add),br,br,
-      Debug(model.subProp(_.form)),
-      Debug(model.subProp(_.result))
+
+      Debug(model.subProp(_.data), "data"),
+      Debug(model.subProp(_.metadata), "form")
     )
   }
 }

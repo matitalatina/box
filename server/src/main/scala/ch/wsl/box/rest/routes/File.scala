@@ -8,10 +8,9 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import ch.wsl.box.model.TablesRegistry
-import ch.wsl.box.model.shared.JSONKeys
+import ch.wsl.box.model.EntityActionsRegistry
+import ch.wsl.box.model.shared.JSONIDs
 import ch.wsl.box.rest.logic.DbActions
-import ch.wsl.box.rest.model.DBFile
 import ch.wsl.box.rest.routes.File.FileHandler
 import ch.wsl.box.rest.utils.Auth.UserProfile
 import io.circe.Decoder
@@ -38,7 +37,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
 
   val utils = new DbActions[T,M](table)
 
-  def upload(id:JSONKeys)(metadata:FileInfo,byteSource:Source[ByteString, Any]) = {
+  def upload(id:JSONIDs)(metadata:FileInfo, byteSource:Source[ByteString, Any]) = {
     for{
       bytea <- byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray)
       row <- utils.getById(id)
@@ -52,17 +51,17 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
     pathPrefix(field) {
       path(Segment) { id =>
 
-        val keys = JSONKeys.fromString(id)
+        val ids = JSONIDs.fromString(id)
 
         post {
           fileUpload("file") { case (metadata, byteSource) =>
-            val result = upload(keys)(metadata, byteSource)
+            val result = upload(ids)(metadata, byteSource)
             complete(result)
           }
         } ~
           get {
             complete {
-              utils.getById(keys).map {
+              utils.getById(ids).map {
                 _.headOption.map { result =>
                   val f = handler.extract(result)
 

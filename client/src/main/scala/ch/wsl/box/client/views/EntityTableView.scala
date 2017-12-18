@@ -10,6 +10,7 @@ import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.table.UdashTable
+import io.udash.properties.single.Property
 import org.scalajs.dom
 
 import scalacss.ScalatagsCss._
@@ -28,11 +29,11 @@ import scala.concurrent.Future
 
 
 case class Row(data: Seq[String])
-case class Metadata(field:JSONField,sort:String,filter:String,filterType:String)
-case class EntityTableModel(name:String, kind:String, rows:Seq[Row], metadata:Seq[Metadata], form:Option[JSONMetadata], selected:Option[Row], keyList: KeyList, pages:Int)
+case class FieldQuery(field:JSONField, sort:String, filter:String, filterType:String)
+case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQueries:Seq[FieldQuery], metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDs, pages:Int)
 
 object EntityTableModel{
-  def empty = EntityTableModel("","",Seq(),Seq(),None,None,KeyList(true,1,Seq(),0),1)
+  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDs(true,1,Seq(),0),1)
 }
 
 case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[EntityTableState] {
@@ -66,144 +67,146 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     model.subProp(_.name).set(state.entity)
     model.subProp(_.kind).set(state.kind)
 
-   val defaultJsonQuery = JSONQuery.limit(Conf.pageLength)
+    val defaultJsonQuery = JSONQuery.empty.limit(Conf.pageLength)
+
+    println("handling state")
 
     for{
-
-      emptyFieldsForm <- REST.form(state.kind,Session.lang(),state.entity)
-      fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.entityFields.contains(field.key))
+      emptyFieldsForm <- REST.metadata(state.kind,Session.lang(),state.entity)
+      fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
       filteredForm = emptyFieldsForm.copy(fields = fields)
-      models <- Enhancer.fetchModels(Seq(filteredForm))
-      form = Enhancer.populateOptionsValuesInFields(models,filteredForm)
+      lookupEntities <- Enhancer.fetchLookupEntities(Seq(filteredForm))
+      form = Enhancer.populateLookupValuesInFields(lookupEntities,filteredForm)
       query = form.query match {
         case None => defaultJsonQuery
         case Some(jsonquery) => jsonquery.copy(paging = defaultJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
       }
       csv <- REST.csv(state.kind,Session.lang(),state.entity,query)
-      keyList <- REST.keysList(model.get.kind,Session.lang(),model.get.name,query)
+      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
+      specificKind <- REST.specificKind(state.kind, Session.lang(), state.entity)
     } yield {
 
 
       val m = EntityTableModel(
         name = state.entity,
-        kind = state.kind,
-        rows = csv.map{ Row(_)},
-        metadata = form.fields.map{ field =>
-          Metadata(
+        kind = specificKind,
+        rows = csv.map(Row(_)),
+        fieldQueries = form.fields.map{ field =>
+          FieldQuery(
             field = field,
-            sort = form.query.flatMap(_.sort.find(_.column == field.key).map(_.order)).getOrElse(Sort.IGNORE),
-            filter = form.query.flatMap(_.filter.find(_.column == field.key).map(_.value)).getOrElse(""),
-            filterType = form.query.flatMap(_.filter.find(_.column == field.key).flatMap(_.operator)).getOrElse(Filter.default(field.`type`))
+            sort = form.query.flatMap(_.sort.find(_.column == field.name).map(_.order)).getOrElse(Sort.IGNORE),
+            filter = form.query.flatMap(_.filter.find(_.column == field.name).map(_.value)).getOrElse(""),
+            filterType = form.query.flatMap(_.filter.find(_.column == field.name).flatMap(_.operator)).getOrElse(Filter.default(field.`type`))
           )
         },
-        form = Some(form),
-        None,
-        keyList,
-        pageCount(keyList)
+        metadata = Some(form),
+        selectedRow = None,
+        ids = ids,
+        pages = pageCount(ids)
       )
 
-      saveKeys(keyList,query)
+      saveIds(ids,query)
 
       model.set(m)
     }
   }
 
-  private def pageCount(keyList: KeyList):Int = {
-    math.ceil(keyList.count.toDouble / Conf.pageLength.toDouble).toInt
+  private def pageCount(ids: IDs):Int = {
+    math.ceil(ids.count.toDouble / Conf.pageLength.toDouble).toInt
   }
 
-  def key(el:Row) = Enhancer.extractKeys(el.data,model.subProp(_.form).get.toSeq.flatMap(_.entityFields),model.subProp(_.form).get.toSeq.flatMap(_.keys))
+  def id(el:Row) = Enhancer.extractIDs(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
 
   def edit(el:Row) = {
-    val k = key(el)
+    val k = id(el)
     val newState = routes.edit(k.asString)
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
 
-  def saveKeys(keyList: KeyList,query:JSONQuery) = {
+  def saveIds(ids: IDs, query:JSONQuery) = {
     Session.setQuery(query)
-    Session.setKeys(keyList)
+    Session.setIDs(ids)
   }
 
   def reloadRows(page:Int) = {
-
-    val metadata = model.subProp(_.metadata).get
-    val sort = metadata.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.key, s.sort)).toList
-    val filter = metadata.filter(_.filter != "").map(f => JSONQueryFilter(f.field.key,Some(f.filterType),f.filter)).toList
-    val query = JSONQuery(Conf.pageLength, page, sort, filter)
+    println("reloading rows")
+    val metadata = model.subProp(_.fieldQueries).get
+    val sort = metadata.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.name, s.sort)).toList
+    val filter = metadata.filter(_.filter != "").map(f => JSONQueryFilter(f.field.name,Some(f.filterType),f.filter)).toList
+    val query = JSONQuery(filter, sort, Conf.pageLength, page)
 
     for {
       csv <- REST.csv(model.subProp(_.kind).get,Session.lang(),model.subProp(_.name).get,query)
-      keyList <- REST.keysList(model.get.kind,Session.lang(),model.get.name,query)
+      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
-      model.subProp(_.keyList).set(keyList)
-      model.subProp(_.pages).set(pageCount(keyList))
-      saveKeys(keyList,query)
+      model.subProp(_.ids).set(ids)
+      model.subProp(_.pages).set(pageCount(ids))
+      saveIds(ids,query)
     }
 
   }
 
-  def filterByKey(key:JSONKeys) = {
-    val newMetadata = model.subProp(_.metadata).get.map{ m =>
-      key.keys.headOption.exists(_.key == m.field.key) match {
-        case true => m.copy(filter = key.keys.head.value, filterType = Filter.EQUALS)
+  def filterByKey(ids:JSONIDs) = {
+    val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
+      ids.ids.headOption.exists(_.key == m.field.name) match {
+        case true => m.copy(filter = ids.ids.head.value, filterType = Filter.EQUALS)
         case false => m
       }
     }
-    model.subProp(_.metadata).set(newMetadata)
+    model.subProp(_.fieldQueries).set(newMetadata)
     reloadRows(1)
   }
 
-  def filter(metadata: Metadata,filter:String) = {
+  def filter(metadata: FieldQuery, filter:String) = {
     println("filtering")
-    val newMetadata = model.subProp(_.metadata).get.map{ m =>
-      m.field.key == metadata.field.key match {
+    val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
+      m.field.name == metadata.field.name match {
         case true => m.copy(filter = filter)
         case false => m
       }
     }
-    model.subProp(_.metadata).set(newMetadata)
+    model.subProp(_.fieldQueries).set(newMetadata)
     reloadRows(1)
   }
 
-  def filterType(metadata:Metadata, filterType:String) = {
+  def filterType(metadata:FieldQuery, filterType:String) = {
     println("setting filtertype " + filterType)
-    val newMetadata = model.subProp(_.metadata).get.map{ m =>
-      m.field.key == metadata.field.key match {
+    val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
+      m.field.name == metadata.field.name match {
         case true => m.copy(filterType = filterType)
         case false => m
       }
     }
-    model.subProp(_.metadata).set(newMetadata)
+    model.subProp(_.fieldQueries).set(newMetadata)
     reloadRows(1)
   }
 
-  def sort(metadata: Metadata) = {
+  def sort(metadata: FieldQuery) = {
 
-    val newMetadata = model.subProp(_.metadata).get.map{ m =>
-      m.field.key == metadata.field.key match {
+    val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
+      m.field.name == metadata.field.name match {
         case false => m
         case true => m.copy(sort = Sort.next(m.sort))
       }
     }
-    model.subProp(_.metadata).set(newMetadata)
+    model.subProp(_.fieldQueries).set(newMetadata)
     reloadRows(1)
   }
 
   def selected(row: Row) = {
-    onSelect(model.get.metadata.map(_.field).zip(row.data))
-    model.subProp(_.selected).set(Some(row))
+    onSelect(model.get.fieldQueries.map(_.field).zip(row.data))
+    model.subProp(_.selectedRow).set(Some(row))
   }
 
   def nextPage() = {
-    if(!model.subProp(_.keyList.last).get) {
-      reloadRows(model.subProp(_.keyList.page).get + 1)
+    if(!model.subProp(_.ids.lastPage).get) {
+      reloadRows(model.subProp(_.ids.currentPage).get + 1)
     }
   }
   def prevPage() = {
-    if(model.subProp(_.keyList.page).get > 1) {
-      reloadRows(model.subProp(_.keyList.page).get - 1)
+    if(model.subProp(_.ids.currentPage).get > 1) {
+      reloadRows(model.subProp(_.ids.currentPage).get - 1)
     }
   }
 }
@@ -217,17 +220,17 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
   override def renderChild(view: View): Unit = {}
 
 
-  def filterOptions(metadata: Metadata) = {
+  def filterOptions(metadata: FieldQuery) = {
     val filterTypeModel = Property(metadata.filterType)
-    println(filterTypeModel.get)
-    println(Filter.>)
-    println(Filter.<)
+//    println(filterTypeModel.get)
+//    println(Filter.>)
+//    println(Filter.<)
 
     //hack using model transformation to get onChange event, using standard HTML breaks udash property model
     val filterTypeHandler = filterTypeModel.transform(
       (s:String) => s,
       {(s:String) =>
-        println("changed " + s)
+        println("changed filter" + s)
         presenter.filterType(metadata,s)  //aggiorna metadata
         s
       }
@@ -242,15 +245,15 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     val pagination = {
 
       div(
-        showIf(model.subProp(_.keyList.page).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.keyList.page).get -1), true), Labels.navigation.previous).render },
+        showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1), true), Labels.navigation.previous).render },
         span(
           " Page: ",
-          bind(model.subProp(_.keyList.page)),
+          bind(model.subProp(_.ids.currentPage)),
           " of ",
           bind(model.subProp(_.pages)),
           " "
         ),
-        showIf(model.subProp(_.keyList.last).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.keyList.page).get + 1), true),Labels.navigation.next).render },
+        showIf(model.subProp(_.ids.lastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
         br,br
       )
     }
@@ -263,12 +266,12 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           headerFactory = Some(() => {
               tr(
                 th(GlobalStyles.smallCells)(Labels.entity.actions),
-                produce(model.subProp(_.form)) { form =>
+                produce(model.subProp(_.metadata)) { form =>
                   for {
-                    key <- form.toSeq.flatMap(_.entityFields)
-                    metadata <- model.subProp(_.metadata).get.filter(_.field.key == key)
+                    name <- form.toSeq.flatMap(_.tabularFields)
+                    metadata <- model.subProp(_.fieldQueries).get.filter(_.field.name == name)
                   } yield {
-                    val title: String = metadata.field.title.getOrElse(metadata.field.key)
+                    val title: String = metadata.field.label.getOrElse(metadata.field.name)
                     val filter = Property(metadata.filter)
 
                     th(GlobalStyles.smallCells)(
@@ -286,16 +289,22 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             ).render
           }),
           rowFactory = (el) => {
-            val key = presenter.key(el.get)
+            val key = presenter.id(el.get)
 
-            val selected = model.subProp(_.selected).transform(_.exists(_ == el.get))
+            val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
+            val kind = model.subProp(_.kind).get
 
             tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
-              td(GlobalStyles.smallCells)(a(
-                cls := "primary",
-                onclick :+= ((ev: Event) => presenter.edit(el.get), true)
-              )(Labels.entity.edit)),
-              produce(model.subSeq(_.metadata)) { metadatas =>
+              td(GlobalStyles.smallCells)(
+                kind match{
+                  case "view" => p(color := "grey")("no Action")
+                  case _ => a(
+                    cls := "primary",
+                    onclick :+= ((ev: Event) => presenter.edit(el.get), true)
+                  )(Labels.entity.edit)
+                }
+                ),
+              produce(model.subSeq(_.fieldQueries)) { metadatas =>
                 for {(metadata, i) <- metadatas.zipWithIndex} yield {
 
                   val value = el.get.data.lift(i).getOrElse("")
@@ -311,7 +320,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           }
         ).render,
         pagination.render,
-        showIf(model.subProp(_.metadata).transform(_.size == 0)){ p("loading...").render }
+        showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render }
       )
     )
   }

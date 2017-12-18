@@ -1,8 +1,8 @@
 package ch.wsl.box.rest.routes
 
-import ch.wsl.box.model.TablesRegistry
-import ch.wsl.box.model.shared.{JSONKeys, JSONMetadata, JSONQuery}
-import ch.wsl.box.rest.logic.{FormShaper, JSONFormMetadata, JSONSchemas}
+import ch.wsl.box.model.EntityActionsRegistry
+import ch.wsl.box.model.shared.{JSONIDs, JSONMetadata, JSONQuery}
+import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import io.circe.Json
 import slick.jdbc.PostgresProfile.api._
@@ -14,11 +14,11 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object Form {
 
-  private def shaper[T](futForm:Future[JSONMetadata])(f:FormShaper => T)(implicit db:Database, ec: ExecutionContext):Future[T] = for{
+  private def actions[T](futForm:Future[JSONMetadata])(f:FormActions => T)(implicit db:Database, ec: ExecutionContext):Future[T] = for{
     form <- futForm
-    formShaper = FormShaper(form)
+    formActions = FormActions(form)
   } yield {
-    f(formShaper)
+    f(formActions)
   }
 
   def apply(name:String,lang:String)(implicit db:Database, ec: ExecutionContext) = {
@@ -32,124 +32,122 @@ object Form {
 
 
 
-      val jsonFormMetadata = JSONFormMetadata()
-      val form = jsonFormMetadata.get(name,lang)
-      val tableForm = form.map{ f =>
-        val filteredFields = f.fields.filter(field => f.entityFields.contains(field.key))
+      val jsonCustomMetadataFactory = JSONFormMetadataFactory()
+      val metadata: Future[JSONMetadata] = jsonCustomMetadataFactory.of(name,lang)
+      val tabularMetadata = metadata.map{ f =>
+        val filteredFields = f.fields.filter(field => f.tabularFields.contains(field.name))
         f.copy(fields = filteredFields)
       }
 
       pathPrefix("id") {
         path(Segment) { id =>
           get {
-            complete(shaper(form){ fs =>
-              fs.getAllById(JSONKeys.fromString(id)).map{record =>
+            complete(actions(metadata){ fs =>
+              fs.getAllById(JSONIDs.fromString(id)).map{ record =>
                 println(record)
                 HttpEntity(ContentTypes.`application/json`,record)
               }
             })
           } ~
-            put {
-              entity(as[Json]) { e =>
-                complete {
-                  shaper(form){ fs =>
-                    for {
-                      _ <- fs.updateAll(e)
-                      result <- fs.getAllById(e.keys(fs.form.keys))
-                    } yield result
-                  }
+          put {
+            entity(as[Json]) { e =>
+              complete {
+                actions(metadata){ fs =>
+                  for {
+                    _ <- fs.updateAll(e)
+                    data <- fs.getAllById(e.IDs(fs.metadata.keys))
+                  } yield data
                 }
               }
-            } ~
-            delete {
-              ???
             }
+          } ~
+          delete {
+            ???
+          }
         }
       } ~
-        path("schema") {
-          get {
-            complete {
-              ???
-            }
-          }
-        } ~
-        path("metadata") {
-          get {
-            complete {
-              form
-            }
-          }
-        } ~
-        path("subform") {
-          get {
-            complete {
-              form.flatMap{ f => jsonFormMetadata.subforms(f)}
-            }
-          }
-        } ~
-        path("keys") {
-          get {
-            complete {
-              form.map(f => JSONSchemas.keysOf(f.entity) )
-            }
-          }
-        } ~
-        path("keysList") {
-          post {
-            entity(as[JSONQuery]) { query =>
-              complete {
-                for{
-                  f <- form
-                  result <- TablesRegistry.actions(f.entity).keyList(query,f.entity)
-                } yield result
-              }
-            }
-          }
-        } ~
-        path("count") {
-          get {
-            complete {
-              form.map { f =>
-                TablesRegistry.actions(f.entity).count()
-              }
-            }
-          }
-        } ~
-        path("list") {
-          post {
-            entity(as[JSONQuery]) { query =>
-              println("list")
-              complete(shaper(tableForm){ fs =>
-                fs.extractArray(query).map{arr =>
-                  HttpEntity(ContentTypes.`text/plain(UTF-8)`,arr)
-                }
-              })
-            }
-          }
-        } ~
-        path("csv") {
-          post {
-            entity(as[JSONQuery]) { query =>
-              println("csv")
-              complete(shaper(tableForm){ fs =>
-                fs.csv(query).map{csv =>
-                  HttpEntity(ContentTypes.`text/plain(UTF-8)`,csv)
-                }
-              })
-            }
-          }
-        } ~
-        pathEnd {
-            post {
-              entity(as[Json]) { e =>
-                complete {
-                  shaper(form){ fs =>
-                    fs.insertAll(e)
-                  }
-                }
-              }
-            }
+      path("kind") {
+        get {
+          complete{"form"}
         }
+      } ~
+      path("metadata") {
+        get {
+          complete {
+            metadata
+          }
+        }
+      } ~
+      path("children") {
+        get {
+          complete {
+            metadata.flatMap{ f => jsonCustomMetadataFactory.children(f)}
+          }
+        }
+      } ~
+      path("keys") {
+        get {
+          complete {
+            metadata.map(f => JSONMetadataFactory.keysOf(f.entity) )
+          }
+        }
+      } ~
+      path("ids") {
+        post {
+          entity(as[JSONQuery]) { query =>
+            complete {
+              for{
+                f <- metadata
+                data <- EntityActionsRegistry.tableActions(f.entity).ids(query)
+              } yield data
+            }
+          }
+        }
+      } ~
+      path("count") {
+        get {
+          complete {
+            metadata.map { f =>
+              EntityActionsRegistry.tableActions(f.entity).count()
+            }
+          }
+        }
+      } ~
+      path("list") {
+        post {
+          entity(as[JSONQuery]) { query =>
+            println("list")
+            complete(actions(tabularMetadata){ fs =>
+              fs.extractArray(query).map{arr =>
+                HttpEntity(ContentTypes.`text/plain(UTF-8)`,arr)
+              }
+            })
+          }
+        }
+      } ~
+      path("csv") {
+        post {
+          entity(as[JSONQuery]) { query =>
+            println("csv")
+            complete(actions(tabularMetadata){ fs =>
+              fs.csv(query).map{csv =>
+                HttpEntity(ContentTypes.`text/plain(UTF-8)`,csv)
+              }
+            })
+          }
+        }
+      } ~
+      pathEnd {
+          post {
+            entity(as[Json]) { e =>
+              complete {
+                actions(metadata){ fs =>
+                  fs.insertAll(e)
+                }
+              }
+            }
+          }
+      }
 
 
 

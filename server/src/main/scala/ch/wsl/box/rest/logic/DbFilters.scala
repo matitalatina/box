@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat
 import ch.wsl.box.model.shared.Filter
 import slick.driver.PostgresDriver.api._
 
-trait DBFilters {
+trait DbFilters {
   def ==(c:Col,v:Any):Rep[Option[Boolean]]
   def not(c:Col,v:Any):Rep[Option[Boolean]]
   def >(c:Col, v:Any):Rep[Option[Boolean]]
@@ -35,7 +35,7 @@ trait DBFilters {
 
 }
 
-trait UglyDBFilters extends DBFilters {
+trait UglyDBFilters extends DbFilters {
 
   val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
 
@@ -198,7 +198,7 @@ trait UglyDBFilters extends DBFilters {
 
   def between(col:Col, v:Any):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
 
-    val extremes = v.asInstanceOf[String].replace("to", "-").split('-')
+    val extremes = v.asInstanceOf[String].replace("to", "-").replace("and", "-").split('-')
 
     if (extremes.length == 2) {
       val lbound = >=(col, extremes(0))//.getOrElse(false)

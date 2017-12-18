@@ -26,7 +26,10 @@ case class EntityFormState(
                             id:Option[String]
                           ) extends RoutingState(EntitiesState(kind,entity))
 
-case class MasterChildState(kind:String, parentEntity:String, childEntity:String) extends RoutingState(EntitiesState(kind,parentEntity))
+case class MasterChildState(kind:String,
+                            masterEntity:String,
+                            childEntity:String
+                           ) extends RoutingState(EntitiesState(kind,masterEntity))
 
 
 case object FireState extends RoutingState(RootState)

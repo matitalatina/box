@@ -2,6 +2,7 @@ package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.client.utils.Conf
 import ch.wsl.box.client.views.components.Debug
 import ch.wsl.box.model.shared.{JSONField, JSONMetadata}
 import io.circe.Json
@@ -21,10 +22,10 @@ case class FileWidget(key:Property[String],prop:Property[Json],field:JSONField, 
 
   override def afterSave(result:Json, form: JSONMetadata) = {
     println(s"File after save with result: $result with selected file: ${selectedFiles.get.headOption.map(_.name)}")
-    val keys = result.keys(form.keys)
+    val ids = result.IDs(form.keys)
     for{
       _ <- Future.sequence{
-        selectedFiles.get.map(REST.sendFile(_,keys,s"${form.entity}.${field.file.get.file}"))
+        selectedFiles.get.map(REST.sendFile(_,ids,s"${form.entity}.${field.file.get.file}"))
       }
     } yield Unit
   }
@@ -52,7 +53,7 @@ case class FileWidget(key:Property[String],prop:Property[Json],field:JSONField, 
       ul(
         produce(prop.transform(_.string)) { name =>
           div(
-          img(src := s"/api/v1/file/${table}.${field.file.get.file}/${key.get}"),
+          img(src := s"/api/v1/file/${table}.${field.file.get.file}/${key.get}", height := Conf.imageHeight),
           a(href := s"/api/v1/file/${table}.${field.file.get.file}/${key.get}",name)
           ).render
         }

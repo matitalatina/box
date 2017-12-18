@@ -31,7 +31,7 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
 }
 
 //exteded code generator (add route and registry generation)
-case class TablesGenerator(model:Model,conf:Config) extends slick.codegen.SourceCodeGenerator(model) with BoxSourceCodeGenerator with MyOutputHelper {
+case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.SourceCodeGenerator(model) with BoxSourceCodeGenerator with MyOutputHelper {
 
 
 
@@ -130,7 +130,7 @@ case class TablesGenerator(model:Model,conf:Config) extends slick.codegen.Source
       val appKeysExceptions = conf.getStringList("generator.keys.app")
       val keyStrategy = conf.getString("generator.keys.default.strategy")
 
-      private def managed:Boolean = {
+      private val managed:Boolean = {
         val result = keyStrategy match {
           case "db" if primaryKey => !dbKeysExceptions.contains(completeName)
           case "app" if primaryKey => dbKeysExceptions.contains(completeName)

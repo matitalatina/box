@@ -1,4 +1,4 @@
-package ch.wsl.box.rest.model
+package ch.wsl.box.rest.boxentities
 
 import slick.driver.PostgresDriver.api._
 
@@ -6,8 +6,6 @@ import slick.driver.PostgresDriver.api._
   * Created by andre on 5/15/2017.
   */
 object Conf {
-
-
 
   val profile = slick.driver.PostgresDriver
 

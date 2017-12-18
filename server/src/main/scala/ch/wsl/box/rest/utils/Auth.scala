@@ -52,7 +52,7 @@ object Auth {
   def getUserProfile(name: String, password: String): Future[UserProfile] = {
 
 
-    println(s"Connecting to DB $dbPath with $name")
+//    println(s"Connecting to DB $dbPath with $name")
 
       val db:Database = Database.forURL(s"$dbPath?currentSchema=$dbSchema",
         driver="org.postgresql.Driver",

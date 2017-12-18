@@ -4,9 +4,9 @@ import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
-import ch.wsl.box.model.TablesRegistry
-import ch.wsl.box.model.shared.{JSONCount, JSONKeys, JSONQuery, JSONResult}
-import ch.wsl.box.rest.logic.{DbActions, JSONEntityMetadata, JSONSchemas}
+import ch.wsl.box.model.EntityActionsRegistry
+import ch.wsl.box.model.shared.{JSONCount, JSONIDs, JSONQuery, JSONData}
+import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
@@ -30,11 +30,11 @@ object Table {
                                                              unmarshaller: FromRequestUnmarshaller[M],
                                                              marshaller:ToResponseMarshaller[M],
                                                              seqmarshaller: ToResponseMarshaller[Seq[M]],
-                                                             jsonmarshaller:ToResponseMarshaller[JSONResult[M]],
+                                                             jsonmarshaller:ToResponseMarshaller[JSONData[M]],
                                                              db:Database,
                                                              ec: ExecutionContext):Route = {
 
-    println(s"adding table: $name" )
+//    println(s"adding table: $name" )
     tables = Set(name) ++ tables
 
     val utils = new DbActions[T,M](table)
@@ -45,52 +45,52 @@ object Table {
     import ch.wsl.box.shared.utils.Formatters._
 
     pathPrefix(name) {
-      pathPrefix("id") {
-        path(Segment) { id =>
-          get {
-            onComplete(utils.getById(JSONKeys.fromString(id))) {
-              case Success(result) => {
-                complete(result)
+        pathPrefix("id") {
+          path(Segment) { id =>
+            get {
+              onComplete(utils.getById(JSONIDs.fromString(id))) {
+                case Success(data) => {
+                  complete(data)
+                }
+                case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
               }
-              case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
-            }
-          } ~
+            } ~
             put {
               entity(as[M]) { e =>
-                onComplete(utils.updateById(JSONKeys.fromString(id),e)) {
+                onComplete(utils.updateById(JSONIDs.fromString(id),e)) {
                   case Success(entity) => complete(e)
                   case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                 }
               }
             } ~
             delete {
-              onComplete(utils.deleteById(JSONKeys.fromString(id))) {
+              onComplete(utils.deleteById(JSONIDs.fromString(id))) {
                 case Success(affectedRow) => complete(JSONCount(affectedRow))
                 case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
               }
             }
         }
       } ~
-      path("schema") {
+      path("kind") {
         get {
-          complete{ JSONSchemas.of(name) }
+          complete{"table"}
         }
       } ~
       path("metadata") {
         get {
-          complete{ JSONEntityMetadata.of(name, "en") }   //can set "en" hardcoded, since base table JSONForm do not change with language
+          complete{ JSONMetadataFactory.of(name, "en") }   //can set "en" hardcoded, since base table JSONForm do not change with language
         }
       } ~
       path("keys") {   //returns key fields names
         get {
-          complete{ JSONSchemas.keysOf(name) }
+          complete{ JSONMetadataFactory.keysOf(name) }
         }
       } ~
-      path("keysList") {   //returns all id values in JSONKeys format filtered according to specified JSONQuery (as body of the post)
+      path("ids") {   //returns all id values in JSONKeys format filtered according to specified JSONQuery (as body of the post)
         post {
           entity(as[JSONQuery]) { query =>
             complete {
-              TablesRegistry.actions(name).keyList(query,name)
+              EntityActionsRegistry.tableActions(name).ids(query)
             }
           }
         }
@@ -124,8 +124,8 @@ object Table {
       } ~
       pathEnd{      //if nothing is specified  return the first 50 rows in JSON format
         get {
-          val result:Future[Seq[T#TableElementType]] = db.run{table.take(50).result}
-          onComplete(result) {
+          val data:Future[Seq[T#TableElementType]] = db.run{table.take(50).result}
+          onComplete(data) {
             case Success(results) => complete(results)
             case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
           }
@@ -133,8 +133,8 @@ object Table {
         post {                            //inserts
           entity(as[M]) { e =>
             println("Inserting: " + e)
-            val result: Future[M] = db.run { table.returning(table) += e } //returns object with id
-            complete(result)
+            val data: Future[M] = db.run { table.returning(table) += e } //returns object with id
+            complete(data)
           }
         }
       }

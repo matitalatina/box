@@ -10,13 +10,13 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
 
 
 
-    val modelWithoutFiles = entity.copy(tables =entity.tables.map { table =>
+    val modelWithoutFiles = dbModel.copy(tables = dbModel.tables.map { table =>
       table.copy(columns = table.columns.filterNot { c =>
         c.tpe == "Array[Byte]"
       })
     })
 
-    TablesGenerator(modelWithoutFiles,dbConf).writeToFile(
+    EntitiesGenerator(modelWithoutFiles,dbConf).writeToFile(
       "slick.driver.PostgresDriver",
       args(0),
       "ch.wsl.box.model",
@@ -25,11 +25,11 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     )
 
 
-    val modelWithOnlyFilesTables = entity.copy(tables = entity.tables.filter(_.columns.exists(_.tpe == "Array[Byte]")).map{ t =>
+    val modelWithOnlyFilesTables = dbModel.copy(tables = dbModel.tables.filter(_.columns.exists(_.tpe == "Array[Byte]")).map{ t =>
       t.copy(foreignKeys = Seq())
     })
 
-    TablesGenerator(modelWithOnlyFilesTables,dbConf).writeToFile(
+    EntitiesGenerator(modelWithOnlyFilesTables,dbConf).writeToFile(
       "slick.driver.PostgresDriver",
       args(0),
       "ch.wsl.box.model",
@@ -44,7 +44,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     val calculatedTables= enabledTables.map(_.name.name)
 
 
-    RoutesGenerator(calculatedViews,calculatedTables,entity).writeToFile(
+    RoutesGenerator(calculatedViews,calculatedTables,dbModel).writeToFile(
       args(0),
       "ch.wsl.box.rest.routes",
       "GeneratedRoutes",
@@ -52,13 +52,13 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "ch.wsl.box.model.Tables"
     )
 
-    RegistryModelsGenerator(calculatedViews,calculatedTables,entity).writeToFile(
+    EntityActionsRegistryGenerator(calculatedViews,calculatedTables,dbModel).writeToFile(
       args(0),
       "ch.wsl.box.model",
       "TablesRegistry.scala"
     )
 
-    FileAccessGenerator(entity,dbConf).writeToFile(
+    FileAccessGenerator(dbModel,dbConf).writeToFile(
       args(0),
       "ch.wsl.box.rest.routes",
       "FileRoutes",

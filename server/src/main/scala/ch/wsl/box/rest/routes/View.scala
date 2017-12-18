@@ -5,8 +5,9 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
-import ch.wsl.box.model.shared.{JSONCount, JSONQuery, JSONResult}
-import ch.wsl.box.rest.logic.{DbActions, JSONEntityMetadata, JSONSchemas}
+import ch.wsl.box.model.EntityActionsRegistry
+import ch.wsl.box.model.shared.{JSONCount, JSONQuery, JSONData}
+import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
@@ -21,13 +22,13 @@ object View {
   var views = Set[String]()
 
   def apply[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])(implicit
-                                                                                              mat:Materializer,
-                                                                                              unmarshaller: FromRequestUnmarshaller[M],
-                                                                                              marshaller:ToResponseMarshaller[M],
-                                                                                              seqmarshaller: ToResponseMarshaller[Seq[M]],
-                                                                                              jsonmarshaller:ToResponseMarshaller[JSONResult[M]],
-                                                                                              db:Database,
-                                                                                              ec: ExecutionContext
+                                                                                                         mat:Materializer,
+                                                                                                         unmarshaller: FromRequestUnmarshaller[M],
+                                                                                                         marshaller:ToResponseMarshaller[M],
+                                                                                                         seqmarshaller: ToResponseMarshaller[Seq[M]],
+                                                                                                         jsonmarshaller:ToResponseMarshaller[JSONData[M]],
+                                                                                                         db:Database,
+                                                                                                         ec: ExecutionContext
                                                                                               ):Route = {
 
     views = Set(name) ++ views
@@ -35,28 +36,44 @@ object View {
     import Directives._
     import JSONSupport._
     import io.circe.generic.auto._
+    import ch.wsl.box.shared.utils.Formatters._
 
     val helper = new DbActions[T,M](table)
 
     pathPrefix(name) {
         println(s"view with name: $name")
-        path("schema") {
+
+        path("kind") {
           get {
-              complete{ JSONSchemas.of(name) }
+            complete{"view"}
           }
         } ~
         path("metadata") {
           get {
-            complete{ JSONEntityMetadata.of(name, "en") }
+            complete{ JSONMetadataFactory.of(name, "en") }
+          }
+        } ~
+        path("keys") {   //returns key fields names
+          get {
+            complete{ Seq[String]()} //JSONSchemas.keysOf(name)
+          }
+        } ~
+        path("ids") {   //returns all id values in JSONIDS format filtered according to specified JSONQuery (as body of the post)
+          post {
+            entity(as[JSONQuery]) { query =>
+              complete {
+                EntityActionsRegistry.viewActions(name).ids(query)
+              }
+            }
           }
         } ~
         path("count") {
           get { ctx =>
 
-            val result = db.run { table.length.result }.map{r =>
+            val nr = db.run { table.length.result }.map{r =>
               JSONCount(r)
             }
-            ctx.complete{ result }
+            ctx.complete{ nr }
           }
         } ~
         path("list") {
@@ -80,8 +97,8 @@ object View {
           get { ctx =>
             ctx.complete {
               val q = table.take(50)
-              val result: Future[Seq[M]] = db.run{ q.result }
-              result
+              val data: Future[Seq[M]] = db.run{ q.result }
+              data
             }
 
           }

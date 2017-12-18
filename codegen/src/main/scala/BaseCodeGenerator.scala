@@ -58,14 +58,14 @@ trait BaseCodeGenerator {
 
   //println(enabledEntities.map(_.name.name))
 
-  private val dbEntity = Await.result(db.run{
+  private val slickDbModel = Await.result(db.run{
     PostgresProfile.createModelBuilder(enabledEntities,true).buildModel   //create model based on specific db (here postgres)
   }, 200 seconds)
 
 
   //exclude fields
   println(excludeFields)
-  private val cleanedTables = dbEntity.tables.filter{t =>
+  private val cleanedEntities = slickDbModel.tables.filter{t =>
     dbSchema match {
       case "public" => t.name.schema.isEmpty
       case _ => t.name.schema == Some(dbSchema)
@@ -77,5 +77,5 @@ trait BaseCodeGenerator {
     })
   }
 
-  val entity = dbEntity.copy(tables = cleanedTables)
+  val dbModel = slickDbModel.copy(tables = cleanedEntities)
 }

@@ -5,13 +5,13 @@ import ch.wsl.box.shared.utils.CSV
 /**
   * Created by andreaminetti on 03/03/16.
   */
-case class JSONResult[M <: Product](count:Int,data:List[M]) {
+case class JSONData[M <: Product](data:List[M], count:Int) {
 
-  import JSONResult._
+  import JSONData._
   def csv:String = CSV.of(data.map(_.values()))
 }
 
-object JSONResult{
+object JSONData{
   implicit class CSVWrapper(val prod: Product) extends AnyVal {
 
     def values():Seq[String] = prod.productIterator.map{

@@ -1,4 +1,4 @@
-package ch.wsl.box.rest.model
+package ch.wsl.box.rest.boxentities
 
 
 import slick.driver.PostgresDriver.api._

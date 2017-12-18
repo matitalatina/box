@@ -18,20 +18,26 @@ class PgInformationSchema(table:String, db:Database, pgSchema:String="public") {
   private val FOREIGNKEY = "FOREIGN KEY"
   private val PRIMARYKEY = "PRIMARY KEY"
 
+  val pgTables = TableQuery[PgTables]
   val pgColumns = TableQuery[PgColumns]
   val pgConstraints = TableQuery[PgConstraints]
   val pgConstraintsReference = TableQuery[PgConstraintReferences]
   val pgContraintsUsage = TableQuery[PgConstraintUsages]
   val pgKeyUsage = TableQuery[PgKeyUsages]
 
-  case class PrimaryKey(keys:Seq[String], constraintName:String){
+  case class PrimaryKey(keys: Seq[String], constraintName: String) {
     def boxKeys = keys.map(_.slickfy)
   }
-  case class ForeignKey(keys:Seq[String], referencingKeys:Seq[String], referencingTable:String, constraintName:String){
+
+  case class ForeignKey(keys: Seq[String], referencingKeys: Seq[String], referencingTable: String, constraintName: String) {
     def boxKeys = keys.map(_.slickfy)
+
     def boxReferencingKeys = referencingKeys.map(_.slickfy)
   }
 
+  lazy val pgTable:Future[PgTable] = db.run{
+    pgTables.filter(e => e.table_name === table && e.table_schema === pgSchema).result.head
+  }
 
   private val columnsQuery = pgColumns
     .filter(e => e.table_name === table && e.table_schema === pgSchema)

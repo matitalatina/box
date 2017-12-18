@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components.widget
 
 import java.util.UUID
 
-import ch.wsl.box.model.shared.{JSONFieldOptions, JSONMetadata}
+import ch.wsl.box.model.shared.{JSONFieldLookup, JSONMetadata}
 import io.circe._
 import io.circe.syntax._
 import io.udash.properties.single.Property
@@ -22,35 +22,35 @@ trait Widget{
 
   def render():Modifier
 
-  def beforeSave(result:Json,form:JSONMetadata):Future[Unit] = Future.successful(Unit)
-  def afterSave(result:Json,form:JSONMetadata):Future[Unit] = Future.successful(Unit)
+  def beforeSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
+  def afterSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
 
-  protected def beforeSaveAll(result:Json,form:JSONMetadata,widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave(result,form))).map(_ => Unit)
-  protected def afterSaveAll(result:Json,form:JSONMetadata,widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(result,form))).map(_ => Unit)
+  protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave(data,metadata))).map(_ => Unit)
+  protected def afterSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(data,metadata))).map(_ => Unit)
 
 }
 
 trait WidgetBinded extends Widget {
 
-  private final val subformInjectedId = "$subform-element"
+  private final val childInjectedId = "$child-element"
 
-  protected def prop:Property[Json]
+  protected def data:Property[Json]
   private val widgetId = UUID.randomUUID().toString
-  private def attachId(js:Json):Json = js.deepMerge(Json.obj((subformInjectedId,widgetId.asJson)))
+  private def attachId(js:Json):Json = js.deepMerge(Json.obj((childInjectedId, widgetId.asJson)))
 
-  protected val propWithSubformid:Property[Json] = prop.transform(attachId,x => x)
+  protected val dataWithChildId:Property[Json] = data.transform(attachId, x => x)
 
   def isOf(js:Json) = {
-    val saved = js.get(subformInjectedId)
-    println(s"cheking if result subformId: $saved is equals to widgetId: $widgetId")
-    js.get(subformInjectedId) == widgetId
+    val saved = js.get(childInjectedId)
+    println(s"cheking if result childId: $saved is equals to widgetId: $widgetId")
+    js.get(childInjectedId) == widgetId
   }
 }
 
 
-trait OptionWidget extends Widget{
-  def options:JSONFieldOptions
+trait LookupWidget extends Widget{
+  def options:JSONFieldLookup
 
-  def value2Label(org:Json):String = options.options.find(_._1 == org.string).map(_._2).getOrElse("Val not found")
-  def label2Value(v:String):Json = options.options.find(_._2 == v).map(_._1.asJson).getOrElse(Json.Null)
+  def value2Label(org:Json):String = options.lookup.find(_._1 == org.string).map(_._2).getOrElse("Val not found")
+  def label2Value(v:String):Json = options.lookup.find(_._2 == v).map(_._1.asJson).getOrElse(Json.Null)
 }
