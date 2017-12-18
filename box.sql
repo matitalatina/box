@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.1
--- Dumped by pg_dump version 9.6.1
+-- Dumped from database version 10.1
+-- Dumped by pg_dump version 10.1
 
--- Started on 2017-11-24 16:50:28
+-- Started on 2017-12-18 07:23:00 CET
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -16,35 +16,25 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
 
-set search_path to 'box';
-set schema 'box';
-
 --
--- TOC entry 1 (class 3079 OID 12387)
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- TOC entry 6 (class 2615 OID 26554)
+-- Name: box; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+CREATE SCHEMA box;
 
 
---
--- TOC entry 2187 (class 0 OID 0)
--- Dependencies: 1
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
+ALTER SCHEMA box OWNER TO postgres;
 
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
---SET search_path = public, pg_catalog;
+SET search_path = box, pg_catalog;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- TOC entry 194 (class 1259 OID 42073)
--- Name: conf; Type: TABLE; Schema: public; Owner: postgres
+-- TOC entry 277 (class 1259 OID 26736)
+-- Name: conf; Type: TABLE; Schema: box; Owner: postgres
 --
 
 CREATE TABLE conf (
@@ -57,8 +47,8 @@ CREATE TABLE conf (
 ALTER TABLE conf OWNER TO postgres;
 
 --
--- TOC entry 193 (class 1259 OID 42071)
--- Name: conf_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- TOC entry 278 (class 1259 OID 26742)
+-- Name: conf_id_seq; Type: SEQUENCE; Schema: box; Owner: postgres
 --
 
 CREATE SEQUENCE conf_id_seq
@@ -72,31 +62,31 @@ CREATE SEQUENCE conf_id_seq
 ALTER TABLE conf_id_seq OWNER TO postgres;
 
 --
--- TOC entry 2188 (class 0 OID 0)
--- Dependencies: 193
--- Name: conf_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- TOC entry 2516 (class 0 OID 0)
+-- Dependencies: 278
+-- Name: conf_id_seq; Type: SEQUENCE OWNED BY; Schema: box; Owner: postgres
 --
 
 ALTER SEQUENCE conf_id_seq OWNED BY conf.id;
 
 
 --
--- TOC entry 188 (class 1259 OID 24997)
--- Name: field; Type: TABLE; Schema: public; Owner: postgres
+-- TOC entry 279 (class 1259 OID 26744)
+-- Name: field; Type: TABLE; Schema: box; Owner: postgres
 --
 
 CREATE TABLE field (
-    id integer NOT NULL,
+    field_id integer NOT NULL,
     form_id integer NOT NULL,
     type text NOT NULL,
-    key text NOT NULL,
+    name text NOT NULL,
     widget text,
-    "refModel" text,
-    "refValueProperty" text,
-    subform integer,
-    "localFields" text,
-    "subFields" text,
-    "subFilter" text,
+    "lookupEntity" text,
+    "lookupValueField" text,
+    child_form_id integer,
+    "masterFields" text,
+    "childFields" text,
+    "childFilter" text,
     "default" text,
     min integer,
     max integer
@@ -106,17 +96,17 @@ CREATE TABLE field (
 ALTER TABLE field OWNER TO postgres;
 
 --
--- TOC entry 2189 (class 0 OID 0)
--- Dependencies: 188
--- Name: COLUMN field."subFields"; Type: COMMENT; Schema: public; Owner: postgres
+-- TOC entry 2517 (class 0 OID 0)
+-- Dependencies: 279
+-- Name: COLUMN field."childFields"; Type: COMMENT; Schema: box; Owner: postgres
 --
 
-COMMENT ON COLUMN field."subFields" IS 'comma separed subform fields to bind with localFields';
+COMMENT ON COLUMN field."childFields" IS 'comma separed subform fields to bind with localFields';
 
 
 --
--- TOC entry 195 (class 1259 OID 50300)
--- Name: field_file; Type: TABLE; Schema: public; Owner: postgres
+-- TOC entry 280 (class 1259 OID 26750)
+-- Name: field_file; Type: TABLE; Schema: box; Owner: postgres
 --
 
 CREATE TABLE field_file (
@@ -130,27 +120,27 @@ CREATE TABLE field_file (
 ALTER TABLE field_file OWNER TO postgres;
 
 --
--- TOC entry 190 (class 1259 OID 25652)
--- Name: field_i18n; Type: TABLE; Schema: public; Owner: postgres
+-- TOC entry 281 (class 1259 OID 26756)
+-- Name: field_i18n; Type: TABLE; Schema: box; Owner: postgres
 --
 
 CREATE TABLE field_i18n (
     id integer NOT NULL,
     field_id integer,
     lang character(2),
-    title text,
+    label text,
     placeholder text,
     tooltip text,
     hint text,
-    "refTextProperty" text
+    "lookupTextField" text
 );
 
 
 ALTER TABLE field_i18n OWNER TO postgres;
 
 --
--- TOC entry 187 (class 1259 OID 24995)
--- Name: field_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- TOC entry 282 (class 1259 OID 26762)
+-- Name: field_id_seq; Type: SEQUENCE; Schema: box; Owner: postgres
 --
 
 CREATE SEQUENCE field_id_seq
@@ -164,26 +154,26 @@ CREATE SEQUENCE field_id_seq
 ALTER TABLE field_id_seq OWNER TO postgres;
 
 --
--- TOC entry 2190 (class 0 OID 0)
--- Dependencies: 187
--- Name: field_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- TOC entry 2518 (class 0 OID 0)
+-- Dependencies: 282
+-- Name: field_id_seq; Type: SEQUENCE OWNED BY; Schema: box; Owner: postgres
 --
 
-ALTER SEQUENCE field_id_seq OWNED BY field.id;
+ALTER SEQUENCE field_id_seq OWNED BY field.field_id;
 
 
 --
--- TOC entry 186 (class 1259 OID 24986)
--- Name: form; Type: TABLE; Schema: public; Owner: postgres
+-- TOC entry 283 (class 1259 OID 26764)
+-- Name: form; Type: TABLE; Schema: box; Owner: postgres
 --
 
 CREATE TABLE form (
-    id integer NOT NULL,
+    form_id integer NOT NULL,
     name text,
     description text,
     layout text,
-    "table" text NOT NULL,
-    "tableFields" text,
+    entity text NOT NULL,
+    "tabularFields" text,
     query text
 );
 
@@ -191,8 +181,8 @@ CREATE TABLE form (
 ALTER TABLE form OWNER TO postgres;
 
 --
--- TOC entry 189 (class 1259 OID 25650)
--- Name: form_i18n_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- TOC entry 284 (class 1259 OID 26770)
+-- Name: form_i18n_id_seq; Type: SEQUENCE; Schema: box; Owner: postgres
 --
 
 CREATE SEQUENCE form_i18n_id_seq
@@ -206,17 +196,17 @@ CREATE SEQUENCE form_i18n_id_seq
 ALTER TABLE form_i18n_id_seq OWNER TO postgres;
 
 --
--- TOC entry 2191 (class 0 OID 0)
--- Dependencies: 189
--- Name: form_i18n_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- TOC entry 2519 (class 0 OID 0)
+-- Dependencies: 284
+-- Name: form_i18n_id_seq; Type: SEQUENCE OWNED BY; Schema: box; Owner: postgres
 --
 
 ALTER SEQUENCE form_i18n_id_seq OWNED BY field_i18n.id;
 
 
 --
--- TOC entry 185 (class 1259 OID 24984)
--- Name: form_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- TOC entry 285 (class 1259 OID 26772)
+-- Name: form_id_seq; Type: SEQUENCE; Schema: box; Owner: postgres
 --
 
 CREATE SEQUENCE form_id_seq
@@ -230,17 +220,17 @@ CREATE SEQUENCE form_id_seq
 ALTER TABLE form_id_seq OWNER TO postgres;
 
 --
--- TOC entry 2192 (class 0 OID 0)
--- Dependencies: 185
--- Name: form_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- TOC entry 2520 (class 0 OID 0)
+-- Dependencies: 285
+-- Name: form_id_seq; Type: SEQUENCE OWNED BY; Schema: box; Owner: postgres
 --
 
-ALTER SEQUENCE form_id_seq OWNED BY form.id;
+ALTER SEQUENCE form_id_seq OWNED BY form.form_id;
 
 
 --
--- TOC entry 192 (class 1259 OID 33877)
--- Name: labels; Type: TABLE; Schema: public; Owner: postgres
+-- TOC entry 286 (class 1259 OID 26774)
+-- Name: labels; Type: TABLE; Schema: box; Owner: postgres
 --
 
 CREATE TABLE labels (
@@ -254,8 +244,8 @@ CREATE TABLE labels (
 ALTER TABLE labels OWNER TO postgres;
 
 --
--- TOC entry 191 (class 1259 OID 33875)
--- Name: labels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- TOC entry 287 (class 1259 OID 26780)
+-- Name: labels_id_seq; Type: SEQUENCE; Schema: box; Owner: postgres
 --
 
 CREATE SEQUENCE labels_id_seq
@@ -269,86 +259,77 @@ CREATE SEQUENCE labels_id_seq
 ALTER TABLE labels_id_seq OWNER TO postgres;
 
 --
--- TOC entry 2193 (class 0 OID 0)
--- Dependencies: 191
--- Name: labels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- TOC entry 2521 (class 0 OID 0)
+-- Dependencies: 287
+-- Name: labels_id_seq; Type: SEQUENCE OWNED BY; Schema: box; Owner: postgres
 --
 
 ALTER SEQUENCE labels_id_seq OWNED BY labels.id;
 
 
 --
--- TOC entry 2039 (class 2604 OID 42076)
--- Name: conf id; Type: DEFAULT; Schema: public; Owner: postgres
+-- TOC entry 2334 (class 2604 OID 26782)
+-- Name: conf id; Type: DEFAULT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY conf ALTER COLUMN id SET DEFAULT nextval('conf_id_seq'::regclass);
 
 
 --
--- TOC entry 2036 (class 2604 OID 25000)
--- Name: field id; Type: DEFAULT; Schema: public; Owner: postgres
+-- TOC entry 2335 (class 2604 OID 29317)
+-- Name: field field_id; Type: DEFAULT; Schema: box; Owner: postgres
 --
 
-ALTER TABLE ONLY field ALTER COLUMN id SET DEFAULT nextval('field_id_seq'::regclass);
+ALTER TABLE ONLY field ALTER COLUMN field_id SET DEFAULT nextval('field_id_seq'::regclass);
 
 
 --
--- TOC entry 2037 (class 2604 OID 25655)
--- Name: field_i18n id; Type: DEFAULT; Schema: public; Owner: postgres
+-- TOC entry 2336 (class 2604 OID 26784)
+-- Name: field_i18n id; Type: DEFAULT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY field_i18n ALTER COLUMN id SET DEFAULT nextval('form_i18n_id_seq'::regclass);
 
 
 --
--- TOC entry 2035 (class 2604 OID 24989)
--- Name: form id; Type: DEFAULT; Schema: public; Owner: postgres
+-- TOC entry 2337 (class 2604 OID 29309)
+-- Name: form form_id; Type: DEFAULT; Schema: box; Owner: postgres
 --
 
-ALTER TABLE ONLY form ALTER COLUMN id SET DEFAULT nextval('form_id_seq'::regclass);
+ALTER TABLE ONLY form ALTER COLUMN form_id SET DEFAULT nextval('form_id_seq'::regclass);
 
 
 --
--- TOC entry 2038 (class 2604 OID 33880)
--- Name: labels id; Type: DEFAULT; Schema: public; Owner: postgres
+-- TOC entry 2338 (class 2604 OID 26786)
+-- Name: labels id; Type: DEFAULT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY labels ALTER COLUMN id SET DEFAULT nextval('labels_id_seq'::regclass);
 
 
 --
--- TOC entry 2179 (class 0 OID 42073)
--- Dependencies: 194
--- Data for Name: conf; Type: TABLE DATA; Schema: public; Owner: postgres
+-- TOC entry 2501 (class 0 OID 26736)
+-- Dependencies: 277
+-- Data for Name: conf; Type: TABLE DATA; Schema: box; Owner: postgres
 --
 
 COPY conf (id, key, value) FROM stdin;
+1	manual_edit.key_fields	false
 \.
 
 
 --
--- TOC entry 2194 (class 0 OID 0)
--- Dependencies: 193
--- Name: conf_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- TOC entry 2503 (class 0 OID 26744)
+-- Dependencies: 279
+-- Data for Name: field; Type: TABLE DATA; Schema: box; Owner: postgres
 --
 
-SELECT pg_catalog.setval('conf_id_seq', 1, false);
-
-
---
--- TOC entry 2173 (class 0 OID 24997)
--- Dependencies: 188
--- Data for Name: field; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY field (id, form_id, type, key, widget, "refModel", "refValueProperty", subform, "localFields", "subFields", "subFilter", "default", min, max) FROM stdin;
+COPY field (field_id, form_id, type, name, widget, "lookupEntity", "lookupValueField", child_form_id, "masterFields", "childFields", "childFilter", "default", min, max) FROM stdin;
 2	1	string	locality	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 3	1	integer	fire_id	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 89	6	number	remark_type_id	hidden	\N	\N	\N	\N	\N	\N	3	\N	\N
 5	1	subform	remarks	\N	\N	\N	2	fire_id	fire_id	\N	\N	\N	\N
 11	3	number	start_date_reliability_id	fullWidth	val_date_reliability	date_reliability_id	\N	\N	\N	\N	\N	\N	\N
-84	3	subform	remark_notes	\N	\N	\N	7	fire_id	fire_id	[\r\n    {\r\n      "column" : "remark_type_id",\r\n      "operator" : "=",\r\n      "value" : "4"\r\n    }\r\n  ]	\N	\N	\N
 8	3	number	fire_id	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 23	3	number	site_id	\N	val_site	site_id	\N	\N	\N	\N	\N	\N	\N
 7	2	number	remark_type_id	hidden	\N	\N	\N	\N	\N	\N	1	\N	\N
@@ -395,9 +376,6 @@ COPY field (id, form_id, type, key, widget, "refModel", "refValueProperty", subf
 81	3	number	data_from_history	checkbox	\N	\N	\N	\N	\N	\N	\N	\N	\N
 82	3	date	alarm_forestdep	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 97	2	number	line_id	hidden	\N	\N	\N	\N	\N	\N	auto	\N	\N
-85	3	subform	remark_cause	\N	\N	\N	5	fire_id	fire_id	[\r\n    {\r\n      "column" : "remark_type_id",\r\n      "operator" : "=",\r\n      "value" : "2"\r\n    }\r\n  ]	\N	\N	\N
-83	3	subform	remark_data_from	\N	\N	\N	6	fire_id	fire_id	[\r\n    {\r\n      "column" : "remark_type_id",\r\n      "operator" : "=",\r\n      "value" : "3"\r\n    }\r\n  ]	\N	\N	\N
-17	3	subform	fire_municipality_touched	\N	\N	\N	10	fire_id	fire_id	[\r\n    {\r\n      "column" : "municipality_type_id",\r\n      "operator" : "=",\r\n      "value" : "2"\r\n    }\r\n  ]\r	\N	\N	\N
 13	3	number	end_date_reliability_id	fullWidth	val_date_reliability	date_reliability_id	\N	\N	\N	\N	\N	\N	\N
 21	3	number	coord_reliability_id	\N	val_coord_reliability	coord_reliability_id	\N	\N	\N	\N	\N	\N	\N
 61	3	number	litter_id	\N	val_layer_abundance	abundance_id	\N	\N	\N	\N	\N	\N	\N
@@ -422,7 +400,6 @@ COPY field (id, form_id, type, key, widget, "refModel", "refValueProperty", subf
 43	3	number	s_pioneer	nolabel	\N	\N	\N	\N	\N	\N	\N	\N	\N
 45	3	number	s_forestation	nolabel	\N	\N	\N	\N	\N	\N	\N	\N	\N
 95	10	number	municipality_type_id	hidden	\N	\N	\N	\N	\N	\N	2	\N	\N
-24	3	subform	remarks_starting_point	\N	\N	\N	2	fire_id	fire_id	[\r\n    {\r\n      "column" : "remark_type_id",\r\n      "operator" : "=",\r\n      "value" : "1"\r\n    }\r\n  ]\r\n	\N	\N	\N
 92	8	number	municipality_id	popup	municipality	municipality_id	\N	\N	\N	\N	\N	\N	\N
 94	10	number	municipality_id	popup	municipality	municipality_id	\N	\N	\N	\N	\N	\N	\N
 98	2	number	fire_id	hidden	\N	\N	\N	\N	\N	\N	auto	\N	\N
@@ -437,7 +414,10 @@ COPY field (id, form_id, type, key, widget, "refModel", "refValueProperty", subf
 105	8	number	fire_id	hidden	\N	\N	\N	\N	\N	\N	auto	\N	\N
 106	10	number	fire_id	hidden	\N	\N	\N	\N	\N	\N	auto	\N	\N
 91	7	number	remark_type_id	hidden	\N	\N	\N	\N	\N	\N	4	\N	\N
-15	3	subform	fire_municipality_start	\N	\N	\N	8	fire_id	fire_id	[\r\n    {\r\n      "column" : "municipality_type_id",\r\n      "operator" : "=",\r\n      "value" : "1"\r\n    }\r\n  ]\r	\N	1	1
+83	3	child	remark_data_from	\N	\N	\N	6	fire_id	fire_id	[\r\n    {\r\n      "column" : "remark_type_id",\r\n      "operator" : "=",\r\n      "value" : "3"\r\n    }\r\n  ]	\N	\N	\N
+84	3	child	remark_notes	\N	\N	\N	7	fire_id	fire_id	[\r\n    {\r\n      "column" : "remark_type_id",\r\n      "operator" : "=",\r\n      "value" : "4"\r\n    }\r\n  ]	\N	\N	\N
+85	3	child	remark_cause	\N	\N	\N	5	fire_id	fire_id	[\r\n    {\r\n      "column" : "remark_type_id",\r\n      "operator" : "=",\r\n      "value" : "2"\r\n    }\r\n  ]	\N	\N	\N
+24	3	child	remarks_starting_point	\N	\N	\N	2	fire_id	fire_id	[\r\n    {\r\n      "column" : "remark_type_id",\r\n      "operator" : "=",\r\n      "value" : "1"\r\n    }\r\n  ]\r\n	\N	\N	\N
 88	6	string	remark	textarea	\N	\N	\N	\N	\N	\N	\N	\N	\N
 90	7	string	remark	textarea	\N	\N	\N	\N	\N	\N	\N	\N	\N
 6	2	string	remark	textarea	\N	\N	\N	\N	\N	\N	\N	\N	\N
@@ -445,18 +425,20 @@ COPY field (id, form_id, type, key, widget, "refModel", "refValueProperty", subf
 108	5	number	order	hidden	\N	\N	\N	\N	\N	\N	arrayIndex	\N	\N
 109	6	number	order	hidden	\N	\N	\N	\N	\N	\N	arrayIndex	\N	\N
 110	7	number	order	hidden	\N	\N	\N	\N	\N	\N	arrayIndex	\N	\N
-111	3	subform	fire_document	\N	\N	\N	11	fire_id	fire_id	\N	\N	\N	\N
 113	11	file	name	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 114	11	number	document_type_id	\N	document_type	document_type_id	\N	\N	\N	\N	\N	\N	\N
 116	11	number	document_id	hidden	\N	\N	\N	\N	\N	\N	auto	\N	\N
 115	11	number	fire_id	hidden	\N	\N	\N	\N	\N	\N	auto	\N	\N
+15	3	child	fire_municipality_start	\N	\N	\N	8	fire_id	fire_id	[\r\n    {\r\n      "column" : "municipality_type_id",\r\n      "operator" : "=",\r\n      "value" : "1"\r\n    }\r\n  ]\r	\N	1	1
+17	3	child	fire_municipality_touched	\N	\N	\N	10	fire_id	fire_id	[\r\n    {\r\n      "column" : "municipality_type_id",\r\n      "operator" : "=",\r\n      "value" : "2"\r\n    }\r\n  ]\r	\N	\N	\N
+111	3	child	fire_document	\N	\N	\N	11	fire_id	fire_id	\N	\N	\N	\N
 \.
 
 
 --
--- TOC entry 2180 (class 0 OID 50300)
--- Dependencies: 195
--- Data for Name: field_file; Type: TABLE DATA; Schema: public; Owner: postgres
+-- TOC entry 2504 (class 0 OID 26750)
+-- Dependencies: 280
+-- Data for Name: field_file; Type: TABLE DATA; Schema: box; Owner: postgres
 --
 
 COPY field_file (field_id, file_field, thumbnail_field, name_field) FROM stdin;
@@ -465,12 +447,12 @@ COPY field_file (field_id, file_field, thumbnail_field, name_field) FROM stdin;
 
 
 --
--- TOC entry 2175 (class 0 OID 25652)
--- Dependencies: 190
--- Data for Name: field_i18n; Type: TABLE DATA; Schema: public; Owner: postgres
+-- TOC entry 2505 (class 0 OID 26756)
+-- Dependencies: 281
+-- Data for Name: field_i18n; Type: TABLE DATA; Schema: box; Owner: postgres
 --
 
-COPY field_i18n (id, field_id, lang, title, placeholder, tooltip, hint, "refTextProperty") FROM stdin;
+COPY field_i18n (id, field_id, lang, label, placeholder, tooltip, hint, "lookupTextField") FROM stdin;
 2	3	en	Fire ID	201701012	\N	\N	\N
 1	2	en	Locality	i.e. Cadenazzo	\N	\N	\N
 3	5	en	Remarks	\N	\N	\N	\N
@@ -903,21 +885,12 @@ COPY field_i18n (id, field_id, lang, title, placeholder, tooltip, hint, "refText
 
 
 --
--- TOC entry 2195 (class 0 OID 0)
--- Dependencies: 187
--- Name: field_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- TOC entry 2507 (class 0 OID 26764)
+-- Dependencies: 283
+-- Data for Name: form; Type: TABLE DATA; Schema: box; Owner: postgres
 --
 
-SELECT pg_catalog.setval('field_id_seq', 116, true);
-
-
---
--- TOC entry 2171 (class 0 OID 24986)
--- Dependencies: 186
--- Data for Name: form; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY form (id, name, description, layout, "table", "tableFields", query) FROM stdin;
+COPY form (form_id, name, description, layout, entity, "tabularFields", query) FROM stdin;
 1	test	test	\N	fire	locality	\N
 2	remark_starting_point	remarks starting_point	\N	remark	remark	{"sort":[{"column":"order","order":"asc"}], "filter": []}
 6	remark_history	remark on history data	\N	remark	remark	\N
@@ -925,33 +898,15 @@ COPY form (id, name, description, layout, "table", "tableFields", query) FROM st
 7	remark_notes	notes	\N	remark	remark	\N
 8	fire_municipality_start	\N	\N	fire_municipality	\N	\N
 10	fire_municipalirt_touched	\N	\N	fire_municipality	\N	\N
-3	fire	fire	{\r\n\t"blocks": [{\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["fire_id", "checked", "definition_id",\r\n\t\t\t\t{\r\n\t\t\t\t\t"fieldsWidth": [6],\r\n\t\t\t\t\t"fields": ["start_date","start_date_reliability_id"]\r\n\t\t\t\t},\r\n\t\t\t\t{\r\n\t\t\t\t\t"fieldsWidth": [6],\r\n\t\t\t\t\t"fields": ["end_date","end_date_reliability_id"]\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t}, {\r\n\t\t\t"title": "fire.municipality",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["fire_municipality_start", "fire_municipality_touched"]\r\n\t\t}, {\r\n\t\t\t"title": "Innesco",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["locality", "x_coord", "y_coord", "coord_reliability_id", "altitude", "site_id", "remarks_starting_point"]\r\n\t\t},{\r\n          \t\t\t"width": 12,\r\n          \t\t\t"fields": []\r\n          \t\t},{\r\n\t\t\t"title": "Rilievo",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["expo_id", "slope"]\r\n\t\t}, {\r\n\t\t\t"title": "Superficie percorsa",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["a_forest", "a_grassland", "a_nonproductive", "a_total"]\r\n\t\t}, {\r\n\t\t\t"width": 12,\r\n\t\t\t"fields": []\r\n\t\t}, {\r\n\t\t\t"title": "Tipologia boschiva",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": [{\r\n\t\t\t\t\t"fieldsWidth": [6],\r\n\t\t\t\t\t"fields": [\r\n\t\t\t\t\t\t"x_bush",\r\n                        "s_bush"\r\n                    ]},\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_coppice",\r\n                            "s_coppice"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_coppice_mixed",\r\n                            "s_coppice_mixed"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_selva",\r\n                            "s_selva"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_high_forest_hardwood",\r\n                            "s_high_forest_hardwood"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_high_forest_softwood",\r\n                            "s_high_forest_softwood"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_high_forest_mixed",\r\n                            "s_high_forest_mixed"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_pioneer",\r\n                            "s_pioneer"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_forestation",\r\n                            "s_forestation"\r\n                        ]\r\n                    }\r\n\t\t\t\t\t\t\t\t\t\t\r\n\t\t\t\t]\r\n\t\t\t\t\r\n\t\t\t\r\n\t\t}, {\r\n\t\t\t"title": "Specie dominante",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["d_castanea", "d_quercus", "d_fagus", "d_betula", "d_other_hardwood", "d_pinus", "d_picea", "d_larix", "d_other_softwood", "diameter"]\r\n\t\t}, {\r\n\t\t\t"title": "Combustibile e sottobosco",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["litter_id", "herb_layer_id", "bush_layer_id"]\r\n\t\t}, {\r\n\t\t\t"title": "Tipologia incendio",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["fire_surface", "fire_crown", "fire_single_tree", "fire_subsurface"]\r\n\t\t}, {\r\n\t\t\t"title": "Danni",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["damage_forest_id", "damage_soil_id", "height_damage"]\r\n\t\t}, {\r\n\t\t\t"title": "Causa",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["cause_id", "cause_reliability_id", "other_cause", "remark_cause"]\r\n\t\t}, {\r\n\t\t\t"title": "Funzioni prevalenti",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["f_protection", "f_economic", "f_recreation"]\r\n\t\t}, {\r\n\t\t\t"title": "Osservazioni",\r\n\t\t\t"width": 12,\r\n\t\t\t"fields": ["data_from_forestdep", "data_from_firemandep", "data_from_history", "alarm_forestdep", "remark_data_from", "remark_notes"]\r\n\t\t},{\r\n          \t\t\t"title": "Document",\r\n          \t\t\t"width": 12,\r\n          \t\t\t"fields": ["fire_document"]\r\n          \t\t}\r\n\t]\r\n}	fire	locality,start_date	{"sort":[{"column":"fire_id","order":"desc"}], "filter": []}
 11	fire_document	documents on fire	\N	document	name	{"sort":[{"column":"document_id","order":"asc"}], "filter": []}
+3	fire	fire	{\r\n\t"blocks": [{\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["fire_id", "checked", "definition_id",\r\n\t\t\t\t{\r\n\t\t\t\t\t"fieldsWidth": [6],\r\n\t\t\t\t\t"fields": ["start_date","start_date_reliability_id"]\r\n\t\t\t\t},\r\n\t\t\t\t{\r\n\t\t\t\t\t"fieldsWidth": [6],\r\n\t\t\t\t\t"fields": ["end_date","end_date_reliability_id"]\r\n\t\t\t\t}\r\n\t\t\t]\r\n\t\t}, {\r\n\t\t\t"title": "fire.municipality",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["fire_municipality_start", "fire_municipality_touched"]\r\n\t\t}, {\r\n\t\t\t"title": "Innesco",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["locality", "x_coord", "y_coord", "coord_reliability_id", "altitude", "site_id", "remarks_starting_point"]\r\n\t\t},{\r\n          \t\t\t"width": 12,\r\n          \t\t\t"fields": []\r\n          \t\t},{\r\n\t\t\t"title": "Rilievo",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["expo_id", "slope"]\r\n\t\t}, {\r\n\t\t\t"title": "Superficie percorsa",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["a_forest", "a_grassland", "a_nonproductive", "a_total"]\r\n\t\t}, {\r\n\t\t\t"width": 12,\r\n\t\t\t"fields": []\r\n\t\t}, {\r\n\t\t\t"title": "Tipologia boschiva",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": [{\r\n\t\t\t\t\t"fieldsWidth": [6],\r\n\t\t\t\t\t"fields": [\r\n\t\t\t\t\t\t"x_bush",\r\n                        "s_bush"\r\n                    ]},\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_coppice",\r\n                            "s_coppice"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_coppice_mixed",\r\n                            "s_coppice_mixed"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_selva",\r\n                            "s_selva"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_high_forest_hardwood",\r\n                            "s_high_forest_hardwood"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_high_forest_softwood",\r\n                            "s_high_forest_softwood"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_high_forest_mixed",\r\n                            "s_high_forest_mixed"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_pioneer",\r\n                            "s_pioneer"\r\n                        ]\r\n                    },\r\n                    {\r\n                        "fieldsWidth": [6],\r\n                        "fields": [\r\n                            "x_forestation",\r\n                            "s_forestation"\r\n                        ]\r\n                    }\r\n\t\t\t\t\t\t\t\t\t\t\r\n\t\t\t\t]\r\n\t\t\t\t\r\n\t\t\t\r\n\t\t}, {\r\n\t\t\t"title": "Specie dominante",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["d_castanea", "d_quercus", "d_fagus", "d_betula", "d_other_hardwood", "d_pinus", "d_picea", "d_larix", "d_other_softwood", "diameter"]\r\n\t\t}, {\r\n\t\t\t"title": "Combustibile e sottobosco",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["litter_id", "herb_layer_id", "bush_layer_id"]\r\n\t\t}, {\r\n\t\t\t"title": "Tipologia incendio",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["fire_surface", "fire_crown", "fire_single_tree", "fire_subsurface"]\r\n\t\t}, {\r\n\t\t\t"title": "Danni",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["damage_forest_id", "damage_soil_id", "height_damage"]\r\n\t\t}, {\r\n\t\t\t"title": "Causa",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["cause_id", "cause_reliability_id", "other_cause", "remark_cause"]\r\n\t\t}, {\r\n\t\t\t"title": "Funzioni prevalenti",\r\n\t\t\t"width": 4,\r\n\t\t\t"fields": ["f_protection", "f_economic", "f_recreation"]\r\n\t\t}, {\r\n\t\t\t"title": "Osservazioni",\r\n\t\t\t"width": 12,\r\n\t\t\t"fields": ["data_from_forestdep", "data_from_firemandep", "data_from_history", "alarm_forestdep", "remark_data_from", "remark_notes"]\r\n\t\t},{\r\n          \t\t\t"title": "Document",\r\n          \t\t\t"width": 12,\r\n          \t\t\t"fields": ["fire_document"]\r\n          \t\t}\r\n\t]\r\n}	fire	locality,start_date,a_forest,a_total,expo_id	{"sort":[{"column":"fire_id","order":"desc"}], "filter": []}
 \.
 
 
 --
--- TOC entry 2196 (class 0 OID 0)
--- Dependencies: 189
--- Name: form_i18n_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('form_i18n_id_seq', 428, true);
-
-
---
--- TOC entry 2197 (class 0 OID 0)
--- Dependencies: 185
--- Name: form_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('form_id_seq', 11, true);
-
-
---
--- TOC entry 2177 (class 0 OID 33877)
--- Dependencies: 192
--- Data for Name: labels; Type: TABLE DATA; Schema: public; Owner: postgres
+-- TOC entry 2510 (class 0 OID 26774)
+-- Dependencies: 286
+-- Data for Name: labels; Type: TABLE DATA; Schema: box; Owner: postgres
 --
 
 COPY labels (id, lang, key, label) FROM stdin;
@@ -969,16 +924,10 @@ COPY labels (id, lang, key, label) FROM stdin;
 15	en	navigation.next	Next
 16	en	navigation.previous	Previous
 17	en	form.save	Save
-18	en	model.search	Search model
-19	en	model.title	Models
-20	en	model.select	select your model
-21	en	model.new	New
-22	en	model.table	Table
 23	en	table.actions	Actions
 24	en	table.edit	Edit
 25	en	header.home	Home
 26	en	header.forms	Forms
-27	en	header.models	Models
 28	en	fire.municipality	Municipality
 29	it	error.notfound	URL non trovato!
 30	it	message.confirm	Sei sicuro?
@@ -992,32 +941,76 @@ COPY labels (id, lang, key, label) FROM stdin;
 38	it	navigation.next	Prossimo
 39	it	navigation.previous	Precendente
 40	it	form.save	Salva
-41	it	model.search	Cerca modello
-42	it	model.title	Modelli
-43	it	model.select	Seleziona modello
-44	it	model.new	Nuovo
-45	it	model.table	Tabella
 46	it	table.actions	Azioni
 47	it	table.edit	Modifica
 48	it	header.home	Home
 49	it	header.forms	Maschere
-50	it	header.models	Modelli
 51	it	fire.municipality	Comune
+52	it	form.save_add	Salva e aggiungi
+53	en	form.save_add	Save and insert next
+21	en	entity.new	New
+22	en	entity.table	Table
+19	en	entity.title	Tables/Views
+20	en	entity.select	select your entity
+44	it	entity.new	Nuovo
+45	it	entity.table	Tabella
+18	en	entity.search	Search entity
+27	en	header.entities	Table/Views
+41	it	entity.search	Cerca entity
+42	it	entity.title	Tabelle/Views
+43	it	entity.select	Seleziona entity
+50	it	header.entities	Entities
 \.
 
 
 --
--- TOC entry 2198 (class 0 OID 0)
--- Dependencies: 191
--- Name: labels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- TOC entry 2522 (class 0 OID 0)
+-- Dependencies: 278
+-- Name: conf_id_seq; Type: SEQUENCE SET; Schema: box; Owner: postgres
 --
 
-SELECT pg_catalog.setval('labels_id_seq', 51, true);
+SELECT pg_catalog.setval('conf_id_seq', 1, false);
 
 
 --
--- TOC entry 2049 (class 2606 OID 50307)
--- Name: field_file field_file_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 2523 (class 0 OID 0)
+-- Dependencies: 282
+-- Name: field_id_seq; Type: SEQUENCE SET; Schema: box; Owner: postgres
+--
+
+SELECT pg_catalog.setval('field_id_seq', 116, true);
+
+
+--
+-- TOC entry 2524 (class 0 OID 0)
+-- Dependencies: 284
+-- Name: form_i18n_id_seq; Type: SEQUENCE SET; Schema: box; Owner: postgres
+--
+
+SELECT pg_catalog.setval('form_i18n_id_seq', 428, true);
+
+
+--
+-- TOC entry 2525 (class 0 OID 0)
+-- Dependencies: 285
+-- Name: form_id_seq; Type: SEQUENCE SET; Schema: box; Owner: postgres
+--
+
+SELECT pg_catalog.setval('form_id_seq', 11, true);
+
+
+--
+-- TOC entry 2526 (class 0 OID 0)
+-- Dependencies: 287
+-- Name: labels_id_seq; Type: SEQUENCE SET; Schema: box; Owner: postgres
+--
+
+SELECT pg_catalog.setval('labels_id_seq', 52, true);
+
+
+--
+-- TOC entry 2342 (class 2606 OID 26788)
+-- Name: field_file field_file_pkey; Type: CONSTRAINT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY field_file
@@ -1025,26 +1018,26 @@ ALTER TABLE ONLY field_file
 
 
 --
--- TOC entry 2041 (class 2606 OID 24994)
--- Name: form form_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 2346 (class 2606 OID 29311)
+-- Name: form form_pkey; Type: CONSTRAINT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY form
-    ADD CONSTRAINT form_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT form_pkey PRIMARY KEY (form_id);
 
 
 --
--- TOC entry 2043 (class 2606 OID 25005)
--- Name: field pkey_field; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 2340 (class 2606 OID 29319)
+-- Name: field pkey_field; Type: CONSTRAINT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY field
-    ADD CONSTRAINT pkey_field PRIMARY KEY (id);
+    ADD CONSTRAINT pkey_field PRIMARY KEY (field_id);
 
 
 --
--- TOC entry 2045 (class 2606 OID 25660)
--- Name: field_i18n pkey_field_i18n; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 2344 (class 2606 OID 26794)
+-- Name: field_i18n pkey_field_i18n; Type: CONSTRAINT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY field_i18n
@@ -1052,8 +1045,8 @@ ALTER TABLE ONLY field_i18n
 
 
 --
--- TOC entry 2047 (class 2606 OID 33885)
--- Name: labels pkey_label; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 2348 (class 2606 OID 26796)
+-- Name: labels pkey_label; Type: CONSTRAINT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY labels
@@ -1061,33 +1054,33 @@ ALTER TABLE ONLY labels
 
 
 --
--- TOC entry 2052 (class 2606 OID 50308)
--- Name: field_file field_file_field_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 2350 (class 2606 OID 29320)
+-- Name: field_file field_file_field_id_fk; Type: FK CONSTRAINT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY field_file
-    ADD CONSTRAINT field_file_field_id_fk FOREIGN KEY (field_id) REFERENCES field(id);
+    ADD CONSTRAINT field_file_field_id_fk FOREIGN KEY (field_id) REFERENCES field(field_id);
 
 
 --
--- TOC entry 2051 (class 2606 OID 25661)
--- Name: field_i18n fkey_field; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 2351 (class 2606 OID 29325)
+-- Name: field_i18n fkey_field; Type: FK CONSTRAINT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY field_i18n
-    ADD CONSTRAINT fkey_field FOREIGN KEY (field_id) REFERENCES field(id);
+    ADD CONSTRAINT fkey_field FOREIGN KEY (field_id) REFERENCES field(field_id);
 
 
 --
--- TOC entry 2050 (class 2606 OID 25006)
--- Name: field fkey_form; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 2349 (class 2606 OID 29312)
+-- Name: field fkey_form; Type: FK CONSTRAINT; Schema: box; Owner: postgres
 --
 
 ALTER TABLE ONLY field
-    ADD CONSTRAINT fkey_form FOREIGN KEY (form_id) REFERENCES form(id);
+    ADD CONSTRAINT fkey_form FOREIGN KEY (form_id) REFERENCES form(form_id);
 
 
--- Completed on 2017-11-24 16:50:28
+-- Completed on 2017-12-18 07:23:00 CET
 
 --
 -- PostgreSQL database dump complete
