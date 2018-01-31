@@ -134,8 +134,10 @@ case class JSONFormMetadataFactory(implicit db:Database) {
   }
 
   private def fieldsToJsonFields(fields:Seq[(((Field_row,Field_i18n_row),Option[FieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
+
     val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
-      val options: Option[Future[JSONFieldLookup]] = for{
+
+      val lookup: Option[Future[JSONFieldLookup]] = for{
         refEntity <- field.lookupEntity
         value <- field.lookupValueField
         text = fieldI18n.lookupTextField.getOrElse(lang)
@@ -148,8 +150,6 @@ case class JSONFormMetadataFactory(implicit db:Database) {
           JSONFieldLookup(refEntity, JSONFieldMap(value,text),options)
         }
       }
-
-
 
       import io.circe.generic.auto._
 
@@ -170,20 +170,17 @@ case class JSONFormMetadataFactory(implicit db:Database) {
       val nullable = pgColumn.map(_.nullable).getOrElse(true)
 
       val file = fieldFile.map{ ff =>
-        FieldFile(ff.file_field,ff.name_field,ff.thumbnail_field)
+        FileReference(ff.name_field, ff.file_field, ff.thumbnail_field)
       }
 
-      options match {
-        case Some(opt) => opt.map{ o =>
+      lookup match {
+        case Some(look) => look.map{ o =>
           JSONField(field.`type`, field.name, nullable, fieldI18n.label,Some(o), fieldI18n.placeholder, field.widget, subform, field.default,file)
         }
         case None => Future.successful{
           JSONField(field.`type`, field.name, nullable, fieldI18n.label,None, fieldI18n.placeholder, field.widget, subform, field.default,file)
         }
       }
-
-
-
     }
 
     Future.sequence(jsonFields)

@@ -1,5 +1,7 @@
 package ch.wsl.box.client.services
 
+import java.io.ByteArrayInputStream
+
 import ch.wsl.box.client.IndexState
 import ch.wsl.box.client.utils.Session
 import org.scalajs.dom
@@ -18,7 +20,7 @@ case class HttpClient(endpoint:String) {
 
   import ch.wsl.box.client.Context._
 
-  private def httpCall[T](method:String,url:String,json:Boolean = true)(send:XMLHttpRequest => Unit)(implicit decoder:io.circe.Decoder[T]):Future[T] = {
+  private def httpCall[T](method:String, url:String, json:Boolean=true, file:Boolean=false)(send:XMLHttpRequest => Unit)(implicit decoder:io.circe.Decoder[T]):Future[T] = {
     val xhr = new dom.XMLHttpRequest()
 
     val promise = Promise[T]()
@@ -28,10 +30,17 @@ case class HttpClient(endpoint:String) {
     if(json) {
       xhr.setRequestHeader("Content-Type", "application/json")
     }
+    if(file) {
+      xhr.setRequestHeader("Content-Type", "application/octet-stream")
+    }
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
         if(xhr.getResponseHeader("Content-Type").contains("text/plain")) {
           promise.success(xhr.responseText.asInstanceOf[T])
+
+        }else if(xhr.getResponseHeader("Content-Type").contains("application/octet-stream")) {
+            promise.success(xhr.response.asInstanceOf[T])
+
         } else {
           decode[T](xhr.responseText) match {
             case Left(fail) => {
@@ -42,7 +51,7 @@ case class HttpClient(endpoint:String) {
           }
         }
       } else if (xhr.status == 401) {
-        println("Non autorizzato")
+        println("Not authorized")
         Session.logout()
         promise.failure(new Exception("HTTP status" + xhr.status))
       } else {
@@ -62,11 +71,10 @@ case class HttpClient(endpoint:String) {
 
   private def request[T](method:String,url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = httpCall[T](method,url)( xhr => xhr.send())
 
-  private def send[D,R](method:String,url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]):Future[R] = {
-    httpCall[R](method,url){ xhr =>
+  private def send[D,R](method:String,url:String,obj:D,json:Boolean = true)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]):Future[R] = {
+    httpCall[R](method,url,json){ xhr =>
       xhr.send(obj.asJson.toString())
     }
-
   }
 
 
@@ -87,7 +95,16 @@ case class HttpClient(endpoint:String) {
 
   }
 
-
+//  def getFile[T](url:String):Future[T] = {
+//    httpCall("GET", url, false, true)
+////    val formData = new FormData();
+////    formData.append("file",file)
+////
+////    httpCall[T]("GET",url,false){ xhr =>
+////      xhr.send(formData)
+////    }
+//
+//  }
 
 
 

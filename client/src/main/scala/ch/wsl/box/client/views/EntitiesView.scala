@@ -7,7 +7,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.BootstrapCol
-import ch.wsl.box.client.utils.Labels
+import ch.wsl.box.client.utils.{Labels, Session}
 import ch.wsl.box.client.{EntityFormState, EntityTableState, EntitiesState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
@@ -38,12 +38,14 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
 
   import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+
   override def handleState(state: EntitiesState): Unit = {
     model.subProp(_.kind).set(Some(state.kind))
     REST.entities(state.kind).map{ models =>
       model.subSeq(_.list).set(models)
       model.subSeq(_.filteredList).set(models)
     }
+    Session.resetQuery()
     if(state.currentEntity != "") {
       model.subProp(_.currentEntity).set(Some(state.currentEntity))
     } else {
@@ -61,6 +63,7 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
 class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, sidebarWidth:Int, routes:Routes) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import ch.wsl.box.model.shared.EntityKind._
 
   val sidebarGrid = BootstrapCol.md(sidebarWidth)
   val contentGrid = BootstrapCol.md(12-sidebarWidth)
@@ -68,14 +71,14 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
   override def renderChild(view: View): Unit = {
 
     import io.udash.wrappers.jquery._
-    jQ(child).children().remove()
+    jQ(content).children().remove()
     if(view != null) {
-      view.getTemplate.applyTo(child)
+      view.getTemplate.applyTo(content)
     }
 
   }
 
-  private val child: Element = div().render
+  private val content: Element = div().render
 
   private def sidebar: Element = div(sidebarGrid)(
     UdashForm.textInput()(Labels.entities.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
@@ -98,12 +101,15 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
             p(Labels.entities.select)
           ).render
           case Some(model) => div(
-            a(href := routes.add().url)(Labels.entities.`new` + " " + model),
-            a(href := routes.entity().url)(Labels.entities.table + " " + model)
+            if (m.kind != Some(VIEW.kind))
+              a(href := routes.add().url)(Labels.entities.`new` + " " + model)
+            else
+              p()
+//            a(href := routes.entity().url)(Labels.entities.table + " " + model)
           ).render
         }
       ),
-      child
+      content
     )
   )
 }

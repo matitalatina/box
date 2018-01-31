@@ -11,7 +11,13 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
   * Created by andre on 5/24/2017.
   */
 
-case class Navigation(hasNext:Boolean, hasPrevious:Boolean, count:Int, current:Int)
+case class Navigation(hasNext:Boolean, hasPrevious:Boolean, count:Int, current:Int,
+                      hasNextPage:Boolean, hasPreviousPage:Boolean, pages:Int, currentPage:Int)
+
+object Navigation{
+  def empty0 = Navigation(false,false,0,0, false, false, 0,0)
+  def empty1 = Navigation(false,false,1,1, false, false, 1,1)
+}
 
 case class IdNav(currentId:Option[String]) {
 
@@ -25,9 +31,15 @@ case class IdNav(currentId:Option[String]) {
       hasNext(),
       hasPrev(),
       ids.count,
-      (query.currentPage-1)*query.pageLength(ids.count)+idx+1
+      (query.currentPage-1)*query.pageLength(ids.count)+idx+1,
+      hasNextPage(),
+      hasPrevPage(),
+      ids.count % query.pageLength(ids.count) +1 ,
+      query.currentPage
+
     )
   }
+
 
   def hasNext():Boolean = {
     for{
@@ -35,9 +47,9 @@ case class IdNav(currentId:Option[String]) {
       ids <- Session.getIDs()
       (_,idx) <- ids.ids.zipWithIndex.find(_._1 == id)
     } yield {
-//      println("checking")
-      val result = !(idx == ids.ids.size-1 && ids.lastPage)
-//      println(s"result: $result")
+      //      println("checking")
+      val result = !(idx == ids.ids.size-1 && ids.isLastPage)
+      //      println(s"result: $result")
       result
     }
   }.getOrElse(false)
@@ -55,6 +67,22 @@ case class IdNav(currentId:Option[String]) {
     }.getOrElse(false)
     result
   }
+
+  def hasNextPage():Boolean = {
+    for{
+      ids <- Session.getIDs()
+    } yield {
+      !ids.isLastPage
+    }
+  }.getOrElse(false)
+
+  def hasPrevPage():Boolean = {
+      for{
+        query <- Session.getQuery()
+      } yield {
+        !(query.currentPage == 1)
+      }
+  }.getOrElse(false)
 
 
   def prev(kind:String,model:String):Future[Option[String]] = {
@@ -80,7 +108,7 @@ case class IdNav(currentId:Option[String]) {
       ids <- Session.getIDs()
       (_, idx) <- ids.ids.zipWithIndex.find(_._1 == id)
     } yield {
-      (idx == ids.ids.size-1,ids.lastPage) match {
+      (idx == ids.ids.size-1,ids.isLastPage) match {
         case (false,_) => Future.successful(ids.ids.lift(idx+1))
         case (true,false) => nextPage(kind,model,query)
         case (true,true) => Future.successful(None)

@@ -10,9 +10,10 @@ import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom.File
 
+
 import scala.concurrent.Future
 
-case class FileWidget(key:Property[String],prop:Property[Json],field:JSONField, labelString:String, table:String) extends Widget {
+case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, labelString:String, entity:String) extends Widget {
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
@@ -20,12 +21,12 @@ case class FileWidget(key:Property[String],prop:Property[Json],field:JSONField, 
   import ch.wsl.box.shared.utils.JsonUtils._
   import io.circe.syntax._
 
-  override def afterSave(result:Json, form: JSONMetadata) = {
+  override def afterSave(result:Json, metadata: JSONMetadata) = {
     println(s"File after save with result: $result with selected file: ${selectedFiles.get.headOption.map(_.name)}")
-    val ids = result.IDs(form.keys)
+    val jsonid = result.ID(metadata.keys)
     for{
       _ <- Future.sequence{
-        selectedFiles.get.map(REST.sendFile(_,ids,s"${form.entity}.${field.file.get.file}"))
+        selectedFiles.get.map(REST.sendFile(_,jsonid,s"${metadata.entity}.${field.file.get.file_field}"))
       }
     } yield Unit
   }
@@ -40,7 +41,7 @@ case class FileWidget(key:Property[String],prop:Property[Json],field:JSONField, 
 
   override def render() = {
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
-      "Key:",bind(key),br,
+      "ID:",bind(id),br,
       if(labelString.length > 0) label(labelString) else {},
       input,
       repeat(selectedFiles) { sf =>
@@ -53,8 +54,10 @@ case class FileWidget(key:Property[String],prop:Property[Json],field:JSONField, 
       ul(
         produce(prop.transform(_.string)) { name =>
           div(
-          img(src := s"/api/v1/file/${table}.${field.file.get.file}/${key.get}", height := Conf.imageHeight),
-          a(href := s"/api/v1/file/${table}.${field.file.get.file}/${key.get}",name)
+          img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${id.get}", height := Conf.imageHeight),
+//          img(src := REST.getFile(entity, id.get), height := Conf.imageHeight),
+//          a(href := REST.getFile(entity, id.get), name)
+          a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${id.get}",name)
           ).render
         }
       ),

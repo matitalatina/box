@@ -13,13 +13,13 @@ case class JSONField(
                       widget: Option[String] = None,
                       child: Option[Child] = None,
                       default: Option[String] = None,
-                      file: Option[FieldFile] = None
+                      file: Option[FileReference] = None
                     )
 
 
 case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Map[String,String] = Map())
 
-case class FieldFile(file:String,name:String,thumbnail:Option[String])
+case class FileReference(name_field:String, file_field:String, thumbnail_field:Option[String])
 
 case class JSONFieldMap(valueProperty:String, textProperty:String)
 

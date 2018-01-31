@@ -72,12 +72,14 @@ object Session {
 
   def authToken() = dom.window.sessionStorage.getItem(AUTH_TOKEN)
 
-  def setQuery(query: JSONQuery) = set(QUERY,query)
   def getQuery():Option[JSONQuery] = get[JSONQuery](QUERY)
+  def setQuery(query: JSONQuery) = set(QUERY,query)
+  def resetQuery() = set(QUERY, None)
 
 
   def getIDs():Option[IDs] = get[IDs](IDS)
-  def setIDs(ids:IDs) = set(IDS,ids)
+  def setIDs(ids:IDs) = set(IDS, ids)
+  def resetIDs() = set(IDS, None)
 
   def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).toOption match {
     case Some(lang) if Labels.langs.contains(lang)  => lang

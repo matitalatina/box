@@ -32,7 +32,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends Ugly
 
   val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
-  def getAllById(id:JSONIDs):Future[Json] = extractOne(id.query)
+  def getAllById(id:JSONID):Future[Json] = extractOne(id.query)
 
   def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)     // todo adapt JSONQuery to select only fields in form
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
@@ -58,10 +58,10 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends Ugly
   }
 
   def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]) = {
-    val receivedIDs = receivedJson.map(_.IDs(child.keys))
-    val dbIDs = dbJson.map(_.IDs(child.keys))
-    println(s"child: ${child.name} received: ${receivedIDs.map(_.asString)} db: ${dbIDs.map(_.asString)}")
-    dbIDs.filterNot(k => receivedIDs.contains(k)).map{ idsToDelete =>
+    val receivedID = receivedJson.map(_.ID(child.keys))
+    val dbID = dbJson.map(_.ID(child.keys))
+    println(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
+    dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
       println(s"Deleting child ${child.name}, with key: $idsToDelete")
       EntityActionsRegistry.tableActions(child.entity).delete(idsToDelete)
     }
@@ -80,7 +80,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends Ugly
         }
       } yield result
     }
-    val id = e.IDs(metadata.keys)
+    val id = e.ID(metadata.keys)
     for{
       _ <- Future.sequence(submetadata)
       dbData <- actions.getById(id).recover{ case t => println("recovered future with none"); None }   //existing record in db
@@ -106,7 +106,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends Ugly
       } yield result
     })
     inserted <- actions.insert(e)
-    data <- getAllById(inserted.IDs(metadata.keys))
+    data <- getAllById(inserted.ID(metadata.keys))
   } yield data
 
 

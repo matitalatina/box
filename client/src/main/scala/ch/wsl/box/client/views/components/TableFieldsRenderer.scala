@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.model.shared.{JSONField, JSONIDs}
+import ch.wsl.box.model.shared.{JSONField, JSONID}
 import io.circe.Json
 import org.scalajs.dom.{Element, Event}
 import io.udash._
@@ -27,7 +27,7 @@ object TableFieldsRenderer {
     editing.set(!editing.get)
   }
 
-  def apply(value:String, field:JSONField, keys:JSONIDs, routes:Routes):TypedTag[Element] = {
+  def apply(value:String, field:JSONField, keys:JSONID, routes:Routes):TypedTag[Element] = {
 
 
     val contentFixed = field.lookup match {

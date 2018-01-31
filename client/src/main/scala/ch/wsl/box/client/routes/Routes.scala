@@ -15,10 +15,10 @@ trait Routes{
 
 object Routes {
 
-  def apply(kind:String,model:String) = new Routes{
-    def add() = EntityFormState(kind,model,None)
-    def edit(id:String) = EntityFormState(kind,model,Some(id))
-    def entity() = EntityTableState(kind,model)
+  def apply(kind:String, entityName:String) = new Routes{
+    def add() = EntityFormState(kind,entityName,None)
+    def edit(id:String) = EntityFormState(kind,entityName,Some(id))
+    def entity() = EntityTableState(kind,entityName)
     def entity(name:String) = EntityTableState(kind,name)
   }
 

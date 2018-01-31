@@ -9,7 +9,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.JSONIDs
+import ch.wsl.box.model.shared.JSONID
 import ch.wsl.box.rest.logic.DbActions
 import ch.wsl.box.rest.routes.File.FileHandler
 import ch.wsl.box.rest.utils.Auth.UserProfile
@@ -24,12 +24,12 @@ object File{
   case class BoxFile(file:Option[Array[Byte]],mime: Option[String],name:Option[String])
 
   trait FileHandler[M <: Product]{
-    def inject(obj:M,file:Array[Byte],metadata:FileInfo):M
+    def inject(obj:M, file:Array[Byte], metadata:FileInfo):M
     def extract(obj:M):BoxFile
   }
 }
 
-case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String,table: TableQuery[T],handler: FileHandler[M])(implicit ec:ExecutionContext,materializer:Materializer,db:Database) {
+case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database) {
   import Directives._
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
@@ -37,7 +37,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
 
   val utils = new DbActions[T,M](table)
 
-  def upload(id:JSONIDs)(metadata:FileInfo, byteSource:Source[ByteString, Any]) = {
+  def upload(id:JSONID)(metadata:FileInfo, byteSource:Source[ByteString, Any]) = {
     for{
       bytea <- byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray)
       row <- utils.getById(id)
@@ -49,19 +49,19 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
 
   def route:Route = {
     pathPrefix(field) {
-      path(Segment) { id =>
+      path(Segment) { idstr =>
 
-        val ids = JSONIDs.fromString(id)
+        val id = JSONID.fromString(idstr)
 
         post {
           fileUpload("file") { case (metadata, byteSource) =>
-            val result = upload(ids)(metadata, byteSource)
+            val result = upload(id)(metadata, byteSource)
             complete(result)
           }
         } ~
           get {
             complete {
-              utils.getById(ids).map {
+              utils.getById(id).map {
                 _.headOption.map { result =>
                   val f = handler.extract(result)
 

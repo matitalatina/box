@@ -13,12 +13,9 @@ import scalatags.JsDom.all._
 
 trait Widget{
 
-
-
   def jsonToString(json:Json):String = json.string
   def strToJson(str:String):Json = str.asJson
   def strToNumericJson(str:String):Json = str.toDouble.asJson
-
 
   def render():Modifier
 
@@ -49,8 +46,8 @@ trait WidgetBinded extends Widget {
 
 
 trait LookupWidget extends Widget{
-  def options:JSONFieldLookup
+  def lookup:JSONFieldLookup
 
-  def value2Label(org:Json):String = options.lookup.find(_._1 == org.string).map(_._2).getOrElse("Val not found")
-  def label2Value(v:String):Json = options.lookup.find(_._2 == v).map(_._1.asJson).getOrElse(Json.Null)
+  def value2Label(org:Json):String = lookup.lookup.find(_._1 == org.string).map(_._2).getOrElse("Value not found")
+  def label2Value(v:String):Json = lookup.lookup.find(_._2 == v).map(_._1.asJson).getOrElse(Json.Null)
 }

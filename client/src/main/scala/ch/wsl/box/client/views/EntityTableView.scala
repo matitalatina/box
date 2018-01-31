@@ -77,12 +77,17 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       filteredForm = emptyFieldsForm.copy(fields = fields)
       lookupEntities <- Enhancer.fetchLookupEntities(Seq(filteredForm))
       form = Enhancer.populateLookupValuesInFields(lookupEntities,filteredForm)
-      query = form.query match {
+//      query = form.query match {
+//        case None => defaultJsonQuery
+//        case Some(jsonquery) => jsonquery.copy(paging = defaultJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
+//      }
+      query = Session.getQuery() match {
         case None => defaultJsonQuery
         case Some(jsonquery) => jsonquery.copy(paging = defaultJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
       }
       csv <- REST.csv(state.kind,Session.lang(),state.entity,query)
       ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
+//      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
       specificKind <- REST.specificKind(state.kind, Session.lang(), state.entity)
     } yield {
 
@@ -115,10 +120,10 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     math.ceil(ids.count.toDouble / Conf.pageLength.toDouble).toInt
   }
 
-  def id(el:Row) = Enhancer.extractIDs(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
+  def ids(el:Row) = Enhancer.extractID(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
 
   def edit(el:Row) = {
-    val k = id(el)
+    val k = ids(el)
     val newState = routes.edit(k.asString)
     io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
   }
@@ -147,10 +152,10 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
   }
 
-  def filterByKey(ids:JSONIDs) = {
+  def filterById(id:JSONID) = {
     val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
-      ids.ids.headOption.exists(_.key == m.field.name) match {
-        case true => m.copy(filter = ids.ids.head.value, filterType = Filter.EQUALS)
+      id.id.headOption.exists(_.key == m.field.name) match {
+        case true => m.copy(filter = id.id.head.value, filterType = Filter.EQUALS)
         case false => m
       }
     }
@@ -200,7 +205,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def nextPage() = {
-    if(!model.subProp(_.ids.lastPage).get) {
+    if(!model.subProp(_.ids.isLastPage).get) {
       reloadRows(model.subProp(_.ids.currentPage).get + 1)
     }
   }
@@ -253,7 +258,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           bind(model.subProp(_.pages)),
           " "
         ),
-        showIf(model.subProp(_.ids.lastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
+        showIf(model.subProp(_.ids.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
         br,br
       )
     }
@@ -262,13 +267,14 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     div(
       h1(bind(model.subProp(_.name))),
       div(id := "box-table",
+//        pagination.render,
         UdashTable()(model.subSeq(_.rows))(
           headerFactory = Some(() => {
               tr(
                 th(GlobalStyles.smallCells)(Labels.entity.actions),
-                produce(model.subProp(_.metadata)) { form =>
+                produce(model.subProp(_.metadata)) { metadata =>
                   for {
-                    name <- form.toSeq.flatMap(_.tabularFields)
+                    name <- metadata.toSeq.flatMap(_.tabularFields)
                     metadata <- model.subProp(_.fieldQueries).get.filter(_.field.name == name)
                   } yield {
                     val title: String = metadata.field.label.getOrElse(metadata.field.name)
@@ -289,7 +295,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             ).render
           }),
           rowFactory = (el) => {
-            val key = presenter.id(el.get)
+            val key = presenter.ids(el.get)
 
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
             val kind = model.subProp(_.kind).get
@@ -297,7 +303,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
               td(GlobalStyles.smallCells)(
                 kind match{
-                  case "view" => p(color := "grey")("no Action")
+                  case "view" => p(color := "grey")(Labels.entity.no_action)
                   case _ => a(
                     cls := "primary",
                     onclick :+= ((ev: Event) => presenter.edit(el.get), true)

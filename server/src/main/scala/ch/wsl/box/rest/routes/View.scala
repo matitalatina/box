@@ -37,6 +37,7 @@ object View {
     import JSONSupport._
     import io.circe.generic.auto._
     import ch.wsl.box.shared.utils.Formatters._
+    import ch.wsl.box.model.shared.EntityKind
 
     val helper = new DbActions[T,M](table)
 
@@ -45,7 +46,7 @@ object View {
 
         path("kind") {
           get {
-            complete{"view"}
+            complete{EntityKind.VIEW.kind}
           }
         } ~
         path("metadata") {

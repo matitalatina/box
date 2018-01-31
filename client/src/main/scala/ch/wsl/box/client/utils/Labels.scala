@@ -45,6 +45,8 @@ object Labels {
   object navigation{
     def next = get("navigation.next")
     def previous = get("navigation.previous")
+    def nextPage = get("navigation.next")
+    def previousPage = get("navigation.previous")
     def loading = get("navigation.loading")
   }
 
@@ -67,6 +69,7 @@ object Labels {
   object entity{
     def actions = get("table.actions")
     def edit = get("table.edit")
+    def no_action = get("table.no_action")
   }
 
   object header{

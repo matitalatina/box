@@ -10,16 +10,16 @@ import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}
 import scalacss.ScalatagsCss._
 
-case class SelectWidget(options:JSONFieldLookup, field:JSONField, label: String, prop: Property[Json], modifiers: Modifier*)extends LookupWidget {
+case class SelectWidget(lookup:JSONFieldLookup, field:JSONField, label: String, prop: Property[Json], modifiers: Modifier*) extends LookupWidget {
 
   override def render() = {
 
     val selectModel = prop.transform(value2Label,label2Value)
 
     val opts = if(field.nullable) {
-      Seq("") ++ options.lookup.values.toSeq
+      Seq("") ++ lookup.lookup.values.toSeq
     } else {
-      options.lookup.values.toSeq
+      lookup.lookup.values.toSeq
     }
 
     val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.pullRight)++modifiers

@@ -1,6 +1,6 @@
 package ch.wsl.box.shared.utils
 
-import ch.wsl.box.model.shared.JSONIDs
+import ch.wsl.box.model.shared.JSONID
 import io.circe._
 
 /**
@@ -37,11 +37,11 @@ object JsonUtils {
       }, { x => x.string }
     )
 
-    def IDs(fields:Seq[String]):JSONIDs = {
+    def ID(fields:Seq[String]):JSONID = {
       val values = fields map { field =>
         field -> get(field)
       }
-      JSONIDs.fromMap(values.toMap)
+      JSONID.fromMap(values.toMap)
     }
   }
 }

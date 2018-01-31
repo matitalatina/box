@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.model.shared.{JSONCount, JSONIDs, JSONQuery, IDs}
+import ch.wsl.box.model.shared.{JSONCount, JSONID, JSONQuery, IDs}
 import io.circe._
 import io.circe.syntax._
 import slick.driver.PostgresDriver
@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait EntityJsonViewActions {
   def getEntity(query: JSONQuery=JSONQuery.empty)(implicit db: Database): Future[Seq[Json]]
 
-  def getById(ids: JSONIDs=JSONIDs.empty)(implicit db: Database): Future[Option[Json]]
+  def getById(id: JSONID=JSONID.empty)(implicit db: Database): Future[Option[Json]]
 
   def count()(implicit db: Database): Future[JSONCount]
 
@@ -25,9 +25,9 @@ trait EntityJsonViewActions {
 }
 
 trait EntityJsonTableActions extends EntityJsonViewActions {
-  def update(ids:JSONIDs, json: Json)(implicit db:Database):Future[Json]
+  def update(id:JSONID, json: Json)(implicit db:Database):Future[Json]
 
-  def delete(ids:JSONIDs)(implicit db:Database):Future[Int]
+  def delete(id:JSONID)(implicit db:Database):Future[Int]
 
   def insert(json: Json)(implicit db:Database):Future[Json]
 }
@@ -38,7 +38,7 @@ case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
 
   override def getEntity(query: JSONQuery=JSONQuery.empty)(implicit db:Database): Future[Seq[Json]] = utils.find(query).map(_.data.toSeq.map(_.asJson))
 
-  override def getById(ids: JSONIDs=JSONIDs.empty)(implicit db:Database): Future[Option[Json]] = utils.getById(ids).map(_.map(_.asJson))
+  override def getById(id: JSONID=JSONID.empty)(implicit db:Database): Future[Option[Json]] = utils.getById(id).map(_.map(_.asJson))
 
 
   override def count()(implicit db:Database) = {
@@ -53,19 +53,20 @@ case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
     for{
       data <- utils.find(query)
       keys <- JSONMetadataFactory.keysOf(table.baseTableRow.tableName)
+      countAllRows <- count().map(_.count) //added by bp
     } yield {
       //println(data.toString().take(100))
       //println(keys)
       val last = query.paging match {
         case None => true
-        case Some(paging) =>  paging.currentPage * paging.pageLength >= data.count
+        case Some(paging) =>  paging.currentPage * paging.pageLength >= countAllRows //data.count
       }
       import ch.wsl.box.shared.utils.JsonUtils._
       IDs(
         last,
         query.paging.map(_.currentPage).getOrElse(1),
-        data.data.map{_.asJson.IDs(keys).asString},
-        data.count
+        data.data.map{_.asJson.ID(keys).asString},
+        countAllRows //data.count
       )
     }
   }
@@ -78,18 +79,18 @@ case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
 
   override def getEntity(query: JSONQuery)(implicit db:Database): Future[Seq[Json]] = jsonView.getEntity(query)
 
-  override def getById(ids: JSONIDs)(implicit db:Database): Future[Option[Json]] = jsonView.getById(ids)
+  override def getById(id: JSONID)(implicit db:Database): Future[Option[Json]] = jsonView.getById(id)
 
   override def count()(implicit db:Database) = jsonView.count()
 
   override def ids(query:JSONQuery)(implicit db:Database):Future[IDs] = jsonView.ids(query)
 
 
-  override def update(ids:JSONIDs, json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Json] = {
+  override def update(id:JSONID, json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Json] = {
     for{
-      current <- getById(ids) //retrieve values in db
+      current <- getById(id) //retrieve values in db
       merged = current.get.deepMerge(json) //merge old and new json
-      result <- jsonView.utils.updateById(ids,merged.as[M].right.get)
+      result <- jsonView.utils.updateById(id,merged.as[M].right.get)
     } yield json
   }
 
@@ -105,5 +106,5 @@ case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
     result.map(_.asJson)
   }
 
-  override def delete(ids: JSONIDs)(implicit db: PostgresDriver.api.Database) = jsonView.utils.deleteById(ids)
+  override def delete(id: JSONID)(implicit db: PostgresDriver.api.Database) = jsonView.utils.deleteById(id)
 }

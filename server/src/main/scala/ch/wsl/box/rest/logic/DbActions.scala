@@ -10,7 +10,7 @@ import scala.util.Try
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](table:TableQuery[T]) extends UglyDBFilters {
+class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](entity:TableQuery[T]) extends UglyDBFilters {
   import ch.wsl.box.model.Tables.profile.api._
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
@@ -41,7 +41,7 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
   }
 
   def find(query:JSONQuery)(implicit db:Database):Future[JSONData[M]] = {
-    val slickQuery = table.where(query.filter).sort(query.sort).page(query.paging)
+    val slickQuery = entity.where(query.filter).sort(query.sort).page(query.paging)
 
 
     for {
@@ -54,18 +54,18 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
     } yield JSONData(result.toList, count) // to list because json4s does't like generics types for serialization
   }
 
-  private def filter(i:JSONIDs):Query[T, M, Seq]  = {
-    if(i.ids.isEmpty) throw new Exception("No key is defined")
+  private def filter(id:JSONID):Query[T, M, Seq]  = {
+    if(id.id.isEmpty) throw new Exception("No key is defined")
 
-    def fil(t: Query[T,M,Seq],key: JSONID):Query[T,M,Seq] =  t.filter(x => super.==(x.col(key.key),key.value))
+    def fil(t: Query[T,M,Seq],keyValue: JSONKeyValue):Query[T,M,Seq] =  t.filter(x => super.==(x.col(keyValue.key),keyValue.value))
 
-    i.ids.foldRight[Query[T,M,Seq]](table){case (jsFilter,query) => fil(query,jsFilter)}
+    id.id.foldRight[Query[T,M,Seq]](entity){case (jsFilter,query) => fil(query,jsFilter)}
   }
 
 
-  def getById(i:JSONIDs)(implicit db:Database):Future[Option[T#TableElementType]] = {
-    println(s"GET BY ID $i")
-    Try(filter(i)).toOption match {
+  def getById(id:JSONID)(implicit db:Database):Future[Option[T#TableElementType]] = {
+    println(s"GET BY ID $id")
+    Try(filter(id)).toOption match {
       case Some(f) => for {
         result <- db.run {
           val action = f.take(1).result
@@ -77,22 +77,22 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
     }
   }
 
-  def deleteById(i:JSONIDs)(implicit db:Database):Future[Int] = {
+  def deleteById(id:JSONID)(implicit db:Database):Future[Int] = {
 
     for{
       result <- db.run{
-        val action = filter(i).delete
+        val action = filter(id).delete
         //println(action.statements)
         action
       }
     } yield result
   }
 
-  def updateById(i:JSONIDs, e:M)(implicit db:Database):Future[Int] = {
+  def updateById(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
     //println (e)
     for{
       result <- db.run {
-        val action = filter(i).update(e)
+        val action = filter(id).update(e)
         println (action.statements)
         action
       }

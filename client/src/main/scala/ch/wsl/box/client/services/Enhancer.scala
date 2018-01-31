@@ -87,14 +87,14 @@ object Enhancer {
 
 
 
-  def extractIDs(row:Seq[String], fields:Seq[String], keys:Seq[String]):JSONIDs = {
+  def extractID(row:Seq[String], fields:Seq[String], keys:Seq[String]):JSONID = {
     val map = for{
       key <- keys
       (field,i) <- fields.zipWithIndex if field == key
     } yield {
       key -> row.lift(i).getOrElse("")
     }
-    JSONIDs.fromMap(map.toMap)
+    JSONID.fromMap(map.toMap)
   }
 
 }

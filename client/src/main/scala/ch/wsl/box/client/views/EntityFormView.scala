@@ -23,10 +23,11 @@ import scalatags.JsDom
   * Created by andre on 4/24/2017.
   */
 
-case class EntityFormModel(name:String, kind:String, id:Option[String], metadata:Option[JSONMetadata], data:Json, error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean)
+case class EntityFormModel(name:String, kind:String, id:Option[String], metadata:Option[JSONMetadata], data:Json,
+                           error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean)
 
 object EntityFormModel{
-  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(),Navigation(false,false,0,0),true)
+  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true)
 }
 
 object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
@@ -50,21 +51,22 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
     val reloadMetadata = {
       val currentModel = model.get
+
       !(currentModel.kind == state.kind &&
         currentModel.name == state.entity &&
         currentModel.metadata.isDefined)
     }
 
-
+    model.subProp(_.kind).set(state.kind)
     model.subProp(_.name).set(state.entity)
     model.subProp(_.id).set(state.id)
 
 
-    val ids = state.id.map(JSONIDs.fromString)
+    val jsonId = state.id.map(JSONID.fromString)
 
     {for{
       currentData <- state.id match {
-        case Some(id) => REST.get(state.kind,Session.lang(),state.entity,ids.get)
+        case Some(id) => REST.get(state.kind, Session.lang(), state.entity,jsonId.get)
         case None => Future.successful(Json.Null)
       }
       metadata <- if(reloadMetadata) REST.metadata(state.kind, Session.lang(), state.entity) else Future.successful(model.get.metadata.get)
@@ -83,7 +85,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         currentData,
         "",
         children,
-        Navigation(false,false,1,1),
+        Navigation.empty1,
         false
       ))
 
@@ -99,24 +101,24 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   def save(toState:(String, String) => RoutingState) = {
 
     val m = model.get
-    m.metadata.foreach{ form =>
+    m.metadata.foreach{ metadata =>
 //      val jsons = for {
 //        (field, i) <- form.fields.zipWithIndex
 //      } yield Enhancer.parse(field, m.results.lift(i).map(_._2),form.keys){ t =>
 //        model.subProp(_.error).set(s"Error parsing ${field.key} field: " + t.getMessage)
 //      }
 
-      val result:Json = m.data
+      val data:Json = m.data
 
       def saveAction() = m.id match {
-        case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONIDs.fromString(id),result)
-        case None => REST.insert(m.kind,Session.lang(),m.name, result)
+        case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONID.fromString(id),data)
+        case None => REST.insert(m.kind,Session.lang(),m.name, data)
       }
 
       {for{
-        _ <- widget.beforeSave(result,form)
+        _ <- widget.beforeSave(data,metadata)
         resultSaved <- saveAction()
-        _ <- widget.afterSave(resultSaved,form)
+        _ <- widget.afterSave(resultSaved,metadata)
       } yield {
 //        val newState =  Routes(m.kind,m.name).table()
         val newState =  toState(m.kind,m.name)
@@ -148,6 +150,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
   def next() = IdNav(model.get.id).next(model.get.kind,model.get.name).map(_.map(goTo))
   def prev() = IdNav(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
+  def nextPage() = IdNav(model.get.id).nextPage(model.get.kind,model.get.name, Session.getQuery().get).map(_.map(goTo))
+  def prevPage() = IdNav(model.get.id).prevPage(model.get.kind,model.get.name, Session.getQuery().get).map(_.map(goTo))
 
   def goTo(id:String) = {
     model.subProp(_.loading).set(true)
@@ -169,6 +173,46 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
   override def getTemplate: scalatags.generic.Modifier[Element] = {
 
+//    val pageNavigation = {
+//
+//      div(
+//        showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1), true), Labels.navigation.previous).render },
+//        span(
+//          " Page: ",
+//          bind(model.subProp(_.ids.currentPage)),
+//          " of ",
+//          bind(model.subProp(_.pages)),
+//          " "
+//        ),
+//        showIf(model.subProp(_.ids.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
+//        br,br
+//      )
+//    }
+
+    val recordNavigation = {
+
+      div(
+        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), Labels.navigation.previous).render },
+        span(
+          bind(model.subProp(_.navigation.current)),
+          " of ",
+          bind(model.subProp(_.navigation.count))
+        ),
+        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),Labels.navigation.next).render },
+
+        br,
+
+        showIf(model.subProp(_.navigation.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.prevPage(), true), Labels.navigation.previousPage).render },
+        span("Page ",
+          bind(model.subProp(_.navigation.currentPage)),
+          " of ",
+          bind(model.subProp(_.navigation.pages))
+        ),
+        showIf(model.subProp(_.navigation.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.nextPage(), true),Labels.navigation.nextPage).render }
+      )
+    }
+
+
     div(
       h1(
         bind(model.subProp(_.name)),
@@ -182,18 +226,19 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
       ),
       div(
-        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), Labels.navigation.previous).render },
-        span(
-          bind(model.subProp(_.navigation.current)),
-          " of ",
-          bind(model.subProp(_.navigation.count))
-        ),
-        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),Labels.navigation.next).render }
+        produce(model.subProp(_.name)) { m =>
+          div(
+            a(href := Routes(model.subProp(_.kind).get, m).entity(m).url)(Labels.entities.table + " " + m)
+          ).render
+        }
       ),
+      recordNavigation,
       produce(model.subProp(_.error)){ error =>
         div(
           if(error.length > 0) {
             UdashLabel.danger(UdashBootstrap.newId(), error).render
+          } else {
+
           }
         ).render
       },
@@ -212,21 +257,21 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       //save and stay on same record
       button(
         cls := "primary",
-        onclick :+= ((ev: Event) => presenter.save(Routes(_,_).edit(model.get.id.getOrElse(""))), true)
+        onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).edit(model.get.id.getOrElse(""))), true)
       )(Labels.form.save),br,
       //save and go to table view
       button(
         cls := "primary",
-        onclick :+= ((ev: Event) => presenter.save(Routes(_,_).entity()), true)
+        onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).entity()), true)
       )(Labels.form.save_table),br,
       //save and go insert new record
       button(
         cls := "primary",
-        onclick :+= ((ev: Event) => presenter.save(Routes(_,_).add()), true)
+        onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).add()), true)
       )(Labels.form.save_add),br,br,
 
       Debug(model.subProp(_.data), "data"),
-      Debug(model.subProp(_.metadata), "form")
+      Debug(model.subProp(_.metadata), "metadata")
     )
   }
 }

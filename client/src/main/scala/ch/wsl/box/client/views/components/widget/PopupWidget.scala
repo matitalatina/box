@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 
 
 
-case class PopupWidget(options:JSONFieldLookup, label: String, prop: Property[Json]) extends LookupWidget {
+case class PopupWidget(lookup:JSONFieldLookup, label: String, data: Property[Json]) extends LookupWidget {
 
 import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._
@@ -23,12 +23,9 @@ import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
 
-  val sortedOptions = options.lookup.toSeq.sortBy(_._2)
+  val sortedOptions = lookup.lookup.toSeq.sortBy(_._2)
 
   override def render() = {
-
-
-
 
     object Status{
       val Closed = "closed"
@@ -39,17 +36,7 @@ import ch.wsl.box.client.Context._
 
     val modalStatus = Property(Status.Closed)
 
-    val selectModel: Property[String] = prop.transform(value2Label,label2Value)
-
-
-
-    val header = () => div(
-      label,
-      UdashButton()(
-        UdashModal.CloseButtonAttr,
-        BootstrapStyles.close, "×"
-      ).render
-    ).render
+    val selectedItem: Property[String] = data.transform(value2Label,label2Value)
 
     val optionList:Modifier = div(
       lab("Search"),br,
@@ -59,12 +46,20 @@ import ch.wsl.box.client.Context._
           sortedOptions.filter(opt => searchTerm == "" || opt._2.toLowerCase.contains(searchTerm.toLowerCase)).map { case (key, value) =>
             li(a(value, onclick :+= ((e: Event) => {
               modalStatus.set(Status.Closed)
-              selectModel.set(value)
+              selectedItem.set(value)
             })))
           }
         ).render
       }
     )
+
+    val header = () => div(
+      label,
+      UdashButton()(
+        UdashModal.CloseButtonAttr,
+        BootstrapStyles.close, "×"
+      ).render
+    ).render
 
     val body = () => div(
       ul(
@@ -92,12 +87,11 @@ import ch.wsl.box.client.Context._
     }
 
 
-
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       modal.render,
       if(label.length >0) lab(label) else {},
       span(
-        bind(selectModel),br,
+        bind(selectedItem),br,
         button(onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),"Change")
       )
     )

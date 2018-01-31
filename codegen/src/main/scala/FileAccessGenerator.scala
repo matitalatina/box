@@ -23,15 +23,15 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
 
     s"""
        |    File("$table.$bytea",$tableTableQuery,new FileHandler[$tableTableRow] {
-       |        override def inject(obj: $tableTableRow, file: Array[Byte], metadata: FileInfo) = obj.copy(
+       |        override def inject(row: $tableTableRow, file: Array[Byte], metadata: FileInfo) = row.copy(
        |          $bytea = Some(file),
        |          $filename = Some(metadata.fileName),
        |          $mime = Some(metadata.contentType.mediaType.toString)
        |        )
-       |        override def extract(obj: $tableTableRow) = BoxFile(
-       |          obj.$bytea,
-       |          obj.$mime,
-       |          obj.$filename
+       |        override def extract(row: $tableTableRow) = BoxFile(
+       |          row.$bytea,
+       |          row.$mime,
+       |          row.$filename
        |        )
        |    }).route""".stripMargin
 

@@ -14,7 +14,6 @@ import io.udash.properties.single.Property
 import scala.concurrent.Future
 import scalatags.JsDom
 
-
 /**
   * Created by andre on 4/25/2017.
   */
@@ -30,22 +29,22 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   import scalatags.JsDom.all._
 
 
-  private def keysFromData(data:Json) = {
-    data.IDs(metadata.keys).asString
+  private def getId(data:Json): String = {
+    data.ID(metadata.keys).asString
   }
 
-  private val key: Property[String] = Property(keysFromData(dataWithChildId.get))
+  private val id: Property[String] = Property(getId(dataWithChildId.get))
 
   dataWithChildId.listen { data =>
-    val currentKey = keysFromData(data)
-    if (currentKey != key.get) {
-      key.set(currentKey)
+    val currentID = getId(data)
+    if (currentID != id.get) {
+      id.set(currentID)
     }
   }
 
 
 
-  private def widgetSelector(field: JSONField, key:Property[String], data:Property[Json]): Widget = {
+  private def widgetSelector(field: JSONField, id:Property[String], data:Property[Json]): Widget = {
     import JSONFieldTypes._
 
     val label = field.label.getOrElse(field.name)
@@ -59,14 +58,14 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
       case (NUMBER, Some(WidgetsNames.checkbox), _, _, _) => CheckboxWidget(label,data)
       case (NUMBER, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Number(label,data)
       case (NUMBER, _, _, _, _) => InputWidget().Number(label,data)
-      case (STRING, Some(WidgetsNames.timepicker), _, _, _) => DateTimeWidget.Time(key,label,data)
-      case (STRING, Some(WidgetsNames.datepicker), _, _, _) => DateTimeWidget.Date(key,label,data)
-      case (STRING, Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime(key,label,data)
+      case (STRING, Some(WidgetsNames.timepicker), _, _, _) => DateTimeWidget.Time(id,label,data)
+      case (STRING, Some(WidgetsNames.datepicker), _, _, _) => DateTimeWidget.Date(id,label,data)
+      case (STRING, Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime(id,label,data)
       case (CHILD, _, _, _, Some(child)) => ChildRenderer(child,children,data,dataWithChildId)
       case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text(label,data)
       case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea(label,data)
       case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea(label,data)
-      case (FILE, _, _, _, _) => FileWidget(key,data,field,label,metadata.entity)
+      case (FILE, _, _, _, _) => FileWidget(id,data,field,label,metadata.entity)
       case (_, _, _, _, _) => InputWidget().Text(label,data)
     }
 
@@ -97,7 +96,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     def toAll(single:Json):Json = dataWithChildId.get.deepMerge(Json.obj((field.name,single)))
     //results.listen(js => println("record changed"))
 
-    widgetSelector(field, key, dataWithChildId.transform(toSingle,toAll))
+    widgetSelector(field, id, dataWithChildId.transform(toSingle,toAll))
 
   }}.getOrElse(HiddenWidget)
 
@@ -136,7 +135,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override def beforeSave(value:Json, metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,blocks.map(_._3))
 
     override def render(): JsDom.all.Modifier = div(UdashForm(
-      "subform",Debug(data),
+      Debug(data, "data"),
       div(BootstrapStyles.row)(
         blocks.map{ case (width,title,widget) =>
           div(BootstrapCol.md(width), GlobalStyles.block)(

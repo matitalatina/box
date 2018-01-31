@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{JSONCount, JSONIDs, JSONQuery, JSONData}
+import ch.wsl.box.model.shared.{JSONCount, JSONID, JSONQuery, JSONData}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import slick.lifted.TableQuery
@@ -43,12 +43,13 @@ object Table {
     import akka.http.scaladsl.server.Directives._
     import io.circe.generic.auto._
     import ch.wsl.box.shared.utils.Formatters._
+    import ch.wsl.box.model.shared.EntityKind
 
     pathPrefix(name) {
         pathPrefix("id") {
           path(Segment) { id =>
             get {
-              onComplete(utils.getById(JSONIDs.fromString(id))) {
+              onComplete(utils.getById(JSONID.fromString(id))) {
                 case Success(data) => {
                   complete(data)
                 }
@@ -57,14 +58,14 @@ object Table {
             } ~
             put {
               entity(as[M]) { e =>
-                onComplete(utils.updateById(JSONIDs.fromString(id),e)) {
+                onComplete(utils.updateById(JSONID.fromString(id),e)) {
                   case Success(entity) => complete(e)
                   case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                 }
               }
             } ~
             delete {
-              onComplete(utils.deleteById(JSONIDs.fromString(id))) {
+              onComplete(utils.deleteById(JSONID.fromString(id))) {
                 case Success(affectedRow) => complete(JSONCount(affectedRow))
                 case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
               }
@@ -73,7 +74,7 @@ object Table {
       } ~
       path("kind") {
         get {
-          complete{"table"}
+          complete{EntityKind.TABLE.kind}
         }
       } ~
       path("metadata") {

@@ -1,7 +1,7 @@
 package ch.wsl.box.rest.routes
 
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{JSONIDs, JSONMetadata, JSONQuery}
+import ch.wsl.box.model.shared.{JSONID, JSONMetadata, JSONQuery}
 import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import io.circe.Json
@@ -29,6 +29,7 @@ object Form {
     import ch.wsl.box.shared.utils.Formatters._
     import io.circe.generic.auto._
     import ch.wsl.box.shared.utils.JsonUtils._
+    import ch.wsl.box.model.shared.EntityKind
 
 
 
@@ -43,7 +44,7 @@ object Form {
         path(Segment) { id =>
           get {
             complete(actions(metadata){ fs =>
-              fs.getAllById(JSONIDs.fromString(id)).map{ record =>
+              fs.getAllById(JSONID.fromString(id)).map{ record =>
                 println(record)
                 HttpEntity(ContentTypes.`application/json`,record)
               }
@@ -55,7 +56,7 @@ object Form {
                 actions(metadata){ fs =>
                   for {
                     _ <- fs.updateAll(e)
-                    data <- fs.getAllById(e.IDs(fs.metadata.keys))
+                    data <- fs.getAllById(e.ID(fs.metadata.keys))
                   } yield data
                 }
               }
@@ -68,7 +69,7 @@ object Form {
       } ~
       path("kind") {
         get {
-          complete{"form"}
+          complete{EntityKind.FORM.kind}
         }
       } ~
       path("metadata") {
