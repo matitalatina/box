@@ -20,17 +20,10 @@ import org.scalajs.dom.{Element, Event, KeyboardEvent}
 import scala.concurrent.Future
 
 
-
-
-/**
-  * Created by andre on 4/24/2017.
-  */
-
-
-
 case class Row(data: Seq[String])
 case class FieldQuery(field:JSONField, sort:String, filter:String, filterType:String)
-case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQueries:Seq[FieldQuery], metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDs, pages:Int)
+case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQueries:Seq[FieldQuery],
+                            metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDs, pages:Int)
 
 object EntityTableModel{
   def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDs(true,1,Seq(),0),1)
@@ -67,7 +60,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     model.subProp(_.name).set(state.entity)
     model.subProp(_.kind).set(state.kind)
 
-    val defaultJsonQuery = JSONQuery.empty.limit(Conf.pageLength)
+    val emptyJsonQuery = JSONQuery.empty.limit(Conf.pageLength)
 
     println("handling state")
 
@@ -77,14 +70,17 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       filteredForm = emptyFieldsForm.copy(fields = fields)
       lookupEntities <- Enhancer.fetchLookupEntities(Seq(filteredForm))
       form = Enhancer.populateLookupValuesInFields(lookupEntities,filteredForm)
-//      query = form.query match {
-//        case None => defaultJsonQuery
-//        case Some(jsonquery) => jsonquery.copy(paging = defaultJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
-//      }
-      query = Session.getQuery() match {
-        case None => defaultJsonQuery
-        case Some(jsonquery) => jsonquery.copy(paging = defaultJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
+
+      defaultQuery = form.query match {
+        case None => emptyJsonQuery
+        case Some(jsonquery) => jsonquery.copy(paging = emptyJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
       }
+
+      query = Session.getQuery() match {
+        case None => defaultQuery
+        case Some(jsonquery) => jsonquery      //in case a query is already stored in Session
+      }
+
       csv <- REST.csv(state.kind,Session.lang(),state.entity,query)
       ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
 //      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
@@ -120,7 +116,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     math.ceil(ids.count.toDouble / Conf.pageLength.toDouble).toInt
   }
 
-  def ids(el:Row) = Enhancer.extractID(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
+  def ids(el:Row): JSONID = Enhancer.extractID(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
 
   def edit(el:Row) = {
     val k = ids(el)
@@ -135,9 +131,9 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
   def reloadRows(page:Int) = {
     println("reloading rows")
-    val metadata = model.subProp(_.fieldQueries).get
-    val sort = metadata.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.name, s.sort)).toList
-    val filter = metadata.filter(_.filter != "").map(f => JSONQueryFilter(f.field.name,Some(f.filterType),f.filter)).toList
+    val fieldQueries = model.subProp(_.fieldQueries).get
+    val sort = fieldQueries.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.name, s.sort)).toList
+    val filter = fieldQueries.filter(_.filter != "").map(f => JSONQueryFilter(f.field.name,Some(f.filterType),f.filter)).toList
     val query = JSONQuery(filter, sort, Conf.pageLength, page)
 
     for {
@@ -165,37 +161,37 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
   def filter(metadata: FieldQuery, filter:String) = {
     println("filtering")
-    val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
+    val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
       m.field.name == metadata.field.name match {
         case true => m.copy(filter = filter)
         case false => m
       }
     }
-    model.subProp(_.fieldQueries).set(newMetadata)
+    model.subProp(_.fieldQueries).set(newFieldQueries)
     reloadRows(1)
   }
 
-  def filterType(metadata:FieldQuery, filterType:String) = {
+  def filterType(fieldQuery:FieldQuery, filterType:String) = {
     println("setting filtertype " + filterType)
-    val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
-      m.field.name == metadata.field.name match {
+    val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
+      m.field.name == fieldQuery.field.name match {
         case true => m.copy(filterType = filterType)
         case false => m
       }
     }
-    model.subProp(_.fieldQueries).set(newMetadata)
+    model.subProp(_.fieldQueries).set(newFieldQueries)
     reloadRows(1)
   }
 
-  def sort(metadata: FieldQuery) = {
+  def sort(fieldQuery: FieldQuery) = {
 
-    val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
-      m.field.name == metadata.field.name match {
+    val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
+      m.field.name == fieldQuery.field.name match {
         case false => m
         case true => m.copy(sort = Sort.next(m.sort))
       }
     }
-    model.subProp(_.fieldQueries).set(newMetadata)
+    model.subProp(_.fieldQueries).set(newFieldQueries)
     reloadRows(1)
   }
 
@@ -225,8 +221,8 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
   override def renderChild(view: View): Unit = {}
 
 
-  def filterOptions(metadata: FieldQuery) = {
-    val filterTypeModel = Property(metadata.filterType)
+  def filterOptions(fieldQuery: FieldQuery) = {
+    val filterTypeModel = Property(fieldQuery.filterType)
 //    println(filterTypeModel.get)
 //    println(Filter.>)
 //    println(Filter.<)
@@ -236,12 +232,12 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       (s:String) => s,
       {(s:String) =>
         println("changed filter" + s)
-        presenter.filterType(metadata,s)  //aggiorna metadata
+        presenter.filterType(fieldQuery,s)  //aggiorna metadata
         s
       }
     )
 
-    Select(filterTypeHandler, Filter.options(metadata.field.`type`), Select.defaultLabel)()
+    Select(filterTypeHandler, Filter.options(fieldQuery.field.`type`), Select.defaultLabel)()
 
   }
 
@@ -250,15 +246,17 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     val pagination = {
 
       div(
+        showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(1), true), Labels.navigation.first).render },
         showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1), true), Labels.navigation.previous).render },
         span(
-          " Page: ",
+          " " + Labels.navigation.page + " ",
           bind(model.subProp(_.ids.currentPage)),
-          " of ",
+          " " + Labels.navigation.of + " ",
           bind(model.subProp(_.pages)),
           " "
         ),
         showIf(model.subProp(_.ids.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
+        showIf(model.subProp(_.ids.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.pages).get ), true),Labels.navigation.last).render },
         br,br
       )
     }
@@ -272,22 +270,25 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           headerFactory = Some(() => {
               tr(
                 th(GlobalStyles.smallCells)(Labels.entity.actions),
-                produce(model.subProp(_.metadata)) { metadata =>
+//                produce(model.subProp(_.metadata)) { metadata =>
+                  produce(model.subProp(_.fieldQueries)) { fieldQueries =>
                   for {
-                    name <- metadata.toSeq.flatMap(_.tabularFields)
-                    metadata <- model.subProp(_.fieldQueries).get.filter(_.field.name == name)
+//                    fieldName <- metadata.toSeq.flatMap(_.tabularFields)
+//                    fieldQuery <- model.subProp(_.fieldQueries).get.filter(_.field.name == fieldName)
+                    fieldQuery <- fieldQueries
                   } yield {
-                    val title: String = metadata.field.label.getOrElse(metadata.field.name)
-                    val filter = Property(metadata.filter)
+                    val title: String = fieldQuery.field.label.getOrElse(fieldQuery.field.name)
+                    val filter = Property(fieldQuery.filter)
+                    val sort = Property(fieldQuery.sort)
 
                     th(GlobalStyles.smallCells)(
                       a(
-                        onclick :+= ((ev: Event) => presenter.sort(metadata), true),
+                        onclick :+= ((ev: Event) => presenter.sort(fieldQuery), true),
                         title," ",
-                        metadata.sort
+                        Labels(Sort.label(sort.get))
                       ),br,
-                      filterOptions(metadata),
-                      TextInput.debounced(filter,onkeyup :+= ((ev: KeyboardEvent) => if(ev.keyCode == KeyCode.Enter) presenter.filter(metadata,filter.get), true))
+                      filterOptions(fieldQuery),
+                      TextInput.debounced(filter,onkeyup :+= ((ev: KeyboardEvent) => if(ev.keyCode == KeyCode.Enter) presenter.filter(fieldQuery,filter.get), true))
 
                     ).render
                   }
@@ -310,13 +311,13 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                   )(Labels.entity.edit)
                 }
                 ),
-              produce(model.subSeq(_.fieldQueries)) { metadatas =>
-                for {(metadata, i) <- metadatas.zipWithIndex} yield {
+              produce(model.subSeq(_.fieldQueries)) { fieldQueries =>
+                for {(fieldQuery, i) <- fieldQueries.zipWithIndex} yield {
 
                   val value = el.get.data.lift(i).getOrElse("")
                   td(GlobalStyles.smallCells)(TableFieldsRenderer(
                     value,
-                    metadata.field,
+                    fieldQuery.field,
                     key,
                     routes
                   )).render

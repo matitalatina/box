@@ -41,16 +41,17 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
   }
 
   def find(query:JSONQuery)(implicit db:Database):Future[JSONData[M]] = {
-    val slickQuery = entity.where(query.filter).sort(query.sort).page(query.paging)
+    val q = entity.where(query.filter).sort(query.sort)
+    val qPaged = q.page(query.paging)
 
 
     for {
       result <- db.run {
-        val r = slickQuery.result;
+        val r = qPaged.result;
         //r.statements.foreach(println);
         r
       }
-      count <- db.run{ slickQuery.length.result }
+      count <- db.run{ q.length.result }
     } yield JSONData(result.toList, count) // to list because json4s does't like generics types for serialization
   }
 

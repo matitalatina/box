@@ -3,12 +3,12 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
-import ch.wsl.box.client.utils.{IdNav, Labels, Navigation, Session}
+import ch.wsl.box.client.utils.{Navigator, Labels, Navigation, Session}
 import ch.wsl.box.client.views.components.widget.Widget
 import ch.wsl.box.client.views.components.{Debug, JSONMetadataRenderer}
 import ch.wsl.box.model.shared._
 import io.circe.Json
-import io.udash._
+import io.udash.{showIf, _}
 import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
 import io.udash.bootstrap.label.UdashLabel
 import io.udash.core.Presenter
@@ -133,7 +133,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
 
   def setNavigation() = {
-    IdNav(model.get.id).navigation().map{ nav =>
+    Navigator(model.get.id).navigation().map{ nav =>
       model.subProp(_.navigation).set(nav)
     }
   }
@@ -148,10 +148,16 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     widget
   }
 
-  def next() = IdNav(model.get.id).next(model.get.kind,model.get.name).map(_.map(goTo))
-  def prev() = IdNav(model.get.id).prev(model.get.kind,model.get.name).map(_.map(goTo))
-  def nextPage() = IdNav(model.get.id).nextPage(model.get.kind,model.get.name, Session.getQuery().get).map(_.map(goTo))
-  def prevPage() = IdNav(model.get.id).prevPage(model.get.kind,model.get.name, Session.getQuery().get).map(_.map(goTo))
+  def next() = nav.next().map(_.map(goTo))
+  def prev() = nav.previous().map(_.map(goTo))
+  def first() = nav.first().map(_.map(goTo))
+  def last() = nav.last().map(_.map(goTo))
+  def nextPage() = nav.nextPage().map(_.map(goTo))
+  def prevPage() = nav.prevPage().map(_.map(goTo))
+  def firstPage() = nav.firstPage().map(_.map(goTo))
+  def lastPage() = nav.lastPage().map(_.map(goTo))
+
+  def nav = Navigator(model.get.id, model.get.kind,model.get.name)
 
   def goTo(id:String) = {
     model.subProp(_.loading).set(true)
@@ -173,42 +179,34 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
   override def getTemplate: scalatags.generic.Modifier[Element] = {
 
-//    val pageNavigation = {
-//
-//      div(
-//        showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1), true), Labels.navigation.previous).render },
-//        span(
-//          " Page: ",
-//          bind(model.subProp(_.ids.currentPage)),
-//          " of ",
-//          bind(model.subProp(_.pages)),
-//          " "
-//        ),
-//        showIf(model.subProp(_.ids.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
-//        br,br
-//      )
-//    }
-
     val recordNavigation = {
 
       div(
+        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.first(), true), Labels.navigation.first).render },
         showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), Labels.navigation.previous).render },
         span(
-          bind(model.subProp(_.navigation.current)),
-          " of ",
-          bind(model.subProp(_.navigation.count))
+          " " + Labels.navigation.record + " ",
+          bind(model.subProp(_.navigation.currentIndex)),
+          " " + Labels.navigation.of + " ",
+          bind(model.subProp(_.navigation.count)),
+          " "
         ),
         showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),Labels.navigation.next).render },
+        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.last(), true),Labels.navigation.last).render },
 
         br,
 
+        showIf(model.subProp(_.navigation.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.firstPage(), true), Labels.navigation.firstPage).render },
         showIf(model.subProp(_.navigation.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.prevPage(), true), Labels.navigation.previousPage).render },
-        span("Page ",
+        span(
+          " " + Labels.navigation.page + " ",
           bind(model.subProp(_.navigation.currentPage)),
-          " of ",
-          bind(model.subProp(_.navigation.pages))
+          " " + Labels.navigation.of + " ",
+          bind(model.subProp(_.navigation.pages)),
+          " "
         ),
-        showIf(model.subProp(_.navigation.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.nextPage(), true),Labels.navigation.nextPage).render }
+        showIf(model.subProp(_.navigation.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.nextPage(), true),Labels.navigation.nextPage).render },
+        showIf(model.subProp(_.navigation.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.lastPage(), true),Labels.navigation.lastPage).render }
       )
     }
 

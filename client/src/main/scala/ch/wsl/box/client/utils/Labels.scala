@@ -13,12 +13,14 @@ object Labels {
   def langs = Seq("it","de","fr","en")
 
   private var labels:Map[String,String] = Map()
+
   def load(lang:String) = REST.labels(lang).map{ table =>
     labels = table
   }
 
   def apply(key:String):String = get(key)
-  private def get(key:String) = labels.lift(key).getOrElse(key)
+
+  private def get(key:String):String = labels.lift(key).getOrElse(key)
 
   object messages {
     def confirm = get("messages.confirm")
@@ -43,11 +45,23 @@ object Labels {
   }
 
   object navigation{
+    def first = get("navigation.first")
+    def last = get("navigation.last")
     def next = get("navigation.next")
     def previous = get("navigation.previous")
+    def firstPage = get("navigation.first")
+    def lastPage = get("navigation.last")
     def nextPage = get("navigation.next")
     def previousPage = get("navigation.previous")
     def loading = get("navigation.loading")
+    def page = get("navigation.page")
+    def record = get("navigation.record")
+    def of = get("navigation.of")
+  }
+
+  object sort{
+    def asc = get("sort.asc")
+    def desc = get("sort.desc")
   }
 
   object form{

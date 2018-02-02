@@ -1,9 +1,8 @@
 package ch.wsl.box.model.shared
 
-import ch.wsl.box.model.shared.JSONQuery.empty
+//import ch.wsl.box.model.shared.JSONQuery.empty
 
 /**
-  * Created by andreaminetti on 24/04/15.
   *
   * @param paging paging information
   * @param sort sort results by JSONSort object
@@ -70,6 +69,12 @@ object Sort{
     case DESC => IGNORE
     case ASC => DESC
     case IGNORE => ASC
+  }
+
+  def label(s:String) = s match {
+    case DESC => "sort.desc"
+    case ASC => "sort.asc"
+    case IGNORE => "sort.ignore"
   }
 }
 

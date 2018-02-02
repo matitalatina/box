@@ -53,20 +53,20 @@ case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
     for{
       data <- utils.find(query)
       keys <- JSONMetadataFactory.keysOf(table.baseTableRow.tableName)
-      countAllRows <- count().map(_.count) //added by bp
+      //countAllRows <- count().map(_.count) //added by bp
     } yield {
       //println(data.toString().take(100))
       //println(keys)
       val last = query.paging match {
         case None => true
-        case Some(paging) =>  paging.currentPage * paging.pageLength >= countAllRows //data.count
+        case Some(paging) =>  paging.currentPage * paging.pageLength >= data.count
       }
       import ch.wsl.box.shared.utils.JsonUtils._
       IDs(
         last,
         query.paging.map(_.currentPage).getOrElse(1),
         data.data.map{_.asJson.ID(keys).asString},
-        countAllRows //data.count
+        data.count
       )
     }
   }
