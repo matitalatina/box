@@ -30,11 +30,12 @@ object JsonUtils {
       result.right.getOrElse(Seq())
     }
 
-    def get(field: String):String = el.hcursor.get[Json](field).fold(
-      { x =>
-        //println(s"error getting $field on $el: $x");
-        ""
-      }, { x => x.string }
+    def get(field: String):String = getOpt(field).getOrElse("")
+
+    def getOpt(field: String):Option[String] = el.hcursor.get[Json](field).fold(
+      { _ =>
+        None
+      }, { x => Some(x.string) }
     )
 
     def ID(fields:Seq[String]):JSONID = {

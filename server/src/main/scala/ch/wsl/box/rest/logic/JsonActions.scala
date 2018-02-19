@@ -96,9 +96,7 @@ case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
 
   override def insert(json: Json)(implicit db:Database): Future[Json] = {
     val data:M = json.as[M].fold({ fail =>
-      println(fail.toString())
-      println(fail.history)
-      throw new Exception(fail.toString())
+      throw new JsonDecoderException(fail,json)
     },
       { x => x})
     println(s"JSON to save on $table: \n $data")
@@ -108,3 +106,5 @@ case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
 
   override def delete(id: JSONID)(implicit db: PostgresDriver.api.Database) = jsonView.utils.deleteById(id)
 }
+
+case class JsonDecoderException(failure: DecodingFailure,original:Json) extends Throwable

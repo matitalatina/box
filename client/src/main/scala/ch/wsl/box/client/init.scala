@@ -18,7 +18,7 @@ object Context {
   implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry, RootState)   //udash application
 
   implicit val pc: PropertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]]
-
+  implicit val pcfr: PropertyCreator[Option[ch.wsl.box.model.shared.FileReference]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.FileReference]]
 }
 
 object Init extends JSApp with StrictLogging {

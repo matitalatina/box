@@ -76,7 +76,8 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val block = style(
-    padding.`0`,
+    paddingTop.`0`,
+    paddingBottom.`0`,
     paddingRight(50 px),
     paddingLeft(10 px)
   )
@@ -86,5 +87,16 @@ object GlobalStyles extends StyleSheet.Inline {
     marginBottom(5 px)
   )
 
+  val notificationArea = style(
+    position.fixed,
+    top(20 px),
+    right(20 px)
+  )
+
+  val notification = style(
+    padding(20 px),
+    border(1 px,solid,red),
+    backgroundColor.white
+  )
 
 }

@@ -3,7 +3,6 @@ package ch.wsl.box.rest
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
 import ch.wsl.box.rest.routes.{GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.Auth
@@ -21,12 +20,8 @@ object Boot extends App with Root {
   implicit val executionContext = system.dispatcher
 
 
-  val myExceptionHandler = ExceptionHandler {
-    case e: Exception => {
-      e.printStackTrace();
-      complete("Internal server error")
-    }
-  }
+
+
 
 
   val conf: Config = ConfigFactory.load().as[Config]("serve")
@@ -37,7 +32,7 @@ object Boot extends App with Root {
   GeneratedRoutes()(Auth.adminDB,materializer,executionContext)
 
   // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
-  val bindingFuture = Http().bindAndHandle(handleExceptions(myExceptionHandler) {
+  val bindingFuture = Http().bindAndHandle(handleExceptions(BoxExceptionHandler()) {
     route
   }, host, port)     //attache the root route
   println(s"Server online at http://localhost:8080/\nPress q to stop...")

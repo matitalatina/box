@@ -1,9 +1,10 @@
 package ch.wsl.box.client.views
 
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{Notification, REST}
+import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.Labels
 import io.udash._
-import ch.wsl.box.client.{IndexState, EntitiesState, RootState}
+import ch.wsl.box.client.{EntitiesState, IndexState, RootState}
 import org.scalajs.dom.Element
 
 import scalatags.JsDom.tags2.main
@@ -48,7 +49,12 @@ class RootView() extends View {
     )),
     main()(
       div()(
-        child
+        child,
+        div(GlobalStyles.notificationArea,
+          repeat(Notification.list){ notice =>
+            div(GlobalStyles.notification,bind(notice)).render
+          }
+        )
       )
     )
 ,Footer.getTemplate
