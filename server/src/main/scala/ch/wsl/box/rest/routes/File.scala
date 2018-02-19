@@ -50,7 +50,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
   def route:Route = {
     pathPrefix(field) {
       path(Segment) { idstr =>
-
+        println(s"Parsing File'JSONID: $idstr")
         val id = JSONID.fromString(idstr)
 
         post {

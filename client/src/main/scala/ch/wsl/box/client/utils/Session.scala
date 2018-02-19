@@ -86,6 +86,7 @@ object Session {
     case _ => "en"
   }
   def setLang(lang:String) = {
+    Labels.load(lang)
     dom.window.sessionStorage.setItem(LANG,lang)
     dom.window.location.reload()
   }

@@ -13,6 +13,15 @@ import org.scalajs.dom.File
 
 import scala.concurrent.Future
 
+
+/**
+  *
+  * @param id
+  * @param prop          holds the filename
+  * @param field
+  * @param labelString
+  * @param entity
+  */
 case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, labelString:String, entity:String) extends Widget {
 
   import scalatags.JsDom.all._
@@ -22,19 +31,23 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   import io.circe.syntax._
 
   override def afterSave(result:Json, metadata: JSONMetadata) = {
-    println(s"File after save with result: $result with selected file: ${selectedFiles.get.headOption.map(_.name)}")
+    println(s"File after save with result: $result with selected file: ${selectedFile.get.headOption.map(_.name)}")
+
     val jsonid = result.ID(metadata.keys)
     for{
-      _ <- Future.sequence{
-        selectedFiles.get.map(REST.sendFile(_,jsonid,s"${metadata.entity}.${field.file.get.file_field}"))
+      idfile <- Future.sequence{
+        val r: Seq[Future[Int]] = selectedFile.get.map(REST.sendFile(_,jsonid,s"${metadata.entity}.${field.file.get.file_field}"))
+        r
       }
-    } yield Unit
+    } yield {
+      idfile.headOption.map(x => id.set(x.toString()))
+    }
   }
 
-  val selectedFiles: SeqProperty[File] = SeqProperty(Seq.empty[File])
-  val input = FileInput("file", Property(false), selectedFiles)()
+  val selectedFile: SeqProperty[File] = SeqProperty(Seq.empty[File])
+  val input = FileInput("file", Property(false), selectedFile)()
 
-  selectedFiles.listen{ files =>
+  selectedFile.listen{ files =>
     prop.set(files.headOption.map(_.name).asJson)
   }
 
@@ -44,7 +57,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       "ID:",bind(id),br,
       if(labelString.length > 0) label(labelString) else {},
       input,
-      repeat(selectedFiles) { sf =>
+      repeat(selectedFile) { sf =>
         div(
           "debug",
           bind(sf.transform(x => x.name))
@@ -54,10 +67,14 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       ul(
         produce(prop.transform(_.string)) { name =>
           div(
-          img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${id.get}", height := Conf.imageHeight),
-//          img(src := REST.getFile(entity, id.get), height := Conf.imageHeight),
-//          a(href := REST.getFile(entity, id.get), name)
-          a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${id.get}",name)
+            produce(id) { idfile =>
+              div(
+                img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", height := Conf.imageHeight),
+                //          img(src := REST.getFile(entity, id.get), height := Conf.imageHeight),
+                //          a(href := REST.getFile(entity, id.get), name)
+                a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
+              ).render
+            }
           ).render
         }
       ),

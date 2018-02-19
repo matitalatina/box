@@ -46,7 +46,7 @@ object REST {
   def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount] = client.delete[JSONCount](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}")
 
   //files
-  def sendFile(file:File, id:JSONID, entity:String) = client.sendFile[Int](s"/file/$entity/${id.asString}",file)
+  def sendFile(file:File, id:JSONID, entity:String): Future[Int] = client.sendFile[Int](s"/file/$entity/${id.asString}",file)
 //  def getFile(entity:String, id:String) = client.getFile(s"/file/$entity/$id")
 //  s"/api/v1/file/${entity}.${field.file.get.file}/${id.get}"
 

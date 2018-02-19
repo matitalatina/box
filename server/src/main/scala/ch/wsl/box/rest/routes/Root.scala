@@ -106,6 +106,15 @@ Root {
                     }
                   }
                 }
+              } ~
+              postgresBasicAuth {  userProfile =>
+              implicit val boxdb = userProfile.db
+                path("box") {
+                    get {
+                      val alltables = Table.tables ++ View.views
+                      complete(alltables.toSeq.sorted)
+                    }
+                }
             }
         }
       //}
