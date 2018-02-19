@@ -50,8 +50,9 @@ object REST {
 //  def getFile(entity:String, id:String) = client.getFile(s"/file/$entity/$id")
 //  s"/api/v1/file/${entity}.${field.file.get.file}/${id.get}"
 
-  //other utils
-  def loginCheck() = client.get[String]("/checkLogin")
+  //other utilsString
+  def login(request:LoginRequest) = client.post[LoginRequest,String]("/login",request)
+  def logout() = client.get[String]("/logout")
   def labels(lang:String):Future[Map[String,String]] = client.get[Map[String,String]](s"/labels/$lang")
   def conf():Future[Map[String,String]] = client.get[Map[String,String]](s"/conf")
   

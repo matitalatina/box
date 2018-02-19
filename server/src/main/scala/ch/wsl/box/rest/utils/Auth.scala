@@ -43,13 +43,11 @@ object Auth {
     password=boxDbConf.as[String]("password"))
 
 
-  case class UserProfile(name: String, db: Database, box:Database)
-
   /**
     * check if this is a valid user on your system and return his profile,
     * that include his username and the connection to the DB
     */
-  def getUserProfile(name: String, password: String): Future[UserProfile] = {
+  def getUserProfile(name: String, password: String): UserProfile = {
 
 
 //    println(s"Connecting to DB $dbPath with $name")
@@ -64,11 +62,9 @@ object Auth {
       user=name,
       password=password)
 
-      db.run{
-        sql"""select 1""".as[Int]
-      }.map{ _ =>
-        UserProfile(name,db,boxDb)
-      }
+
+      UserProfile(name,db,boxDb)
+
 
 
 
@@ -90,12 +86,16 @@ object Auth {
 
       cred match {
           case None => Future.successful(fail())
-        case Some(c) => getUserProfile(c.username, c.password)
-          .map{ u =>
-            AuthenticationResult.success(u)
-          }.recover { case t =>
+        case Some(c) => {
+          val up = getUserProfile(c.username, c.password)
+            up.check.map{ u =>
+              if(u) {
+                AuthenticationResult.success(up)
+              } else fail()
+            }.recover { case t =>
             fail()
           }
+        }
       }
 
 

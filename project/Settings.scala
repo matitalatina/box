@@ -100,6 +100,7 @@ object Settings {
     "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
     "com.typesafe.akka"        %% "akka-actor"       % versions.akka,
     "ch.megard"                %% "akka-http-cors"   % versions.akkaCors,
+    "com.softwaremill.akka-http-session" %% "core" % "0.5.3",
     "io.circe"                 %% "circe-core"       % versions.circe,
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,

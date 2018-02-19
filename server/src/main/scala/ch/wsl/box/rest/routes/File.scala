@@ -12,7 +12,6 @@ import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.JSONID
 import ch.wsl.box.rest.logic.DbActions
 import ch.wsl.box.rest.routes.File.FileHandler
-import ch.wsl.box.rest.utils.Auth.UserProfile
 import io.circe.Decoder
 import slick.jdbc.PostgresProfile.api._
 
