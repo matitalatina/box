@@ -1,10 +1,15 @@
 package ch.wsl.box.rest.routes
 
+import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
+import akka.stream.Materializer
+import akka.stream.scaladsl.Source
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONID, JSONMetadata, JSONQuery}
 import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
+import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
+import io.circe.parser.parse
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,16 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Created by andre on 5/15/2017.
   */
-object Form {
-
-  private def actions[T](futForm:Future[JSONMetadata])(f:FormActions => T)(implicit db:Database, ec: ExecutionContext):Future[T] = for{
-    form <- futForm
-    formActions = FormActions(form)
-  } yield {
-    f(formActions)
-  }
-
-  def apply(name:String,lang:String)(implicit db:Database, ec: ExecutionContext) = {
+case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload {
 
     import JSONSupport._
     import akka.http.scaladsl.model._
@@ -32,6 +28,14 @@ object Form {
     import ch.wsl.box.model.shared.EntityKind
 
 
+    private def actions[T](futForm:Future[JSONMetadata])(f:FormActions => T):Future[T] = for{
+      form <- futForm
+      formActions = FormActions(form)
+    } yield {
+      f(formActions)
+    }
+
+
 
       val jsonCustomMetadataFactory = JSONFormMetadataFactory()
       val metadata: Future[JSONMetadata] = jsonCustomMetadataFactory.of(name,lang)
@@ -40,7 +44,7 @@ object Form {
         f.copy(fields = filteredFields)
       }
 
-      pathPrefix("id") {
+      def route = pathPrefix("id") {
         path(Segment) { id =>
           get {
             complete(actions(metadata){ fs =>
@@ -131,10 +135,19 @@ object Form {
           entity(as[JSONQuery]) { query =>
             println("csv")
             complete(actions(tabularMetadata){ fs =>
-              fs.csv(query).map{csv =>
-                HttpEntity(ContentTypes.`text/plain(UTF-8)`,csv)
-              }
+              fs.csv(query)
             })
+          }
+        } ~
+        respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
+          get {
+            parameters('q) { q =>
+              val query = parse(q).right.get.as[JSONQuery].right.get
+              complete(actions(tabularMetadata) { fs =>
+                Source.fromFuture(tabularMetadata.map(x => CSV.row(x.fields.map(_.name))))
+                  .concat(fs.csv(query))
+              })
+            }
           }
         }
       } ~
@@ -151,6 +164,4 @@ object Form {
       }
 
 
-
-  }
 }

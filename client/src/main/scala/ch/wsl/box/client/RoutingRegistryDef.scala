@@ -32,9 +32,6 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
     case "/box" /:/ kind /:/ entity /:/ "update" /:/ id => EntityFormState(kind,entity,Some(id))
     case "/box" /:/ kind /:/ entity /:/ "child" /:/ childEntity => MasterChildState(kind,entity,childEntity)
     case "/box" /:/ kind /:/ entity => EntityTableState(kind,entity)
-    case "/fire" => FireState
-    case "/fire/insert" => FireFormState(None)
-    case "/fire" /:/ id => FireFormState(Some(id))
   }
 
   private val (loggedOutUrl2State, loggedOutState2Url) = Bidirectional[String, RoutingState] {

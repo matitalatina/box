@@ -28,7 +28,7 @@ object REST {
   def list(kind:String, lang:String, entity:String, limit:Int): Future[Seq[Json]] = client.post[JSONQuery,JSONData[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",JSONQuery.empty.limit(limit)).map(_.data)
   def list(kind:String, lang:String, entity:String, query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,JSONData[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",query).map(_.data)
   def csv(kind:String, lang:String, entity:String, q:JSONQuery): Future[Seq[Seq[String]]] = client.post[JSONQuery,String](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/csv",q).map{ result =>
-    result.split("\r\n").toSeq.map{x => x.substring(1,x.length-1).split("\",\"").toSeq}
+    result.split("\n").toSeq.map{x => x.substring(1,x.length-1).split("\",\"").toSeq}
   }
   def count(kind:String, lang:String, entity:String): Future[Int] = client.get[Int](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/count")
   def keys(kind:String, lang:String, entity:String): Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/keys")
@@ -47,8 +47,6 @@ object REST {
 
   //files
   def sendFile(file:File, id:JSONID, entity:String): Future[Int] = client.sendFile[Int](s"/file/$entity/${id.asString}",file)
-//  def getFile(entity:String, id:String) = client.getFile(s"/file/$entity/$id")
-//  s"/api/v1/file/${entity}.${field.file.get.file}/${id.get}"
 
   //other utilsString
   def login(request:LoginRequest) = client.post[LoginRequest,String]("/login",request)

@@ -32,7 +32,3 @@ case class MasterChildState(kind:String,
                            ) extends RoutingState(EntitiesState(kind,masterEntity))
 
 
-case object FireState extends RoutingState(RootState)
-
-case class FireFormState(id:Option[String]) extends RoutingState(RootState)
-

@@ -47,14 +47,14 @@ class RootView() extends View {
       MenuLink("Views",EntitiesState("view","")),
       MenuLink(Labels.header.forms,EntitiesState("form",""))
     )),
+    div(GlobalStyles.notificationArea,
+      repeat(Notification.list){ notice =>
+        div(GlobalStyles.notification,bind(notice)).render
+      }
+    ),
     main()(
       div()(
-        child,
-        div(GlobalStyles.notificationArea,
-          repeat(Notification.list){ notice =>
-            div(GlobalStyles.notification,bind(notice)).render
-          }
-        )
+        child
       )
     )
 ,Footer.getTemplate

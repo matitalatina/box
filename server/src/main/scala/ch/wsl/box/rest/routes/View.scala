@@ -1,14 +1,18 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
+import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
+import akka.stream.scaladsl.Source
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{JSONCount, JSONQuery, JSONData}
+import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
+import ch.wsl.box.shared.utils.CSV
+import io.circe.parser.parse
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
 
@@ -21,7 +25,9 @@ object View {
 
   var views = Set[String]()
 
-  def apply[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])(implicit
+}
+
+case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])(implicit
                                                                                                          mat:Materializer,
                                                                                                          unmarshaller: FromRequestUnmarshaller[M],
                                                                                                          marshaller:ToResponseMarshaller[M],
@@ -29,19 +35,20 @@ object View {
                                                                                                          jsonmarshaller:ToResponseMarshaller[JSONData[M]],
                                                                                                          db:Database,
                                                                                                          ec: ExecutionContext
-                                                                                              ):Route = {
+                                                                                              ) extends enablers.CSVDownload {
 
-    views = Set(name) ++ views
+    View.views = Set(name) ++ View.views
 
     import Directives._
     import JSONSupport._
-    import io.circe.generic.auto._
+  import JSONData._
+  import io.circe.generic.auto._
     import ch.wsl.box.shared.utils.Formatters._
     import ch.wsl.box.model.shared.EntityKind
 
     val helper = new DbActions[T,M](table)
 
-    pathPrefix(name) {
+    def route = pathPrefix(name) {
         println(s"view with name: $name")
 
         path("kind") {
@@ -85,15 +92,26 @@ object View {
             }
           }
         } ~
-        path("csv") {
-          post {
-            entity(as[JSONQuery]) { query =>
-              println("csv")
-
-              complete(helper.find(query).map(x => HttpEntity(ContentTypes.`text/plain(UTF-8)`,x.csv)))
-            }
-          }
-        } ~
+          path("csv") {           //all values in csv format according to JSONQuery
+            post {
+              entity(as[JSONQuery]) { query =>
+                println("csv")
+                Source
+                complete(Source.fromPublisher(helper.findStreamed(query)))
+              }
+            } ~
+              respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
+                get {
+                  parameters('q) { q =>
+                    val query = parse(q).right.get.as[JSONQuery].right.get
+                    val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en").map{ metadata =>
+                      CSV.row(metadata.fields.map(_.name))
+                    }).concat(Source.fromPublisher(helper.findStreamed(query)).map(x => CSV.row(x.values())))
+                    complete(csv)
+                  }
+                }
+              }
+          } ~
         pathEnd{
           get { ctx =>
             ctx.complete {
@@ -105,5 +123,5 @@ object View {
           }
         }
     }
-  }
+
 }

@@ -14,9 +14,7 @@ object CSV {
     "\""+str.replaceAll("\"","\\\"")+"\""
   }
 
-  def of(data:Seq[Seq[String]]):String = {
-    data.map { row =>
-      row.map(escape).mkString(",")
-    }.mkString("\r\n")
-  }
+  def of(data:Seq[Seq[String]]):String = data.map(row).mkString("\r\n")
+
+  def row(row:Seq[String]):String = row.map(escape).mkString(",")
 }

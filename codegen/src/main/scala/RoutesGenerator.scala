@@ -7,7 +7,7 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
   with slick.codegen.OutputHelpers {
 
   def singleRoute(method:String,model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
-    s"""$method[${table.TableClass.name},${table.EntityType.name}]("${table.model.name.table}",${table.TableClass.name})"""
+    s"""$method[${table.TableClass.name},${table.EntityType.name}]("${table.model.name.table}",${table.TableClass.name}).route"""
   }
 
   def composeRoutes():String = {

@@ -1,6 +1,10 @@
 package ch.wsl.box.rest.logic
 
+import akka.stream.Materializer
+import akka.stream.scaladsl.{Sink, Source}
 import ch.wsl.box.model.shared._
+import slick.basic.DatabasePublisher
+import slick.jdbc.{ResultSetConcurrency, ResultSetType}
 import slick.lifted.{ColumnOrdered, TableQuery}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,19 +44,36 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
     }
   }
 
-  def find(query:JSONQuery)(implicit db:Database):Future[JSONData[M]] = {
+  def count(query:JSONQuery)(implicit db:Database):Future[Int] = {
     val q = entity.where(query.filter).sort(query.sort)
-    val qPaged = q.page(query.paging)
-
 
     for {
-      result <- db.run {
-        val r = qPaged.result;
-        //r.statements.foreach(println);
-        r
+      c <- db.run{
+        q.length.result
       }
-      count <- db.run{ q.length.result }
-    } yield JSONData(result.toList, count) // to list because json4s does't like generics types for serialization
+    } yield c
+  }
+
+  def findStreamed(query:JSONQuery)(implicit db:Database): DatabasePublisher[M] = {
+    val q = entity.where(query.filter).sort(query.sort)
+    val qPaged = q.page(query.paging).result
+      .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 300) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
+      .transactionally
+
+    db.stream(qPaged)
+
+  }
+
+  def find(query:JSONQuery)(implicit db:Database, mat: Materializer): Future[JSONData[M]] = {
+
+    val source = Source.fromPublisher(findStreamed(query))
+    val sink = Sink.fold[Seq[M], M](Seq())(_ ++ Seq(_))
+    for{
+      data <- source.runWith(sink)
+      count <- count(query)
+    } yield {
+      JSONData(data.toList,count)
+    }
   }
 
   private def filter(id:JSONID):Query[T, M, Seq]  = {

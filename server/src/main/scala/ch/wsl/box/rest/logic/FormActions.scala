@@ -1,5 +1,7 @@
 package ch.wsl.box.rest.logic
 
+import akka.NotUsed
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import io.circe._
 import io.circe.syntax._
@@ -8,6 +10,7 @@ import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.rest.utils.FutureUtils
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
+import slick.basic.DatabasePublisher
 import slick.lifted.Query
 import slick.driver.PostgresDriver.api._
 
@@ -23,7 +26,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class ReferenceKey(localField:String,remoteField:String,value:String)
 case class Reference(association:Seq[ReferenceKey])
 
-case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends UglyDBFilters {
+case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Materializer) extends UglyDBFilters {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
@@ -34,18 +37,16 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends Ugly
 
   def getAllById(id:JSONID):Future[Json] = extractOne(id.query)
 
-  def extractArray(query:JSONQuery):Future[Json] = extractSeq(query).map(_.asJson)     // todo adapt JSONQuery to select only fields in form
-  def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
+  def extractArray(query:JSONQuery):Source[Json,NotUsed] = extractSeq(query)     // todo adapt JSONQuery to select only fields in form
+  def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
 
-  def csv(query:JSONQuery):Future[String] = for {
-    results <- extractSeq(query)
-  } yield {
-    val strings = results.map { row =>
-      metadata.tabularFields.map { field =>
-        row.get(field)
+  def csv(query:JSONQuery):Source[String,NotUsed] = {
+    extractSeq(query).map{ json =>
+      val row = metadata.tabularFields.map { field =>
+        json.get(field)
       }
+      CSV.row(row)
     }
-    CSV.of(strings)
   }
 
   def attachArrayIndex(jsonToInsert:Seq[Json],form:JSONMetadata):Seq[Json] = {
@@ -57,7 +58,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends Ugly
     }
   }
 
-  def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]) = {
+  def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]): Seq[Future[Int]] = {
     val receivedID = receivedJson.map(_.ID(child.keys))
     val dbID = dbJson.map(_.ID(child.keys))
     println(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
@@ -124,11 +125,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends Ugly
 
   private def getChild(dataJson:Json, field:JSONField, metadata:JSONMetadata, child:Child):Future[Seq[Json]] = {
     val query = createQuery(dataJson,child)
-
-    for {
-      data <- FormActions(metadata).extractSeq(query)
-    } yield data
-
+    FormActions(metadata).extractSeq(query).runFold(Seq[Json]())(_ ++ Seq(_))
   }
 
   private def expandJson(dataJson:Json):Future[Json] = {
@@ -152,14 +149,10 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database) extends Ugly
     Future.sequence(values).map(_.toMap.asJson)
   }
 
-  private def extractSeq(query:JSONQuery):Future[Seq[Json]] = {
-    for{
-      data <- EntityActionsRegistry.tableActions(metadata.entity).getEntity(query)
-      expandedData <- Future.sequence(data.map(expandJson))
-    } yield expandedData
-  }.recover{ case t =>
-    t.printStackTrace()
-    Seq()
+  private def extractSeq(query:JSONQuery):Source[Json,NotUsed] = {
+    Source
+      .fromPublisher(EntityActionsRegistry.tableActions(metadata.entity).getEntityStreamed(query))
+      .flatMapConcat( json => Source.fromFuture(expandJson(json)))
   }
 
 }

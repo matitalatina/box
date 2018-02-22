@@ -1,5 +1,6 @@
 package ch.wsl.box.rest.logic
 
+import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
@@ -19,7 +20,7 @@ import io.circe.syntax._
   *
   * mapping from form specs in box schema into JSONForm
   */
-case class JSONFormMetadataFactory(implicit db:Database) {
+case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer) {
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Form.table.result
   }.map{_.map(_.name)}

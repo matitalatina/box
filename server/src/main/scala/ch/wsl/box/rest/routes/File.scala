@@ -48,6 +48,13 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
 
   def route:Route = {
     pathPrefix(field) {
+      pathPrefix("generate-thumbnail") { // /api/v1/file/document.b_document/generate-thumbnail/document_id::35/document.b_thumbnail
+        path(Segment) { originField => //
+          path(Segment) { idstr =>
+            complete("")
+          }
+        }
+      } ~
       path(Segment) { idstr =>
         println(s"Parsing File'JSONID: $idstr")
         val id = JSONID.fromString(idstr)

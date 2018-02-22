@@ -1,42 +1,27 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.ContentDispositionTypes
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper}
 import ch.wsl.box.rest.boxentities.Conf
 import ch.wsl.box.rest.utils.BoxSession
-import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
-import com.softwaremill.session._
-import BoxSession._
-import akka.actor.ActorSystem
 import ch.wsl.box.model.shared.LoginRequest
 
 import scala.util.Success
 /**
   * Created by andreaminetti on 15/03/16.
   */
-trait
-Root {
+trait Root extends enablers.Sessions {
 
   implicit val materializer:Materializer
   implicit val executionContext:ExecutionContext
 
-
-
-  val sessionConfig = SessionConfig.fromConfig()
-  implicit val sessionManager = new SessionManager[BoxSession](sessionConfig)
-  implicit val refreshTokenStorage = new InMemoryRefreshTokenStorage[BoxSession] {
-    override def log(msg: String): Unit = {}
-  }
-
-  def boxSetSession(v: BoxSession) = setSession(oneOff, usingCookies, v)
 
 
   val route:Route = {
@@ -130,7 +115,7 @@ Root {
               pathPrefix("form") {
                 pathPrefix(Segment) { lang =>
                   pathPrefix(Segment) { name =>
-                    Form(name, lang)
+                    Form(name, lang).route
                   }
                 }
               }

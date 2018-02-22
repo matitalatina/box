@@ -187,8 +187,8 @@ trait UglyDBFilters extends DbFilters {
     println("Executing like on" + col.toString)
 
     col.`type` match {
-          case "String" => c.asInstanceOf[Rep[String]] like v.asInstanceOf[String]
-          case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] like v.asInstanceOf[String]
+          case "String" => c.asInstanceOf[Rep[String]].toLowerCase like v.asInstanceOf[String].toLowerCase
+          case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]].toLowerCase like v.asInstanceOf[String].toLowerCase
           case _ => {
             println("Type mapping for: " + col.`type` + " not found")
             None

@@ -1,5 +1,6 @@
 package ch.wsl.box.rest.logic
 
+import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.utils.Auth
@@ -25,7 +26,7 @@ object JSONMetadataFactory {
     tableFieldTitles.as[Option[String]]("default").getOrElse("name")
   }
 
-  def of(table:String,lang:String)(implicit db:Database):Future[JSONMetadata] = {
+  def of(table:String,lang:String)(implicit db:Database, mat:Materializer):Future[JSONMetadata] = {
 
     val schema = new PgInformationSchema(table, db)
 

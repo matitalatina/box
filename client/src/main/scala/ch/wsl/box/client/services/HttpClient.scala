@@ -37,7 +37,6 @@ case class HttpClient(endpoint:String) {
     val promise = Promise[Response[T]]()
 
     xhr.open(method,endpoint+url,false)
-    xhr.setRequestHeader("Authorization",Session.authToken())
     if(json) {
       xhr.setRequestHeader("Content-Type", "application/json")
     }
@@ -46,7 +45,7 @@ case class HttpClient(endpoint:String) {
     }
     xhr.onload = { (e: dom.Event) =>
       if (xhr.status == 200) {
-        if(xhr.getResponseHeader("Content-Type").contains("text/plain")) {
+        if(xhr.getResponseHeader("Content-Type").contains("text")) {
           promise.success(Right(xhr.responseText.asInstanceOf[T]))
 
         }else if(xhr.getResponseHeader("Content-Type").contains("application/octet-stream")) {

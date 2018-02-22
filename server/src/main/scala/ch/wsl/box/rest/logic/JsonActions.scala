@@ -1,8 +1,11 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.model.shared.{JSONCount, JSONID, JSONQuery, IDs}
+import akka.stream.Materializer
+import akka.stream.scaladsl.Source
+import ch.wsl.box.model.shared.{IDs, JSONCount, JSONID, JSONQuery}
 import io.circe._
 import io.circe.syntax._
+import slick.basic.DatabasePublisher
 import slick.driver.PostgresDriver
 import slick.lifted.TableQuery
 import slick.driver.PostgresDriver.api._
@@ -15,13 +18,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 
 trait EntityJsonViewActions {
-  def getEntity(query: JSONQuery=JSONQuery.empty)(implicit db: Database): Future[Seq[Json]]
+  def getEntity(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): Future[Seq[Json]] = Source.fromPublisher(getEntityStreamed(query)).runFold(Seq[Json]())(_ ++ Seq(_))
+  def getEntityStreamed(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): DatabasePublisher[Json]
 
   def getById(id: JSONID=JSONID.empty)(implicit db: Database): Future[Option[Json]]
 
   def count()(implicit db: Database): Future[JSONCount]
 
-  def ids(query: JSONQuery)(implicit db: Database): Future[IDs]
+  def ids(query: JSONQuery)(implicit db: Database, mat:Materializer): Future[IDs]
 }
 
 trait EntityJsonTableActions extends EntityJsonViewActions {
@@ -36,7 +40,7 @@ case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
 
   val utils = new DbActions[T,M](table)
 
-  override def getEntity(query: JSONQuery=JSONQuery.empty)(implicit db:Database): Future[Seq[Json]] = utils.find(query).map(_.data.toSeq.map(_.asJson))
+  override def getEntityStreamed(query: JSONQuery=JSONQuery.empty)(implicit db:Database, mat:Materializer): DatabasePublisher[Json] = utils.findStreamed(query).mapResult(_.asJson)
 
   override def getById(id: JSONID=JSONID.empty)(implicit db:Database): Future[Option[Json]] = utils.getById(id).map(_.map(_.asJson))
 
@@ -49,7 +53,7 @@ case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
     }
   }
 
-  override def ids(query:JSONQuery)(implicit db:Database):Future[IDs] = {
+  override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = {
     for{
       data <- utils.find(query)
       keys <- JSONMetadataFactory.keysOf(table.baseTableRow.tableName)
@@ -77,13 +81,13 @@ case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
 
   lazy val jsonView = JsonViewActions[T,M](table)
 
-  override def getEntity(query: JSONQuery)(implicit db:Database): Future[Seq[Json]] = jsonView.getEntity(query)
+  override def getEntityStreamed(query: JSONQuery)(implicit db:Database, mat:Materializer):DatabasePublisher[Json] = jsonView.getEntityStreamed(query)
 
   override def getById(id: JSONID)(implicit db:Database): Future[Option[Json]] = jsonView.getById(id)
 
   override def count()(implicit db:Database) = jsonView.count()
 
-  override def ids(query:JSONQuery)(implicit db:Database):Future[IDs] = jsonView.ids(query)
+  override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = jsonView.ids(query)
 
 
   override def update(id:JSONID, json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Json] = {

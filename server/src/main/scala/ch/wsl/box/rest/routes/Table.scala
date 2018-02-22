@@ -1,13 +1,18 @@
 package ch.wsl.box.rest.routes
 
-import akka.http.scaladsl.marshalling.ToResponseMarshaller
+import akka.http.scaladsl.common.EntityStreamingSupport
+import akka.http.scaladsl.marshalling.{Marshaller, Marshalling, ToResponseMarshaller}
+import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{JSONCount, JSONID, JSONQuery, JSONData}
+import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
+import ch.wsl.box.shared.utils.CSV
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
 
@@ -20,11 +25,11 @@ import scala.util.{Failure, Success}
 
 object Table {
 
-
-
   var tables = Set[String]()
 
-  def apply[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])
+}
+
+case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])
                                                             (implicit
                                                              mat:Materializer,
                                                              unmarshaller: FromRequestUnmarshaller[M],
@@ -32,20 +37,26 @@ object Table {
                                                              seqmarshaller: ToResponseMarshaller[Seq[M]],
                                                              jsonmarshaller:ToResponseMarshaller[JSONData[M]],
                                                              db:Database,
-                                                             ec: ExecutionContext):Route = {
+                                                             ec: ExecutionContext) extends enablers.CSVDownload {
 
 //    println(s"adding table: $name" )
-    tables = Set(name) ++ tables
+    Table.tables = Set(name) ++ Table.tables
 
     val utils = new DbActions[T,M](table)
     import JSONSupport._
     import akka.http.scaladsl.model._
     import akka.http.scaladsl.server.Directives._
     import io.circe.generic.auto._
+    import io.circe.syntax._
+    import io.circe.parser._
     import ch.wsl.box.shared.utils.Formatters._
     import ch.wsl.box.model.shared.EntityKind
+    import JSONData._
 
-    pathPrefix(name) {
+
+
+
+  def route:Route = pathPrefix(name) {
         pathPrefix("id") {
           path(Segment) { id =>
             get {
@@ -116,12 +127,23 @@ object Table {
         }
       } ~
       path("csv") {           //all values in csv format according to JSONQuery
-        post {
-          entity(as[JSONQuery]) { query =>
-            println("csv")
-            complete(utils.find(query).map(x => HttpEntity(ContentTypes.`text/plain(UTF-8)`,x.csv)))    //wrap to specify return type
+          post {
+            entity(as[JSONQuery]) { query =>
+              println("csv")
+              complete(Source.fromPublisher(utils.findStreamed(query)))
+            }
+          } ~
+          respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
+            get {
+              parameters('q) { q =>
+                val query = parse(q).right.get.as[JSONQuery].right.get
+                val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en").map{ metadata =>
+                  CSV.row(metadata.fields.map(_.name))
+                }).concat(Source.fromPublisher(utils.findStreamed(query)).map(x => CSV.row(x.values())))
+                complete(csv)
+              }
+            }
           }
-        }
       } ~
       pathEnd{      //if nothing is specified  return the first 50 rows in JSON format
         get {
@@ -140,6 +162,4 @@ object Table {
         }
       }
     }
-  }
-
 }

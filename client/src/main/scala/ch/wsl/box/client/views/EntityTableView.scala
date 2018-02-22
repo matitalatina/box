@@ -7,7 +7,9 @@ import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.{Conf, Labels, Session}
 import ch.wsl.box.client.views.components.TableFieldsRenderer
 import ch.wsl.box.model.shared._
-import io.circe.Json
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
 import io.udash._
 import io.udash.bootstrap.table.UdashTable
 import io.udash.properties.single.Property
@@ -129,21 +131,27 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     Session.setIDs(ids)
   }
 
-  def reloadRows(page:Int) = {
-    println("reloading rows")
+
+  private def query():JSONQuery = {
     val fieldQueries = model.subProp(_.fieldQueries).get
     val sort = fieldQueries.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.name, s.sort)).toList
     val filter = fieldQueries.filter(_.filter != "").map(f => JSONQueryFilter(f.field.name,Some(f.filterType),f.filter)).toList
-    val query = JSONQuery(filter, sort, Conf.pageLength, page)
+    JSONQuery(filter, sort, None)
+  }
+
+  def reloadRows(page:Int) = {
+    println("reloading rows")
+
+    val q = query().copy(paging = Some(JSONQueryPaging(Conf.pageLength,page)))
 
     for {
-      csv <- REST.csv(model.subProp(_.kind).get,Session.lang(),model.subProp(_.name).get,query)
-      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
+      csv <- REST.csv(model.subProp(_.kind).get,Session.lang(),model.subProp(_.name).get,q)
+      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,q)
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
       model.subProp(_.ids).set(ids)
       model.subProp(_.pages).set(pageCount(ids))
-      saveIds(ids,query)
+      saveIds(ids,q)
     }
 
   }
@@ -209,6 +217,12 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     if(model.subProp(_.ids.currentPage).get > 1) {
       reloadRows(model.subProp(_.ids.currentPage).get - 1)
     }
+  }
+
+  def downloadCSV() = {
+    query().asJson.toString()
+    val kind = EntityKind(model.subProp(_.kind).get).entityOrForm
+    dom.window.open(s"/api/v1/$kind/${Session.lang()}/${model.subProp(_.name).get}/csv?q=${query().asJson.toString()}")
   }
 }
 
@@ -327,6 +341,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           }
         ).render,
         pagination.render,
+        button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),"Download CSV"),
         showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render }
       )
     )
