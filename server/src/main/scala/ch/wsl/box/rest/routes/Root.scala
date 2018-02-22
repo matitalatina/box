@@ -35,92 +35,96 @@ trait Root extends enablers.Sessions {
 
     //Serving UI
     UI.clientFiles ~
-      //Serving REST-API
-      pathPrefix("api" / "v1") {
-        //version 1
-        //cors() {
-        // enable cross domain usage
-        //          options {
-        //            complete(StatusCodes.OK)
-        //          } ~
-        pathPrefix("labels") {
-          path(Segment) { lang =>
-            get {
-              complete(LangHelper(lang).translationTable)
-            }
-          }
-        } ~
-          path("conf") {
-            get {
-              complete(Auth.boxDB.run {
-                Conf.table.result
-              }.map { result =>
-                result.map(x => x.key -> x.value).toMap
-              }
-              )
-            }
-          } ~
-          path("logout") {
-            get {
-              invalidateSession(oneOff, usingCookies) {
-                complete("ok")
+    pathPrefix("webjars") {
+      WebJarsSupport.webJars
+    } ~
+        //Serving REST-API
+        pathPrefix("api" / "v1") {
+          //version 1
+          //cors() {
+          // enable cross domain usage
+          //          options {
+          //            complete(StatusCodes.OK)
+          //          } ~
+          pathPrefix("labels") {
+            path(Segment) { lang =>
+              get {
+                complete(LangHelper(lang).translationTable)
               }
             }
           } ~
-          path("login") {
-            post {
-              entity(as[LoginRequest]) { request =>
-                val usernamePassword = BoxSession.fromLogin(request)
-                onComplete(usernamePassword.userProfile.check) {
-                  case Success(true) => boxSetSession(usernamePassword) {
-                    complete("ok")
-                  }
-                  case _ => complete(StatusCodes.Unauthorized, "nok")
+            path("conf") {
+              get {
+                complete(Auth.boxDB.run {
+                  Conf.table.result
+                }.map { result =>
+                  result.map(x => x.key -> x.value).toMap
                 }
+                )
               }
-            }
-          } ~
-          touchRequiredSession(oneOff, usingCookiesOrHeaders) { session =>
-            implicit val db = session.userProfile.db
-
-            pathPrefix("file") {
-              FileRoutes.route
             } ~
-              pathPrefix("entity") {
-                pathPrefix(Segment) { lang =>
-                  GeneratedRoutes()
+            path("logout") {
+              get {
+                invalidateSession(oneOff, usingCookies) {
+                  complete("ok")
                 }
-              } ~
-              path("entities") {
-                get {
-                  val alltables = Table.tables ++ View.views
-                  complete(alltables.toSeq.sorted)
-                }
-              } ~
-              path("tables") {
-                get {
-                  complete(Table.tables.toSeq.sorted)
-                }
-              } ~
-              path("views") {
-                get {
-                  complete(View.views.toSeq.sorted)
-                }
-              } ~
-              path("forms") {
-                get {
-                  complete(JSONFormMetadataFactory().list)
-                }
-              } ~
-              pathPrefix("form") {
-                pathPrefix(Segment) { lang =>
-                  pathPrefix(Segment) { name =>
-                    Form(name, lang).route
+              }
+            } ~
+            path("login") {
+              post {
+                entity(as[LoginRequest]) { request =>
+                  val usernamePassword = BoxSession.fromLogin(request)
+                  onComplete(usernamePassword.userProfile.check) {
+                    case Success(true) => boxSetSession(usernamePassword) {
+                      complete("ok")
+                    }
+                    case _ => complete(StatusCodes.Unauthorized, "nok")
                   }
                 }
               }
-          }
-      }
+            } ~
+            touchRequiredSession(oneOff, usingCookiesOrHeaders) { session =>
+              implicit val db = session.userProfile.db
+
+              pathPrefix("file") {
+                FileRoutes.route
+              } ~
+                pathPrefix("entity") {
+                  pathPrefix(Segment) { lang =>
+                    GeneratedRoutes()
+                  }
+                } ~
+                path("entities") {
+                  get {
+                    val alltables = Table.tables ++ View.views
+                    complete(alltables.toSeq.sorted)
+                  }
+                } ~
+                path("tables") {
+                  get {
+                    complete(Table.tables.toSeq.sorted)
+                  }
+                } ~
+                path("views") {
+                  get {
+                    complete(View.views.toSeq.sorted)
+                  }
+                } ~
+                path("forms") {
+                  get {
+                    complete(JSONFormMetadataFactory().list)
+                  }
+                } ~
+                pathPrefix("form") {
+                  pathPrefix(Segment) { lang =>
+                    pathPrefix(Segment) { name =>
+                      Form(name, lang).route
+                    }
+                  }
+                }
+            }
+        }
+    }
 //        ~
 //              touchRequiredSession {  userProfile =>
 //              implicit val boxdb = userProfile.db
@@ -133,7 +137,6 @@ trait Root extends enablers.Sessions {
 //            }
 //        }
       //}
-  }
 }
 
 

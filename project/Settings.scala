@@ -112,7 +112,8 @@ object Settings {
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test",
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka % "test",
-    "com.typesafe.akka"        %% "akka-http-testkit" % versions.akkaHttp % "test"
+    "com.typesafe.akka"        %% "akka-http-testkit" % versions.akkaHttp % "test",
+    "org.webjars" % "bootstrap" % "3.3.7"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

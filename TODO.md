@@ -1,7 +1,6 @@
 TODO
 ====
 
-1. add CSV download
 1. on session expired go to login & save actual page
 1. Reduced interface for users, conf object for customization
 1. thumbnails of images/pdf

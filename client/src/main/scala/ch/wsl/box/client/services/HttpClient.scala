@@ -60,9 +60,9 @@ case class HttpClient(endpoint:String) {
             case Right(result) => promise.success(Right(result))
           }
         }
-      } else if (xhr.status == 401) {
+      } else if (xhr.status == 401 || xhr.status == 403) {
         println("Not authorized")
-        Session.logout()
+        Session.logoutAndSaveState()
         promise.failure(new Exception("HTTP status" + xhr.status))
       } else {
         promise.success(Left(manageError(xhr)))
@@ -72,7 +72,13 @@ case class HttpClient(endpoint:String) {
 
 
     xhr.onerror = { (e: dom.Event) =>
-      promise.success(Left(manageError(xhr)))
+      if (xhr.status == 401 || xhr.status == 403) {
+        println("Not authorized")
+        Session.logoutAndSaveState()
+        promise.failure(new Exception("HTTP status" + xhr.status))
+      } else {
+        promise.success(Left(manageError(xhr)))
+      }
     }
 
     send(xhr)

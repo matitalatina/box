@@ -1,7 +1,7 @@
 package ch.wsl.box.client.utils
 
 import ch.wsl.box.client.services.REST
-import ch.wsl.box.client.{IndexState, LoginState}
+import ch.wsl.box.client.{Context, IndexState, LoginState}
 import org.scalajs.dom
 import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
 
@@ -22,9 +22,9 @@ object Session {
   final val QUERY = "query"
   final val IDS = "ids"
   final val USER = "user"
-  final val AUTH_TOKEN = "auth_token"
   final val LANG = "lang"
   final val LABELS = "labels"
+  final val STATE = "state"
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
     println(s"Setting $key")
@@ -43,36 +43,39 @@ object Session {
     Try(dom.window.sessionStorage.getItem(key).size > 0).isSuccess
   }
 
-  import Base64._
-  private def basicAuthToken(username: String, password: String):String = "Basic " + Base64.Encoder((username + ":" + password).getBytes).toBase64
-
   def login(username:String,password:String):Future[Boolean] = {
     dom.window.sessionStorage.setItem(USER,username)
-    //dom.window.sessionStorage.setItem(AUTH_TOKEN,basicAuthToken(username,password))
     REST.login(LoginRequest(username,password)).map{ result =>
-      io.udash.routing.WindowUrlChangeProvider.changeUrl(IndexState.url)
-      //dom.window.location.reload()
+      if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined) {
+        val state = dom.window.sessionStorage.getItem(STATE)
+        io.udash.routing.WindowUrlChangeProvider.changeUrl(state)
+        dom.window.sessionStorage.removeItem(STATE)
+      } else {
+        io.udash.routing.WindowUrlChangeProvider.changeUrl(IndexState.url)
+      }
+      dom.window.location.reload()
       true
     }.recover{ case t =>
       dom.window.sessionStorage.removeItem(USER)
-      //dom.window.sessionStorage.removeItem(AUTH_TOKEN)
       t.printStackTrace()
       false
     }
   }
 
+
+  def logoutAndSaveState() = {
+    dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url)
+    logout()
+  }
+
   def logout() = {
     dom.window.sessionStorage.removeItem(USER)
     REST.logout().map{ result =>
-      //dom.window.sessionStorage.removeItem(AUTH_TOKEN)
       io.udash.routing.WindowUrlChangeProvider.changeUrl(LoginState.url)
-      dom.window.location.reload()
     }
   }
 
   def isLogged() = isSet(USER)
-
-  def authToken() = "" //dom.window.sessionStorage.getItem(AUTH_TOKEN)
 
   def getQuery():Option[JSONQuery] = get[JSONQuery](QUERY)
   def setQuery(query: JSONQuery) = set(QUERY,query)
