@@ -1,5 +1,6 @@
 package ch.wsl.box.client.views.components
 
+import ch.wsl.box.client.utils.UI
 import io.udash.properties.model.ModelProperty
 
 import scalatags.JsDom.all._
@@ -12,23 +13,24 @@ object Debug {
   import ch.wsl.box.client.Context._
 
   def apply[T](model: Property[T], name:String ="")(implicit enc:io.circe.Encoder[T]) = {
-    val show = Property{false}
+    val show = Property {
+      false
+    }
 
-    val out = model.transform{ m =>
+    val out = model.transform { m =>
       m.asJson.spaces2
     }
-    div(
-      a(""),
-      produce(show) { s =>
-        s match {
-          case true => div(
-            a("Hide debug " + name,onclick :+= ((e:Event) => show.set(false))),
-            pre(bind(out))
-          ).render
-          case false => a("Show debug " + name,onclick :+= ((e:Event) => show.set(true))).render
+    if (UI.debug) {
+      div(
+        a(""),
+        produce(show) {
+            case true => div(
+              a("Hide debug " + name, onclick :+= ((e: Event) => show.set(false))),
+              pre(bind(out))
+            ).render
+            case false => a("Show debug " + name, onclick :+= ((e: Event) => show.set(true))).render
         }
-
-      }
-    )
+      )
+    } else frag()
   }
 }

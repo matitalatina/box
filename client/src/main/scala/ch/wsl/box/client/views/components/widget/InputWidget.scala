@@ -20,7 +20,7 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
     def withLabel = hasLabel && labelString.exists(_.length > 0)
 
-    div(BootstrapCol.md(12),GlobalStyles.noPadding,
+    div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
       if(withLabel) label(labelString) else {},
       if(withLabel)
         inputRenderer(inputRendererDefaultModifiers++modifiers)

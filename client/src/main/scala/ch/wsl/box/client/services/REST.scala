@@ -53,6 +53,7 @@ object REST {
   def logout() = client.get[String]("/logout")
   def labels(lang:String):Future[Map[String,String]] = client.get[Map[String,String]](s"/labels/$lang")
   def conf():Future[Map[String,String]] = client.get[Map[String,String]](s"/conf")
-  
+  def ui():Future[Map[String,String]] = client.get[Map[String,String]](s"/ui")
+
 
 }

@@ -38,6 +38,9 @@ object StyleConstants extends StyleSheet.Inline{
     val Yellow = c"#ffd600"
 
     val Cyan = c"#eef4f7"
+
+    val wsl = c"#006268"
+    val wslLink = c"#fbf0b2"
   }
 
   /**

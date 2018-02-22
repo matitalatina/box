@@ -90,9 +90,8 @@ import ch.wsl.box.client.Context._
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       modal.render,
       if(label.length >0) lab(label) else {},
-      span(
-        bind(selectedItem),br,
-        button(onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),"Change")
+      div(style := "text-align: right",
+        button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem))
       )
     )
   }

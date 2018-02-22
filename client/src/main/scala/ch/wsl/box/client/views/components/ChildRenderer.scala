@@ -1,9 +1,10 @@
 package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{Labels, Session}
 import ch.wsl.box.client.views.components.widget.{Widget, WidgetBinded}
-import ch.wsl.box.model.shared.{JSONMetadata, Child}
+import ch.wsl.box.model.shared.{Child, JSONMetadata}
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
@@ -13,6 +14,7 @@ import org.scalajs.dom.Event
 import scala.concurrent.Future
 import scala.util.Random
 import scalatags.JsDom.all._
+import scalacss.ScalatagsCss._
 
 /**
   * Created by andre on 6/1/2017.
@@ -115,24 +117,27 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
         case None => p("child not found")
         case Some(f) => {
 
-          div(BootstrapStyles.Panel.panel)(
-            div(BootstrapStyles.Panel.panelBody, BootstrapStyles.Panel.panelDefault)(
-              h4(f.name),
+          div()(
+              label(f.name),
               produce(entitySize) { size =>
                 cleanSubwidget()
                 for {i <- 0 until size} yield {
                   val subResults = entity.transform(splitJsonFields(f, i), mergeJsonFields(entity, f, i))
                   val widget = findOrAdd(f, subResults, children)
-                  div(
+                  div(GlobalStyles.subform,
                     widget.render(),
-                    a(onclick :+= ((e: Event) => removeItem(entity, entity.get(i), child)), Labels.subform.remove)
+                    div(
+                      BootstrapStyles.row,
+                      div(BootstrapCol.md(12),GlobalStyles.block,
+                        div(BootstrapStyles.pullRight,
+                          a(onclick :+= ((e: Event) => removeItem(entity, entity.get(i), child)), Labels.subform.remove)
+                        )
+                      )
+                    )
                   ).render
                 }
               },
-              br,
               a(onclick :+= ((e: Event) => addItem(entity, child, f)), Labels.subform.add)
-
-            )
           )
         }
       }

@@ -45,7 +45,9 @@ object Session {
 
   def login(username:String,password:String):Future[Boolean] = {
     dom.window.sessionStorage.setItem(USER,username)
-    REST.login(LoginRequest(username,password)).map{ result =>
+    val fut = for{
+      _ <- REST.login(LoginRequest(username,password))
+    } yield {
       if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined) {
         val state = dom.window.sessionStorage.getItem(STATE)
         io.udash.routing.WindowUrlChangeProvider.changeUrl(state)
@@ -55,7 +57,9 @@ object Session {
       }
       dom.window.location.reload()
       true
-    }.recover{ case t =>
+    }
+
+    fut.recover{ case t =>
       dom.window.sessionStorage.removeItem(USER)
       t.printStackTrace()
       false
@@ -64,7 +68,9 @@ object Session {
 
 
   def logoutAndSaveState() = {
-    dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url)
+    Try{
+      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url)
+    }
     logout()
   }
 

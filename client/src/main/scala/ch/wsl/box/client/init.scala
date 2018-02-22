@@ -1,12 +1,13 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.utils.{Conf, Labels, Session}
+import ch.wsl.box.client.utils.{Conf, Labels, Session, UI}
 import io.udash._
 import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.properties.PropertyCreator
 import io.udash.wrappers.jquery._
 import org.scalajs.dom.{Element, document}
 
+import scala.concurrent.Future
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
 
@@ -29,6 +30,7 @@ object Init extends JSApp with StrictLogging {
 
     for {
       _ <- Conf.load()
+      _ <- UI.load()
       _ <- Labels.load(Session.lang())
     } yield {
       jQ(document).ready((_: Element) => {

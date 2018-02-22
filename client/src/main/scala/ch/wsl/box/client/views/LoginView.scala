@@ -1,6 +1,7 @@
 package ch.wsl.box.client.views
 
 
+import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.{IndexState, LoginState}
 import ch.wsl.box.client.utils.{Labels, Session}
 import io.udash._
@@ -45,6 +46,7 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import scalacss.ScalatagsCss._
 
   override def renderChild(view: View): Unit = {}
 
@@ -57,17 +59,21 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
           )
         ),
         div(BootstrapStyles.Panel.panelBody)(
-          label(Labels.login.choseLang),br,
-          Labels.langs.map{ l =>
-            span(a(onclick :+= ((e:Event) => Session.setLang(l) ),l)," ")
-          },br,
-          strong(bind(model.subProp(_.message))),
-          br,
-          label(Labels.login.username),br,
-          TextInput(model.subProp(_.username)),br,
-          label(Labels.login.password),br,
-          PasswordInput(model.subProp(_.password)),br,br,
-          button(`type` := "submit",onclick :+= ((e:Event) => presenter.login()),Labels.login.button)
+          form(
+            onsubmit :+= ((e:Event) => {
+              e.preventDefault()
+              presenter.login()
+              false
+            }),
+            GlobalStyles.contentMinHeight,
+            strong(bind(model.subProp(_.message))),
+            br,
+            label(Labels.login.username),br,
+            TextInput(model.subProp(_.username)),br,
+            label(Labels.login.password),br,
+            PasswordInput(model.subProp(_.password)),br,br,
+            button(`type` := "submit",Labels.login.button)
+          )
         )
       )
     )

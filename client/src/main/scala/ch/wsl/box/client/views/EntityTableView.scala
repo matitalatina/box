@@ -6,11 +6,13 @@ import ch.wsl.box.client.services.{Enhancer, REST}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.{Conf, Labels, Session}
 import ch.wsl.box.client.views.components.TableFieldsRenderer
+import ch.wsl.box.model.shared.EntityKind.VIEW
 import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.udash._
+import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.table.UdashTable
 import io.udash.properties.single.Property
 import org.scalajs.dom
@@ -277,7 +279,17 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
 
     div(
-      h1(bind(model.subProp(_.name))),
+      h3(bind(model.subProp(_.name))),
+      div(BootstrapStyles.pullLeft) (
+        if (model.get.kind != VIEW.kind)
+          a(href := routes.add().url)(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
+        else
+          p()
+      ),
+      div(BootstrapStyles.pullRight) (
+        pagination.render
+      ),
+
       div(id := "box-table",
 //        pagination.render,
         UdashTable()(model.subSeq(_.rows))(
@@ -340,9 +352,9 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             ).render
           }
         ).render,
-        pagination.render,
         button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),"Download CSV"),
-        showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render }
+        showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render },
+        br,br
       )
     )
   }

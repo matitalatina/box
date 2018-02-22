@@ -3,12 +3,17 @@ package ch.wsl.box.client
 import ch.wsl.box.client.routes.Routes
 import io.udash._
 
+import scala.util.Try
+
 sealed abstract class RoutingState(override val parentState: RoutingState) extends State {
-  def url(implicit application: Application[RoutingState]): String = s"#${application.matchState(this).value}"
+  def url(implicit application: Application[RoutingState]): String = Try{application.matchState(this).value}.toOption match {
+    case Some(v) => s"#$v"
+    case None => ""
+  }
 }
 
 
-case object LoginState extends RoutingState(null)
+case object LoginState extends RoutingState(RootState)
 
 case object RootState extends RoutingState(null)
 

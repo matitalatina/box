@@ -3,7 +3,8 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, REST}
-import ch.wsl.box.client.utils.{Navigator, Labels, Navigation, Session}
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.client.utils.{Labels, Navigation, Navigator, Session}
 import ch.wsl.box.client.views.components.widget.Widget
 import ch.wsl.box.client.views.components.{Debug, JSONMetadataRenderer}
 import ch.wsl.box.model.shared._
@@ -17,6 +18,7 @@ import org.scalajs.dom.{Element, Event}
 
 import scala.concurrent.Future
 import scalatags.JsDom
+import scalacss.ScalatagsCss._
 
 
 /**
@@ -212,7 +214,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
 
     div(
-      h1(
+      h3(
+        GlobalStyles.noMargin,
         bind(model.subProp(_.name)),
         showIf(model.subProp(_.loading)) {
           small(" - " + Labels.navigation.loading).render
@@ -223,14 +226,33 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         }
 
       ),
-      div(
+      div(BootstrapStyles.pullLeft) (
         produce(model.subProp(_.name)) { m =>
           div(
-            a(href := Routes(model.subProp(_.kind).get, m).entity(m).url)(Labels.entities.table + " " + m)
+            a(GlobalStyles.boxButton,href := Routes(model.subProp(_.kind).get, m).add().url)(Labels.entities.`new` + " ", bind(model.subProp(_.name)))," ",
+            a(GlobalStyles.boxButton,href := Routes(model.subProp(_.kind).get, m).entity(m).url)(Labels.entities.table + " " + m),br,
+            //save and stay on same record
+            a(
+              GlobalStyles.boxButton,
+              onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).edit(model.get.id.getOrElse(""))), true)
+            )(Labels.form.save)," ",
+            //save and go to table view
+            a(
+              GlobalStyles.boxButton,
+              onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).entity()), true)
+            )(Labels.form.save_table)," ",
+            //save and go insert new record
+            a(
+              GlobalStyles.boxButton,
+              onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).add()), true)
+            )(Labels.form.save_add)
           ).render
         }
       ),
-      recordNavigation,
+      div(BootstrapStyles.pullRight) (
+          recordNavigation
+      ),
+      div(BootstrapStyles.Visibility.clearfix),
       produce(model.subProp(_.error)){ error =>
         div(
           if(error.length > 0) {
@@ -240,10 +262,9 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           }
         ).render
       },
-      br,
       hr,
       produce(model.subProp(_.metadata)){ form =>
-        div(
+        div(BootstrapCol.md(12),GlobalStyles.fullHeightMax,
           form match {
             case None => p("Loading form")
             case Some(f) => {
@@ -251,22 +272,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
             }
           }
         ).render
-      },
-      //save and stay on same record
-      button(
-        cls := "primary",
-        onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).edit(model.get.id.getOrElse(""))), true)
-      )(Labels.form.save),br,
-      //save and go to table view
-      button(
-        cls := "primary",
-        onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).entity()), true)
-      )(Labels.form.save_table),br,
-      //save and go insert new record
-      button(
-        cls := "primary",
-        onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).add()), true)
-      )(Labels.form.save_add),br,br,
+      },br,br,
 
       Debug(model.subProp(_.data), "data"),
       Debug(model.subProp(_.metadata), "metadata")

@@ -12,25 +12,13 @@ object FooterStyles extends StyleSheet.Inline {
 
   val footer = style(
     borderTop(solid,1 px,black),
-    height(StyleConstants.Sizes.FooterHeight px),
     fontSize(1.2 rem),
-    color.black,
-
+    color.white,
+    padding(15 px),
     MediaQueries.phone(
       style(
         height.auto,
         padding(2 rem, `0`)
-      )
-    )
-  )
-
-  val footerInner = style(
-    StyleUtils.relativeMiddle,
-
-    MediaQueries.phone(
-      style(
-        top.auto,
-        transform := "none"
       )
     )
   )

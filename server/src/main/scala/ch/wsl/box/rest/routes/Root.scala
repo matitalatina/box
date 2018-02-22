@@ -3,8 +3,8 @@ package ch.wsl.box.rest.routes
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
-import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper}
-import ch.wsl.box.rest.boxentities.Conf
+import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper, UIProvider}
+import ch.wsl.box.rest.boxentities.{Conf, UITable}
 import ch.wsl.box.rest.utils.BoxSession
 import slick.jdbc.PostgresProfile.api._
 
@@ -83,8 +83,20 @@ trait Root extends enablers.Sessions {
                 }
               }
             } ~
+            path("ui") {
+              get {
+                optionalSession(oneOff, usingCookiesOrHeaders) {
+                  case None => complete(UIProvider.forAccessLevel(UIProvider.NOT_LOGGED_IN))
+                  case Some(session) => complete(for {
+                    accessLevel <- session.userProfile.accessLevel
+                    ui <- UIProvider.forAccessLevel(accessLevel)
+                  } yield ui)
+                }
+              }
+            } ~
             touchRequiredSession(oneOff, usingCookiesOrHeaders) { session =>
               implicit val db = session.userProfile.db
+
 
               pathPrefix("file") {
                 FileRoutes.route

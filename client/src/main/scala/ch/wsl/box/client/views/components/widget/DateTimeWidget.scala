@@ -105,10 +105,7 @@ object DateTimeWidget {
       val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
       div(
         if (modelLabel.length > 0) label(modelLabel) else {},
-        div(BootstrapStyles.pullRight,
-          picker.render
-        ),
-        div(BootstrapStyles.Visibility.clearfix)
+        picker.render
       ).render
     }
   }
