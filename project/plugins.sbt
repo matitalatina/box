@@ -1,12 +1,12 @@
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.21")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.22")
 
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
+//addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
 
-addSbtPlugin("com.lihaoyi" % "workbench" % "0.3.0")
+//addSbtPlugin("com.lihaoyi" % "workbench" % "0.3.0")
 
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.3")
+//addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.10")
 
-libraryDependencies += "org.scala-js" %% "scalajs-env-selenium" % "0.1.3"   //for tests
+//libraryDependencies += "org.scala-js" %% "scalajs-env-selenium" % "0.1.3"   //for tests
 
 
 //uncomment to enable SASS compilation, you need sass

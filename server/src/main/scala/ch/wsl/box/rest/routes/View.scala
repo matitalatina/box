@@ -70,7 +70,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
           post {
             entity(as[JSONQuery]) { query =>
               complete {
-                EntityActionsRegistry.viewActions(name).ids(query)
+                EntityActionsRegistry().viewActions(name).ids(query)
               }
             }
           }

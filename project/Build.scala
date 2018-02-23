@@ -27,6 +27,9 @@ object Build extends sbt.Build {
       name := "server",
       version := Settings.version,
       scalaVersion := Settings.versions.scala,
+      //resolvers += "nightlies" at "https://scala-ci.typesafe.com/artifactory/scala-release-temp/",
+      //scalaVersion := "2.12.5-bin-2791989",
+      scalaBinaryVersion := "2.12",
       scalacOptions ++= Settings.scalacOptionsServer,
       libraryDependencies ++= Settings.jvmDependencies.value,
       resolvers += Resolver.jcenterRepo,
@@ -60,7 +63,7 @@ object Build extends sbt.Build {
       javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
       // use uTest framework for tests
       testFrameworks += new TestFramework("utest.runner.Framework"),
-      jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(org.scalajs.jsenv.selenium.Chrome()),
+      //jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(org.scalajs.jsenv.selenium.Chrome()),
       requiresDOM := true,
       // Compile tests to JS using fast-optimisation
       scalaJSStage in Test := FastOptStage,
@@ -114,7 +117,7 @@ object Build extends sbt.Build {
   lazy val root: Project = (project in file("."))
     .settings(
       serve := {
-        (fastOptJS in Compile in client).toTask.value
+        //(fastOptJS in Compile in client).toTask.value
         (run in Compile in server).toTask("").value
       },
       cleanAll := {

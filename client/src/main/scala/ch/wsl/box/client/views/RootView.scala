@@ -13,11 +13,10 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.Presenter
 
 import scalacss.ScalatagsCss._
-
+import ch.wsl.box.client.Context._
 
 case object RootViewPresenter extends ViewPresenter[RootState.type]{
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def create(): (View, Presenter[RootState.type]) = {
 
@@ -27,7 +26,6 @@ case object RootViewPresenter extends ViewPresenter[RootState.type]{
 
 class RootPresenter() extends Presenter[RootState.type] {
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override def handleState(state: RootState.type): Unit = {
   }

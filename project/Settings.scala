@@ -35,14 +35,13 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.12.3"
+    val scala = "2.12.4"
     val ficus = "1.4.0"
 
     //HTTP actors
-    val akka = "2.4.17"
-    val akkaHttp = "10.0.3"
+    val akka = "2.5.9"
+    val akkaHttp = "10.1.0-RC2"
     val akkaHttpJson = "1.12.0"
-    val akkaCors = "0.1.11"
 
     //Testing
     val specs2 = "3.8.6"
@@ -99,7 +98,7 @@ object Settings {
     "com.typesafe.akka"        %% "akka-http-core"   % versions.akkaHttp,
     "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
     "com.typesafe.akka"        %% "akka-actor"       % versions.akka,
-    "ch.megard"                %% "akka-http-cors"   % versions.akkaCors,
+    "com.typesafe.akka"        %% "akka-stream"      % versions.akka,
     "com.softwaremill.akka-http-session" %% "core" % "0.5.3",
     "io.circe"                 %% "circe-core"       % versions.circe,
     "io.circe"                 %% "circe-generic"    % versions.circe,

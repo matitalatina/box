@@ -34,8 +34,7 @@ object EntityFormModel{
 
 object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
-
+  import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[EntityFormState]) = {
     val model = ModelProperty{EntityFormModel.empty}
     val presenter = EntityFormPresenter(model)

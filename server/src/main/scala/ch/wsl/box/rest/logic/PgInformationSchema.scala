@@ -5,15 +5,14 @@ import slick.driver.PostgresDriver
 import PostgresDriver.api._
 import net.ceedubs.ficus.Ficus._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import StringHelper._
 import slick.lifted.ShapedValue
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class PgInformationSchema(table:String, db:Database, pgSchema:String="public") {
+class PgInformationSchema(table:String, db:Database, pgSchema:String="public")(implicit ec:ExecutionContext) {
 
   private val FOREIGNKEY = "FOREIGN KEY"
   private val PRIMARYKEY = "PRIMARY KEY"

@@ -7,14 +7,13 @@ import slick.basic.DatabasePublisher
 import slick.jdbc.{ResultSetConcurrency, ResultSetType}
 import slick.lifted.{ColumnOrdered, TableQuery}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](entity:TableQuery[T]) extends UglyDBFilters {
+class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit ec:ExecutionContext) extends UglyDBFilters {
   import ch.wsl.box.model.Tables.profile.api._
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
@@ -57,7 +56,7 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
   def findStreamed(query:JSONQuery)(implicit db:Database): DatabasePublisher[M] = {
     val q = entity.where(query.filter).sort(query.sort)
     val qPaged = q.page(query.paging).result
-      .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 300) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
+      .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
       .transactionally
 
     db.stream(qPaged)
@@ -66,10 +65,11 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
 
   def find(query:JSONQuery)(implicit db:Database, mat: Materializer): Future[JSONData[M]] = {
 
-    val source = Source.fromPublisher(findStreamed(query))
-    val sink = Sink.fold[Seq[M], M](Seq())(_ ++ Seq(_))
+    val q = entity.where(query.filter).sort(query.sort)
+    val qPaged = q.page(query.paging).result
+
     for{
-      data <- source.runWith(sink)
+      data <- db.run(qPaged)
       count <- count(query)
     } yield {
       JSONData(data.toList,count)

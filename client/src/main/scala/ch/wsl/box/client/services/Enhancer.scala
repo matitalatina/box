@@ -15,7 +15,7 @@ object Enhancer {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
-  import _root_.scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+  import ch.wsl.box.client.Context._
 
   def fetchLookup(values:Seq[Json], field:JSONField, opts:JSONFieldLookup):JSONField = {
     val options:Map[String,String] = values.map{ value =>

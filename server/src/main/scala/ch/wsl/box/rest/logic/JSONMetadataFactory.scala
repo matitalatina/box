@@ -8,8 +8,7 @@ import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 
 object JSONMetadataFactory {
@@ -26,7 +25,7 @@ object JSONMetadataFactory {
     tableFieldTitles.as[Option[String]]("default").getOrElse("name")
   }
 
-  def of(table:String,lang:String)(implicit db:Database, mat:Materializer):Future[JSONMetadata] = {
+  def of(table:String,lang:String)(implicit db:Database, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
 
     val schema = new PgInformationSchema(table, db)
 
@@ -49,7 +48,7 @@ object JSONMetadataFactory {
             val value = fk.referencingKeys.head
 
             import ch.wsl.box.shared.utils.JsonUtils._
-            EntityActionsRegistry.tableActions(model).getEntity().map{ lookupData =>
+            EntityActionsRegistry().tableActions(model).getEntity().map{ lookupData =>
               val options = lookupData.map{ lookupRow =>
                 (lookupRow.get(value),lookupRow.get(text))
               }.toMap
@@ -87,7 +86,7 @@ object JSONMetadataFactory {
 
 
   }
-  def keysOf(table:String):Future[Seq[String]] = {
+  def keysOf(table:String)(implicit ec:ExecutionContext):Future[Seq[String]] = {
     println("Getting " + table + " keys")
     new PgInformationSchema(table,Auth.adminDB).pk.map { pk =>   //map to enter the future
       println(pk)
@@ -96,7 +95,7 @@ object JSONMetadataFactory {
 
   }
 
-  def isView(table:String):Future[Boolean] =
+  def isView(table:String)(implicit ec:ExecutionContext):Future[Boolean] =
     new PgInformationSchema(table,Auth.adminDB).pgTable.map(_.isView)  //map to enter the future
 
 

@@ -3,12 +3,13 @@ package ch.wsl.box.client.utils
 import ch.wsl.box.client.services.REST
 
 import scala.util.Try
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by andre on 6/8/2017.
   */
 object Labels {
+
+  import ch.wsl.box.client.Context._
 
   def langs = Seq("it","de","fr","en")
 

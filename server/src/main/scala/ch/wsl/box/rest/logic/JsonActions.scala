@@ -10,8 +10,7 @@ import slick.driver.PostgresDriver
 import slick.lifted.TableQuery
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created by andre on 5/19/2017.
@@ -36,7 +35,7 @@ trait EntityJsonTableActions extends EntityJsonViewActions {
   def insert(json: Json)(implicit db:Database):Future[Json]
 }
 
-case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M]) extends EntityJsonViewActions {
+case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJsonViewActions {
 
   val utils = new DbActions[T,M](table)
 
@@ -77,7 +76,7 @@ case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
 
 }
 
-case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M]) extends EntityJsonTableActions {
+case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJsonTableActions {
 
   lazy val jsonView = JsonViewActions[T,M](table)
 

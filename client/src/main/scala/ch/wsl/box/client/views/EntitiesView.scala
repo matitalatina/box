@@ -14,13 +14,12 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
-
+import ch.wsl.box.client.Context._
 
 case class Entities(list:Seq[String], currentEntity:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
 
 case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int) extends ViewPresenter[EntitiesState] {
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
   override def create(): (View, Presenter[EntitiesState]) = {
@@ -36,7 +35,6 @@ case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int
 
 class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[EntitiesState] {
 
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
   override def handleState(state: EntitiesState): Unit = {

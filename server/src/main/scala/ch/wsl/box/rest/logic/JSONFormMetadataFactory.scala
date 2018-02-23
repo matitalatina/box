@@ -9,8 +9,7 @@ import ch.wsl.box.rest.boxentities.{Field, Form}
 import ch.wsl.box.rest.utils.Auth
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -20,7 +19,7 @@ import io.circe.syntax._
   *
   * mapping from form specs in box schema into JSONForm
   */
-case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer) {
+case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:ExecutionContext) {
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Form.table.result
   }.map{_.map(_.name)}
@@ -144,7 +143,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer) {
         text = fieldI18n.lookupTextField.getOrElse(lang)
       } yield {
 
-        EntityActionsRegistry.tableActions(refEntity).getEntity().map{ lookupData =>   //JSONQuery.limit(100)
+        EntityActionsRegistry().tableActions(refEntity).getEntity().map{ lookupData =>   //JSONQuery.limit(100)
           val options = lookupData.map{ lookupRow =>
             (lookupRow.get(value),lookupRow.get(text))
           }.toMap

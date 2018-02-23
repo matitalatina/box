@@ -17,8 +17,7 @@ import org.scalajs.dom.Event
 case class LoginData(username:String,password:String,message:String)
 
 case object LoginViewPresenter extends ViewPresenter[LoginState.type] {
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
-
+  import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[LoginState.type]) = {
     val model = ModelProperty{
       LoginData("","","")

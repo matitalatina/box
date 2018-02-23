@@ -15,7 +15,7 @@ object REST {
 
   import io.circe.generic.auto._
   import ch.wsl.box.shared.utils.Formatters._
-  import scalajs.concurrent.JSExecutionContext.Implicits.queue
+  import ch.wsl.box.client.Context._
   import ch.wsl.box.model.shared.EntityKind._
 
   private def client = HttpClient("/api/v1")

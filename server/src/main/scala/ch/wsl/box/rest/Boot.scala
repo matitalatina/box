@@ -34,7 +34,7 @@ object Boot extends App with Root {
   // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
   val bindingFuture = Http().bindAndHandle(handleExceptions(BoxExceptionHandler()) {
     route
-  }, host, port)     //attache the root route
+  }, host, port)     //attach the root route
   println(s"Server online at http://localhost:8080/\nPress q to stop...")
   while(StdIn.readLine() != "q"){       //endless loop until q in sbt console is pressed
     println()

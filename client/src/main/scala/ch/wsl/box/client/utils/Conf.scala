@@ -2,13 +2,14 @@ package ch.wsl.box.client.utils
 
 import ch.wsl.box.client.services.REST
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.Try
 
 /**
   * Created by andre on 6/8/2017.
   */
 object Conf {
+
+  import ch.wsl.box.client.Context._
 
   private var conf:Map[String,String] = Map()
 

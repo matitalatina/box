@@ -102,7 +102,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
         post {
           entity(as[JSONQuery]) { query =>
             complete {
-              EntityActionsRegistry.tableActions(name).ids(query)
+              EntityActionsRegistry().tableActions(name).ids(query)
             }
           }
         }

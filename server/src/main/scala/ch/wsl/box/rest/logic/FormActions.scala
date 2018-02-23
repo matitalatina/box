@@ -14,8 +14,7 @@ import slick.basic.DatabasePublisher
 import slick.lifted.Query
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created by andre on 5/18/2017.
@@ -26,12 +25,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class ReferenceKey(localField:String,remoteField:String,value:String)
 case class Reference(association:Seq[ReferenceKey])
 
-case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Materializer) extends UglyDBFilters {
+case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
 
-  val actions = EntityActionsRegistry.tableActions(metadata.entity)
+  val actions = EntityActionsRegistry().tableActions(metadata.entity)
 
   val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
@@ -64,7 +63,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
     println(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
     dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
       println(s"Deleting child ${child.name}, with key: $idsToDelete")
-      EntityActionsRegistry.tableActions(child.entity).delete(idsToDelete)
+      EntityActionsRegistry().tableActions(child.entity).delete(idsToDelete)
     }
   }
 
@@ -151,7 +150,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
 
   private def extractSeq(query:JSONQuery):Source[Json,NotUsed] = {
     Source
-      .fromPublisher(EntityActionsRegistry.tableActions(metadata.entity).getEntityStreamed(query))
+      .fromPublisher(EntityActionsRegistry().tableActions(metadata.entity).getEntityStreamed(query))
       .flatMapConcat( json => Source.fromFuture(expandJson(json)))
   }
 

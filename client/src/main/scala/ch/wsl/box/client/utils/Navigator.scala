@@ -4,8 +4,7 @@ import ch.wsl.box.client.services.REST
 import ch.wsl.box.model.shared.{IDs, JSONQuery}
 
 import scala.concurrent.Future
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
-
+import ch.wsl.box.client.Context._
 
 /**
   * Created by andre on 5/24/2017.

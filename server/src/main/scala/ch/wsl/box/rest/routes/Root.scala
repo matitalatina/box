@@ -29,7 +29,6 @@ trait Root extends enablers.Sessions {
     import Directives._
     import ch.wsl.box.rest.utils.JSONSupport._
     import ch.wsl.box.rest.utils.Auth
-    import Auth.PostgresAuthenticator._
     import io.circe.generic.auto._
 
 

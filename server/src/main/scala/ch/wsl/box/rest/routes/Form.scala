@@ -103,7 +103,7 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
             complete {
               for{
                 f <- metadata
-                data <- EntityActionsRegistry.tableActions(f.entity).ids(query)
+                data <- EntityActionsRegistry().tableActions(f.entity).ids(query)
               } yield data
             }
           }
@@ -113,7 +113,7 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
         get {
           complete {
             metadata.map { f =>
-              EntityActionsRegistry.tableActions(f.entity).count()
+              EntityActionsRegistry().tableActions(f.entity).count()
             }
           }
         }

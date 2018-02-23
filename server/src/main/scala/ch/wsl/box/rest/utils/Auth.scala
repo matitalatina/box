@@ -11,7 +11,6 @@ import slick.driver.PostgresDriver.api._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by andreaminetti on 16/02/16.
@@ -19,6 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object Auth {
 
 
+  val executor = AsyncExecutor("public-executor",10,10,1000)
 
   val dbConf: Config = ConfigFactory.load().as[Config]("db")
   val dbPath = dbConf.as[String]("url")
@@ -35,12 +35,16 @@ object Auth {
   def adminDB = Database.forURL(s"$dbPath?currentSchema=$dbSchema",
     driver="org.postgresql.Driver",
     user=dbConf.as[String]("user"),
-    password=dbConf.as[String]("password"))
+    password=dbConf.as[String]("password"),
+    executor = executor
+  )
 
   def boxDB = Database.forURL(s"$boxDbPath?currentSchema=$boxDbSchema",
     driver="org.postgresql.Driver",
     user=boxDbConf.as[String]("user"),
-    password=boxDbConf.as[String]("password"))
+    password=boxDbConf.as[String]("password"),
+    executor = executor
+  )
 
 
   /**
@@ -52,15 +56,18 @@ object Auth {
 
 //    println(s"Connecting to DB $dbPath with $name")
 
+
       val db:Database = Database.forURL(s"$dbPath?currentSchema=$dbSchema",
         driver="org.postgresql.Driver",
         user=name,
-        password=password)
+        password=password,
+        executor = executor)
 
       val boxDb:Database = Database.forURL(s"$boxDbPath?currentSchema=$boxDbSchema",
       driver="org.postgresql.Driver",
       user=name,
-      password=password)
+      password=password,
+      executor = executor)
 
 
       UserProfile(name,db,boxDb)
@@ -70,37 +77,5 @@ object Auth {
 
   }
 
-  /**
-    * #Custom Authenticator
-    *
-    * It authenticate the users against PostgresSQL roles
-    *
-    */
-  object PostgresAuthenticator {
-
-    import SecurityDirectives._
-
-    def postgresBasicAuth: AuthenticationDirective[UserProfile] = authenticateOrRejectWithChallenge[BasicHttpCredentials, UserProfile] { cred =>
-
-      def fail() = AuthenticationResult.failWithChallenge(HttpChallenges.basic("Postgres user password"))
-
-      cred match {
-          case None => Future.successful(fail())
-        case Some(c) => {
-          val up = getUserProfile(c.username, c.password)
-            up.check.map{ u =>
-              if(u) {
-                AuthenticationResult.success(up)
-              } else fail()
-            }.recover { case t =>
-            fail()
-          }
-        }
-      }
-
-
-    }
-
-  }
 
 }

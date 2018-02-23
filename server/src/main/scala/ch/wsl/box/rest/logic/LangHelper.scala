@@ -4,14 +4,13 @@ import ch.wsl.box.rest.boxentities.Labels
 import ch.wsl.box.rest.utils.Auth
 import slick.jdbc.PostgresProfile.api._
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
   * Created by andre on 6/8/2017.
   */
-case class LangHelper(lang:String) {
+case class LangHelper(lang:String)(implicit ec:ExecutionContext) {
   def translationTable:Future[Map[String,String]] = {
     val query = for{
       label <- Labels.table if label.lang === lang
