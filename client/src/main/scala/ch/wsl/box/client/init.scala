@@ -1,10 +1,13 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.utils.{Labels, Session}
+import ch.wsl.box.client.utils.{Conf, Labels, Session, UI}
 import io.udash._
+import io.udash.bootstrap.datepicker.UdashDatePicker
+import io.udash.properties.PropertyCreator
 import io.udash.wrappers.jquery._
 import org.scalajs.dom.{Element, document}
 
+import scala.concurrent.Future
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
 
@@ -14,6 +17,9 @@ object Context {
   private val viewPresenterRegistry = new StatesToViewPresenterDef
 
   implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry, RootState)   //udash application
+
+  implicit val pc: PropertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]]
+  implicit val pcfr: PropertyCreator[Option[ch.wsl.box.model.shared.FileReference]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.FileReference]]
 }
 
 object Init extends JSApp with StrictLogging {
@@ -22,7 +28,11 @@ object Init extends JSApp with StrictLogging {
   @JSExport
   override def main(): Unit = {
 
-    Labels.loadLabels(Session.lang()).map{ _ =>
+    for {
+      _ <- Conf.load()
+      _ <- UI.load()
+      _ <- Labels.load(Session.lang())
+    } yield {
       jQ(document).ready((_: Element) => {
         val appRoot = jQ("#application").get(0)
         if (appRoot.isEmpty) {
@@ -37,6 +47,7 @@ object Init extends JSApp with StrictLogging {
           import ch.wsl.box.client.styles.partials.FooterStyles
           jQ(GlobalStyles.render[TypedTag[org.scalajs.dom.raw.HTMLStyleElement]].render).insertBefore(appRoot.get)
           jQ(FooterStyles.render[TypedTag[org.scalajs.dom.raw.HTMLStyleElement]].render).insertBefore(appRoot.get)
+          jQ(UdashDatePicker.loadBootstrapDatePickerStyles()).insertBefore(appRoot.get)
         }
       })
     }

@@ -1,7 +1,29 @@
 package ch.wsl.box.rest.logic
 
 import slick.driver.PostgresDriver.api._
+import StringHelper._
 
+case class PgTable(
+   table_schema:String,
+   table_name:String,
+   table_type:String,
+   is_insertable_into:String){
+
+  def isView = table_type == "VIEW"
+  def isTable = table_type == "BASE_TABLE"
+  def isInsertableInto = is_insertable_into == "YES"
+  def boxName = table_name.slickfy
+}
+
+class PgTables(tag: Tag) extends Table[PgTable](tag,  Some("information_schema"), "tables") {
+
+  def table_schema = column[String]("table_schema")
+  def table_name = column[String]("table_name")
+  def table_type = column[String]("table_type")
+  def is_insertable_into = column[String]("is_insertable_into")
+
+  def * = (table_schema, table_name, table_type, is_insertable_into) <> (PgTable.tupled, PgTable.unapply)
+}
 
 
 case class PgColumn(
@@ -15,7 +37,13 @@ case class PgColumn(
   table_name:String,
   table_schema:String,
   ordinal_position:Int
-)
+) {
+  def nullable = is_nullable == "YES"
+  def updatable = is_updatable == "YES"
+  def jsonType = JSONMetadataFactory.typesMapping(data_type)
+  def defaultWidget = JSONMetadataFactory.defaultWidgetMapping(data_type)
+  def boxName = column_name.slickfy
+}
 
 class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema"), "columns") {
 

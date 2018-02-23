@@ -23,11 +23,15 @@ object EnhancedTable {
 
     private def accessor(field:String):MethodSymbol = {
       try {
+
           rm.classSymbol(t.getClass).toType.members.collectFirst {
             case m: MethodSymbol if m.name.toString == field => m
           }.get
         } catch {
-          case e: Exception => throw new Exception("Field not found: " + field)
+          case e: Exception => {
+            println(rm.classSymbol(t.getClass).toType.members)
+            throw new Exception(s"Field not found:$field available fields: ${rm.classSymbol(t.getClass).toType.members} of table:${t.tableName}")
+          }
         }
       }
 

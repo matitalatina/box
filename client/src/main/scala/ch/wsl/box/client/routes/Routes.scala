@@ -1,6 +1,6 @@
 package ch.wsl.box.client.routes
 
-import ch.wsl.box.client.{ModelFormState, ModelTableState, RoutingState}
+import ch.wsl.box.client.{EntityFormState, EntityTableState, RoutingState}
 
 /**
   * Created by andre on 6/6/2017.
@@ -9,17 +9,17 @@ import ch.wsl.box.client.{ModelFormState, ModelTableState, RoutingState}
 trait Routes{
   def add():RoutingState
   def edit(id:String):RoutingState
-  def table():RoutingState
-  def table(modelName:String):RoutingState
+  def entity():RoutingState
+  def entity(name:String):RoutingState
 }
 
 object Routes {
 
-  def apply(kind:String,model:String) = new Routes{
-    def add() = ModelFormState(kind,model,None)
-    def edit(id:String) = ModelFormState(kind,model,Some(id))
-    def table() = ModelTableState(kind,model)
-    def table(modelName:String) = ModelTableState(kind,modelName)
+  def apply(kind:String, entityName:String) = new Routes{
+    def add() = EntityFormState(kind,entityName,None)
+    def edit(id:String) = EntityFormState(kind,entityName,Some(id))
+    def entity() = EntityTableState(kind,entityName)
+    def entity(name:String) = EntityTableState(kind,name)
   }
 
 }

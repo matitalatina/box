@@ -35,19 +35,18 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.11.8"
+    val scala = "2.12.4"
     val ficus = "1.4.0"
 
     //HTTP actors
-    val akka = "2.4.17"
-    val akkaHttp = "10.0.3"
+    val akka = "2.5.9"
+    val akkaHttp = "10.1.0-RC2"
     val akkaHttpJson = "1.12.0"
-    val akkaCors = "0.1.11"
 
     //Testing
     val specs2 = "3.8.6"
     val junit = "4.12"
-    val scalatest = "3.0.0"
+    val scalatest = "3.0.1"
     val selenium = "2.53.1"
 
     //logs
@@ -58,7 +57,7 @@ object Settings {
 
     //database
     val postgres = "9.4.1211"
-    val slick = "3.2.0-M2"
+    val slick = "3.2.1"
 
     //frontend
     val scalaCss = "0.5.3-RC1"
@@ -66,8 +65,8 @@ object Settings {
     //js
     val bootstrap =  "3.3.1-1"
 
-    val udash = "0.4.0"
-    val udashJQuery = "1.0.0"
+    val udash = "0.5.0"
+    val udashJQuery = "1.1.0"
 
 
   }
@@ -78,8 +77,6 @@ object Settings {
     */
   val sharedJVMJSDependencies = Def.setting(Seq(
     "io.udash"                 %%% "udash-core-shared" % versions.udash,
-    "io.udash"                 %%% "udash-rest-shared" % versions.udash,
-    "io.udash"                 %%% "udash-rpc-shared" % versions.udash,
     "io.circe" %%% "circe-core" % versions.circe,
     "io.circe" %%% "circe-generic" % versions.circe,
     "io.circe" %%% "circe-parser" % versions.circe
@@ -101,7 +98,8 @@ object Settings {
     "com.typesafe.akka"        %% "akka-http-core"   % versions.akkaHttp,
     "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
     "com.typesafe.akka"        %% "akka-actor"       % versions.akka,
-    "ch.megard"                %% "akka-http-cors"   % versions.akkaCors,
+    "com.typesafe.akka"        %% "akka-stream"      % versions.akka,
+    "com.softwaremill.akka-http-session" %% "core" % "0.5.3",
     "io.circe"                 %% "circe-core"       % versions.circe,
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,
@@ -109,10 +107,12 @@ object Settings {
     "io.udash"                 %% "udash-rpc-backend" % versions.udash,
     "org.webjars"              % "webjars-locator"   % "0.32",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
+    "org.scalatest"            %% "scalatest"        % versions.scalatest % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test",
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka % "test",
-    "com.typesafe.akka"        %% "akka-http-testkit" % versions.akkaHttp % "test"
+    "com.typesafe.akka"        %% "akka-http-testkit" % versions.akkaHttp % "test",
+    "org.webjars" % "bootstrap" % "3.3.7"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

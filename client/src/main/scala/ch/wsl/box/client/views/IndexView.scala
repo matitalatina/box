@@ -2,36 +2,61 @@ package ch.wsl.box.client.views
 
 import io.udash._
 import ch.wsl.box.client._
+import ch.wsl.box.client.services.REST
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.client.utils.{Session, UI}
+import ch.wsl.box.model.shared.{JSONQuery, JSONSort, Sort}
+import io.circe.Json
 
 import scalacss.ScalatagsCss._
+import Context._
+import ch.wsl.box.client.views.components.Debug
+import io.udash.bootstrap.BootstrapStyles
 
-object IndexViewPresenter extends DefaultViewPresenterFactory[IndexState.type](() => new IndexView)
+case class IndexViewModel(news:Seq[Json])
 
-class IndexView extends View {
+object IndexViewPresenter extends ViewPresenter[IndexState.type]{
+
+  val prop = ModelProperty{IndexViewModel(Seq())}
+
+  override def create() = (new IndexView(prop),new IndexPresenter(prop))
+}
+
+class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[IndexState.type] {
+  override def handleState(state: IndexState.type): Unit = {
+    for{
+      news <- REST.list("entity",Session.lang(),UI.newsTable.getOrElse("news"),JSONQuery(List(), List(JSONSort("news_id",Sort.DESC)),10,1))
+    } yield {
+      viewModel.set(IndexViewModel(news))
+    }
+  }
+}
+
+class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.circe.generic.auto._
+  import ch.wsl.box.shared.utils.JsonUtils._
+
 
   import org.scalajs.dom.File
-  val acceptMultipleFiles: Property[Boolean] = Property(false)
-  val selectedFiles: SeqProperty[File] = SeqProperty(Seq.empty)
-
-  val fileUploader = new FileUploader(new Url("/test"))
-
-  val input = FileInput("file", acceptMultipleFiles, selectedFiles)()
 
 
-  private val content = div(
-    h2("Postgres Box Client"),
-    input,
-    h4("Selected files"),
-    ul(
-      repeat(selectedFiles)(file => {
-        li(file.get.name).render
-      })
-    ),
-    button(onclick :+= ((e:Event) => fileUploader.upload(input)),"Send")
+  private val content = div(BootstrapStyles.row)(
+    div(raw(UI.info.getOrElse(""))),
+    if(UI.enableNews) {
+      div(h2("News"),
+        Debug(viewModel, "indexView"),
+        repeat(viewModel.subSeq(_.news)) { news =>
+          div(
+            div(news.get.get("news_id")),
+            div(pre(news.get.get(Session.lang()))),
+            br
+          ).render
+        }
+      )
+    } else div()
   )
 
 

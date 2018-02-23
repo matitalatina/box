@@ -5,6 +5,7 @@ package ch.wsl.box.model.shared
   */
 object WidgetsNames {
   val textinput = "textinput"
+  val textarea = "textarea"
   val datepicker = "datepicker"
   val timepicker = "timepicker"
   val datetimePicker = "datetimePicker"
@@ -12,4 +13,7 @@ object WidgetsNames {
   val checkbox = "checkbox"
   val hidden = "hidden"
   val nolabel = "nolabel"
+  val twoLines = "twoLines"
+  val popup = "popup"
+  val fullWidth = "fullWidth"
 }

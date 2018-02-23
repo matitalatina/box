@@ -1,19 +1,30 @@
 package ch.wsl.box.model.shared
 
+//import ch.wsl.box.model.shared.JSONQuery.empty
+
 /**
-  * Created by andreaminetti on 24/04/15.
   *
-  * @param count how many rows
-  * @param page page n of count rows
+  * @param paging paging information
   * @param sort sort results by JSONSort object
   * @param filter result by JSONQueryFilter object
   */
 case class JSONQuery(
-                      count:Int,
-                      page:Int,
+                      filter:List[JSONQueryFilter],
                       sort:List[JSONSort],
-                      filter:List[JSONQueryFilter]
-                    )
+                      paging:Option[JSONQueryPaging]
+                    ){
+  def currentPage = paging.map(_.currentPage).getOrElse(1)
+  def pageLength(n:Int) = paging.map(_.pageLength).getOrElse(n)
+  def limit(limit:Int) = copy(paging= Some(paging.getOrElse(JSONQueryPaging(1,1)).copy(pageLength = limit)))
+}
+
+/**
+  * Apply paging
+  *
+  * @param pageLength
+  * @param currentPage
+  */
+case class JSONQueryPaging(pageLength:Int, currentPage:Int=1)
 
 /**
   * Apply operator to column/value
@@ -36,17 +47,17 @@ case class JSONSort(column:String,order:String)
   * Created by andreaminetti on 16/03/16.
   */
 object JSONQuery{
+
+  def apply(filter:List[JSONQueryFilter], sort:List[JSONSort], pages:Int, currentPage:Int ):JSONQuery =
+    JSONQuery(filter, sort, paging = Some(JSONQueryPaging(pageLength = pages, currentPage = currentPage)))
   /**
     * Generic query
     */
-  val baseQuery = JSONQuery(
-    count = 30,
-    page = 1,
+  val empty = JSONQuery(
+    filter = List(),
     sort = List(),
-    filter = List()
-  )
-
-  def limit(limit:Int) = baseQuery.copy(count = limit)
+    paging = None
+ )
 }
 
 object Sort{
@@ -59,25 +70,36 @@ object Sort{
     case ASC => DESC
     case IGNORE => ASC
   }
+
+  def label(s:String) = s match {
+    case DESC => "sort.desc"
+    case ASC => "sort.asc"
+    case IGNORE => "sort.ignore"
+  }
 }
+
 
 object Filter {
   final val NONE = "none"
   final val EQUALS = "="
   final val NOT = "not"
-  final val `>` = ">"
-  final val `<` = "<"
+  final val > = ">"
+  final val < = "<"
+  final val >= = ">="
+  final val <= = "<="
   final val LIKE = "like"
+  final val IN = "in"
+  final val BETWEEN = "between"
 
   def options(`type`:String) = `type` match {
-    case "number" => Seq(Filter.EQUALS,Filter.`>`,Filter.`<`,Filter.NOT)
-    case "string" => Seq(Filter.LIKE,Filter.EQUALS,Filter.NOT)
-    case _ => Seq(Filter.EQUALS,Filter.NOT)
+    case JSONFieldTypes.NUMBER => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT, Filter.IN, Filter.BETWEEN)
+    case JSONFieldTypes.STRING => Seq(Filter.LIKE, Filter.EQUALS, Filter.NOT)
+    case _ => Seq(Filter.EQUALS, Filter.NOT)
   }
 
   def default(`type`:String) = `type` match {
-    case "number" => Filter.EQUALS
-    case "string" => Filter.LIKE
+    case JSONFieldTypes.NUMBER => Filter.EQUALS
+    case JSONFieldTypes.STRING => Filter.LIKE
     case _ => Filter.EQUALS
   }
 }

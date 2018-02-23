@@ -7,7 +7,7 @@ import org.scalajs.dom.raw.Element
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import ch.wsl.box.client.Context._
-import ch.wsl.box.client.utils.Session
+import ch.wsl.box.client.utils.{Labels, Session, UI}
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.dropdown.UdashDropdown
 import io.udash.bootstrap.navs.{UdashNav, UdashNavbar}
@@ -25,23 +25,27 @@ object Header {
     a(href := l.state.url)(span(l.name)).render
 
 
-  def langs = Seq("it","de","fr","en")
 
-
-  def navbar(title:String, links:Seq[MenuLink]) = {
+  def navbar(logo:Option[String],title:Option[String], links:Seq[MenuLink]) = {
     header(
-      div(BootstrapStyles.pullLeft)(b(title)),
+      div(BootstrapStyles.pullLeft)(logo.map(x => img(GlobalStyles.headerLogo,src := x)),b(title)),
       div(BootstrapStyles.pullRight) (
         links.map{link =>
-          a(href := link.state.url)(
+          frag(a(GlobalStyles.linkHeaderFooter,href := link.state.url)(
             link.name
-          )
+          )," ")
+        },
+        UI.menu.map{ link =>
+          frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => io.udash.routing.WindowUrlChangeProvider.changeFragment(Url(link.url))))(
+            link.name
+          )," ")
         },
         if(Session.isLogged()) {
-          a(onclick :+= ((e:Event) => Session.logout() ),"Logout")
+          frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => Session.logout() ),"Logout")," ")
         } else frag(),
-        langs.map{ l =>
-          a(onclick :+= ((e:Event) => Session.setLang(l) ),l)
+        b(" "+Labels.header.lang+ ": "),
+        Labels.langs.map{ l =>
+          span(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => Session.setLang(l) ),l)," ")
         }
       )
     ).render

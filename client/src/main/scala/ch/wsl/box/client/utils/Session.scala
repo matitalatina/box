@@ -1,9 +1,9 @@
 package ch.wsl.box.client.utils
 
 import ch.wsl.box.client.services.REST
-import ch.wsl.box.client.{IndexState, LoginState}
+import ch.wsl.box.client.{Context, IndexState, LoginState}
 import org.scalajs.dom
-import ch.wsl.box.model.shared.{JSONQuery, KeyList}
+import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -20,11 +20,11 @@ object Session {
   import io.circe.parser._
 
   final val QUERY = "query"
-  final val KEYS = "keys"
+  final val IDS = "ids"
   final val USER = "user"
-  final val AUTH_TOKEN = "auth_token"
   final val LANG = "lang"
   final val LABELS = "labels"
+  final val STATE = "state"
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
     println(s"Setting $key")
@@ -39,48 +39,65 @@ object Session {
     } yield query
   }
 
-  def isset(key:String):Boolean = {
+  def isSet(key:String):Boolean = {
     Try(dom.window.sessionStorage.getItem(key).size > 0).isSuccess
   }
 
-  import Base64._
-  private def basicAuthToken(username: String, password: String):String = "Basic " + Base64.Encoder((username + ":" + password).getBytes).toBase64
-
   def login(username:String,password:String):Future[Boolean] = {
     dom.window.sessionStorage.setItem(USER,username)
-    dom.window.sessionStorage.setItem(AUTH_TOKEN,basicAuthToken(username,password))
-    REST.loginCheck().map{ result =>
-      io.udash.routing.WindowUrlChangeProvider.changeUrl(IndexState.url)
+    val fut = for{
+      _ <- REST.login(LoginRequest(username,password))
+    } yield {
+      if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined) {
+        val state = dom.window.sessionStorage.getItem(STATE)
+        io.udash.routing.WindowUrlChangeProvider.changeUrl(state)
+        dom.window.sessionStorage.removeItem(STATE)
+      } else {
+        io.udash.routing.WindowUrlChangeProvider.changeUrl(IndexState.url)
+      }
       dom.window.location.reload()
       true
-    }.recover{ case t =>
+    }
+
+    fut.recover{ case t =>
       dom.window.sessionStorage.removeItem(USER)
-      dom.window.sessionStorage.removeItem(AUTH_TOKEN)
       t.printStackTrace()
       false
     }
   }
 
-  def logout() = {
-    dom.window.sessionStorage.removeItem(USER)
-    dom.window.sessionStorage.removeItem(AUTH_TOKEN)
-    io.udash.routing.WindowUrlChangeProvider.changeUrl(LoginState.url)
-    dom.window.location.reload()
+
+  def logoutAndSaveState() = {
+    Try{
+      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url)
+    }
+    logout()
   }
 
-  def isLogged() = isset(USER)
+  def logout() = {
+    dom.window.sessionStorage.removeItem(USER)
+    REST.logout().map{ result =>
+      io.udash.routing.WindowUrlChangeProvider.changeUrl(LoginState.url)
+    }
+  }
 
-  def authToken() = dom.window.sessionStorage.getItem(AUTH_TOKEN)
+  def isLogged() = isSet(USER)
 
-  def setQuery(query: JSONQuery) = set(QUERY,query)
   def getQuery():Option[JSONQuery] = get[JSONQuery](QUERY)
+  def setQuery(query: JSONQuery) = set(QUERY,query)
+  def resetQuery() = set(QUERY, None)
 
 
-  def getKeys():Option[KeyList] = get[KeyList](KEYS)
-  def setKeys(list:KeyList) = set(KEYS,list)
+  def getIDs():Option[IDs] = get[IDs](IDS)
+  def setIDs(ids:IDs) = set(IDS, ids)
+  def resetIDs() = set(IDS, None)
 
-  def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).getOrElse("en")
+  def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).toOption match {
+    case Some(lang) if Labels.langs.contains(lang)  => lang
+    case _ => "en"
+  }
   def setLang(lang:String) = {
+    Labels.load(lang)
     dom.window.sessionStorage.setItem(LANG,lang)
     dom.window.location.reload()
   }

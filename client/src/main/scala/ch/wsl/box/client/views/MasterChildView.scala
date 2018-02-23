@@ -1,8 +1,8 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{MasterChildState, ModelTableState}
-import ch.wsl.box.model.shared.{Filter, JSONField, JSONKeys}
+import ch.wsl.box.client.{MasterChildState, EntityTableState}
+import ch.wsl.box.model.shared.{Filter, JSONField, JSONID}
 import io.udash.ViewPresenter
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.{Presenter, View}
@@ -20,20 +20,20 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
   override def create(): (View, Presenter[MasterChildState]) = {
 
-    val (childView,childPresenter) = ModelTableViewPresenter(Routes("model",child)).create()
+    val (childView,childPresenter) = EntityTableViewPresenter(Routes("entity",child)).create()
 
     def onChangeMaster(rows:Seq[(JSONField,String)]):Unit = {
       println("change master")
-      val keys = rows.filter(_._1.options.exists(_.refModel == child))
-      val childTable = childPresenter.asInstanceOf[ModelTablePresenter]
-      if(keys.length > 0)
-        childTable.filterByKey(JSONKeys.fromMap(keys.map(x => x._1.key -> x._2).toMap))
+      val ids = rows.filter(_._1.lookup.exists(_.lookupEntity == child))
+      val childTable = childPresenter.asInstanceOf[EntityTablePresenter]
+      if(ids.length > 0)
+        childTable.filterById(JSONID.fromMap(ids.map(x => x._1.name -> x._2).toMap))
 
-      val childForeignMetadata = childTable.model.get.metadata.find(_.field.options.exists(_.refModel == master))
+      val childForeignMetadata = childTable.model.get.fieldQueries.find(_.field.lookup.exists(_.lookupEntity == master))
       println(childForeignMetadata)
       for{
         metadata <- childForeignMetadata
-        value <- rows.find(_._1.key == metadata.field.options.get.map.valueProperty)
+        value <- rows.find(_._1.name == metadata.field.lookup.get.map.valueProperty)
       } yield {
         childTable.filter(metadata.copy(filter = value._2,filterType = Filter.EQUALS),value._2)
       }
@@ -41,17 +41,17 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewPres
 
     }
 
-    val (masterView,masterPresenter) = ModelTableViewPresenter(Routes("model",master),onChangeMaster).create()
+    val (masterView,masterPresenter) = EntityTableViewPresenter(Routes("entity",master),onChangeMaster).create()
 
 
     (MasterChildView(masterView,childView),MasterChildPresenter(masterPresenter,childPresenter))
   }
 }
 
-case class MasterChildPresenter(masterPresenter:Presenter[ModelTableState],childPresenter:Presenter[ModelTableState]) extends Presenter[MasterChildState] {
+case class MasterChildPresenter(masterPresenter:Presenter[EntityTableState], childPresenter:Presenter[EntityTableState]) extends Presenter[MasterChildState] {
   override def handleState(state: MasterChildState): Unit = {
-    masterPresenter.handleState(ModelTableState(state.kind,state.parentModel))
-    childPresenter.handleState(ModelTableState(state.kind,state.childModel))
+    masterPresenter.handleState(EntityTableState(state.kind,state.masterEntity))
+    childPresenter.handleState(EntityTableState(state.kind,state.childEntity))
   }
 }
 

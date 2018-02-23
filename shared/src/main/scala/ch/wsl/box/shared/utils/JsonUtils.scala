@@ -1,6 +1,6 @@
 package ch.wsl.box.shared.utils
 
-import ch.wsl.box.model.shared.JSONKeys
+import ch.wsl.box.model.shared.JSONID
 import io.circe._
 
 /**
@@ -21,23 +21,28 @@ object JsonUtils {
       result
     }
 
-    //return JSON value of the gieven field
+    //return JSON value of the given field
     def js(field:String):Json = el.hcursor.get[Json](field).right.getOrElse(Json.Null)
 
-    def seq(field:String):Seq[Json] = el.hcursor.get[Seq[Json]](field).right.getOrElse(Seq())
+    def seq(field:String):Seq[Json] = {
+      val result = el.hcursor.get[Seq[Json]](field)
+      println(s"getting seq of $field, result: $result")
+      result.right.getOrElse(Seq())
+    }
 
-    def get(field: String):String = el.hcursor.get[Json](field).fold(
-      { x =>
-        //println(s"error getting $field on $el: $x");
-        ""
-      }, { x => x.string }
+    def get(field: String):String = getOpt(field).getOrElse("")
+
+    def getOpt(field: String):Option[String] = el.hcursor.get[Json](field).fold(
+      { _ =>
+        None
+      }, { x => Some(x.string) }
     )
 
-    def keys(fields:Seq[String]) :JSONKeys = {
+    def ID(fields:Seq[String]):JSONID = {
       val values = fields map { field =>
         field -> get(field)
       }
-      JSONKeys.fromMap(values.toMap)
+      JSONID.fromMap(values.toMap)
     }
   }
 }
