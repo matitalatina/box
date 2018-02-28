@@ -5,7 +5,7 @@ package ch.wsl.box.client.views
   */
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.styles.BootstrapCol
 import ch.wsl.box.client.utils.{Labels, Session, UI}
 import ch.wsl.box.client.{EntitiesState, EntityFormState, EntityTableState}
@@ -15,6 +15,8 @@ import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.Context._
+
+import scalatags.generic
 
 case class Entities(list:Seq[String], currentEntity:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
 
@@ -76,6 +78,7 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
 
   }
 
+
   private val content: Element = div().render
 
   private def sidebar: Element = if(UI.showEntitiesSidebar) {
@@ -84,7 +87,7 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
       produce(model.subProp(_.search)) { q =>
         ul(
           repeat(model.subSeq(_.filteredList)){m =>
-            li(a(href := routes.entity(m.get).url)(m.get)).render
+            li(a(Navigate.click(routes.entity(m.get).url),m.get)).render
           }
         ).render
       }

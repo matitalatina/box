@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Enhancer, REST}
+import ch.wsl.box.client.services.{Enhancer, Navigate, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{Labels, Navigation, Navigator, Session}
 import ch.wsl.box.client.views.components.widget.Widget
@@ -14,7 +14,7 @@ import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
 import io.udash.bootstrap.label.UdashLabel
 import io.udash.core.Presenter
 import io.udash.properties.single.Property
-import org.scalajs.dom.{Element, Event}
+import org.scalajs.dom._
 
 import scala.concurrent.Future
 import scalatags.JsDom
@@ -26,10 +26,10 @@ import scalacss.ScalatagsCss._
   */
 
 case class EntityFormModel(name:String, kind:String, id:Option[String], metadata:Option[JSONMetadata], data:Json,
-                           error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean)
+                           error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean, changed:Boolean)
 
 object EntityFormModel{
-  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true)
+  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false)
 }
 
 object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
@@ -87,8 +87,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         "",
         children,
         Navigation.empty1,
+        false,
         false
       ))
+
+      //need to be called after setting data because we are listening for data changes
+      enableGoAway
 
       setNavigation()
 
@@ -123,7 +127,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       } yield {
 //        val newState =  Routes(m.kind,m.name).table()
         val newState =  toState(m.kind,m.name)
-        io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
+        enableGoAway
+        Navigate.to(newState.url)
 
       }}.recover{ case e =>
         e.getStackTrace.foreach(x => println(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
@@ -164,8 +169,31 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     model.subProp(_.loading).set(true)
     val m = model.get
     val newState = Routes(m.kind,m.name).edit(id)
-    io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
+    Navigate.to(newState.url)
   }
+
+  model.subProp(_.data).listen { _ =>
+    avoidGoAway
+  }
+
+  def avoidGoAway = {
+    Navigate.disable{ () =>
+      window.confirm(Labels.navigation.goAway)
+    }
+    model.subProp(_.changed).set(true)
+    window.onbeforeunload = { (e:BeforeUnloadEvent) =>
+      Labels.navigation.goAway
+    }
+  }
+  def enableGoAway = {
+    Navigate.enable()
+    model.subProp(_.changed).set(false)
+    window.onbeforeunload = { (e:BeforeUnloadEvent) =>
+
+    }
+  }
+
+
 
 
 }
@@ -223,6 +251,9 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         showIf(model.subProp(_.loading)) {
           small(" - " + Labels.navigation.loading).render
         },
+        showIf(model.subProp(_.changed)) {
+          small(style := "color: red"," - " + Labels.form.changed).render
+        },
         produce(model.subProp(_.id)){ id =>
           val subTitle = id.map(" - " + _).getOrElse("")
           small(subTitle).render
@@ -232,8 +263,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       div(BootstrapStyles.pullLeft) (
         produce(model.subProp(_.name)) { m =>
           div(
-            a(GlobalStyles.boxButton,href := Routes(model.subProp(_.kind).get, m).add().url)(Labels.entities.`new` + " ", labelTitle)," ",
-            a(GlobalStyles.boxButton,href := Routes(model.subProp(_.kind).get, m).entity(m).url)(Labels.entities.table + " ", labelTitle),br,
+            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).add().url))(Labels.entities.`new` + " ", labelTitle)," ",
+            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m).url))(Labels.entities.table + " ", labelTitle),br,
             //save and stay on same record
             a(
               GlobalStyles.boxButton,

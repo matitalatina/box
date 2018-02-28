@@ -1,6 +1,6 @@
 package ch.wsl.box.client.utils
 
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.{Context, IndexState, LoginState}
 import org.scalajs.dom
 import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
@@ -50,10 +50,10 @@ object Session {
     } yield {
       if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined) {
         val state = dom.window.sessionStorage.getItem(STATE)
-        io.udash.routing.WindowUrlChangeProvider.changeUrl(state)
+        Navigate.to(state)
         dom.window.sessionStorage.removeItem(STATE)
       } else {
-        io.udash.routing.WindowUrlChangeProvider.changeUrl(IndexState.url)
+        Navigate.to(IndexState.url)
       }
       dom.window.location.reload()
       true
@@ -75,9 +75,11 @@ object Session {
   }
 
   def logout() = {
-    dom.window.sessionStorage.removeItem(USER)
-    REST.logout().map{ result =>
-      io.udash.routing.WindowUrlChangeProvider.changeUrl(LoginState.url)
+    Navigate.toAction{ () =>
+      dom.window.sessionStorage.removeItem(USER)
+      REST.logout().map { result =>
+        io.udash.routing.WindowUrlChangeProvider.changeUrl(LoginState.url)
+      }
     }
   }
 

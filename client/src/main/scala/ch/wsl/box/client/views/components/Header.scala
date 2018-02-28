@@ -7,6 +7,7 @@ import org.scalajs.dom.raw.Element
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import ch.wsl.box.client.Context._
+import ch.wsl.box.client.services.Navigate
 import ch.wsl.box.client.utils.{Labels, Session, UI}
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.dropdown.UdashDropdown
@@ -22,7 +23,7 @@ object Header {
   import ch.wsl.box.client.Context
 
   private def linkFactory(l: MenuLink) =
-    a(href := l.state.url)(span(l.name)).render
+    a(Navigate.click(l.state.url))(span(l.name)).render
 
 
 
@@ -31,12 +32,12 @@ object Header {
       div(BootstrapStyles.pullLeft)(logo.map(x => img(GlobalStyles.headerLogo,src := x)),b(title)),
       div(BootstrapStyles.pullRight) (
         links.map{link =>
-          frag(a(GlobalStyles.linkHeaderFooter,href := link.state.url)(
+          frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.state.url))(
             link.name
           )," ")
         },
         UI.menu.map{ link =>
-          frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => io.udash.routing.WindowUrlChangeProvider.changeFragment(Url(link.url))))(
+          frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.url))(
             link.name
           )," ")
         },

@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Enhancer, REST}
+import ch.wsl.box.client.services.{Enhancer, Navigate, REST}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.{Conf, Labels, Session}
 import ch.wsl.box.client.views.components.TableFieldsRenderer
@@ -125,7 +125,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   def edit(el:Row) = {
     val k = ids(el)
     val newState = routes.edit(k.asString)
-    io.udash.routing.WindowUrlChangeProvider.changeUrl(newState.url)
+    Navigate.to(newState.url)
   }
 
   def saveIds(ids: IDs, query:JSONQuery) = {
@@ -287,7 +287,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       h3(labelTitle),
       div(BootstrapStyles.pullLeft) (
         if (model.get.kind != VIEW.kind)
-          a(href := routes.add().url)(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
+          a(Navigate.click(routes.add().url))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
         else
           p()
       ),

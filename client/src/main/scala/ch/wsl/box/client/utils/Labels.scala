@@ -46,6 +46,7 @@ object Labels {
   }
 
   object navigation{
+    def goAway = get("navigation.goAway")
     def first = get("navigation.first")
     def last = get("navigation.last")
     def next = get("navigation.next")
@@ -71,6 +72,7 @@ object Labels {
     def save_table = get("form.save_table")
     def addDate = get("form.add_date")
     def removeDate = get("form.remove_date")
+    def changed = get("form.changed")
   }
 
   object entities{
