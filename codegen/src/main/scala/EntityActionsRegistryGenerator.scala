@@ -24,7 +24,7 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |import ch.wsl.box.rest.logic.{JsonTableActions, JsonViewActions, EntityJsonTableActions, EntityJsonViewActions}
          |import Tables._
          |
-         |case class EntityActionsRegistry(implicit ec:ExecutionContext) {
+         |class EntityActionsRegistry(implicit ec:ExecutionContext) {
          |
          |  import io.circe._
          |  import io.circe.generic.auto._
@@ -37,6 +37,10 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |  def viewActions:String => EntityJsonViewActions = {
          |    ${viewList.flatMap(mapView).mkString("\n")}
          |  }
+         |}
+         |
+         |object EntityActionsRegistry{
+         |  def apply()(implicit ec: ExecutionContext) = new EntityActionsRegistry
          |}
            """.stripMargin
 

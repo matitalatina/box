@@ -12,7 +12,16 @@ import slick.lifted.ShapedValue
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class PgInformationSchema(table:String, db:Database, pgSchema:String="public")(implicit ec:ExecutionContext) {
+class PgInformationSchema(table:String, db:Database)(implicit ec:ExecutionContext) {
+
+  def runWithSession[T](d:Session => DBIOAction[T,NoStream,Nothing]): Future[T] = Future{
+    val session = db.createSession()
+    try{
+      db.run{d(session)}
+    } finally {
+      session.close()
+    }
+  }.flatten
 
   private val FOREIGNKEY = "FOREIGN KEY"
   private val PRIMARYKEY = "PRIMARY KEY"
@@ -34,17 +43,15 @@ class PgInformationSchema(table:String, db:Database, pgSchema:String="public")(i
     def boxReferencingKeys = referencingKeys.map(_.slickfy)
   }
 
-  lazy val pgTable:Future[PgTable] = db.run{
-    pgTables.filter(e => e.table_name === table && e.table_schema === pgSchema).result.head
+  lazy val pgTable:Future[PgTable] = runWithSession{ session =>
+    pgTables.filter(e => e.table_name === table && e.table_schema === session.conn.getSchema).result.head
   }
 
-  private val columnsQuery = pgColumns
-    .filter(e => e.table_name === table && e.table_schema === pgSchema)
-    .sortBy(_.ordinal_position)
 
-
-  lazy val columns:Future[Seq[PgColumn]] = db.run{
-    columnsQuery.result
+  lazy val columns:Future[Seq[PgColumn]] = runWithSession{ session =>
+    pgColumns
+      .filter(e => e.table_name === table && e.table_schema === session.conn.getSchema)
+      .sortBy(_.ordinal_position).result
   }
 
   val pkQ = for{

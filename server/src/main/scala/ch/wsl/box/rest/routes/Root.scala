@@ -94,69 +94,43 @@ trait Root extends enablers.Sessions {
                 }
               }
             } ~
+            pathPrefix("uiFile") {
+              path(Segment) { fileName =>
+                get {
+                  optionalSession(oneOff, usingCookiesOrHeaders) { session =>
+                    val boxFile = session match {
+                      case None => UIProvider.fileForAccessLevel(fileName,UIProvider.NOT_LOGGED_IN)
+                      case Some(session) => for {
+                        accessLevel <- session.userProfile.accessLevel
+                        ui <- UIProvider.fileForAccessLevel(fileName,accessLevel)
+                      } yield ui
+                    }
+                    onSuccess(boxFile){
+                      case Some(f) => File.completeFile(f)
+                      case None => complete(StatusCodes.NotFound,"Not found")
+                    }
+                  }
+                }
+              }
+            } ~
             touchRequiredSession(oneOff, usingCookiesOrHeaders) { session =>
               implicit val db = session.userProfile.db
 //              val accessLevel = session.userProfile.accessLevel.get
 
-              //todo: verificare differenza di Auth.boxDB con userProfile.box
-              def onlyAdminstrator(r:Route):Route = {
-                import scala.concurrent._
-                import scala.concurrent.duration._
 
-                //todo: do it without Await ...
-                val accessLevel = Await.result(session.userProfile.accessLevel, 1 second)
-
-                accessLevel match {
-                  case 1000 => r
-                  case al => get {
-                    complete("You don't have the rights (access level = " + al + ")")
-                  }
-                }
-//
-//                (session.userProfile.accessLevel).map {
-//                    case 1000 => r
-//                    case al => get {
-//                      complete("You don't have the rights (access level = " + al + ")")
-//                  }
-//                }
-
-//                for {
-//                  accessLevel <- session.userProfile.accessLevel
-//                } yield {
-//                  r
-//                }
-//                  else get {
-//                    complete("You don't have the rights (access level = " + accessLevel + ")")
-//                  }
-//
-
-
-//                val accessLevel:Int =  session.userProfile.accessLevel.onComplete {
-//                  case Success(al) => al
-//                  case Failure(ex) => -1
-//                }
-//                if (accessLevel==1000)
-//                  r
-//                else
-//                  get {
-//                    complete("You don't have the rights (access level = " + accessLevel + ")")
-//                  }
-              }
-
-
-              //access to box tables for administrator
-              pathPrefix("boxfile") {
-                onlyAdminstrator(BoxFileRoutes.route(Auth.boxDB, materializer, executionContext))
-              } ~
-              pathPrefix("boxentity") {
-                onlyAdminstrator(BoxRoutes()(Auth.boxDB, materializer, executionContext))
-              } ~
-              path("boxentities") {
-                onlyAdminstrator(
+              Auth.onlyAdminstrator(session) {
+                //access to box tables for administrator
+                pathPrefix("boxfile") {
+                  BoxFileRoutes.route(session.userProfile.boxDb, materializer, executionContext)
+                } ~
+                pathPrefix("boxentity") {
+                  BoxRoutes()(session.userProfile.boxDb, materializer, executionContext)
+                } ~
+                path("boxentities") {
                   get {
                     complete(Table.boxTables.toSeq.sorted)
                   }
-                )
+                }
               } ~
               pathPrefix("file") {
                 FileRoutes.route

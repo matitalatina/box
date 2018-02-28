@@ -1,7 +1,8 @@
 package ch.wsl.box.rest.utils
 
 import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenges}
-import akka.http.scaladsl.server.Directives
+import akka.http.scaladsl.server.Directives.{complete, get, onSuccess}
+import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, AuthenticationResult, Credentials, SecurityDirectives}
 import akka.http.scaladsl.server.directives.Credentials.Missing
 import com.typesafe.config.{Config, ConfigFactory}
@@ -9,7 +10,7 @@ import net.ceedubs.ficus.Ficus._
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
 /**
@@ -76,6 +77,19 @@ object Auth {
 
 
   }
+
+  //todo: verificare differenza di Auth.boxDB con userProfile.box
+  def onlyAdminstrator(s:BoxSession)(r:Route)(implicit ec: ExecutionContext):Route = {
+
+    onSuccess(s.userProfile.accessLevel){
+      case 1000 => r
+      case al => get {
+        complete("You don't have the rights (access level = " + al + ")")
+      }
+    }
+
+  }
+
 
 
 }

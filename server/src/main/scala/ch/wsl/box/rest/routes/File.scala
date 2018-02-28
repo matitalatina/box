@@ -3,7 +3,7 @@ package ch.wsl.box.rest.routes
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.ContentDispositionTypes
 import akka.http.scaladsl.server.{Directives, Route}
-import akka.http.scaladsl.server.Directives.{complete, fileUpload, path, pathEnd, pathPrefix, post}
+import akka.http.scaladsl.server.Directives.{complete, fileUpload, get, path, pathEnd, pathPrefix, post}
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
@@ -26,6 +26,21 @@ object File{
     def inject(obj:M, file:Array[Byte], metadata:FileInfo):M
     def extract(obj:M):BoxFile
   }
+
+  def completeFile(f:BoxFile) =
+    complete {
+      val contentType = f.mime.flatMap{ mime =>
+        ContentType.parse(mime).right.toOption
+      }.getOrElse(ContentTypes.`application/octet-stream`)
+      val file = f.file.getOrElse(Array())
+      val name = f.name.getOrElse("noname")
+
+      val entity = HttpEntity(contentType,file)
+      val contentDistribution: HttpHeader = headers.`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> name, "size" -> file.length.toString))
+      HttpResponse(entity = entity, headers = scala.collection.immutable.Seq(contentDistribution))
+    }
+
+
 }
 
 case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database) {
@@ -66,23 +81,12 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
           }
         } ~
           get {
-            complete {
-              utils.getById(id).map {
-                _.headOption.map { result =>
-                  val f = handler.extract(result)
 
-                  val contentType = f.mime.flatMap{ mime =>
-                    ContentType.parse(mime).right.toOption
-                  }.getOrElse(ContentTypes.`application/octet-stream`)
-                  val file = f.file.getOrElse(Array())
-                  val name = f.name.getOrElse("noname")
-
-                  val entity = HttpEntity(contentType,file)
-                  val contentDistribution: HttpHeader = headers.`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> name, "size" -> file.length.toString))
-                  HttpResponse(entity = entity, headers = scala.collection.immutable.Seq(contentDistribution))
-                }
+              onSuccess(utils.getById(id)) { result =>
+                  val f = handler.extract(result.head)
+                  File.completeFile(f)
               }
-            }
+
           }
       }
     }
