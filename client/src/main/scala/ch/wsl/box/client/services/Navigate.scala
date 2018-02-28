@@ -1,9 +1,10 @@
 package ch.wsl.box.client.services
 
 import org.scalajs.dom.{BeforeUnloadEvent, window}
+import scribe.Logging
 
 
-object Navigate {
+object Navigate extends Logging {
   private var enabled:Boolean = true
   private var enabler:() => Boolean = () => false
 
@@ -13,7 +14,10 @@ object Navigate {
   }
   def enable() = {enabled = true }
 
-  def to(url:String) = toAction{ () => io.udash.routing.WindowUrlChangeProvider.changeUrl(url) }
+  def to(url:String) = toAction{ () =>
+    logger.debug(s"navigate to $url")
+    io.udash.routing.WindowUrlChangeProvider.changeUrl(url)
+  }
 
   def toAction(action: () => Unit) = {
     if(enabled) {

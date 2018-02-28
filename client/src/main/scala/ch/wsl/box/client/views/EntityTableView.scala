@@ -97,7 +97,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         name = state.entity,
         kind = specificKind,
         rows = csv.map(Row(_)),
-        fieldQueries = form.fields.map{ field =>
+        fieldQueries = form.tabularFields.flatMap(x => form.fields.find(_.name == x)).map{ field =>
           FieldQuery(
             field = field,
             sort = form.query.flatMap(_.sort.find(_.column == field.name).map(_.order)).getOrElse(Sort.IGNORE),

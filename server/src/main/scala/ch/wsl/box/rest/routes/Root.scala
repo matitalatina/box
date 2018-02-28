@@ -117,21 +117,6 @@ trait Root extends enablers.Sessions {
               implicit val db = session.userProfile.db
 //              val accessLevel = session.userProfile.accessLevel.get
 
-
-              Auth.onlyAdminstrator(session) {
-                //access to box tables for administrator
-                pathPrefix("boxfile") {
-                  BoxFileRoutes.route(session.userProfile.boxDb, materializer, executionContext)
-                } ~
-                pathPrefix("boxentity") {
-                  BoxRoutes()(session.userProfile.boxDb, materializer, executionContext)
-                } ~
-                path("boxentities") {
-                  get {
-                    complete(Table.boxTables.toSeq.sorted)
-                  }
-                }
-              } ~
               pathPrefix("file") {
                 FileRoutes.route
               } ~
@@ -167,6 +152,20 @@ trait Root extends enablers.Sessions {
                     Form(name, lang).route
                   }
                 }
+              } ~
+              Auth.onlyAdminstrator(session) { //need to be at the end or non administrator request are not resolved
+                //access to box tables for administrator
+                pathPrefix("boxfile") {
+                  BoxFileRoutes.route(session.userProfile.boxDb, materializer, executionContext)
+                } ~
+                  pathPrefix("boxentity") {
+                    BoxRoutes()(session.userProfile.boxDb, materializer, executionContext)
+                  } ~
+                  path("boxentities") {
+                    get {
+                      complete(Table.boxTables.toSeq.sorted)
+                    }
+                  }
               }
             }
         }

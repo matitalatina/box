@@ -37,7 +37,7 @@ object Header {
           )," ")
         },
         UI.menu.map{ link =>
-          frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.url))(
+          frag(a(GlobalStyles.linkHeaderFooter,Navigate.click("#"+link.url))(
             link.name
           )," ")
         },
