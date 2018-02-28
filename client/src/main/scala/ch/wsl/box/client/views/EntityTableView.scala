@@ -237,6 +237,11 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
   override def renderChild(view: View): Unit = {}
 
 
+  def labelTitle = produce(model.subProp(_.metadata)) { m =>
+    val name = m.map(_.label).getOrElse(model.get.name)
+    span(name).render
+  }
+
   def filterOptions(fieldQuery: FieldQuery) = {
     val filterTypeModel = Property(fieldQuery.filterType)
 //    println(filterTypeModel.get)
@@ -279,7 +284,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
 
     div(
-      h3(bind(model.subProp(_.name))),
+      h3(labelTitle),
       div(BootstrapStyles.pullLeft) (
         if (model.get.kind != VIEW.kind)
           a(href := routes.add().url)(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
