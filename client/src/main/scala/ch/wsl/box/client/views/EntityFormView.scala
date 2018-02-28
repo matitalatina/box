@@ -15,7 +15,7 @@ import io.udash.bootstrap.label.UdashLabel
 import io.udash.core.Presenter
 import io.udash.properties.single.Property
 import org.scalajs.dom._
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.Future
 import scalatags.JsDom
@@ -43,7 +43,7 @@ object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
   }
 }
 
-case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] with LazyLogging {
+case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] with Logging {
 
   import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JsonUtils._

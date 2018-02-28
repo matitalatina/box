@@ -10,6 +10,7 @@ import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.rest.utils.FutureUtils
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
+import scribe.Logging
 import slick.basic.DatabasePublisher
 import slick.lifted.Query
 import slick.driver.PostgresDriver.api._
@@ -25,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class ReferenceKey(localField:String,remoteField:String,value:String)
 case class Reference(association:Seq[ReferenceKey])
 
-case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters {
+case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters with Logging {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
@@ -60,9 +61,9 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
   def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]): Seq[Future[Int]] = {
     val receivedID = receivedJson.map(_.ID(child.keys))
     val dbID = dbJson.map(_.ID(child.keys))
-    println(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
+    logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
     dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
-      println(s"Deleting child ${child.name}, with key: $idsToDelete")
+      logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")
       EntityActionsRegistry().tableActions(child.entity).delete(idsToDelete)
     }
   }
@@ -83,13 +84,13 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
     val id = e.ID(metadata.keys)
     for{
       _ <- Future.sequence(submetadata)
-      dbData <- actions.getById(id).recover{ case t => println("recovered future with none"); None }   //existing record in db
+      dbData <- actions.getById(id).recover{ case t => logger.info("recovered future with none"); None }   //existing record in db
       result <- {
         if(dbData.isDefined) {
-          println(s"update $id")
+          logger.info(s"update $id")
           actions.update(id,e)
         } else {
-          println(s"insert into ${metadata.entity} with id $id")
+          logger.info(s"insert into ${metadata.entity} with id $id")
           actions.insert(e)
         }
       }
@@ -137,7 +138,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
           form <- jsonCustomMetadataFactory.of(child.objId,metadata.lang)
           data <- getChild(dataJson,field,form,child)
         } yield {
-          println(s"expanding child ${field.name} : ${data.asJson}")
+          logger.info(s"expanding child ${field.name} : ${data.asJson}")
           field.name -> data.asJson
         }
       }}.recover{ case t =>

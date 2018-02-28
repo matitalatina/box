@@ -3,6 +3,7 @@ package ch.wsl.box.rest.logic
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import ch.wsl.box.model.shared._
+import scribe.Logging
 import slick.basic.DatabasePublisher
 import slick.jdbc.{ResultSetConcurrency, ResultSetType}
 import slick.lifted.{ColumnOrdered, TableQuery}
@@ -13,7 +14,7 @@ import scala.util.Try
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit ec:ExecutionContext) extends UglyDBFilters {
+class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit ec:ExecutionContext) extends UglyDBFilters with Logging {
   import ch.wsl.box.model.Tables.profile.api._
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
@@ -86,12 +87,12 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
 
 
   def getById(id:JSONID)(implicit db:Database):Future[Option[T#TableElementType]] = {
-    println(s"GET BY ID $id")
+    logger.info(s"GET BY ID $id")
     Try(filter(id)).toOption match {
       case Some(f) => for {
         result <- db.run {
           val action = f.take(1).result
-          println(action.statements)
+          logger.debug(action.statements)
           action
         }
       } yield result.headOption
@@ -115,7 +116,7 @@ class DbActions[T <: ch.wsl.box.model.Tables.profile.api.Table[M],M <: Product](
     for{
       result <- db.run {
         val action = filter(id).update(e)
-        println (action.statements)
+        logger.debug (action.statements)
         action
       }
     } yield result

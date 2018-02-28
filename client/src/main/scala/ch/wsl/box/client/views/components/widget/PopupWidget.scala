@@ -11,13 +11,13 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.button.{ButtonStyle, UdashButton, UdashButtonGroup}
 import io.udash.bootstrap.modal.{ModalSize, UdashModal}
 import org.scalajs.dom
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.duration._
 
 
 
-case class PopupWidget(lookup:JSONFieldLookup, label: String, data: Property[Json]) extends LookupWidget with LazyLogging {
+case class PopupWidget(lookup:JSONFieldLookup, label: String, data: Property[Json]) extends LookupWidget with Logging {
 
 import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._

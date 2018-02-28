@@ -2,11 +2,12 @@ package ch.wsl.box.shared.utils
 
 import ch.wsl.box.model.shared.JSONID
 import io.circe._
+import scribe.Logging
 
 /**
   * Created by andre on 5/22/2017.
   */
-object JsonUtils {
+object JsonUtils extends Logging {
   implicit class EnhancedJson(el:Json) {
 
     def string:String = {
@@ -26,7 +27,7 @@ object JsonUtils {
 
     def seq(field:String):Seq[Json] = {
       val result = el.hcursor.get[Seq[Json]](field)
-      println(s"getting seq of $field, result: $result")
+      logger.info(s"getting seq of $field, result: $result")
       result.right.getOrElse(Seq())
     }
 

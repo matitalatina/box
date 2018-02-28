@@ -6,14 +6,14 @@ import ch.wsl.box.model.shared.{JSONField, JSONID}
 import io.circe.Json
 import org.scalajs.dom.{Element, Event}
 import io.udash._
-import slogging.LazyLogging
+import scribe.Logging
 
 import scalatags.JsDom.TypedTag
 
 /**
   * Created by andre on 5/2/2017.
   */
-object TableFieldsRenderer extends LazyLogging{
+object TableFieldsRenderer extends Logging{
 
   import io.circe.syntax._
 

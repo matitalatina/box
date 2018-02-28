@@ -8,6 +8,7 @@ import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.Auth
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
+import scribe.{Level, Logger}
 
 import scala.io.StdIn
 
@@ -27,6 +28,8 @@ object Boot extends App with Root {
   val conf: Config = ConfigFactory.load().as[Config]("serve")
   val host = conf.as[String]("host")
   val port = conf.as[Int]("port")
+
+  Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Error))
 
   //TODO need to be reworked now it's based on an hack, it call generated root to populate models
   GeneratedRoutes()(Auth.adminDB,materializer,executionContext)

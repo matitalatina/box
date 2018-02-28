@@ -10,7 +10,7 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
 import io.udash._
 import org.scalajs.dom.Event
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.Future
 import scala.util.Random
@@ -20,7 +20,7 @@ import scalacss.ScalatagsCss._
 /**
   * Created by andre on 6/1/2017.
   */
-case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[Json], masterData:Property[Json]) extends Widget with LazyLogging {
+case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[Json], masterData:Property[Json]) extends Widget with Logging {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._

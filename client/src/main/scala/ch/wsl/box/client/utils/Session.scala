@@ -4,7 +4,7 @@ import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.{Context, IndexState, LoginState}
 import org.scalajs.dom
 import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -12,7 +12,7 @@ import scala.util.Try
 /**
   * Created by andre on 5/24/2017.
   */
-object Session extends LazyLogging {
+object Session extends Logging {
 
   import ch.wsl.box.client.Context._
   import io.circe._

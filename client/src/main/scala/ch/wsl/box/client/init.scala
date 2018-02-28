@@ -6,7 +6,7 @@ import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.properties.PropertyCreator
 import io.udash.wrappers.jquery._
 import org.scalajs.dom.{Element, document}
-import slogging._
+import scribe.{Level, Logger, Logging}
 
 import scala.concurrent.Future
 import scala.scalajs.js.JSApp
@@ -23,14 +23,13 @@ object Context {
   implicit val pcfr: PropertyCreator[Option[ch.wsl.box.model.shared.FileReference]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.FileReference]]
 }
 
-object Init extends JSApp with LazyLogging {
+object Init extends JSApp with Logging {
   import Context._
 
   @JSExport
   override def main(): Unit = {
 
-    LoggerConfig.factory = ConsoleLoggerFactory()
-    LoggerConfig.level = LogLevel.ERROR
+    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Error))
 
     logger.debug("Box started")
 

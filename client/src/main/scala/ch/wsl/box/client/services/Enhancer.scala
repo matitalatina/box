@@ -4,7 +4,7 @@ import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -12,7 +12,7 @@ import scala.util.Try
 /**
   * Created by andre on 5/2/2017.
   */
-object Enhancer extends LazyLogging {
+object Enhancer extends Logging {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 

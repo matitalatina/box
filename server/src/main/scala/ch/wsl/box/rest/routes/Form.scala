@@ -10,6 +10,7 @@ import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
 import io.circe.parser.parse
+import scribe.Logging
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -17,7 +18,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Created by andre on 5/15/2017.
   */
-case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload {
+case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload with Logging {
 
     import JSONSupport._
     import akka.http.scaladsl.model._
@@ -49,7 +50,7 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
           get {
             complete(actions(metadata){ fs =>
               fs.getAllById(JSONID.fromString(id)).map{ record =>
-                println(record)
+                logger.info(record)
                 HttpEntity(ContentTypes.`application/json`,record)
               }
             })
@@ -121,7 +122,7 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
       path("list") {
         post {
           entity(as[JSONQuery]) { query =>
-            println("list")
+            logger.info("list")
             complete(actions(tabularMetadata){ fs =>
               fs.extractArray(query).map{arr =>
                 HttpEntity(ContentTypes.`text/plain(UTF-8)`,arr)
@@ -133,7 +134,7 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
       path("csv") {
         post {
           entity(as[JSONQuery]) { query =>
-            println("csv")
+            logger.info("csv")
             complete(actions(tabularMetadata){ fs =>
               fs.csv(query)
             })

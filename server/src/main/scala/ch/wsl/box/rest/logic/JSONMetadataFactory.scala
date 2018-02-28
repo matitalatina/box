@@ -7,12 +7,13 @@ import ch.wsl.box.rest.model.TablesRegistry
 import ch.wsl.box.rest.utils.Auth
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
+import scribe.Logging
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
-object JSONMetadataFactory {
+object JSONMetadataFactory extends Logging {
 
   import StringHelper._
   
@@ -38,8 +39,8 @@ object JSONMetadataFactory {
       _ match {
         case Some(fk) => {
           if (constraints.contains(fk.constraintName)) {
-            println("error: " + fk.constraintName)
-            println(field.column_name)
+            logger.info("error: " + fk.constraintName)
+            logger.info(field.column_name)
             Future.successful(JSONField(field.jsonType, name = field.boxName, nullable = field.nullable))
           } else {
             constraints = fk.constraintName :: constraints
@@ -88,9 +89,9 @@ object JSONMetadataFactory {
 
   }
   def keysOf(table:String)(implicit ec:ExecutionContext):Future[Seq[String]] = {
-    println("Getting " + table + " keys")
+    logger.info("Getting " + table + " keys")
     new PgInformationSchema(table,Auth.adminDB).pk.map { pk =>   //map to enter the future
-      println(pk)
+      logger.info(pk)
       pk.boxKeys
     }
 

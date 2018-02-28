@@ -1,6 +1,8 @@
 package ch.wsl.box.rest.logic
 
+import scribe.Logging
 import slick.lifted.{AbstractTable, TableQuery}
+
 import scala.reflect.runtime.universe._
 import slick.driver.PostgresDriver.api._
 
@@ -14,7 +16,7 @@ case class Col(rep:Rep[_],`type`:String)
  */
 
 
-object EnhancedTable {
+object EnhancedTable extends Logging {
 
   implicit class EnTable[T](t: Table[_]) {
 
@@ -29,7 +31,7 @@ object EnhancedTable {
           }.get
         } catch {
           case e: Exception => {
-            println(rm.classSymbol(t.getClass).toType.members)
+            logger.debug(rm.classSymbol(t.getClass).toType.members)
             throw new Exception(s"Field not found:$field available fields: ${rm.classSymbol(t.getClass).toType.members} of table:${t.tableName}")
           }
         }

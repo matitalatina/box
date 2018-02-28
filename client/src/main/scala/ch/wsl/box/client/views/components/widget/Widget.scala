@@ -7,7 +7,7 @@ import io.circe._
 import io.circe.syntax._
 import io.udash.properties.single.Property
 import ch.wsl.box.shared.utils.JsonUtils._
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalatags.JsDom.all._
@@ -28,7 +28,7 @@ trait Widget{
 
 }
 
-trait WidgetBinded extends Widget with LazyLogging {
+trait WidgetBinded extends Widget with Logging {
 
   private final val childInjectedId = "$child-element"
 

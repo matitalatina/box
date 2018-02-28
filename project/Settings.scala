@@ -68,7 +68,7 @@ object Settings {
     val udash = "0.5.0"
     val udashJQuery = "1.1.0"
 
-    val slogging = "0.6.1"
+    val scribe = "2.1.0"
 
   }
 
@@ -80,7 +80,8 @@ object Settings {
     "io.udash"                 %%% "udash-core-shared" % versions.udash,
     "io.circe" %%% "circe-core" % versions.circe,
     "io.circe" %%% "circe-generic" % versions.circe,
-    "io.circe" %%% "circe-parser" % versions.circe
+    "io.circe" %%% "circe-parser" % versions.circe,
+    "com.outr" %%% "scribe" % versions.scribe
   ))
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(
@@ -104,7 +105,6 @@ object Settings {
     "io.circe"                 %% "circe-core"       % versions.circe,
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,
-    "ch.qos.logback"           %  "logback-classic"  % versions.logback,
     "io.udash"                 %% "udash-rpc-backend" % versions.udash,
     "org.webjars"              % "webjars-locator"   % "0.32",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
@@ -114,8 +114,8 @@ object Settings {
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka % "test",
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp % "test",
     "org.webjars"              % "bootstrap"         % "3.3.7",
-    "biz.enef"                 %% "slogging-slf4j"   % versions.slogging,
-    "org.slf4j"                % "slf4j-simple"      % "1.7.25"
+    "com.outr" %% "scribe" % versions.scribe,
+    "com.outr" %% "scribe-slf4j" % versions.scribe
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */
@@ -128,8 +128,7 @@ object Settings {
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
-    "org.scala-js" %%% "scalajs-dom" % "0.9.0",
-    "biz.enef"     %%% "slogging"   % versions.slogging
+    "org.scala-js" %%% "scalajs-dom" % "0.9.0"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

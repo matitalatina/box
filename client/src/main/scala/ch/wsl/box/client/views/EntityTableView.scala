@@ -20,7 +20,7 @@ import org.scalajs.dom
 import scalacss.ScalatagsCss._
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.{Element, Event, KeyboardEvent}
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.Future
 
@@ -55,7 +55,7 @@ Failed to decode JSON on
 /model/en/v_remark_base/metadata
 with error: DecodingFailure(String, List(DownArray, DownField(fields), DownArray, DownField(blocks), DownField(layout)))
  */
-case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState] with LazyLogging {
+case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState] with Logging {
 
   import ch.wsl.box.client.Context._
   import Enhancer._
@@ -229,7 +229,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 }
 
-case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:EntityTablePresenter, routes:Routes) extends View with LazyLogging {
+case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:EntityTablePresenter, routes:Routes) extends View with Logging {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 

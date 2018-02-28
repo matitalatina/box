@@ -7,7 +7,7 @@ import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared.errors.{ExceptionReport, GenericExceptionReport, JsonDecoderExceptionReport, SQLExceptionReport}
 import org.scalajs.dom
 import org.scalajs.dom.{File, FormData, XMLHttpRequest}
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.{Future, Promise}
 
@@ -18,7 +18,7 @@ object HttpClient{
   type Response[T] = Either[ExceptionReport,T]
 }
 
-case class HttpClient(endpoint:String) extends LazyLogging {
+case class HttpClient(endpoint:String) extends Logging {
 
 
   import io.circe.parser.decode

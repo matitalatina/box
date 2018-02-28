@@ -5,6 +5,7 @@ import akka.stream.scaladsl.Source
 import ch.wsl.box.model.shared.{IDs, JSONCount, JSONID, JSONQuery}
 import io.circe._
 import io.circe.syntax._
+import scribe.Logging
 import slick.basic.DatabasePublisher
 import slick.driver.PostgresDriver
 import slick.lifted.TableQuery
@@ -76,7 +77,7 @@ case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
 
 }
 
-case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJsonTableActions {
+case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJsonTableActions with Logging {
 
   lazy val jsonView = JsonViewActions[T,M](table)
 
@@ -102,7 +103,7 @@ case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
       throw new JsonDecoderException(fail,json)
     },
       { x => x})
-    println(s"JSON to save on $table: \n $data")
+    logger.info(s"JSON to save on $table: \n $data")
     val result: Future[M] = db.run { table.returning(table) += data }
     result.map(_.asJson)
   }

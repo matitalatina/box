@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 
 import ch.wsl.box.model.shared.Filter
+import scribe.{Logging}
 import slick.driver.PostgresDriver.api._
 
 trait DbFilters {
@@ -35,7 +36,7 @@ trait DbFilters {
 
 }
 
-trait UglyDBFilters extends DbFilters {
+trait UglyDBFilters extends DbFilters with Logging {
 
   val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
 
@@ -60,7 +61,7 @@ trait UglyDBFilters extends DbFilters {
           case "scala.Option[scala.Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] === v.asInstanceOf[String].toBoolean
           case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] === new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
-                println("Type mapping for: " + col.`type`+ " not found")
+                logger.error("Type mapping for: " + col.`type`+ " not found")
                 None
           }
       }
@@ -87,7 +88,7 @@ trait UglyDBFilters extends DbFilters {
           case "scala.Option[scala.Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.asInstanceOf[String].toBoolean
           case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] =!= new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
-            println("Type mapping for: " + col.`type` + " not found")
+            logger.error("Type mapping for: " + col.`type` + " not found")
             None
           }
       }
@@ -109,7 +110,7 @@ trait UglyDBFilters extends DbFilters {
           case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] > v.asInstanceOf[String].toLong
           case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] > new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
-              println("Type mapping for: " + col.`type` + " not found")
+              logger.error("Type mapping for: " + col.`type` + " not found")
               None
           }
       }
@@ -130,7 +131,7 @@ trait UglyDBFilters extends DbFilters {
           case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] >= v.asInstanceOf[String].toLong
           case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] >= new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
-              println("Type mapping for: " + col.`type` + " not found")
+              logger.error("Type mapping for: " + col.`type` + " not found")
               None
           }
       }
@@ -152,7 +153,7 @@ trait UglyDBFilters extends DbFilters {
           case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] < v.asInstanceOf[String].toLong
           case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] < new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
-            println("Type mapping for: " + col.`type` + " not found")
+            logger.error("Type mapping for: " + col.`type` + " not found")
             None
           }
       }
@@ -174,7 +175,7 @@ trait UglyDBFilters extends DbFilters {
           case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] <= v.asInstanceOf[String].toLong
           case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] <= new Timestamp(timestampFormatter.parse((v.asInstanceOf[String])).getTime)
           case _ => {
-            println("Type mapping for: " + col.`type` + " not found")
+            logger.error("Type mapping for: " + col.`type` + " not found")
             None
           }
       }
@@ -184,13 +185,13 @@ trait UglyDBFilters extends DbFilters {
 
     val c:Rep[_] = col.rep
 
-    println("Executing like on" + col.toString)
+    logger.info("Executing like on" + col.toString)
 
     col.`type` match {
           case "String" => c.asInstanceOf[Rep[String]].toLowerCase like v.asInstanceOf[String].toLowerCase
           case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]].toLowerCase like v.asInstanceOf[String].toLowerCase
           case _ => {
-            println("Type mapping for: " + col.`type` + " not found")
+            logger.error("Type mapping for: " + col.`type` + " not found")
             None
           }
       }

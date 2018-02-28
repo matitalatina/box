@@ -1,12 +1,12 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.utils.{ Session}
+import ch.wsl.box.client.utils.Session
 import io.udash._
 import io.udash.utils.Bidirectional
 import Context._
-import slogging.LazyLogging
+import scribe.Logging
 
-class RoutingRegistryDef extends RoutingRegistry[RoutingState] with LazyLogging {
+class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {
   def matchUrl(url: Url): RoutingState = {
     logger.info(s"match URL ${Session.isSet(Session.USER)}")
     Session.isSet(Session.USER) match {

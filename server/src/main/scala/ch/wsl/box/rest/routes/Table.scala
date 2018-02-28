@@ -13,6 +13,7 @@ import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.shared.utils.CSV
+import scribe.Logging
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
 
@@ -38,7 +39,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
                                                              seqmarshaller: ToResponseMarshaller[Seq[M]],
                                                              jsonmarshaller:ToResponseMarshaller[JSONData[M]],
                                                              db:Database,
-                                                             ec: ExecutionContext) extends enablers.CSVDownload {
+                                                             ec: ExecutionContext) extends enablers.CSVDownload with Logging {
 
 //    println(s"adding table: $name" )
     isBoxTable match{
@@ -126,7 +127,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
       path("list") {           //all values in JSON format according to JSONQuery
         post {
           entity(as[JSONQuery]) { query =>
-            println("list")
+            logger.info("list")
             complete(utils.find(query))
           }
         }
@@ -134,7 +135,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
       path("csv") {           //all values in csv format according to JSONQuery
           post {
             entity(as[JSONQuery]) { query =>
-              println("csv")
+              logger.info("csv")
               complete(Source.fromPublisher(utils.findStreamed(query)))
             }
           } ~
@@ -160,7 +161,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
         } ~
         post {                            //inserts
           entity(as[M]) { e =>
-            println("Inserting: " + e)
+            logger.info("Inserting: " + e)
             val data: Future[M] = db.run { table.returning(table) += e } //returns object with id
             complete(data)
           }

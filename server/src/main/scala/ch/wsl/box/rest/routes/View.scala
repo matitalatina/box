@@ -13,6 +13,7 @@ import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.shared.utils.CSV
 import io.circe.parser.parse
+import scribe.Logging
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
 
@@ -35,7 +36,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
                                                                                                          jsonmarshaller:ToResponseMarshaller[JSONData[M]],
                                                                                                          db:Database,
                                                                                                          ec: ExecutionContext
-                                                                                              ) extends enablers.CSVDownload {
+                                                                                              ) extends enablers.CSVDownload with Logging {
 
     View.views = Set(name) ++ View.views
 
@@ -49,7 +50,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
     val helper = new DbActions[T,M](table)
 
     def route = pathPrefix(name) {
-        println(s"view with name: $name")
+        logger.info(s"view with name: $name")
 
         path("kind") {
           get {
@@ -87,7 +88,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
         path("list") {
           post {
             entity(as[JSONQuery]) { query =>
-              println("list")
+              logger.info("list")
               complete(helper.find(query))
             }
           }
@@ -95,7 +96,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
           path("csv") {           //all values in csv format according to JSONQuery
             post {
               entity(as[JSONQuery]) { query =>
-                println("csv")
+                logger.info("csv")
                 Source
                 complete(Source.fromPublisher(helper.findStreamed(query)))
               }

@@ -9,7 +9,7 @@ import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom.File
-import slogging.LazyLogging
+import scribe.Logging
 
 import scala.concurrent.Future
 
@@ -22,7 +22,7 @@ import scala.concurrent.Future
   * @param labelString
   * @param entity
   */
-case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, labelString:String, entity:String) extends Widget with LazyLogging {
+case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, labelString:String, entity:String) extends Widget with Logging {
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._

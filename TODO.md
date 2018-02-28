@@ -4,7 +4,6 @@ TODO
 
 1. export page (DB driven)
 1. visualizzazione campi su condizione di altri campi (agginugere a box.field 2 colonne `conditionFieldId` che fa riferimento al field da "osservare" e `conditionValue` con i valori per cui il campo deve essere visualizzato )
-1. sostituire all println with logger
 
 
 

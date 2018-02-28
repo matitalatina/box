@@ -4,7 +4,7 @@ import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
-import ch.wsl.box.rest.boxentities.Form.{Form, Form_row, Form_i18n, Form_i18n_row}
+import ch.wsl.box.rest.boxentities.Form.{Form, Form_i18n, Form_i18n_row, Form_row}
 import ch.wsl.box.rest.boxentities.{Field, Form}
 import ch.wsl.box.rest.utils.Auth
 import slick.driver.PostgresDriver.api._
@@ -13,13 +13,14 @@ import scala.concurrent.{ExecutionContext, Future}
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
+import scribe.Logging
 
 /**
   * Created by andreaminetti on 10/03/16.
   *
   * mapping from form specs in box schema into JSONForm
   */
-case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:ExecutionContext) {
+case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends Logging {
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Form.table.result
   }.map{_.map(_.name)}
@@ -87,7 +88,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
         JSONField("string",key,false)
       }
 
-      println(s"Missing Key fields $missingKeyFields")
+      logger.info(s"Missing Key fields $missingKeyFields")
 
       val definedTableFields = form.tabularFields.toSeq.flatMap(_.split(","))
       val missingKeyTableFields = keys.filterNot(k => definedTableFields.contains(k))
@@ -104,11 +105,11 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
       val layout = form.layout.flatMap { l =>
         parse(l).fold({ f =>
-          println(f.getMessage())
+          logger.info(f.getMessage())
           None
         }, { json =>
           json.as[Layout].fold({ f =>
-            println(f.getMessage())
+            logger.info(f.getMessage())
             None
           }, { lay =>
             Some(lay)

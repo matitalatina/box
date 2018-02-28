@@ -13,6 +13,7 @@ import ch.wsl.box.model.shared.JSONID
 import ch.wsl.box.rest.logic.DbActions
 import ch.wsl.box.rest.routes.File.FileHandler
 import io.circe.Decoder
+import scribe.Logging
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,7 +44,7 @@ object File{
 
 }
 
-case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database) {
+case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database) extends Logging {
   import Directives._
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
@@ -71,7 +72,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
         }
       } ~
       path(Segment) { idstr =>
-        println(s"Parsing File'JSONID: $idstr")
+        logger.info(s"Parsing File'JSONID: $idstr")
         val id = JSONID.fromString(idstr)
 
         post {
