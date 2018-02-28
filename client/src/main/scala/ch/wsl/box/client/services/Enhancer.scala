@@ -4,6 +4,7 @@ import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
+import slogging.LazyLogging
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -11,7 +12,7 @@ import scala.util.Try
 /**
   * Created by andre on 5/2/2017.
   */
-object Enhancer {
+object Enhancer extends LazyLogging {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
@@ -36,7 +37,7 @@ object Enhancer {
 
     Future.sequence {
       models.distinct.map { model: String =>
-        println(s"fetching Model: $model")
+        logger.info(s"fetching Model: $model")
         REST.list("entity", Session.lang(), model, 6000).map(r => model -> r)
       }
     }
@@ -63,7 +64,7 @@ object Enhancer {
 
 
   def parse(field: JSONField,value:Option[Json])(onError:(Throwable => Unit)):(String,Json) = try{
-    println(s"parsing ${field.name} with value $value")
+    logger.debug(s"parsing ${field.name} with value $value")
 
     val valueToSave:Json = value match {
       case None => Json.Null

@@ -6,13 +6,14 @@ import ch.wsl.box.model.shared.{JSONField, JSONID}
 import io.circe.Json
 import org.scalajs.dom.{Element, Event}
 import io.udash._
+import slogging.LazyLogging
 
 import scalatags.JsDom.TypedTag
 
 /**
   * Created by andre on 5/2/2017.
   */
-object TableFieldsRenderer {
+object TableFieldsRenderer extends LazyLogging{
 
   import io.circe.syntax._
 
@@ -23,7 +24,7 @@ object TableFieldsRenderer {
 
 
   def toggleEdit(editing:Property[Boolean]) = {
-    println("Toggle edit")
+    logger.info("Toggle edit")
     editing.set(!editing.get)
   }
 

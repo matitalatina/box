@@ -7,6 +7,7 @@ import io.circe._
 import io.circe.syntax._
 import io.udash.properties.single.Property
 import ch.wsl.box.shared.utils.JsonUtils._
+import slogging.LazyLogging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalatags.JsDom.all._
@@ -27,7 +28,7 @@ trait Widget{
 
 }
 
-trait WidgetBinded extends Widget {
+trait WidgetBinded extends Widget with LazyLogging {
 
   private final val childInjectedId = "$child-element"
 
@@ -39,7 +40,7 @@ trait WidgetBinded extends Widget {
 
   def isOf(js:Json) = {
     val saved = js.get(childInjectedId)
-    println(s"cheking if result childId: $saved is equals to widgetId: $widgetId")
+    logger.debug(s"cheking if result childId: $saved is equals to widgetId: $widgetId")
     js.get(childInjectedId) == widgetId
   }
 }

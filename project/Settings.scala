@@ -68,6 +68,7 @@ object Settings {
     val udash = "0.5.0"
     val udashJQuery = "1.1.0"
 
+    val slogging = "0.6.1"
 
   }
 
@@ -111,8 +112,10 @@ object Settings {
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test",
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka % "test",
-    "com.typesafe.akka"        %% "akka-http-testkit" % versions.akkaHttp % "test",
-    "org.webjars" % "bootstrap" % "3.3.7"
+    "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp % "test",
+    "org.webjars"              % "bootstrap"         % "3.3.7",
+    "biz.enef"                 %% "slogging-slf4j"   % versions.slogging,
+    "org.slf4j"                % "slf4j-simple"      % "1.7.25"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */
@@ -125,7 +128,8 @@ object Settings {
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
-    "org.scala-js" %%% "scalajs-dom" % "0.9.0"
+    "org.scala-js" %%% "scalajs-dom" % "0.9.0",
+    "biz.enef"     %%% "slogging"   % versions.slogging
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

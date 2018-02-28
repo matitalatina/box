@@ -64,7 +64,6 @@ trait BaseCodeGenerator {
 
 
   //exclude fields
-  println(excludeFields)
   private val cleanedEntities = slickDbModel.tables.filter{t =>
     dbSchema match {
       case "public" => t.name.schema.isEmpty

@@ -1,22 +1,23 @@
 TODO
 ====
 
-1. thumbnails of images/pdf
+
 1. export page (DB driven)
 1. visualizzazione campi su condizione di altri campi (agginugere a box.field 2 colonne `conditionFieldId` che fa riferimento al field da "osservare" e `conditionValue` con i valori per cui il campo deve essere visualizzato )
 1. sostituire all println with logger
-1. errors management:
-    - Data insert validation
-1. track if record changed
+
+
 
 ##### Details
-1. change "save" button appearance
 
 
 ##### Someday
+1. thumbnails of images/pdf
 1. custom Search mask
 1. visualizzazione/modifica/insert dati geografici
 1. aggiungere lookupFilter in box.field
+1. errors management:
+    - Data insert validation field to field
 
 
 BUGS

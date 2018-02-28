@@ -16,7 +16,6 @@ object JsonTest extends TestSuite{
       import io.circe.generic.auto._
 
       val result = decode[JSONSchema](jsonSchema)
-      println(result)
     }
 //    'test2{
 //      GenCodec.read[Js.Value](new SimpleValueInput(json2))

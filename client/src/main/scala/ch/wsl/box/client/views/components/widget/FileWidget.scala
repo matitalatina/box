@@ -9,7 +9,7 @@ import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom.File
-
+import slogging.LazyLogging
 
 import scala.concurrent.Future
 
@@ -22,7 +22,7 @@ import scala.concurrent.Future
   * @param labelString
   * @param entity
   */
-case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, labelString:String, entity:String) extends Widget {
+case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, labelString:String, entity:String) extends Widget with LazyLogging {
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
@@ -31,7 +31,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   import io.circe.syntax._
 
   override def afterSave(result:Json, metadata: JSONMetadata) = {
-    println(s"File after save with result: $result with selected file: ${selectedFile.get.headOption.map(_.name)}")
+    logger.info(s"File after save with result: $result with selected file: ${selectedFile.get.headOption.map(_.name)}")
 
     val jsonid = result.ID(metadata.keys)
     for{

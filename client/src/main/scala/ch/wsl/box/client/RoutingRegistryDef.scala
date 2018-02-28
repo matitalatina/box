@@ -1,12 +1,14 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.utils.Session
+import ch.wsl.box.client.utils.{ Session}
 import io.udash._
 import io.udash.utils.Bidirectional
+import Context._
+import slogging.LazyLogging
 
-class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
+class RoutingRegistryDef extends RoutingRegistry[RoutingState] with LazyLogging {
   def matchUrl(url: Url): RoutingState = {
-    println(s"match URL ${Session.isSet(Session.USER)}")
+    logger.info(s"match URL ${Session.isSet(Session.USER)}")
     Session.isSet(Session.USER) match {
       case true => loggedInUrl2State.applyOrElse (url.value.stripSuffix ("/"), (x: String) => ErrorState)
       case false => loggedOutUrl2State.applyOrElse (url.value.stripSuffix ("/"), (x: String) => ErrorState)
@@ -14,7 +16,7 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
   }
 
   def matchState(state: RoutingState): Url = {
-    println(s"match STATE ${Session.isSet(Session.USER)}")
+    logger.info(s"match STATE ${Session.isSet(Session.USER)}")
     Session.isSet(Session.USER) match {
       case true => Url(loggedInState2Url.apply(state))
       case false => Url(loggedOutState2Url.apply(state))

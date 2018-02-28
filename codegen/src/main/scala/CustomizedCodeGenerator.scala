@@ -66,7 +66,6 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "ch.wsl.box.model.FileTables"
     )
 
-    println("Exit")
 
 
   }

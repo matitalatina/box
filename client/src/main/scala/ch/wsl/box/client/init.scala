@@ -1,11 +1,12 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.utils.{Conf, Labels, Session, UI}
+import ch.wsl.box.client.utils._
 import io.udash._
 import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.properties.PropertyCreator
 import io.udash.wrappers.jquery._
 import org.scalajs.dom.{Element, document}
+import slogging._
 
 import scala.concurrent.Future
 import scala.scalajs.js.JSApp
@@ -22,11 +23,16 @@ object Context {
   implicit val pcfr: PropertyCreator[Option[ch.wsl.box.model.shared.FileReference]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.FileReference]]
 }
 
-object Init extends JSApp with StrictLogging {
+object Init extends JSApp with LazyLogging {
   import Context._
 
   @JSExport
   override def main(): Unit = {
+
+    LoggerConfig.factory = ConsoleLoggerFactory()
+    LoggerConfig.level = LogLevel.ERROR
+
+    logger.debug("Box started")
 
     for {
       _ <- Conf.load()

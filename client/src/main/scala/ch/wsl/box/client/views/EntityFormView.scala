@@ -15,6 +15,7 @@ import io.udash.bootstrap.label.UdashLabel
 import io.udash.core.Presenter
 import io.udash.properties.single.Property
 import org.scalajs.dom._
+import slogging.LazyLogging
 
 import scala.concurrent.Future
 import scalatags.JsDom
@@ -42,7 +43,7 @@ object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
   }
 }
 
-case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] {
+case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] with LazyLogging {
 
   import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JsonUtils._
@@ -131,7 +132,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         Navigate.to(newState.url)
 
       }}.recover{ case e =>
-        e.getStackTrace.foreach(x => println(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
+        e.getStackTrace.foreach(x => logger.error(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
         e.printStackTrace()
       }
     }

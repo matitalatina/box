@@ -4,6 +4,7 @@ import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.{Context, IndexState, LoginState}
 import org.scalajs.dom
 import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
+import slogging.LazyLogging
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -11,7 +12,7 @@ import scala.util.Try
 /**
   * Created by andre on 5/24/2017.
   */
-object Session {
+object Session extends LazyLogging {
 
   import ch.wsl.box.client.Context._
   import io.circe._
@@ -27,7 +28,7 @@ object Session {
   final val STATE = "state"
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
-    println(s"Setting $key")
+    logger.info(s"Setting $key")
     dom.window.sessionStorage.setItem(key,obj.asJson.toString())
   }
 

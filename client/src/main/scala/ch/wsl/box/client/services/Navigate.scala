@@ -1,5 +1,6 @@
 package ch.wsl.box.client.services
 
+import org.scalajs.dom.{BeforeUnloadEvent, window}
 
 
 object Navigate {
@@ -19,6 +20,7 @@ object Navigate {
       action()
     } else if(enabler()) {
       enabled = true
+      window.onbeforeunload = { (e:BeforeUnloadEvent) => } //is a new page i don't want to block the user anymore
       action()
     }
   }

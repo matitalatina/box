@@ -11,11 +11,13 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.button.{ButtonStyle, UdashButton, UdashButtonGroup}
 import io.udash.bootstrap.modal.{ModalSize, UdashModal}
 import org.scalajs.dom
+import slogging.LazyLogging
+
 import scala.concurrent.duration._
 
 
 
-case class PopupWidget(lookup:JSONFieldLookup, label: String, data: Property[Json]) extends LookupWidget {
+case class PopupWidget(lookup:JSONFieldLookup, label: String, data: Property[Json]) extends LookupWidget with LazyLogging {
 
 import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._
@@ -79,7 +81,7 @@ import ch.wsl.box.client.Context._
 
 
     modalStatus.listen{ state =>
-      println(s"State changed to:$state")
+      logger.info(s"State changed to:$state")
       state match {
         case Status.Open => modal.show()
         case Status.Closed => modal.hide()

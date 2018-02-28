@@ -7,6 +7,7 @@ import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared.errors.{ExceptionReport, GenericExceptionReport, JsonDecoderExceptionReport, SQLExceptionReport}
 import org.scalajs.dom
 import org.scalajs.dom.{File, FormData, XMLHttpRequest}
+import slogging.LazyLogging
 
 import scala.concurrent.{Future, Promise}
 
@@ -17,7 +18,7 @@ object HttpClient{
   type Response[T] = Either[ExceptionReport,T]
 }
 
-case class HttpClient(endpoint:String) {
+case class HttpClient(endpoint:String) extends LazyLogging {
 
 
   import io.circe.parser.decode
@@ -54,14 +55,14 @@ case class HttpClient(endpoint:String) {
         } else {
           decode[T](xhr.responseText) match {
             case Left(fail) => {
-              println(s"Failed to decode JSON on $url with error: $fail")
+              logger.warn(s"Failed to decode JSON on $url with error: $fail")
               promise.failure(fail)
             }
             case Right(result) => promise.success(Right(result))
           }
         }
       } else if (xhr.status == 401 || xhr.status == 403) {
-        println("Not authorized")
+        logger.info("Not authorized")
         Session.logoutAndSaveState()
         promise.failure(new Exception("HTTP status" + xhr.status))
       } else {
@@ -73,7 +74,7 @@ case class HttpClient(endpoint:String) {
 
     xhr.onerror = { (e: dom.Event) =>
       if (xhr.status == 401 || xhr.status == 403) {
-        println("Not authorized")
+        logger.info("Not authorized")
         Session.logoutAndSaveState()
         promise.failure(new Exception("HTTP status" + xhr.status))
       } else {
@@ -95,20 +96,20 @@ case class HttpClient(endpoint:String) {
         for{
           json <- {
             val r = parse(xhr.responseText).right.toOption
-            println(r)
+            logger.debug(r.toString)
             r
           }
           er <- {
             val r = json.getOpt("source").flatMap{
               case "json" => {
                 val r = json.as[JsonDecoderExceptionReport]
-                println(r)
+                logger.debug(r.toString)
                 r.right.toOption
               }
               case "sql" => json.as[SQLExceptionReport].right.toOption
-              case x => println(s"AAAAA $x"); None
+              case x =>  None
             }
-            println(r)
+            logger.debug(r.toString)
             r
           }
         } yield er

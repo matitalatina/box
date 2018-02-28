@@ -136,9 +136,6 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
           case "app" if primaryKey => dbKeysExceptions.contains(completeName)
           case _ => false
         }
-        if(result) {
-          println(s"$completeName managed: $result")
-        }
         result
       }
 

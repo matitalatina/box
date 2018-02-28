@@ -20,6 +20,7 @@ import org.scalajs.dom
 import scalacss.ScalatagsCss._
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.{Element, Event, KeyboardEvent}
+import slogging.LazyLogging
 
 import scala.concurrent.Future
 
@@ -54,7 +55,7 @@ Failed to decode JSON on
 /model/en/v_remark_base/metadata
 with error: DecodingFailure(String, List(DownArray, DownField(fields), DownArray, DownField(blocks), DownField(layout)))
  */
-case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState]{
+case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState] with LazyLogging {
 
   import ch.wsl.box.client.Context._
   import Enhancer._
@@ -66,7 +67,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
     val emptyJsonQuery = JSONQuery.empty.limit(Conf.pageLength)
 
-    println("handling state")
+    logger.info("handling state")
 
     for{
       emptyFieldsForm <- REST.metadata(state.kind,Session.lang(),state.entity)
@@ -142,7 +143,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def reloadRows(page:Int) = {
-    println("reloading rows")
+    logger.info("reloading rows")
 
     val q = query().copy(paging = Some(JSONQueryPaging(Conf.pageLength,page)))
 
@@ -170,7 +171,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def filter(metadata: FieldQuery, filter:String) = {
-    println("filtering")
+    logger.info("filtering")
     val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
       m.field.name == metadata.field.name match {
         case true => m.copy(filter = filter)
@@ -182,7 +183,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def filterType(fieldQuery:FieldQuery, filterType:String) = {
-    println("setting filtertype " + filterType)
+    logger.info("setting filtertype " + filterType)
     val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
       m.field.name == fieldQuery.field.name match {
         case true => m.copy(filterType = filterType)
@@ -228,7 +229,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 }
 
-case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:EntityTablePresenter, routes:Routes) extends View {
+case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:EntityTablePresenter, routes:Routes) extends View with LazyLogging {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
@@ -252,7 +253,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     val filterTypeHandler = filterTypeModel.transform(
       (s:String) => s,
       {(s:String) =>
-        println("changed filter" + s)
+        logger.info("changed filter" + s)
         presenter.filterType(fieldQuery,s)  //aggiorna metadata
         s
       }

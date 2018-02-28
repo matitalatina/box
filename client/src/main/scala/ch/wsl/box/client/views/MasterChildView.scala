@@ -1,13 +1,14 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{MasterChildState, EntityTableState}
+import ch.wsl.box.client.{EntityTableState, MasterChildState}
 import ch.wsl.box.model.shared.{Filter, JSONField, JSONID}
 import io.udash.ViewPresenter
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.{Presenter, View}
 import io.udash.properties.model.ModelProperty
 import org.scalajs.dom.Element
+import slogging.LazyLogging
 
 import scalatags.generic.Modifier
 
@@ -16,21 +17,21 @@ import scalatags.generic.Modifier
   */
 
 
-case class MasterChildViewPresenter(master:String,child:String) extends ViewPresenter[MasterChildState]{
+case class MasterChildViewPresenter(master:String,child:String) extends ViewPresenter[MasterChildState] with LazyLogging {
 
   override def create(): (View, Presenter[MasterChildState]) = {
 
     val (childView,childPresenter) = EntityTableViewPresenter(Routes("entity",child)).create()
 
     def onChangeMaster(rows:Seq[(JSONField,String)]):Unit = {
-      println("change master")
+      logger.info("change master")
       val ids = rows.filter(_._1.lookup.exists(_.lookupEntity == child))
       val childTable = childPresenter.asInstanceOf[EntityTablePresenter]
       if(ids.length > 0)
         childTable.filterById(JSONID.fromMap(ids.map(x => x._1.name -> x._2).toMap))
 
       val childForeignMetadata = childTable.model.get.fieldQueries.find(_.field.lookup.exists(_.lookupEntity == master))
-      println(childForeignMetadata)
+      logger.debug(childForeignMetadata.toString)
       for{
         metadata <- childForeignMetadata
         value <- rows.find(_._1.name == metadata.field.lookup.get.map.valueProperty)

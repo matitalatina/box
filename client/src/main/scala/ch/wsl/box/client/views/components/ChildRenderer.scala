@@ -10,6 +10,7 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
 import io.udash._
 import org.scalajs.dom.Event
+import slogging.LazyLogging
 
 import scala.concurrent.Future
 import scala.util.Random
@@ -19,7 +20,7 @@ import scalacss.ScalatagsCss._
 /**
   * Created by andre on 6/1/2017.
   */
-case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[Json], masterData:Property[Json]) extends Widget {
+case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[Json], masterData:Property[Json]) extends Widget with LazyLogging {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
@@ -44,7 +45,7 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
   }
 
   def removeItem(entity:Property[Seq[Json]], itemToRemove:Json, child:Child) = {
-    println("removing item")
+    logger.info("removing item")
     if(org.scalajs.dom.window.confirm(Labels.messages.confirm)) {
       for {
         form <- children.find(_.objId == child.objId)
@@ -56,7 +57,7 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
 
 
   def addItem(entity:Property[Seq[Json]], child:Child, metadata:JSONMetadata) = {
-    println("adding item")
+    logger.info("adding item")
 
 
     val keys = for {
