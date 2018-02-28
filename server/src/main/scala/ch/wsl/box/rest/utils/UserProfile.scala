@@ -6,7 +6,7 @@ import slick.driver.PostgresDriver.api._
 import scala.concurrent.{ExecutionContext, Future}
 
 case class UserProfile(name: String, db: Database, box:Database) {
-  def check(implicit ec:ExecutionContext) = db.run{
+  def check(implicit ec:ExecutionContext): Future[Boolean] = db.run{
     sql"""select 1""".as[Int]
   }.map{ _ =>
     true

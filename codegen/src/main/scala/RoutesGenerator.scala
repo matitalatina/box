@@ -20,7 +20,7 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
   def generate(pkg:String,name:String,modelPackages:String):String =
     s"""package ${pkg}
        |
-             |import akka.http.scaladsl.server.{Directives, Route}
+       |import akka.http.scaladsl.server.{Directives, Route}
        |import akka.stream.Materializer
        |import scala.concurrent.ExecutionContext
        |import $modelPackages._

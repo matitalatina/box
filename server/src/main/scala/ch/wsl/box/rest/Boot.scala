@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import ch.wsl.box.rest.routes.{GeneratedRoutes, Root}
+import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.Auth
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
@@ -30,6 +30,7 @@ object Boot extends App with Root {
 
   //TODO need to be reworked now it's based on an hack, it call generated root to populate models
   GeneratedRoutes()(Auth.adminDB,materializer,executionContext)
+  BoxRoutes()(Auth.adminDB,materializer,executionContext)
 
   // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
   val bindingFuture = Http().bindAndHandle(handleExceptions(BoxExceptionHandler()) {

@@ -25,6 +25,7 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] {
   private val (loggedInUrl2State, loggedInState2Url) = Bidirectional[String, RoutingState] {
     case "/home" => IndexState
     case "/entities" => EntitiesState("entity","")
+//    case "/boxtables" => EntitiesState("table","")
     case "/tables" => EntitiesState("table","")
     case "/views" => EntitiesState("view","")
     case "/forms" => EntitiesState("form","")

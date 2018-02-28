@@ -9,6 +9,7 @@ import io.circe.syntax._
 case class JSONMetadata(
                          objId:Int,
                          name:String,
+                         label:String,
                          fields:Seq[JSONField],
                          layout:Layout,
                          entity:String,

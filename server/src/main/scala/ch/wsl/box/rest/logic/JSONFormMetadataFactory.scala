@@ -4,7 +4,7 @@ import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
-import ch.wsl.box.rest.boxentities.Form.{Form, Form_row}
+import ch.wsl.box.rest.boxentities.Form.{Form, Form_row, Form_i18n, Form_i18n_row}
 import ch.wsl.box.rest.boxentities.{Field, Form}
 import ch.wsl.box.rest.utils.Auth
 import slick.driver.PostgresDriver.api._
@@ -69,6 +69,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
     for{
       form <- Auth.boxDB.run( formQuery.result ).map(_.head)
+      formI18n <- Auth.boxDB.run(  Form.Form_i18n.filter(f => f.form_id === form.form_id.get && f.lang === lang).result ).map(_.headOption)
       fields <- Auth.boxDB.run{fieldQuery(form.form_id.get).result}
       fieldsFile <- Future.sequence(fields.map { case (f, _) =>
         Auth.boxDB.run {
@@ -118,7 +119,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
 
 
-      val result = JSONMetadata(form.form_id.get,form.name,jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery)
+      val result = JSONMetadata(form.form_id.get,form.name,formI18n.flatMap(_.label).getOrElse(form.name),jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery)
       //println(s"resulting form: $result")
       result
     }

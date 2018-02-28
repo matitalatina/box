@@ -44,7 +44,7 @@ class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
 
 
   private val content = div(BootstrapStyles.row)(
-    div(raw(UI.info.getOrElse(""))),
+    div(raw(UI.info)),
     if(UI.enableNews) {
       div(h2("News"),
         Debug(viewModel, "indexView"),

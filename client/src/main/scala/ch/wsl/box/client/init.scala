@@ -30,8 +30,8 @@ object Init extends JSApp with StrictLogging {
 
     for {
       _ <- Conf.load()
-      _ <- UI.load()
       _ <- Labels.load(Session.lang())
+      _ <- UI.load()
     } yield {
       jQ(document).ready((_: Element) => {
         val appRoot = jQ("#application").get(0)

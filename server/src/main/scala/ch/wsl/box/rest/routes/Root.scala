@@ -8,12 +8,13 @@ import ch.wsl.box.rest.boxentities.{Conf, UITable}
 import ch.wsl.box.rest.utils.BoxSession
 import slick.jdbc.PostgresProfile.api._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext, Future}
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.LoginRequest
 
-import scala.util.Success
+import scala.util.{Failure, Success}
+
 /**
   * Created by andreaminetti on 15/03/16.
   */
@@ -95,44 +96,104 @@ trait Root extends enablers.Sessions {
             } ~
             touchRequiredSession(oneOff, usingCookiesOrHeaders) { session =>
               implicit val db = session.userProfile.db
+//              val accessLevel = session.userProfile.accessLevel.get
+
+              //todo: verificare differenza di Auth.boxDB con userProfile.box
+              def onlyAdminstrator(r:Route):Route = {
+                import scala.concurrent._
+                import scala.concurrent.duration._
+
+                //todo: do it without Await ...
+                val accessLevel = Await.result(session.userProfile.accessLevel, 1 second)
+
+                accessLevel match {
+                  case 1000 => r
+                  case al => get {
+                    complete("You don't have the rights (access level = " + al + ")")
+                  }
+                }
+//
+//                (session.userProfile.accessLevel).map {
+//                    case 1000 => r
+//                    case al => get {
+//                      complete("You don't have the rights (access level = " + al + ")")
+//                  }
+//                }
+
+//                for {
+//                  accessLevel <- session.userProfile.accessLevel
+//                } yield {
+//                  r
+//                }
+//                  else get {
+//                    complete("You don't have the rights (access level = " + accessLevel + ")")
+//                  }
+//
 
 
+//                val accessLevel:Int =  session.userProfile.accessLevel.onComplete {
+//                  case Success(al) => al
+//                  case Failure(ex) => -1
+//                }
+//                if (accessLevel==1000)
+//                  r
+//                else
+//                  get {
+//                    complete("You don't have the rights (access level = " + accessLevel + ")")
+//                  }
+              }
+
+
+              //access to box tables for administrator
+              pathPrefix("boxfile") {
+                onlyAdminstrator(BoxFileRoutes.route(Auth.boxDB, materializer, executionContext))
+              } ~
+              pathPrefix("boxentity") {
+                onlyAdminstrator(BoxRoutes()(Auth.boxDB, materializer, executionContext))
+              } ~
+              path("boxentities") {
+                onlyAdminstrator(
+                  get {
+                    complete(Table.boxTables.toSeq.sorted)
+                  }
+                )
+              } ~
               pathPrefix("file") {
                 FileRoutes.route
               } ~
-                pathPrefix("entity") {
-                  pathPrefix(Segment) { lang =>
-                    GeneratedRoutes()
-                  }
-                } ~
-                path("entities") {
-                  get {
-                    val alltables = Table.tables ++ View.views
-                    complete(alltables.toSeq.sorted)
-                  }
-                } ~
-                path("tables") {
-                  get {
-                    complete(Table.tables.toSeq.sorted)
-                  }
-                } ~
-                path("views") {
-                  get {
-                    complete(View.views.toSeq.sorted)
-                  }
-                } ~
-                path("forms") {
-                  get {
-                    complete(JSONFormMetadataFactory().list)
-                  }
-                } ~
-                pathPrefix("form") {
-                  pathPrefix(Segment) { lang =>
-                    pathPrefix(Segment) { name =>
-                      Form(name, lang).route
-                    }
+              pathPrefix("entity") {
+                pathPrefix(Segment) { lang =>
+                  GeneratedRoutes()
+                }
+              } ~
+              path("entities") {
+                get {
+                  val alltables = Table.tables ++ View.views
+                  complete(alltables.toSeq.sorted)
+                }
+              } ~
+              path("tables") {
+                get {
+                  complete(Table.tables.toSeq.sorted)
+                }
+              } ~
+              path("views") {
+                get {
+                  complete(View.views.toSeq.sorted)
+                }
+              } ~
+              path("forms") {
+                get {
+                  complete(JSONFormMetadataFactory().list)
+                }
+              } ~
+              pathPrefix("form") {
+                pathPrefix(Segment) { lang =>
+                  pathPrefix(Segment) { name =>
+                    Form(name, lang).route
                   }
                 }
+              }
             }
         }
     }

@@ -1,7 +1,7 @@
 package ch.wsl.box.client.utils
 
 import ch.wsl.box.client.services.REST
-
+import ch.wsl.box.client.utils.Labels
 import scala.util.Try
 
 object UI {
@@ -10,6 +10,7 @@ object UI {
   import io.circe._
   import io.circe.generic.auto._
   import io.circe.syntax._
+
 
   private var ui:Map[String,String] = Map()
 
@@ -21,7 +22,7 @@ object UI {
 
   def logo = ui.lift("logo")
   def title = ui.lift("title")
-  def info = ui.lift("info")
+  def info = Labels(ui.lift("info").getOrElse("ui.info"))
   def newsTable = ui.lift("newsTable")
   def footerCopyright = ui.lift("footerCopyright")
   def enableNews = ui.lift("enableNews").contains("true")

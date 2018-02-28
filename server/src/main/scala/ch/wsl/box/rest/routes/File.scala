@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 object File{
-  case class BoxFile(file:Option[Array[Byte]],mime: Option[String],name:Option[String])
+  case class BoxFile(file:Option[Array[Byte]], mime: Option[String], name:Option[String])
 
   trait FileHandler[M <: Product]{
     def inject(obj:M, file:Array[Byte], metadata:FileInfo):M

@@ -60,7 +60,7 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
        |
        |  import akka.http.scaladsl.server.Directives._
        |
-       |  def route(implicit ec:ExecutionContext,materializer:Materializer,db:Database):Route = $filesCode
+       |  def route(implicit db:Database,materializer:Materializer,ec:ExecutionContext):Route = $filesCode
        |}
      """.stripMargin
 

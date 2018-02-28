@@ -26,10 +26,11 @@ import scala.util.{Failure, Success}
 object Table {
 
   var tables = Set[String]()
+  var boxTables = Set[String]()
 
 }
 
-case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])
+case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], isBoxTable:Boolean = false)
                                                             (implicit
                                                              mat:Materializer,
                                                              unmarshaller: FromRequestUnmarshaller[M],
@@ -40,7 +41,11 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
                                                              ec: ExecutionContext) extends enablers.CSVDownload {
 
 //    println(s"adding table: $name" )
-    Table.tables = Set(name) ++ Table.tables
+    isBoxTable match{
+      case false => Table.tables = Set(name) ++ Table.tables
+      case true => Table.boxTables = Set(name) ++ Table.boxTables
+    }
+
 
     val utils = new DbActions[T,M](table)
     import JSONSupport._
