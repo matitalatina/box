@@ -102,7 +102,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
       val jsonFields = {missingKeyFields ++ jsonFieldsPartial}.distinct
 
-      val layout = form.layout.map { l =>
+      val layout = form.layout.flatMap { l =>
         parse(l).fold({ f =>
           println(f.getMessage())
           None
@@ -115,7 +115,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
           }
           )
         })
-      }.flatten.getOrElse(Layout.fromFields(jsonFields))
+      }.getOrElse(Layout.fromFields(jsonFields))
 
 
 
@@ -134,11 +134,11 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
     }.map(_.headOption)
   }
 
-  private def fieldsToJsonFields(fields:Seq[(((Field_row,Field_i18n_row),Option[FieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
+  private def fieldsToJsonFields(fields:Seq[(((Field_row,Field_i18n_row),Option[FieldFile_row]),Option[PgColumn])],lang:String): Future[Seq[JSONField]] = {
 
     val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
 
-      val lookup: Option[Future[JSONFieldLookup]] = for{
+      val lookup: Future[Option[JSONFieldLookup]] = {for{
         refEntity <- field.lookupEntity
         value <- field.lookupValueField
         text = fieldI18n.lookupTextField.getOrElse(lang)
@@ -148,8 +148,11 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
           val options = lookupData.map{ lookupRow =>
             (lookupRow.get(value),lookupRow.get(text))
           }.toMap
-          JSONFieldLookup(refEntity, JSONFieldMap(value,text),options)
+          Some(JSONFieldLookup(refEntity, JSONFieldMap(value,text),options))
         }
+      }} match {
+        case Some(a) => a
+        case None => Future.successful(None)
       }
 
       import io.circe.generic.auto._
@@ -168,20 +171,29 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
       } yield Child(id,field.name,local,remote,queryFilter)
 
 
+      val label:Future[Option[String]] = {
+
+        field.child_form_id match {
+          case None => Future.successful(fieldI18n.label)
+          case Some(subformId) => Auth.boxDB.run{
+            Form_i18n.filter(_.form_id === subformId).result
+          }.map(_.find(_.lang.contains(lang)).flatMap(_.label))
+        }
+      }
+
       val nullable = pgColumn.map(_.nullable).getOrElse(true)
 
       val file = fieldFile.map{ ff =>
         FileReference(ff.name_field, ff.file_field, ff.thumbnail_field)
       }
 
-      lookup match {
-        case Some(look) => look.map{ o =>
-          JSONField(field.`type`, field.name, nullable, fieldI18n.label,Some(o), fieldI18n.placeholder, field.widget, subform, field.default,file)
-        }
-        case None => Future.successful{
-          JSONField(field.`type`, field.name, nullable, fieldI18n.label,None, fieldI18n.placeholder, field.widget, subform, field.default,file)
-        }
+      for{
+        look <- lookup
+        lab <- label
+      } yield {
+        JSONField(field.`type`, field.name, nullable, lab,look, fieldI18n.placeholder, field.widget, subform, field.default,file)
       }
+
     }
 
     Future.sequence(jsonFields)

@@ -177,6 +177,10 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
   override def renderChild(view: View): Unit = {}
 
+  def labelTitle = produce(model.subProp(_.metadata)) { m =>
+    val name = m.map(_.label).getOrElse(model.get.name)
+    span(name).render
+  }
 
   override def getTemplate: scalatags.generic.Modifier[Element] = {
 
@@ -215,7 +219,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
     div(
       h3(
         GlobalStyles.noMargin,
-        bind(model.subProp(_.name)),
+        labelTitle,
         showIf(model.subProp(_.loading)) {
           small(" - " + Labels.navigation.loading).render
         },
@@ -228,8 +232,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       div(BootstrapStyles.pullLeft) (
         produce(model.subProp(_.name)) { m =>
           div(
-            a(GlobalStyles.boxButton,href := Routes(model.subProp(_.kind).get, m).add().url)(Labels.entities.`new` + " ", bind(model.subProp(_.name)))," ",
-            a(GlobalStyles.boxButton,href := Routes(model.subProp(_.kind).get, m).entity(m).url)(Labels.entities.table + " " + m),br,
+            a(GlobalStyles.boxButton,href := Routes(model.subProp(_.kind).get, m).add().url)(Labels.entities.`new` + " ", labelTitle)," ",
+            a(GlobalStyles.boxButton,href := Routes(model.subProp(_.kind).get, m).entity(m).url)(Labels.entities.table + " ", labelTitle),br,
             //save and stay on same record
             a(
               GlobalStyles.boxButton,

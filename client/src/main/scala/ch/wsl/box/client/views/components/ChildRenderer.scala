@@ -118,7 +118,7 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
         case Some(f) => {
 
           div()(
-              label(f.name),
+              label(f.label),
               produce(entitySize) { size =>
                 cleanSubwidget()
                 for {i <- 0 until size} yield {
