@@ -67,12 +67,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     val jsonId = state.id.map(JSONID.fromString)
 
     {for{
+      metadata <- if(reloadMetadata) REST.metadata(state.kind, Session.lang(), state.entity) else Future.successful(model.get.metadata.get)
+      children <- if(state.kind == "form" && reloadMetadata) REST.children(state.entity,Session.lang()) else Future.successful(Seq())
       currentData <- state.id match {
         case Some(id) => REST.get(state.kind, Session.lang(), state.entity,jsonId.get)
         case None => Future.successful(Json.Null)
       }
-      metadata <- if(reloadMetadata) REST.metadata(state.kind, Session.lang(), state.entity) else Future.successful(model.get.metadata.get)
-      children <- if(state.kind == "form" && reloadMetadata) REST.children(state.entity,Session.lang()) else Future.successful(Seq())
     } yield {
 
 

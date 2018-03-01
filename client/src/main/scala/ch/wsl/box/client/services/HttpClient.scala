@@ -29,60 +29,61 @@ case class HttpClient(endpoint:String) extends Logging {
   import HttpClient._
 
   import ch.wsl.box.client.Context._
-
+  import scala.concurrent.blocking
 
 
   private def httpCall[T](method:String, url:String, json:Boolean=true, file:Boolean=false)(send:XMLHttpRequest => Unit)(implicit decoder:io.circe.Decoder[T]):Future[Response[T]] = {
-    val xhr = new dom.XMLHttpRequest()
+
 
     val promise = Promise[Response[T]]()
+    blocking {
+      val xhr = new dom.XMLHttpRequest()
+      xhr.open(method, endpoint + url, false)
+      if (json) {
+        xhr.setRequestHeader("Content-Type", "application/json")
+      }
+      if (file) {
+        xhr.setRequestHeader("Content-Type", "application/octet-stream")
+      }
+      xhr.onload = { (e: dom.Event) =>
+        if (xhr.status == 200) {
+          if (xhr.getResponseHeader("Content-Type").contains("text")) {
+            promise.success(Right(xhr.responseText.asInstanceOf[T]))
 
-    xhr.open(method,endpoint+url,false)
-    if(json) {
-      xhr.setRequestHeader("Content-Type", "application/json")
-    }
-    if(file) {
-      xhr.setRequestHeader("Content-Type", "application/octet-stream")
-    }
-    xhr.onload = { (e: dom.Event) =>
-      if (xhr.status == 200) {
-        if(xhr.getResponseHeader("Content-Type").contains("text")) {
-          promise.success(Right(xhr.responseText.asInstanceOf[T]))
-
-        }else if(xhr.getResponseHeader("Content-Type").contains("application/octet-stream")) {
+          } else if (xhr.getResponseHeader("Content-Type").contains("application/octet-stream")) {
             promise.success(Right(xhr.response.asInstanceOf[T]))
 
-        } else {
-          decode[T](xhr.responseText) match {
-            case Left(fail) => {
-              logger.warn(s"Failed to decode JSON on $url with error: $fail")
-              promise.failure(fail)
+          } else {
+            decode[T](xhr.responseText) match {
+              case Left(fail) => {
+                logger.warn(s"Failed to decode JSON on $url with error: $fail")
+                promise.failure(fail)
+              }
+              case Right(result) => promise.success(Right(result))
             }
-            case Right(result) => promise.success(Right(result))
           }
+        } else if (xhr.status == 401 || xhr.status == 403) {
+          logger.info("Not authorized")
+          Session.logoutAndSaveState()
+          promise.failure(new Exception("HTTP status" + xhr.status))
+        } else {
+          promise.success(Left(manageError(xhr)))
         }
-      } else if (xhr.status == 401 || xhr.status == 403) {
-        logger.info("Not authorized")
-        Session.logoutAndSaveState()
-        promise.failure(new Exception("HTTP status" + xhr.status))
-      } else {
-        promise.success(Left(manageError(xhr)))
       }
-    }
 
 
-
-    xhr.onerror = { (e: dom.Event) =>
-      if (xhr.status == 401 || xhr.status == 403) {
-        logger.info("Not authorized")
-        Session.logoutAndSaveState()
-        promise.failure(new Exception("HTTP status" + xhr.status))
-      } else {
-        promise.success(Left(manageError(xhr)))
+      xhr.onerror = { (e: dom.Event) =>
+        if (xhr.status == 401 || xhr.status == 403) {
+          logger.info("Not authorized")
+          Session.logoutAndSaveState()
+          promise.failure(new Exception("HTTP status" + xhr.status))
+        } else {
+          promise.success(Left(manageError(xhr)))
+        }
       }
-    }
 
-    send(xhr)
+      send(xhr)
+    }
 
     promise.future
 

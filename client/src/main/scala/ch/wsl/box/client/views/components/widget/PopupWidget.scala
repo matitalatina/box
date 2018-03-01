@@ -43,15 +43,17 @@ import ch.wsl.box.client.Context._
     val optionList:Modifier = div(
       lab("Search"),br,
       TextInput(searchProp,Some(500 milliseconds)),br,br,
-      produce(searchProp) { searchTerm =>
-        div(
-          sortedOptions.filter(opt => searchTerm == "" || opt._2.toLowerCase.contains(searchTerm.toLowerCase)).map { case (key, value) =>
-            li(a(value, onclick :+= ((e: Event) => {
-              modalStatus.set(Status.Closed)
-              selectedItem.set(value)
-            })))
-          }
-        ).render
+      showIf(modalStatus.transform(_ == Status.Open)) {
+        div(produce(searchProp) { searchTerm =>
+          div(
+              sortedOptions.filter(opt => searchTerm == "" || opt._2.toLowerCase.contains(searchTerm.toLowerCase)).map { case (key, value) =>
+                li(a(value, onclick :+= ((e: Event) => {
+                  modalStatus.set(Status.Closed)
+                  selectedItem.set(value)
+                })))
+              }
+          ).render
+        }).render
       }
     )
 
