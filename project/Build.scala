@@ -153,10 +153,10 @@ object Build extends sbt.Build {
   lazy val slickCodeGenTask = (sourceManaged, dependencyClasspath in Compile, runner in Compile, streams) map { (dir, cp, r, s) =>
     val outputDir = (dir / "slick").getPath // place generated files in sbt's managed sources folder
     toError(r.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log))
-    val fname = outputDir + "/ch/wsl/box/model/Tables.scala"
+    val fname = outputDir + "/ch/wsl/box/model/Entities.scala"
     val ffname = outputDir + "/ch/wsl/box/model/FileTables.scala"
     val rname = outputDir + "/ch/wsl/box/rest/routes/GeneratedRoutes.scala"
-    val registryname = outputDir + "/ch/wsl/box/model/TablesRegistry.scala"
+    val registryname = outputDir + "/ch/wsl/box/model/EntityActionsRegistry.scala"
     val filename = outputDir + "/ch/wsl/box/rest/routes/FileRoutes.scala"
     Seq(file(fname),file(ffname),file(rname),file(registryname),file(filename))    //include the generated files in the sbt project
   }

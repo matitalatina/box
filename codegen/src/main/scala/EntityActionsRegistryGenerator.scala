@@ -17,12 +17,12 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
     }
 
 
-    def generate(pkg:String):String =
+    def generate(pkg:String, modelPackages:String):String =
       s"""package ${pkg}
          |
          |import scala.concurrent.ExecutionContext
          |import ch.wsl.box.rest.logic.{JsonTableActions, JsonViewActions, EntityJsonTableActions, EntityJsonViewActions}
-         |import Tables._
+         |import $modelPackages._
          |
          |class EntityActionsRegistry(implicit ec:ExecutionContext) {
          |
@@ -44,8 +44,8 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |}
            """.stripMargin
 
-    def writeToFile(folder:String, pkg:String, fileName:String) =
-      writeStringToFile(generate(pkg),folder,pkg,fileName)
+    def writeToFile(folder:String, pkg:String, fileName:String, modelPackages:String) =
+      writeStringToFile(generate(pkg, modelPackages),folder,pkg,fileName)
 
 
 

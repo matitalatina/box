@@ -11,7 +11,7 @@ import ch.wsl.box.rest.logic.JsonTableActions
 
 import scala.concurrent.ExecutionContext
 
-case class TablesRegistry(implicit ec: ExecutionContext) extends EntityActionsRegistry {
+case class BoxTablesRegistry(implicit ec: ExecutionContext) extends EntityActionsRegistry {
 
   import io.circe._
   import io.circe.generic.auto._

@@ -20,8 +20,8 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "slick.driver.PostgresDriver",
       args(0),
       "ch.wsl.box.model",
-      "Tables",
-      "Tables.scala"
+      "Entities",
+      "Entities.scala"
     )
 
 
@@ -49,13 +49,14 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "ch.wsl.box.rest.routes",
       "GeneratedRoutes",
       "GeneratedRoutes.scala",
-      "ch.wsl.box.model.Tables"
+      "ch.wsl.box.model.Entities"
     )
 
     EntityActionsRegistryGenerator(calculatedViews,calculatedTables,dbModel).writeToFile(
       args(0),
       "ch.wsl.box.model",
-      "TablesRegistry.scala"
+      "EntityActionsRegistry.scala",
+      "ch.wsl.box.model.Entities"
     )
 
     FileAccessGenerator(dbModel,dbConf).writeToFile(

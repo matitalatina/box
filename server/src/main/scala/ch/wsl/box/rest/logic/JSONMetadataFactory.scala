@@ -3,7 +3,7 @@ package ch.wsl.box.rest.logic
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.model.TablesRegistry
+import ch.wsl.box.rest.model.BoxTablesRegistry
 import ch.wsl.box.rest.utils.Auth
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
@@ -50,7 +50,7 @@ object JSONMetadataFactory extends Logging {
             val value = fk.referencingKeys.head
 
             import ch.wsl.box.shared.utils.JsonUtils._
-            TablesRegistry().tableActions(model).getEntity().map{ lookupData =>
+            BoxTablesRegistry().tableActions(model).getEntity().map{ lookupData =>
               val options = lookupData.map{ lookupRow =>
                 (lookupRow.get(value),lookupRow.get(text))
               }.toMap
