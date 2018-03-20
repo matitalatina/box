@@ -81,14 +81,14 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
             complete(result)
           }
         } ~
-          get {
+        get {
 
-              onSuccess(utils.getById(id)) { result =>
-                  val f = handler.extract(result.head)
-                  File.completeFile(f)
-              }
+            onSuccess(utils.getById(id)) { result =>
+                val f = handler.extract(result.head)
+                File.completeFile(f)
+            }
 
-          }
+        }
       }
     }
   }

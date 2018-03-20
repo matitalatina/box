@@ -19,7 +19,7 @@ import scala.util.Try
 object Auth {
 
 
-  val executor = AsyncExecutor("public-executor",10,10,1000)
+  val executor = AsyncExecutor("public-executor",50,50,1000)
 
   val dbConf: Config = ConfigFactory.load().as[Config]("db")
   val dbPath = dbConf.as[String]("url")
@@ -61,14 +61,14 @@ object Auth {
       val db:Database = Database.forURL(s"$dbPath?currentSchema=$dbSchema",
         driver="org.postgresql.Driver",
         user=name,
-        password=password,
-        executor = executor)
+        password=password)//,
+//        executor = executor)
 
       val boxDb:Database = Database.forURL(s"$boxDbPath?currentSchema=$boxDbSchema",
       driver="org.postgresql.Driver",
       user=name,
-      password=password,
-      executor = executor)
+      password=password)//,
+//      executor = executor)
 
 
       UserProfile(name,db,boxDb)

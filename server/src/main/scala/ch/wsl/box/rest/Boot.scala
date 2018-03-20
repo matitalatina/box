@@ -29,7 +29,7 @@ object Boot extends App with Root {
   val host = conf.as[String]("host")
   val port = conf.as[Int]("port")
 
-  Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Error))
+  Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Info))
 
   //TODO need to be reworked now it's based on an hack, it call generated root to populate models
   GeneratedRoutes()(Auth.adminDB,materializer,executionContext)

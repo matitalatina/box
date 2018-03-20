@@ -13,9 +13,12 @@ import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.shared.utils.CSV
+import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
+import com.typesafe.config._
+import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -49,6 +52,8 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
 
 
     val utils = new DbActions[T,M](table)
+    val limitLookupFromFk: Int = ConfigFactory.load().as[Int]("limitLookupFromFk")
+
     import JSONSupport._
     import akka.http.scaladsl.model._
     import akka.http.scaladsl.server.Directives._
@@ -96,7 +101,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
       } ~
       path("metadata") {
         get {
-          complete{ JSONMetadataFactory.of(name, "en") }   //can set "en" hardcoded, since base table JSONForm do not change with language
+          complete{ JSONMetadataFactory.of(name, "en", limitLookupFromFk) }   //can set "en" hardcoded, since base table JSONForm do not change with language
         }
       } ~
       path("keys") {   //returns key fields names
@@ -143,7 +148,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
             get {
               parameters('q) { q =>
                 val query = parse(q).right.get.as[JSONQuery].right.get
-                val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en").map{ metadata =>
+                val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en", limitLookupFromFk).map{ metadata =>
                   CSV.row(metadata.fields.map(_.name))
                 }).concat(Source.fromPublisher(utils.findStreamed(query)).map(x => CSV.row(x.values())))
                 complete(csv)

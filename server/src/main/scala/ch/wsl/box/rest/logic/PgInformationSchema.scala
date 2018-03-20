@@ -4,15 +4,18 @@ import ch.wsl.box.rest.utils.Auth
 import slick.driver.PostgresDriver
 import PostgresDriver.api._
 import net.ceedubs.ficus.Ficus._
+import slick.jdbc.PostgresProfile
+import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
 import StringHelper._
+import com.typesafe.config.Config
 import slick.lifted.ShapedValue
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class PgInformationSchema(table:String, db:Database)(implicit ec:ExecutionContext) {
+class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext) {
 
   def runWithSession[T](d:Session => DBIOAction[T,NoStream,Nothing]): Future[T] = Future{
     val session = db.createSession()
@@ -49,10 +52,42 @@ class PgInformationSchema(table:String, db:Database)(implicit ec:ExecutionContex
 
 
   lazy val columns:Future[Seq[PgColumn]] = runWithSession{ session =>
-    pgColumns
-      .filter(e => e.table_name === table && e.table_schema === session.conn.getSchema)
-      .sortBy(_.ordinal_position).result
+    if (excludeFields.size==0)
+      pgColumns
+        .filter(e => e.table_name === table && e.table_schema === session.conn.getSchema)
+        .sortBy(_.ordinal_position).result
+    else
+      pgColumns
+        .filter(e => e.table_name === table && e.table_schema === session.conn.getSchema)
+        .filterNot(_.column_name.inSet(excludeFields))
+        .sortBy(_.ordinal_position).result
   }
+
+//  lazy val firstNoPKColumn:Future[Seq[PgColumn]] =
+//    if (excludeFields.size==0)
+//      for (
+//        pks <- pk
+//      ) yield {
+//        runWithSession { session =>
+//          pgColumns
+//            .filter(e => e.table_name === table && e.table_schema === session.conn.getSchema)
+//            .filterNot(e => e.column_name.inSet(pks.keys))
+//            .sortBy(_.ordinal_position).result
+//        }
+//      }
+//    else
+//      for (
+//        pks <- pk
+//      ) yield {
+//        runWithSession { session =>
+//          pgColumns
+//            .filter(e => e.table_name === table && e.table_schema === session.conn.getSchema)
+//            .filterNot(e => e.column_name.inSet(pks.keys))
+//            .filterNot(_.column_name.inSet(excludeFields))
+//            .sortBy(_.ordinal_position).result
+//        }
+//      }
+
 
   val pkQ = for{
     constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === PRIMARYKEY
@@ -61,7 +96,7 @@ class PgInformationSchema(table:String, db:Database)(implicit ec:ExecutionContex
 
   def pk:Future[PrimaryKey] = Auth.adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
       pkQ.result
-        .map(x => x.unzip)    //change seq of tuple into tuple od seqs
+        .map(x => x.unzip)    //change seq of tuple into tuple of seqs
         .map(x => PrimaryKey(x._1, x._2.headOption.getOrElse("")))   //as constraint_name take only first element (should be the same)
   }
 

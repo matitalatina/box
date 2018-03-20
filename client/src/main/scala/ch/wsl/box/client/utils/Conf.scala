@@ -17,7 +17,8 @@ object Conf {
     conf = table
   }
 
-  def pageLength = Try(conf("page_length").toInt).getOrElse(30)
+  def pageLength  = Try(conf("page_length").toInt).getOrElse(30)
+  def lookupMaxRows  = Try(conf("fk_rows").toInt).getOrElse(30)
   def imageHeight = Try(conf("image_height").toInt).getOrElse(200)
 
   def manualEditKeyFields = Try(conf("manual_edit.key_fields").toBoolean).getOrElse(false)

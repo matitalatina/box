@@ -1,5 +1,6 @@
 package ch.wsl.box.rest.boxentities
 
+import ch.wsl.box.rest.utils.Auth
 import slick.driver.PostgresDriver.api._
 
 /**
@@ -22,7 +23,7 @@ object Conf {
     val value: Rep[Option[String]] = column[Option[String]]("value", O.Default(None))
 
   }
-  /** Collection-like TableQuery object for table Form */
+  /** Collection-like TableQuery object for table Conf  */
   lazy val table = new TableQuery(tag => new Conf(tag))
 
 }

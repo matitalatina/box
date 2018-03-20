@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.boxentities
 
-import ch.wsl.box.model.FileTables.{Document, profile}
+//import ch.wsl.box.model.FileTables.{Document, profile}
 import slick.driver.PostgresDriver.api._
 
 /**
@@ -10,13 +10,14 @@ object UIscrTable {
 
   val profile = slick.driver.PostgresDriver
   import slick.model.ForeignKeyAction
-  // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
+  // NOTE: GetResult mappers for plai
+  // n SQL are only generated for tables where Slick knows how to map the types of all columns.
   import slick.jdbc.{GetResult => GR}
 
-  /** DDL for all tables. Call .create to execute. */
-  lazy val schema: profile.SchemaDescription = Document.schema
-  @deprecated("Use .schema instead of .ddl", "3.0")
-  def ddl = schema
+//  /** DDL for all tables. Call .create to execute. */
+//  lazy val schema: profile.SchemaDescription =               Document.schema
+//  @deprecated("Use .schema instead of .ddl", "3.0")
+//  def ddl = schema
 
   case class UIsrc_row(id: Option[Int] = None, file: Option[Array[Byte]], mime:Option[String], name:Option[String], accessLevel:Int)
 
