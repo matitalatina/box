@@ -38,7 +38,7 @@ object Build extends sbt.Build {
       resourceDirectory in Compile := baseDirectory.value / "../resources",
       testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
     )
-    .aggregate(clients.map(projectToRef): _*)
+    //.aggregate(clients.map(projectToRef): _*)
     .dependsOn(sharedJVM)
     .dependsOn(codegen)
 
