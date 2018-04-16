@@ -73,22 +73,25 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
       } ~
       path(Segment) { idstr =>
         logger.info(s"Parsing File'JSONID: $idstr")
-        val id = JSONID.fromString(idstr)
+        JSONID.fromString(idstr) match {
+          case Some(id) => post {
+            fileUpload("file") { case (metadata, byteSource) =>
+              val result = upload(id)(metadata, byteSource)
+              complete(result)
+            }
+          } ~
+            get {
 
-        post {
-          fileUpload("file") { case (metadata, byteSource) =>
-            val result = upload(id)(metadata, byteSource)
-            complete(result)
-          }
-        } ~
-        get {
-
-            onSuccess(utils.getById(id)) { result =>
+              onSuccess(utils.getById(id)) { result =>
                 val f = handler.extract(result.head)
                 File.completeFile(f)
-            }
+              }
 
+            }
+          case None => complete(StatusCodes.BadRequest,s"JSONID $idstr not valid")
         }
+
+
       }
     }
   }

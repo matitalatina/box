@@ -9,17 +9,24 @@ import ch.wsl.box.rest.boxentities.{Field, Form}
 import ch.wsl.box.rest.utils.Auth
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
 import scribe.Logging
+
+import scala.util.{Failure, Success}
 
 /**
   * Created by andreaminetti on 10/03/16.
   *
   * mapping from form specs in box schema into JSONForm
   */
+object JSONFormMetadataFactory{
+  private var cacheName = Map[(String,String),Future[JSONMetadata]]()
+  private var cacheId = Map[(Int,String),Future[JSONMetadata]]()
+}
+
 case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends Logging {
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Form.table.result
@@ -28,17 +35,34 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
   import ch.wsl.box.shared.utils.JsonUtils._
 
   def of(id:Int, lang:String):Future[JSONMetadata] = {
-    val formQuery: Query[Form, Form_row, Seq] = for {
-      form <- Form.table if form.form_id === id
-    } yield form
-    getForm(formQuery,lang)
+    JSONFormMetadataFactory.cacheId.lift((id,lang)) match {
+      case Some(r) => r
+      case None => {
+        logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${JSONFormMetadataFactory.cacheName}")
+        val formQuery: Query[Form, Form_row, Seq] = for {
+          form <- Form.table if form.form_id === id
+        } yield form
+        val result = getForm(formQuery,lang)
+        JSONFormMetadataFactory.cacheId = JSONFormMetadataFactory.cacheId ++ Map((id,lang) -> result)
+        result
+      }
+    }
   }
 
   def of(name:String, lang:String):Future[JSONMetadata] = {
-    val formQuery: Query[Form, Form_row, Seq] = for {
-      form <- Form.table if form.name === name
-    } yield form
-    getForm(formQuery,lang)
+    JSONFormMetadataFactory.cacheName.lift((name,lang)) match {
+      case Some(r) => r
+      case None => {
+        logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${JSONFormMetadataFactory.cacheName}")
+        val formQuery: Query[Form, Form_row, Seq] = for {
+          form <- Form.table if form.name === name
+        } yield form
+        val result = getForm(formQuery,lang)
+        JSONFormMetadataFactory.cacheName = JSONFormMetadataFactory.cacheName ++ Map((name,lang) -> result)
+        result
+      }
+    }
+
   }
 
   def children(form:JSONMetadata):Future[Seq[JSONMetadata]] = {

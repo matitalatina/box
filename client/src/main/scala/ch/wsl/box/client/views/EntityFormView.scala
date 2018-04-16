@@ -64,7 +64,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     model.subProp(_.id).set(state.id)
 
 
-    val jsonId = state.id.map(JSONID.fromString)
+    val jsonId = state.id.flatMap(JSONID.fromString)
 
     {for{
       metadata <- if(reloadMetadata) REST.metadata(state.kind, Session.lang(), state.entity) else Future.successful(model.get.metadata.get)
@@ -116,8 +116,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
       val data:Json = m.data
 
-      def saveAction() = m.id match {
-        case Some(id) => REST.update(m.kind,Session.lang(),m.name,JSONID.fromString(id),data)
+      def saveAction() = JSONID.fromString(m.id.getOrElse("")) match {
+        case Some(id) => REST.update(m.kind,Session.lang(),m.name,id,data)
         case None => REST.insert(m.kind,Session.lang(),m.name, data)
       }
 

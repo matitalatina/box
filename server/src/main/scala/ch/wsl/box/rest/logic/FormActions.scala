@@ -7,7 +7,7 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.rest.utils.FutureUtils
+import ch.wsl.box.rest.utils.{FutureUtils, Timer}
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
 import scribe.Logging

@@ -35,6 +35,8 @@ object Boot extends App with Root {
   GeneratedRoutes()(Auth.adminDB,materializer,executionContext)
   BoxRoutes()(Auth.adminDB,materializer,executionContext)
 
+  Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Warn))
+
   // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
   val bindingFuture = Http().bindAndHandle(handleExceptions(BoxExceptionHandler()) {
     route

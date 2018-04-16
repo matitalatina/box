@@ -7,6 +7,7 @@ import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONID, JSONMetadata, JSONQuery}
 import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
+import ch.wsl.box.rest.utils.Timer
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
 import io.circe.parser.parse
@@ -14,6 +15,7 @@ import scribe.Logging
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
   * Created by andre on 5/15/2017.
@@ -38,6 +40,8 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
 
 
 
+
+
       val jsonCustomMetadataFactory = JSONFormMetadataFactory()
       val metadata: Future[JSONMetadata] = jsonCustomMetadataFactory.of(name,lang)
       val tabularMetadata = metadata.map{ f =>
@@ -46,29 +50,33 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
       }
 
       def route = pathPrefix("id") {
-        path(Segment) { id =>
-          get {
-            complete(actions(metadata){ fs =>
-              fs.getAllById(JSONID.fromString(id)).map{ record =>
-                logger.info(record)
-                HttpEntity(ContentTypes.`application/json`,record)
-              }
-            })
-          } ~
-          put {
-            entity(as[Json]) { e =>
-              complete {
-                actions(metadata){ fs =>
-                  for {
-                    _ <- fs.updateAll(e)
-                    data <- fs.getAllById(e.ID(fs.metadata.keys))
-                  } yield data
+        path(Segment) { strId =>
+          JSONID.fromString(strId) match {
+            case Some(id) =>
+              get {
+                complete(actions(metadata) { fs =>
+                  fs.getAllById(id).map { record =>
+                    logger.info(record)
+                    HttpEntity(ContentTypes.`application/json`, record)
+                  }
+                })
+              } ~
+                put {
+                  entity(as[Json]) { e =>
+                    complete {
+                      actions(metadata) { fs =>
+                        for {
+                          _ <- fs.updateAll(e)
+                          data <- fs.getAllById(e.ID(fs.metadata.keys))
+                        } yield data
+                      }
+                    }
+                  }
+                } ~
+                delete {
+                  ???
                 }
-              }
-            }
-          } ~
-          delete {
-            ???
+            case None => complete(StatusCodes.BadRequest,s"JSONID $strId not valid")
           }
         }
       } ~

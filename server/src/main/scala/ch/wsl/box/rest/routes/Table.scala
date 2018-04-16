@@ -69,28 +69,32 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
 
   def route:Route = pathPrefix(name) {
         pathPrefix("id") {
-          path(Segment) { id =>
-            get {
-              onComplete(utils.getById(JSONID.fromString(id))) {
-                case Success(data) => {
-                  complete(data)
-                }
-                case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
-              }
-            } ~
-            put {
-              entity(as[M]) { e =>
-                onComplete(utils.updateById(JSONID.fromString(id),e)) {
-                  case Success(entity) => complete(e)
-                  case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
-                }
-              }
-            } ~
-            delete {
-              onComplete(utils.deleteById(JSONID.fromString(id))) {
-                case Success(affectedRow) => complete(JSONCount(affectedRow))
-                case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
-              }
+          path(Segment) { strId =>
+            JSONID.fromString(strId) match {
+              case Some(id) =>
+                get {
+                  onComplete(utils.getById(id)) {
+                    case Success(data) => {
+                      complete(data)
+                    }
+                    case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
+                  }
+                } ~
+                  put {
+                    entity(as[M]) { e =>
+                      onComplete(utils.updateById(id, e)) {
+                        case Success(entity) => complete(e)
+                        case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
+                      }
+                    }
+                  } ~
+                  delete {
+                    onComplete(utils.deleteById(id)) {
+                      case Success(affectedRow) => complete(JSONCount(affectedRow))
+                      case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
+                    }
+                  }
+              case None => complete(StatusCodes.BadRequest, s"JSONID $strId not valid")
             }
         }
       } ~

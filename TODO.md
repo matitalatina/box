@@ -31,6 +31,8 @@ FRAMEWORK
 BUGS
 ===
 1. Subform propagation id on error (ie. saving a fire with a fire_municipality_start without fire_id then adding fire_id and saving again) -- needs trigger to be properly tested
+1. Insert fire, fire_id default
+1. Update image, array out of bound
 
 DB
 ===
