@@ -40,7 +40,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
         r
       }
     } yield {
-      idfile.headOption.map(x => id.set(x.toString()))
+      id.set(jsonid.asString)
     }
   }
 

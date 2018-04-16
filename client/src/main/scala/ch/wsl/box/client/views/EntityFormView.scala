@@ -128,6 +128,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       } yield {
 //        val newState =  Routes(m.kind,m.name).table()
         val newState =  toState(m.kind,m.name)
+        model.subProp(_.data).set(resultSaved)
         enableGoAway
         Navigate.to(newState.url)
 
