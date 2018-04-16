@@ -15,7 +15,7 @@ import io.circe.parser._
 import io.circe.syntax._
 import scribe.Logging
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by andreaminetti on 10/03/16.
@@ -212,11 +212,18 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
         FileReference(ff.name_field, ff.file_field, ff.thumbnail_field)
       }
 
+
+      val condition = for{
+        fieldId <- field.conditionFieldId
+        values <- field.conditionValues
+        json <- Try(parse(values).right.get.as[Seq[Json]].right.get).toOption
+      } yield ConditionalField(fieldId,json)
+
       for{
         look <- lookup
         lab <- label
       } yield {
-        JSONField(field.`type`, field.name, nullable, lab,look, fieldI18n.placeholder, field.widget, subform, field.default,file)
+        JSONField(field.`type`, field.name, nullable, lab,look, fieldI18n.placeholder, field.widget, subform, field.default,file,condition)
       }
 
     }

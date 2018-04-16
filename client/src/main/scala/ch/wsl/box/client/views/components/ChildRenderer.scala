@@ -126,7 +126,7 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
                   val subResults = entity.transform(splitJsonFields(f, i), mergeJsonFields(entity, f, i))
                   val widget = findOrAdd(f, subResults, children)
                   div(GlobalStyles.subform,
-                    widget.render(),
+                    widget.render(Property(true)),
                     div(
                       BootstrapStyles.row,
                       div(BootstrapCol.md(12),GlobalStyles.block,

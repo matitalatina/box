@@ -5,12 +5,13 @@ import java.util.UUID
 import ch.wsl.box.model.shared.{JSONFieldLookup, JSONMetadata}
 import io.circe._
 import io.circe.syntax._
-import io.udash.properties.single.Property
+import io.udash.properties.single.{Property, ReadableProperty}
 import ch.wsl.box.shared.utils.JsonUtils._
 import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalatags.JsDom.all._
+import io.udash._
 
 trait Widget{
 
@@ -18,7 +19,10 @@ trait Widget{
   def strToJson(str:String):Json = str.asJson
   def strToNumericJson(str:String):Json = str.toDouble.asJson
 
-  def render():Modifier
+  protected def render():Modifier
+  def render(conditional:ReadableProperty[Boolean]):Modifier = showIf(conditional) {
+    div(render()).render
+  }
 
   def beforeSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
   def afterSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)

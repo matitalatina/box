@@ -142,7 +142,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     JSONQuery(filter, sort, None)
   }
 
-  def reloadRows(page:Int) = {
+  def reloadRows(page:Int): Future[Unit] = {
     logger.info("reloading rows")
 
     val q = query().copy(paging = Some(JSONQueryPaging(Conf.pageLength,page)))

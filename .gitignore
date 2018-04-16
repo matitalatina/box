@@ -44,3 +44,8 @@ test-output/
 #project
 js/*
 .sass-cache
+
+.hydra/
+/project/hydra.sbt
+/resources/application.test.conf
+/resources/db.test.conf

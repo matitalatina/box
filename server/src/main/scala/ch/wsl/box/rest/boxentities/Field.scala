@@ -25,15 +25,15 @@ object Field {
   case class Field_row(field_id: Option[Int] = None, form_id: Int, `type`: String, name: String, widget: Option[String] = None,
                        lookupEntity: Option[String] = None, lookupValueField: Option[String] = None,
                        child_form_id: Option[Int] = None, masterFields:Option[String] = None, childFields:Option[String] = None, childFilter:Option[String] = None,
-                       default:Option[String] = None)
+                       default:Option[String] = None,conditionFieldId:Option[String] = None,conditionValues:Option[String] = None)
   /** GetResult implicit for fetching Field_row objects using plain SQL queries */
 
   /** Table description of table field. Objects of this class serve as prototypes for rows in queries.
     *  NOTE: The following names collided with Scala keywords and were escaped: type */
   class Field(_tableTag: Tag) extends profile.api.Table[Field_row](_tableTag, "field") {
-    def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField, child_form_id,masterFields,childFields,childFilter,default) <> (Field_row.tupled, Field_row.unapply)
+    def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField, child_form_id,masterFields,childFields,childFilter,default,conditionFieldId,conditionValues) <> (Field_row.tupled, Field_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(field_id), Rep.Some(form_id), Rep.Some(`type`),  name, widget, lookupEntity, lookupValueField, child_form_id,masterFields,childFields,childFilter,default).shaped.<>({ r=>import r._; _1.map(_=> Field_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11,_12)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(field_id), Rep.Some(form_id), Rep.Some(`type`),  name, widget, lookupEntity, lookupValueField, child_form_id,masterFields,childFields,childFilter,default,conditionFieldId,conditionValues).shaped.<>({ r=>import r._; _1.map(_=> Field_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11,_12,_13,_14)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val field_id: Rep[Int] = column[Int]("field_id", O.AutoInc, O.PrimaryKey)
@@ -56,6 +56,8 @@ object Field {
     val childFields: Rep[Option[String]] = column[Option[String]]("childFields", O.Default(None))
     val childFilter: Rep[Option[String]] = column[Option[String]]("childFilter", O.Default(None))
     val default: Rep[Option[String]] = column[Option[String]]("default", O.Default(None))
+    val conditionFieldId: Rep[Option[String]] = column[Option[String]]("conditionFieldId", O.Default(None))
+    val conditionValues: Rep[Option[String]] = column[Option[String]]("conditionValues", O.Default(None))
 
     /** Foreign key referencing Form (database name fkey_form) */
     lazy val formFk = foreignKey("fkey_form", form_id, Form.table)(r => r.form_id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)

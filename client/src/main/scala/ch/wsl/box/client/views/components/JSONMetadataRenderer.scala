@@ -9,7 +9,7 @@ import ch.wsl.box.shared.utils.JsonUtils._
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
-import io.udash.properties.single.Property
+import io.udash.properties.single.{Property, ReadableProperty}
 
 import scala.concurrent.Future
 import scalatags.JsDom
@@ -43,36 +43,65 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   }
 
 
+  private def checkCondition(field: JSONField):ReadableProperty[Boolean] = {
+    field.condition match {
+      case None => Property(true)
+      case Some(condition) => {
 
-  private def widgetSelector(field: JSONField, id:Property[String], data:Property[Json]): Widget = {
+        def evaluate(d:Json):Boolean = {
+          val value = d.js(condition.conditionFieldId)
+          val r = condition.conditionValues.contains(value)
+          logger.info(s"evaluating condition for field: ${field.name} against $value with accepted values: ${condition.conditionValues} with result: $r")
+          r
+        }
+
+        val property = Property(evaluate(data.get))
+        data.listen{d =>
+          val r = evaluate(d)
+          if(r == !property.get) { //change only when the status changes
+            property.set(r)
+          }
+        }
+        property
+      }
+    }
+  }
+
+
+  private def widgetSelector(field: JSONField, id:Property[String], fieldData:Property[Json]): Widget = {
     import JSONFieldTypes._
 
     val label = field.label.getOrElse(field.name)
 
     (field.`type`, field.widget, field.lookup, metadata.keys.contains(field.name), field.child) match {
       case (_, Some(WidgetsNames.hidden), _, _, _) => HiddenWidget
-      case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidget(options,field,label,data,width := 100.pct)
-      case (_, Some(WidgetsNames.popup), Some(options), _, _) => PopupWidget(options,label,data)
-      case (_, _, Some(lookup), _, _) => SelectWidget(lookup, field,label,data)
-      case (_, _, _, true, _) => InputWidget(disabled := Conf.manualEditKeyFields, textAlign.right).Text(label,data)
-      case (NUMBER, Some(WidgetsNames.checkbox), _, _, _) => CheckboxWidget(label,data)
-      case (NUMBER, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Number(label,data)
-      case (NUMBER, _, _, _, _) => InputWidget().Number(label,data)
-      case (STRING, Some(WidgetsNames.timepicker), _, _, _) => DateTimeWidget.Time(id,label,data)
-      case (STRING, Some(WidgetsNames.datepicker), _, _, _) => DateTimeWidget.Date(id,label,data)
-      case (STRING, Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime(id,label,data)
-      case (CHILD, _, _, _, Some(child)) => ChildRenderer(child,children,data,dataWithChildId)
-      case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text(label,data)
-      case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea(label,data)
-      case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea(label,data)
-      case (FILE, _, _, _, _) => FileWidget(id,data,field,label,metadata.entity)
-      case (_, _, _, _, _) => InputWidget().Text(label,data)
+      case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidget(options,field,label,fieldData,width := 100.pct)
+      case (_, Some(WidgetsNames.popup), Some(options), _, _) => PopupWidget(options,label,fieldData)
+      case (_, _, Some(lookup), _, _) => SelectWidget(lookup, field,label,fieldData)
+      case (_, _, _, true, _) => InputWidget(disabled := Conf.manualEditKeyFields, textAlign.right).Text(label,fieldData)
+      case (NUMBER, Some(WidgetsNames.checkbox), _, _, _) => CheckboxWidget(label,fieldData)
+      case (NUMBER, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Number(label,fieldData)
+      case (NUMBER, _, _, _, _) => InputWidget().Number(label,fieldData)
+      case (STRING, Some(WidgetsNames.timepicker), _, _, _) => DateTimeWidget.Time(id,label,fieldData)
+      case (STRING, Some(WidgetsNames.datepicker), _, _, _) => DateTimeWidget.Date(id,label,fieldData)
+      case (STRING, Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime(id,label,fieldData)
+      case (CHILD, _, _, _, Some(child)) => ChildRenderer(child,children,fieldData,dataWithChildId)
+      case (_, Some(WidgetsNames.nolabel), _, _, _) => InputWidget.noLabel().Text(label,fieldData)
+      case (_, Some(WidgetsNames.twoLines), _, _, _) => InputWidget(rows := 2).Textarea(label,fieldData)
+      case (_, Some(WidgetsNames.textarea), _, _, _) => InputWidget().Textarea(label,fieldData)
+      case (FILE, _, _, _, _) => FileWidget(id,fieldData,field,label,metadata.entity)
+      case (_, _, _, _, _) => InputWidget().Text(label,fieldData)
     }
 
   }
 
 
-  private def subBlock(block: SubLayoutBlock):Widget = new Widget {
+  case class WidgetVisibility(widget:Widget,visibility: ReadableProperty[Boolean])
+  object WidgetVisibility{
+    def apply(widget: Widget): WidgetVisibility = WidgetVisibility(widget, Property(true))
+  }
+
+  private def subBlock(block: SubLayoutBlock):WidgetVisibility = WidgetVisibility(new Widget {
 
     val widget = fieldsRenderer(block.fields, Stream.continually(block.fieldsWidth.toStream).flatten)
 
@@ -80,11 +109,11 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override def beforeSave(data:Json,form:JSONMetadata): Future[Unit] = widget.beforeSave(data,form)
 
     override def render(): JsDom.all.Modifier = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
-      widget.render()
+      widget.render(Property(true))
     )
-  }
+  })
 
-  private def simpleField(fieldName:String):Widget = {for{
+  private def simpleField(fieldName:String):WidgetVisibility = {for{
     field <- metadata.fields.find(_.name == fieldName)
   } yield {
 
@@ -96,25 +125,25 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     def toAll(single:Json):Json = dataWithChildId.get.deepMerge(Json.obj((field.name,single)))
     //results.listen(js => println("record changed"))
 
-    widgetSelector(field, id, dataWithChildId.transform(toSingle,toAll))
+    WidgetVisibility(widgetSelector(field, id, dataWithChildId.transform(toSingle,toAll)),checkCondition(field))
 
-  }}.getOrElse(HiddenWidget)
+  }}.getOrElse(WidgetVisibility(HiddenWidget))
 
 
   private def fieldsRenderer(fields: Seq[Either[String, SubLayoutBlock]], widths: Stream[Int] = Stream.continually(12)):Widget = new Widget {
 
-    val widgets:Seq[Widget] = fields.map{
+    val widgets:Seq[WidgetVisibility] = fields.map{
       case Left(fieldName) => simpleField(fieldName)
       case Right(subForm) => subBlock(subForm)
     }
 
-    override def afterSave(value:Json,metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,widgets)
-    override def beforeSave(value:Json,metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,widgets)
+    override def afterSave(value:Json,metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,widgets.map(_.widget))
+    override def beforeSave(value:Json,metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,widgets.map(_.widget))
 
     override def render(): JsDom.all.Modifier = div(
       widgets.zip(widths).map { case (widget, width) =>
         div(BootstrapCol.md(width), GlobalStyles.field,
-          widget.render()
+          widget.widget.render(widget.visibility)
         )
       }
 
@@ -140,7 +169,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
         blocks.map{ case (width,title,widget) =>
           div(BootstrapCol.md(width), GlobalStyles.block)(
             title.map{ title => h3(Labels(title)) },
-            widget.render()
+            widget.render(Property(true))
           )
         }
       )

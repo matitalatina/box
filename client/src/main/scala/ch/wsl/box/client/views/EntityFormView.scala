@@ -304,7 +304,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           form match {
             case None => p("Loading form")
             case Some(f) => {
-              presenter.loadWidgets(f).render()
+              presenter.loadWidgets(f).render(Property(true))
             }
           }
         ).render

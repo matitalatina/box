@@ -1,5 +1,7 @@
 package ch.wsl.box.model.shared
 
+import io.circe.Json
+
 /**
   * Created by andreaminetti on 16/03/16.
   */
@@ -13,7 +15,8 @@ case class JSONField(
                       widget: Option[String] = None,
                       child: Option[Child] = None,
                       default: Option[String] = None,
-                      file: Option[FileReference] = None
+                      file: Option[FileReference] = None,
+                      condition: Option[ConditionalField] = None
                     )
 
 
@@ -24,6 +27,8 @@ case class FileReference(name_field:String, file_field:String, thumbnail_field:O
 case class JSONFieldMap(valueProperty:String, textProperty:String)
 
 case class Child(objId:Int, key:String, masterFields:String, childFields:String, childFilter:Seq[JSONQueryFilter])
+
+case class ConditionalField(conditionFieldId:String,conditionValues:Seq[Json])
 
 object JSONFieldTypes{
   val NUMBER = "number"
