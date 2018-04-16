@@ -4,7 +4,7 @@ import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.Conf
 import ch.wsl.box.client.views.components.Debug
-import ch.wsl.box.model.shared.{JSONField, JSONMetadata}
+import ch.wsl.box.model.shared.{JSONField, JSONID, JSONMetadata}
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
@@ -58,12 +58,14 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       produce(prop.transform(_.string)) { name =>
         div(
           produce(id) { idfile =>
-            div(
-              img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", height := Conf.imageHeight),br,
-              //          img(src := REST.getFile(entity, id.get), height := Conf.imageHeight),
-              //          a(href := REST.getFile(entity, id.get), name)
-              a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
-            ).render
+            JSONID.fromString(idfile) match {
+              case Some(_) => div(
+                  img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", height := Conf.imageHeight),br,
+                  a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
+                ).render
+              case None => div().render
+            }
+
           }
         ).render
       },
