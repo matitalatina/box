@@ -1,5 +1,7 @@
 package ch.wsl.box.rest.routes
 
+import java.io.ByteArrayInputStream
+
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.ContentDispositionTypes
 import akka.http.scaladsl.server.{Directives, Route}
@@ -13,10 +15,13 @@ import ch.wsl.box.model.shared.JSONID
 import ch.wsl.box.rest.logic.DbActions
 import ch.wsl.box.rest.routes.File.FileHandler
 import io.circe.Decoder
+import nz.co.rossphillips.thumbnailer.Thumbnailer
+import nz.co.rossphillips.thumbnailer.thumbnailers.{DOCXThumbnailer, ImageThumbnailer, PDFThumbnailer, TextThumbnailer}
 import scribe.Logging
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 
 
@@ -26,6 +31,8 @@ object File{
   trait FileHandler[M <: Product]{
     def inject(obj:M, file:Array[Byte], metadata:FileInfo):M
     def extract(obj:M):BoxFile
+    def injectThumbnail(obj:M, file:Array[Byte]):M
+    def extractThumbnail(obj:M):BoxFile
   }
 
   def completeFile(f:BoxFile) =
@@ -52,26 +59,33 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
 
   val utils = new DbActions[T,M](table)
 
+  def createThumbnail(file:Array[Byte],contentType:String):Option[Array[Byte]] = Try{
+    val thumbnailer = new Thumbnailer(new PDFThumbnailer, new TextThumbnailer, new ImageThumbnailer, new DOCXThumbnailer)
+    thumbnailer.setSize(300,200)
+    thumbnailer.generateThumbnail(new ByteArrayInputStream(file),contentType)
+  }.toOption
+
   def upload(id:JSONID)(metadata:FileInfo, byteSource:Source[ByteString, Any]) = {
     for{
       bytea <- byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray)
       row <- utils.getById(id)
       rowWithFile = handler.inject(row.get,bytea,metadata)
-      result <- utils.updateById(id,rowWithFile)
+      rowWithFileAndThumb <- Future{
+        createThumbnail(bytea,metadata.contentType.mediaType.toString) match {
+          case Some(thumbnail) => handler.injectThumbnail(rowWithFile,thumbnail)
+          case None => rowWithFile
+        }
+
+      }
+      result <- utils.updateById(id,rowWithFileAndThumb)
     } yield result
   }
 
 
   def route:Route = {
     pathPrefix(field) {
-      pathPrefix("generate-thumbnail") { // /api/v1/file/document.b_document/generate-thumbnail/document_id::35/document.b_thumbnail
-        path(Segment) { originField => //
-          path(Segment) { idstr =>
-            complete("")
-          }
-        }
-      } ~
-      path(Segment) { idstr =>
+
+      pathPrefix(Segment) { idstr =>
         logger.info(s"Parsing File'JSONID: $idstr")
         JSONID.fromString(idstr) match {
           case Some(id) => post {
@@ -80,13 +94,21 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
               complete(result)
             }
           } ~
-            get {
-
-              onSuccess(utils.getById(id)) { result =>
-                val f = handler.extract(result.head)
-                File.completeFile(f)
+            path("thumb") {
+              get {
+                onSuccess(utils.getById(id)) { result =>
+                  val f = handler.extractThumbnail(result.head)
+                  File.completeFile(f)
+                }
               }
-
+            } ~
+            pathEnd {
+              get {
+                onSuccess(utils.getById(id)) { result =>
+                  val f = handler.extract(result.head)
+                  File.completeFile(f)
+                }
+              }
             }
           case None => complete(StatusCodes.BadRequest,s"JSONID $idstr not valid")
         }

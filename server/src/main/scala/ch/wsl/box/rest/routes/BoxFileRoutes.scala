@@ -28,6 +28,12 @@ object BoxFileRoutes {
           row.mime,
           row.name
         )
+        override def injectThumbnail(row: UIsrc_row, file: Array[Byte]) = row
+        override def extractThumbnail(row: UIsrc_row) = BoxFile(
+          row.file,
+          row.mime,
+          row.name
+        )
     }).route
 }
      

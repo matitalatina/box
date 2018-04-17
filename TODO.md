@@ -3,9 +3,6 @@ TODO
 
 
 1. export page (DB driven)
-1. thumbnails of images/pdf
-1. performance review
-1. column filtering on lookup values
 
 
 ##### Details

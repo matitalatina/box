@@ -115,7 +115,8 @@ object Settings {
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp % "test",
     "org.webjars"              % "bootstrap"         % "3.3.7",
     "com.outr" %% "scribe" % versions.scribe,
-    "com.outr" %% "scribe-slf4j" % versions.scribe
+    "com.outr" %% "scribe-slf4j" % versions.scribe,
+    "nz.co.rossphillips" %% "scala-thumbnailer" % "0.5.SNAPSHOT"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

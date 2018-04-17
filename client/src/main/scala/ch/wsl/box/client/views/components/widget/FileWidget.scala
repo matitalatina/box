@@ -60,7 +60,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
           produce(id) { idfile =>
             JSONID.fromString(idfile) match {
               case Some(_) => div(
-                  img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", height := Conf.imageHeight),br,
+                  img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb", height := Conf.imageHeight),br,
                   a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
                 ).render
               case None => div().render

@@ -5,6 +5,8 @@ import com.typesafe.config.Config
 import slick.model.Model
 import net.ceedubs.ficus.Ficus._
 
+import scala.util.Try
+
 
 
 case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.SourceCodeGenerator(model)
@@ -16,10 +18,34 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
     val table = conf.getString(
       "table")
     val bytea = conf.getString("bytea")
+    val thumbnail = Try(conf.getString("thumbnail")).toOption
     val filename = conf.getString("filename")
     val mime = conf.getString("mime")
     val tableTableQuery = tables.find(_.model.name.table == table).get.TableClass.name
     val tableTableRow = tables.find(_.model.name.table == table).get.EntityType.name
+
+    val thumbnailCode = thumbnail match {
+      case Some(t) =>
+        s"""
+           |        override def injectThumbnail(row: $tableTableRow, file: Array[Byte]) = row.copy(
+           |          $t = Some(file)
+           |        )
+           |        override def extractThumbnail(row: $tableTableRow) = BoxFile(
+           |          row.$t,
+           |          Some("image/jpeg"),
+           |          row.$filename
+           |        )
+            """.stripMargin
+      case None =>
+        s"""
+           |        override def injectThumbnail(row: $tableTableRow, file: Array[Byte]) = row
+           |        override def extractThumbnail(row: $tableTableRow) = BoxFile(
+           |          row.$bytea,
+           |          row.$mime,
+           |          row.$filename
+           |        )
+            """.stripMargin
+    }
 
     s"""
        |    File("$table.$bytea",$tableTableQuery,new FileHandler[$tableTableRow] {
@@ -33,6 +59,7 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
        |          row.$mime,
        |          row.$filename
        |        )
+       |        $thumbnailCode
        |    }).route""".stripMargin
 
   }
