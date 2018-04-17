@@ -33,7 +33,21 @@ case class JSONQueryPaging(pageLength:Int, currentPage:Int=1)
   * @param operator
   * @param value
   */
-case class JSONQueryFilter(column:String, operator:Option[String], value:String)
+case class JSONQueryFilter(
+                            column:String,
+                            operator:Option[String],
+                            value:String,
+                            lookup: Option[JSONFieldLookup]
+                          ) {
+  def lookUpQuery(operator:String):JSONQuery = lookup match {
+    case None => JSONQuery.empty
+    case Some(l) => JSONQuery(
+      filter = List(JSONQueryFilter(l.map.textProperty,Some(operator),value,None)),
+      sort = List(),
+      paging = None
+    )
+  }
+}
 
 /**
   * Sort data by column
@@ -83,24 +97,31 @@ object Filter {
   final val NONE = "none"
   final val EQUALS = "="
   final val NOT = "not"
+  final val FK_EQUALS = "FK="
+  final val FK_NOT = " FKnot"
   final val > = ">"
   final val < = "<"
   final val >= = ">="
   final val <= = "<="
   final val LIKE = "like"
+  final val FK_LIKE = "FKlike"
   final val IN = "in"
   final val BETWEEN = "between"
 
-  def options(`type`:String) = `type` match {
-    case JSONFieldTypes.NUMBER => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT, Filter.IN, Filter.BETWEEN)
+  private def basicOptions(`type`:String) = `type` match {
+    case JSONFieldTypes.NUMBER  => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT, Filter.IN, Filter.BETWEEN)
+    case JSONFieldTypes.DATE | JSONFieldTypes.DATETIME | JSONFieldTypes.TIME => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT)
     case JSONFieldTypes.STRING => Seq(Filter.LIKE, Filter.EQUALS, Filter.NOT)
     case _ => Seq(Filter.EQUALS, Filter.NOT)
   }
 
-  def default(`type`:String) = `type` match {
-    case JSONFieldTypes.NUMBER => Filter.EQUALS
-    case JSONFieldTypes.STRING => Filter.LIKE
-    case _ => Filter.EQUALS
+  def options(field:JSONField):Seq[String] = {
+    field.lookup match {
+      case None => basicOptions(field.`type`)
+      case Some(lookup) => Seq(Filter.FK_LIKE, Filter.FK_EQUALS, Filter.FK_NOT)// ++ lookup.lookup.values.toSeq
+    }
   }
+
+  def default(field:JSONField) = options(field).head
 }
 

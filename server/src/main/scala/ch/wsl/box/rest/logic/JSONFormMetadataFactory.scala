@@ -25,6 +25,11 @@ import scala.util.{Failure, Success, Try}
 object JSONFormMetadataFactory{
   private var cacheName = Map[(String,String),Future[JSONMetadata]]()
   private var cacheId = Map[(Int,String),Future[JSONMetadata]]()
+
+  def resetCache() = {
+    cacheName = Map()
+    cacheId = Map()
+  }
 }
 
 case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends Logging {

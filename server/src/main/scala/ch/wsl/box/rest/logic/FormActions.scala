@@ -115,7 +115,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
     val parentFilter = for{
       (local,remote) <- child.masterFields.split(",").zip(child.childFields.split(","))
     } yield {
-      JSONQueryFilter(remote,Some(Filter.EQUALS),entity.get(local))
+      JSONQueryFilter(remote,Some(Filter.EQUALS),entity.get(local),None)
     }
 
     val filters = parentFilter.toSeq ++ child.childFilter

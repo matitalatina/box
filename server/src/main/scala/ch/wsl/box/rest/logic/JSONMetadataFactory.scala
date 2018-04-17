@@ -144,21 +144,21 @@ object JSONMetadataFactory extends Logging {
 
 
   val typesMapping =  Map(
-    "integer" -> "number",
-    "character varying" -> "string",
-    "character" -> "string",
-    "smallint" -> "number",
-    "bigint" -> "number",
-    "double precision" -> "number",
-    "timestamp without time zone" -> "string",
-    "date" -> "string",
-    "real" -> "number",
+    "integer" -> JSONFieldTypes.NUMBER,
+    "character varying" -> JSONFieldTypes.STRING,
+    "character" -> JSONFieldTypes.STRING,
+    "smallint" -> JSONFieldTypes.NUMBER,
+    "bigint" -> JSONFieldTypes.NUMBER,
+    "double precision" -> JSONFieldTypes.NUMBER,
+    "timestamp without time zone" -> JSONFieldTypes.DATETIME,
+    "date" -> JSONFieldTypes.DATE,
+    "real" -> JSONFieldTypes.NUMBER,
     "boolean" -> "boolean",
-    "bytea" -> "string",
-    "numeric" -> "number",
-    "text" -> "string",
-    "USER-DEFINED" -> "string",
-    "time without time zone" -> "string"
+    "bytea" -> JSONFieldTypes.FILE,
+    "numeric" -> JSONFieldTypes.NUMBER,
+    "text" -> JSONFieldTypes.STRING,
+    "USER-DEFINED" -> JSONFieldTypes.STRING,
+    "time without time zone" -> JSONFieldTypes.TIME
   )
 
   val defaultWidgetMapping = Map(

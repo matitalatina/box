@@ -22,7 +22,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     def where(filters: Seq[JSONQueryFilter]): Query[T, M, Seq] = {
       filters.foldRight[Query[T, M, Seq]](base) { case (jsFilter, query) =>
         //println(jsFilter)
-        query.filter(x => operator(jsFilter.operator.getOrElse(Filter.EQUALS))(x.col(jsFilter.column), jsFilter.value))
+        query.filter(x => operator(jsFilter.operator.getOrElse(Filter.EQUALS))(x.col(jsFilter.column), jsFilter))
       }
     }
 

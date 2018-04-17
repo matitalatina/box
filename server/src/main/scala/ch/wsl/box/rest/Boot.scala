@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import ch.wsl.box.rest.logic.JSONFormMetadataFactory
 import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.Auth
 import com.typesafe.config.{Config, ConfigFactory}
@@ -41,10 +42,19 @@ object Boot extends App with Root {
   val bindingFuture = Http().bindAndHandle(handleExceptions(BoxExceptionHandler()) {
     route
   }, host, port)     //attach the root route
-  println(s"Server online at http://localhost:8080/\nPress q to stop...")
-  while(StdIn.readLine() != "q"){       //endless loop until q in sbt console is pressed
+  println(s"Server online at http://localhost:8080/\nPress q to stop, r to reset cache...")
+  var read = ""
+  do{       //endless loop until q in sbt console is pressed
+    read = StdIn.readLine()
+    read match {
+      case "r" => {
+        JSONFormMetadataFactory.resetCache()
+        println("reset cache")
+      }
+      case _ => {}
+    }
     println()
-  } // let it run until user presses return
+  } while(read != "q")// let it run until user presses return
   bindingFuture
     .flatMap(_.unbind()) // trigger unbinding from the port
     .onComplete(_ => system.terminate()) // and shutdown when done

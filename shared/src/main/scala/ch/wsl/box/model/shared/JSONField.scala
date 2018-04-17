@@ -35,4 +35,7 @@ object JSONFieldTypes{
   val STRING = "string"
   val CHILD = "child"
   val FILE = "file"
+  val DATE = "date"
+  val DATETIME = "datetime"
+  val TIME = "time"
 }
