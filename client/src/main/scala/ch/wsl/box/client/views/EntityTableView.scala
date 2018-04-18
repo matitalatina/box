@@ -222,7 +222,9 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   def downloadCSV() = {
     query().asJson.toString()
     val kind = EntityKind(model.subProp(_.kind).get).entityOrForm
-    dom.window.open(s"/api/v1/$kind/${Session.lang()}/${model.subProp(_.name).get}/csv?q=${query().asJson.toString()}")
+    val url = s"/api/v1/$kind/${Session.lang()}/${model.subProp(_.name).get}/csv?q=${query().asJson.toString()}".replaceAll("\n","")
+    logger.info(s"downloading: $url")
+    dom.window.open(url)
   }
 }
 
