@@ -26,15 +26,20 @@ object JSONMetadataFactory extends Logging {
 //  private val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes")
   private val excludeFields:Seq[String] = dbConf.as[Seq[String]]("generator.excludeFields")
 
-  
-  def tableFieldTitles: Config = {
-    val config = ConfigFactory.load()
 
-    config.as[Config]("rest.lookup.labels")
-  }
 
-  def defaultTableLookupField:String = {
-    tableFieldTitles.as[Option[String]]("default").getOrElse("name")
+  def lookupField(referencingTable:String, firstNoPK:Option[String]):String = {
+
+    val config = ConfigFactory.load().as[Config]("rest.lookup.labels")
+
+    val default = config.as[Option[String]]("default").getOrElse("name")
+
+    val myDefaultTableLookupField: String = default match {
+      case "firstNoPKField" => firstNoPK.getOrElse("name")
+      case _ => default
+    }
+
+    config.as[Option[String]](referencingTable).getOrElse(myDefaultTableLookupField)
   }
 
   def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit db:Database, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
@@ -46,60 +51,67 @@ object JSONMetadataFactory extends Logging {
 
     var constraints = List[String]()
 
-    def field2form(field: PgColumn): Future[JSONField] = schema.findFk(field.column_name).flatMap {
-      _ match {
-        case Some(fk) => {
-          if (Await.result(BoxTablesRegistry().tableActions(fk.referencingTable).count().map(_.count), 1 second) <= lookupMaxRows) {
-            if (constraints.contains(fk.constraintName)) {
-              logger.info("error: " + fk.constraintName)
-              logger.info(field.column_name)
-              Future.successful(JSONField(field.jsonType, name = field.boxName, nullable = field.nullable))
-            } else {
-              constraints = fk.constraintName :: constraints //add fk constraint to contraint list
-
-              val myDefaultTableLookupField: String = defaultTableLookupField match {
-                case "firstNoPKField" => Await.result(firstNoPKField(fk.referencingTable), 1 second) //todo: solve without blocking
-                case _ => defaultTableLookupField
-              }
-              //            logger.info("LookupField of " + fk.referencingTable + " is " + myDefaultTableLookupField)
-              val text = tableFieldTitles.as[Option[String]](fk.referencingTable).getOrElse(myDefaultTableLookupField)
-              val model = fk.referencingTable
-              val value = fk.referencingKeys.head //todo verify for multiple keys
-
-              import ch.wsl.box.shared.utils.JsonUtils._
-              BoxTablesRegistry().tableActions(model).getEntity().map { lookupData =>
-                val options = lookupData.map { lookupRow =>
-                  (lookupRow.get(value), lookupRow.get(text))
-                }.toMap
-
-                JSONField(
-                  field.jsonType,
-                  name = field.boxName,
-                  nullable = field.nullable,
-                  placeholder = Some(fk.referencingTable + " Lookup"),
-                  //widget = Some(WidgetsNames.select),
-                  lookup = Some(JSONFieldLookup(model, JSONFieldMap(value, text), options))
-                )
-              }
-
-            }
-          } else {  //no lookup from fk
-            Future.successful(JSONField(
-              field.jsonType,
-              name = field.boxName,
-              nullable = field.nullable,
-              widget = JSONMetadataFactory.defaultWidgetMapping(field.data_type)
-            ))
-          }
+    def field2form(field: PgColumn): Future[JSONField] = {
+      for{
+        fk <- schema.findFk(field.column_name)
+        firstNoPK <- fk match {
+          case Some(f) => firstNoPKField(f.referencingTable)
+          case None => Future.successful(None)
         }
-        case _ => Future.successful(JSONField(
-          field.jsonType,
-          name = field.boxName,
-          nullable = field.nullable,
-          widget = JSONMetadataFactory.defaultWidgetMapping(field.data_type)
-        ))
+      } yield {
+        fk match {
+          case Some(fk) => {
+            if (Await.result(BoxTablesRegistry().tableActions(fk.referencingTable).count().map(_.count), 1 second) <= lookupMaxRows) {
+              if (constraints.contains(fk.constraintName)) {
+                logger.info("error: " + fk.constraintName)
+                logger.info(field.column_name)
+                Future.successful(JSONField(field.jsonType, name = field.boxName, nullable = field.nullable))
+              } else {
+                constraints = fk.constraintName :: constraints //add fk constraint to contraint list
+
+
+                val text = lookupField(fk.referencingTable,firstNoPK)
+
+                val model = fk.referencingTable
+                val value = fk.referencingKeys.head //todo verify for multiple keys
+
+
+                import ch.wsl.box.shared.utils.JsonUtils._
+                BoxTablesRegistry().tableActions(model).getEntity().map { lookupData =>
+                  val options = lookupData.map { lookupRow =>
+                    (lookupRow.get(value), lookupRow.get(text))
+                  }.toMap
+
+                  JSONField(
+                    field.jsonType,
+                    name = field.boxName,
+                    nullable = field.nullable,
+                    placeholder = Some(fk.referencingTable + " Lookup"),
+                    //widget = Some(WidgetsNames.select),
+                    lookup = Some(JSONFieldLookup(model, JSONFieldMap(value, text), options))
+                  )
+                }
+
+              }
+            } else {  //no lookup from fk
+              Future.successful(JSONField(
+                field.jsonType,
+                name = field.boxName,
+                nullable = field.nullable,
+                widget = JSONMetadataFactory.defaultWidgetMapping(field.data_type)
+              ))
+            }
+          }
+          case _ => Future.successful(JSONField(
+            field.jsonType,
+            name = field.boxName,
+            nullable = field.nullable,
+            widget = JSONMetadataFactory.defaultWidgetMapping(field.data_type)
+          ))
+        }
       }
-    }
+
+    }.flatten
 
 
 
@@ -122,7 +134,7 @@ object JSONMetadataFactory extends Logging {
 
   }
 
-  def firstNoPKField(table:String)(implicit db:Database, mat:Materializer, ec:ExecutionContext):Future[String] = {
+  def firstNoPKField(table:String)(implicit db:Database, mat:Materializer, ec:ExecutionContext):Future[Option[String]] = {
     logger.info("Getting first field of " + table + " that is not PK")
     val schema = new PgInformationSchema(table, Auth.adminDB, excludeFields)
     for {
@@ -133,7 +145,7 @@ object JSONMetadataFactory extends Logging {
 //      logger.info("PK's " + pks.mkString("-"))
 //      logger.info("Columns " + c.map(_.column_name).mkString("-"))
 //      logger.info("Columns " + c.map(_.column_name).diff(pks).mkString("-") + " that are not PK")
-      c.map(_.column_name).diff(pks).headOption.getOrElse("")
+      c.map(_.column_name).diff(pks).headOption
     }
   }
 

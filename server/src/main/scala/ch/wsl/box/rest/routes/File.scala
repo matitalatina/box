@@ -98,7 +98,25 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
               get {
                 onSuccess(utils.getById(id)) { result =>
                   val f = handler.extractThumbnail(result.head)
-                  File.completeFile(f)
+                  if(f.file.isEmpty) {
+                    val originalFile = handler.extract(result.head)
+                    val thumbnailFile = for{
+                      file <- originalFile.file
+                      mime <- originalFile.mime
+                      thumb <- createThumbnail(file,mime)
+                    } yield {
+                      val row = handler.injectThumbnail(result.head,thumb)
+                      utils.updateById(id,row)
+                      handler.extractThumbnail(row)
+                    }
+                    thumbnailFile match {
+                      case Some(f) => File.completeFile(f)
+                      case None => complete(StatusCodes.NotFound)
+                    }
+
+                  } else {
+                    File.completeFile(f)
+                  }
                 }
               }
             } ~

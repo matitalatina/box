@@ -171,7 +171,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
       val lookup: Future[Option[JSONFieldLookup]] = {for{
         refEntity <- field.lookupEntity
         value <- field.lookupValueField
-        text = fieldI18n.lookupTextField.getOrElse(lang)
+        text = fieldI18n.lookupTextField.getOrElse(JSONMetadataFactory.lookupField(refEntity,None))
       } yield {
 
         EntityActionsRegistry().tableActions(refEntity).getEntity().map{ lookupData =>   //JSONQuery.limit(100)
