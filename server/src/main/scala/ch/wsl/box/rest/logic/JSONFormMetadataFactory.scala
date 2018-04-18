@@ -149,7 +149,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
 
 
-      val result = JSONMetadata(form.form_id.get,form.name,formI18n.flatMap(_.label).getOrElse(form.name),jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery)
+      val result = JSONMetadata(form.form_id.get,form.name,formI18n.flatMap(_.label).getOrElse(form.name),jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery, form.exportView)
       //println(s"resulting form: $result")
       result
     }

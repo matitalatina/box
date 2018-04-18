@@ -5,10 +5,12 @@ TODO
 
 1. export page (DB driven) form to functions
 
-1. form view download
 1. csv download parameter to resolve lookup
 
 
+
+##### Remarks
+v_fire & fire don't have the same rows, ex searching "bei" in locality
 
 ##### Details
 

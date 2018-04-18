@@ -16,7 +16,8 @@ case class JSONMetadata(
                          lang:String,
                          tabularFields:Seq[String],
                          keys:Seq[String],
-                         query:Option[JSONQuery]
+                         query:Option[JSONQuery],
+                         exportView:Option[String]
                        )
 
 object JSONMetadata{
