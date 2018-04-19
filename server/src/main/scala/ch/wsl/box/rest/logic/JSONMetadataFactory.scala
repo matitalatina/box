@@ -28,7 +28,7 @@ object JSONMetadataFactory extends Logging {
 
 
 
-  def lookupField(referencingTable:String, firstNoPK:Option[String]):String = {
+  def lookupField(referencingTable:String,lang:String, firstNoPK:Option[String]):String = {
 
     val config = ConfigFactory.load().as[Config]("rest.lookup.labels")
 
@@ -36,6 +36,7 @@ object JSONMetadataFactory extends Logging {
 
     val myDefaultTableLookupField: String = default match {
       case "firstNoPKField" => firstNoPK.getOrElse("name")
+      case "::lang" => lang
       case _ => default
     }
 
@@ -70,7 +71,7 @@ object JSONMetadataFactory extends Logging {
                 constraints = fk.constraintName :: constraints //add fk constraint to contraint list
 
 
-                val text = lookupField(fk.referencingTable,firstNoPK)
+                val text = lookupField(fk.referencingTable,lang,firstNoPK)
 
                 val model = fk.referencingTable
                 val value = fk.referencingKeys.head //todo verify for multiple keys

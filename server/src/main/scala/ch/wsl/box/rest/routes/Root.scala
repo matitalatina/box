@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper, UIProvider}
@@ -12,13 +13,16 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.LoginRequest
+import ch.wsl.box.rest.jdbc.JdbcConnect
+import ch.wsl.box.shared.utils.CSV
+import scribe.Logging
 
 import scala.util.{Failure, Success}
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-trait Root extends enablers.Sessions {
+trait Root extends enablers.Sessions with Logging {
 
   implicit val materializer:Materializer
   implicit val executionContext:ExecutionContext
@@ -31,6 +35,8 @@ trait Root extends enablers.Sessions {
     import ch.wsl.box.rest.utils.JSONSupport._
     import ch.wsl.box.rest.utils.Auth
     import io.circe.generic.auto._
+    import io.circe.syntax._
+    import ch.wsl.box.shared.utils.JsonUtils._
 
 
     //Serving UI
@@ -117,6 +123,9 @@ trait Root extends enablers.Sessions {
               implicit val db = session.userProfile.db
 //              val accessLevel = session.userProfile.accessLevel.get
 
+              pathPrefix("export") {
+                Export.route
+              } ~
               pathPrefix("file") {
                 FileRoutes.route
               } ~

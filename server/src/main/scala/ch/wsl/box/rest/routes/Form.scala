@@ -5,7 +5,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONID, JSONMetadata, JSONQuery}
-import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory}
+import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory, Lookup}
 import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.rest.utils.Timer
 import ch.wsl.box.shared.utils.CSV
@@ -143,19 +143,33 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
         post {
           entity(as[JSONQuery]) { query =>
             logger.info("csv")
-            complete(actions(tabularMetadata){ fs =>
-              fs.csv(query)
-            })
+            complete{
+              for{
+                metadata <- tabularMetadata
+              } yield {
+                val formActions = FormActions(metadata)
+                formActions.csv(query,None)
+              }
+            }
           }
         } ~
         respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
           get {
-            parameters('q) { q =>
+            parameters('q, 'lang.?) { (q,resolveFk) =>
               val query = parse(q).right.get.as[JSONQuery].right.get
-              complete(actions(tabularMetadata) { fs =>
-                Source.fromFuture(tabularMetadata.map(x => CSV.row(x.fields.map(_.name))))
-                  .concat(fs.csv(query))
-              })
+              complete{
+                for {
+                  metadata <- tabularMetadata
+                  fkValues <- resolveFk match {
+                    case None => Future.successful(None)
+                    case Some(_) => Lookup.valuesForEntity(metadata).map(Some(_))
+                  }
+                } yield {
+                  val formActions = FormActions(metadata)
+                  Source.fromFuture(tabularMetadata.map(x => CSV.row(x.fields.map(_.name))))
+                    .concat(formActions.csv(query,fkValues))
+                }
+              }
             }
           }
         }

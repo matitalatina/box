@@ -31,7 +31,8 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
   import ch.wsl.box.shared.utils.JsonUtils._
 
 
-  val actions = EntityActionsRegistry().tableActions(metadata.entity)
+  val actionRegistry = EntityActionsRegistry()
+  val actions = actionRegistry.tableActions(metadata.entity)
 
   val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
@@ -40,13 +41,17 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
   def extractArray(query:JSONQuery):Source[Json,NotUsed] = extractSeq(query)     // todo adapt JSONQuery to select only fields in form
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
 
-  def csv(query:JSONQuery):Source[String,NotUsed] = {
-    extractSeq(query).map{ json =>
-      val row = metadata.tabularFields.map { field =>
-        json.get(field)
+  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):Source[String,NotUsed] = {
+
+      val lookup = Lookup.valueExtractor(lookupElements,metadata) _
+
+      extractSeq(query).map { json =>
+        val row = metadata.tabularFields.map { field =>
+          lookup(field,json.get(field))
+        }
+        CSV.row(row)
       }
-      CSV.row(row)
-    }
+
   }
 
   def attachArrayIndex(jsonToInsert:Seq[Json],form:JSONMetadata):Seq[Json] = {

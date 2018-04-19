@@ -9,7 +9,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
-import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
+import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory, Lookup}
 import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.shared.utils.CSV
 import io.circe.parser.parse
@@ -46,6 +46,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
   import io.circe.generic.auto._
     import ch.wsl.box.shared.utils.Formatters._
     import ch.wsl.box.model.shared.EntityKind
+    import io.circe.syntax._
 
     val helper = new DbActions[T,M](table)
 
@@ -103,12 +104,29 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
             } ~
               respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
                 get {
-                  parameters('q) { q =>
+                  parameters('q,'lang.?) { (q, lang) =>
                     val query = parse(q).right.get.as[JSONQuery].right.get
-                    val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en").map{ metadata =>
-                      CSV.row(metadata.fields.map(_.name))
-                    }).concat(Source.fromPublisher(helper.findStreamed(query)).map(x => CSV.row(x.values())))
-                    complete(csv)
+                    complete {
+                      for {
+                        metadata <- JSONMetadataFactory.of(name, lang.getOrElse("en"))
+                        fkValues <- lang match {
+                          case None => Future.successful(None)
+                          case Some(_) => Lookup.valuesForEntity(metadata).map(Some(_))
+                        }
+                      } yield {
+
+                        val lookup = Lookup.valueExtractor(fkValues,metadata) _
+
+                        Source.fromFuture(Future.successful(
+                          CSV.row(metadata.fields.map(_.name))
+                        )).concat(Source.fromPublisher(helper.findStreamed(query)).map{x =>
+
+                          val row = metadata.fields.map(_.name).zip(x.values()).map{ case (field,v) => lookup(field,v)}
+
+                          CSV.row(row)
+                        })
+                      }
+                    }
                   }
                 }
               }

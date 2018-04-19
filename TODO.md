@@ -10,7 +10,6 @@ TODO
 
 
 ##### Remarks
-v_fire & fire don't have the same rows, ex searching "bei" in locality
 
 ##### Details
 

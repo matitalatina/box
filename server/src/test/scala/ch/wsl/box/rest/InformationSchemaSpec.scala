@@ -9,6 +9,7 @@ import slick.driver.PostgresDriver.api._
 import scala.concurrent.Future
 import scala.reflect.macros.whitebox
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by pezzatti on 7/20/17.

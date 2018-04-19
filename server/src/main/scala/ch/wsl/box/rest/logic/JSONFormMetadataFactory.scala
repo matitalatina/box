@@ -149,7 +149,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
 
 
-      val result = JSONMetadata(form.form_id.get,form.name,formI18n.flatMap(_.label).getOrElse(form.name),jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery, form.exportView)
+      val result = JSONMetadata(form.form_id.get,form.name,formI18n.flatMap(_.label).getOrElse(form.name),jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery, formI18n.flatMap(_.exportView))
       //println(s"resulting form: $result")
       result
     }
@@ -171,7 +171,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
       val lookup: Future[Option[JSONFieldLookup]] = {for{
         refEntity <- field.lookupEntity
         value <- field.lookupValueField
-        text = fieldI18n.lookupTextField.getOrElse(JSONMetadataFactory.lookupField(refEntity,None))
+        text = fieldI18n.lookupTextField.getOrElse(JSONMetadataFactory.lookupField(refEntity,lang,None))
       } yield {
 
         EntityActionsRegistry().tableActions(refEntity).getEntity().map{ lookupData =>   //JSONQuery.limit(100)

@@ -2,6 +2,7 @@ package ch.wsl.box.client.services
 
 import ch.wsl.box.client.services.REST.get
 import ch.wsl.box.model.shared._
+import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
 import org.scalajs.dom.File
 
@@ -28,7 +29,7 @@ object REST {
   def list(kind:String, lang:String, entity:String, limit:Int): Future[Seq[Json]] = client.post[JSONQuery,JSONData[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",JSONQuery.empty.limit(limit)).map(_.data)
   def list(kind:String, lang:String, entity:String, query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,JSONData[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",query).map(_.data)
   def csv(kind:String, lang:String, entity:String, q:JSONQuery): Future[Seq[Seq[String]]] = client.post[JSONQuery,String](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/csv",q).map{ result =>
-    result.split("\n").toSeq.map{x => x.substring(1,x.length-1).split("\",\"").toSeq}
+    CSV.split(result)
   }
   def count(kind:String, lang:String, entity:String): Future[Int] = client.get[Int](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/count")
   def keys(kind:String, lang:String, entity:String): Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/keys")
@@ -55,5 +56,9 @@ object REST {
   def conf():Future[Map[String,String]] = client.get[Map[String,String]](s"/conf")
   def ui():Future[Map[String,String]] = client.get[Map[String,String]](s"/ui")
 
+
+  //export
+  def exportMetadata(name:String) = client.get[JSONMetadata](s"/export/$name/metadata")
+  def export(name:String,params:Seq[Json]) = client.post[Seq[Json],String](s"/export/$name",params).map(CSV.split)
 
 }

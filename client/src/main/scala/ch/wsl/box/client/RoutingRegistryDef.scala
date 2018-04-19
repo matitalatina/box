@@ -31,6 +31,7 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {
     case "/tables" => EntitiesState("table","")
     case "/views" => EntitiesState("view","")
     case "/forms" => EntitiesState("form","")
+    case "/box" /:/ "export" /:/ name  => ExportState(name)
     case "/box" /:/ kind /:/ entity /:/ "insert" => EntityFormState(kind,entity,None)
     case "/box" /:/ kind /:/ entity /:/ "update" /:/ id => EntityFormState(kind,entity,Some(id))
     case "/box" /:/ kind /:/ entity /:/ "child" /:/ childEntity => MasterChildState(kind,entity,childEntity)
