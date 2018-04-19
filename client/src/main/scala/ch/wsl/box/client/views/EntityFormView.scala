@@ -71,7 +71,9 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       children <- if(state.kind == "form" && reloadMetadata) REST.children(state.entity,Session.lang()) else Future.successful(Seq())
       currentData <- state.id match {
         case Some(id) => REST.get(state.kind, Session.lang(), state.entity,jsonId.get)
-        case None => Future.successful(Json.Null)
+        case None => Future.successful{
+          Json.obj(JSONMetadata.jsonPlaceholder(metadata,children).toSeq :_*)
+        }
       }
     } yield {
 
@@ -127,6 +129,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         _ <- widget.afterSave(resultSaved,metadata)
       } yield {
 //        val newState =  Routes(m.kind,m.name).table()
+        val newId = JSONID.fromMap(metadata.keys.map(k => (k,resultSaved.js(k))))
+        model.subProp(_.id).set(Some(newId.asString))
         val newState =  toState(m.kind,m.name)
         model.subProp(_.data).set(resultSaved)
         enableGoAway
