@@ -9,7 +9,7 @@ import akka.stream.Materializer
 import akka.util.ByteString
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.rest.logic.JSONMetadataFactory
+import ch.wsl.box.rest.logic.{JSONExportMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
@@ -40,18 +40,11 @@ object Export extends Logging {
 
   def route(implicit ec:ExecutionContext,db:Database, mat:Materializer):Route = {
     pathPrefix(Segment) { function =>
-      path("metadata") {
-        get{
-          val jsonMetadata = JSONMetadata(1,"function_test","Function Test",
-            Seq(
-              JSONField(JSONFieldTypes.NUMBER,"p0",false,Some("Parametro 1")),
-              JSONField(JSONFieldTypes.STRING,"p1",false,Some("Parametro 2")),
-              JSONField(JSONFieldTypes.STRING,"p2",false,Some("Parametro 3"))
-            ),
-            Layout(Seq(LayoutBlock(Some("Title"),4,Seq(Left("p0"),Left("p1"),Left("p2"))))),
-            "function_test","it",Seq("p0","p1","p2"),Seq(),None,None
-          )
-          complete(jsonMetadata)
+      pathPrefix("metadata") {
+        path(Segment) { lang =>
+          get {
+            complete(JSONExportMetadataFactory().of(function,lang))
+          }
         }
       } ~
       get {

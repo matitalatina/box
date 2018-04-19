@@ -58,7 +58,7 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
 
   override def handleState(state: ExportState): Unit = {
     for{
-      metadata <- REST.exportMetadata(state.name)
+      metadata <- REST.exportMetadata(state.name,Session.lang())
     } yield {
       model.subProp(_.metadata).set(Some(metadata))
     }
@@ -97,8 +97,16 @@ case class ExportView(model:ModelProperty[ExportModel], presenter:ExportPresente
   override def getTemplate = div(
     produce(model.subProp(_.metadata)) {
       case None => div("loading").render
-      case Some(metadata) => div(JSONMetadataRenderer(metadata,model.subProp(_.queryData),Seq()).render()).render
-    },
+      case Some(metadata) => loaded(metadata)
+    }
+  )
+
+  def loaded(metadata: JSONMetadata) = div(
+    br,br,
+    h3(GlobalStyles.noMargin,
+      metadata.label
+    ),
+    JSONMetadataRenderer(metadata,model.subProp(_.queryData),Seq()).render(),
     a("load data",onclick :+= ((e:Event) => presenter.query()),GlobalStyles.boxButton),
     a("download CSV",onclick :+= ((e:Event) => presenter.csv()),GlobalStyles.boxButton),
       UdashTable()(model.subSeq(_.data))(
@@ -120,5 +128,5 @@ case class ExportView(model:ModelProperty[ExportModel], presenter:ExportPresente
         }
       ).render,
       br,br
-  )
+  ).render
 }

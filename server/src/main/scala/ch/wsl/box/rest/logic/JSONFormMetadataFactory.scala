@@ -132,20 +132,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
       val jsonFields = {missingKeyFields ++ jsonFieldsPartial}.distinct
 
-      val layout = form.layout.flatMap { l =>
-        parse(l).fold({ f =>
-          logger.info(f.getMessage())
-          None
-        }, { json =>
-          json.as[Layout].fold({ f =>
-            logger.info(f.getMessage())
-            None
-          }, { lay =>
-            Some(lay)
-          }
-          )
-        })
-      }.getOrElse(Layout.fromFields(jsonFields))
+      val layout = Layout.fromString(form.layout).getOrElse(Layout.fromFields(jsonFields))
 
 
 
