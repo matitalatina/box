@@ -37,4 +37,5 @@ case class MasterChildState(kind:String,
                            ) extends RoutingState(EntitiesState(kind,masterEntity))
 
 
-case class ExportState(name:String) extends RoutingState(RootState)
+case object ExportsState extends RoutingState(RootState)
+case class ExportState(name:String) extends RoutingState(ExportsState)

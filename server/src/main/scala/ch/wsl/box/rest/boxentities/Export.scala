@@ -48,14 +48,14 @@ object Export {
     *  @param hint Database column hint SqlType(text), Default(None)*/
   case class Export_i18n_row(id: Option[Int] = None, export_id: Option[Int] = None,
                            lang: Option[String] = None, label: Option[String] = None,
-                           tooltip: Option[String] = None, hint: Option[String] = None)
+                           tooltip: Option[String] = None, hint: Option[String] = None, function: Option[String] = None)
   /** GetResult implicit for fetching Form_i18n_row objects using plain SQL queries */
 
   /** Table description of table form_i18n. Objects of this class serve as prototypes for rows in queries. */
   class Export_i18n(_tableTag: Tag) extends Table[Export_i18n_row](_tableTag, "export_i18n") {
-    def * = (Rep.Some(id), export_id, lang, label, tooltip, hint) <> (Export_i18n_row.tupled, Export_i18n_row.unapply)
+    def * = (Rep.Some(id), export_id, lang, label, tooltip, hint, function) <> (Export_i18n_row.tupled, Export_i18n_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), export_id, lang, label, tooltip, hint).shaped.<>({ r=>import r._; _1.map(_=> Export_i18n_row.tupled((_1, _2, _3, _4, _5, _6)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), export_id, lang, label, tooltip, hint, function).shaped.<>({ r=>import r._; _1.map(_=> Export_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -69,6 +69,8 @@ object Export {
     val tooltip: Rep[Option[String]] = column[Option[String]]("tooltip", O.Default(None))
     /** Database column hint SqlType(text), Default(None) */
     val hint: Rep[Option[String]] = column[Option[String]]("hint", O.Default(None))
+
+    val function: Rep[Option[String]] = column[Option[String]]("function", O.Default(None))
 
 
     /** Foreign key referencing Field (database name fkey_field) */

@@ -14,6 +14,7 @@ class StatesToViewPresenterDef extends ViewPresenterRegistry[RoutingState] {
     case EntityFormState(kind,entity,id) => EntityFormViewPresenter
     case MasterChildState(_,master,child) => MasterChildViewPresenter(master,child)
     case ExportState(_) => ExportViewPresenter
+    case ExportsState => ExportsViewPresenter
     case _ => ErrorViewPresenter
   }
 }

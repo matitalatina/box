@@ -39,7 +39,9 @@ object Export extends Logging {
   }
 
   def route(implicit ec:ExecutionContext,db:Database, mat:Materializer):Route = {
-    pathPrefix(Segment) { function =>
+    path("list") {
+      complete(JSONExportMetadataFactory().list)
+    } ~ pathPrefix(Segment) { function =>
       pathPrefix("metadata") {
         path(Segment) { lang =>
           get {

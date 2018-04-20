@@ -83,6 +83,12 @@ object Labels {
     def table = get("entity.table")
   }
 
+  object exports{
+    def search = get("exports.search")
+    def title = get("exports.title")
+    def select = get("exports.select")
+  }
+
   object entity{
     def actions = get("table.actions")
     def edit = get("table.edit")

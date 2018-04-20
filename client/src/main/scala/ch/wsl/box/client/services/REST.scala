@@ -60,5 +60,6 @@ object REST {
   //export
   def exportMetadata(name:String,lang:String) = client.get[JSONMetadata](s"/export/$name/metadata/$lang")
   def export(name:String,params:Seq[Json]) = client.post[Seq[Json],String](s"/export/$name",params).map(CSV.split)
+  def exports() = client.get[Seq[String]](s"/export/list")
 
 }

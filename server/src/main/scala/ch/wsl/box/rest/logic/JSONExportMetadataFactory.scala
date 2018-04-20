@@ -3,7 +3,7 @@ package ch.wsl.box.rest.logic
 import akka.stream.Materializer
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
-import ch.wsl.box.rest.boxentities.{Export, ExportField}
+import ch.wsl.box.rest.boxentities.{Export, ExportField, Form}
 import ch.wsl.box.rest.utils.Auth
 import io.circe.Json
 import io.circe.parser.parse
@@ -17,9 +17,14 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
 
   import io.circe.generic.auto._
 
+
+  def list: Future[Seq[String]] = Auth.boxDB.run{
+    Export.Export.result
+  }.map{_.map(_.name)}
+
   def of(name:String, lang:String):Future[JSONMetadata]  = {
     val query = for{
-      export <- Export.Export if export.function === name
+      export <- Export.Export if export.name === name
       exportI18n <- Export.Export_i18n if exportI18n.lang === lang && exportI18n.export_id === export.export_id
     } yield (export,exportI18n)
 
@@ -42,7 +47,7 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
 
       val parameters = export.parameters.toSeq.flatMap(_.split(","))
 
-      JSONMetadata(export.export_id.get,export.name,exportI18n.label.getOrElse(name),jsonFields,layout,name,lang,parameters,Seq(),None,None)
+      JSONMetadata(export.export_id.get,export.name,exportI18n.label.getOrElse(name),jsonFields,layout,exportI18n.function.getOrElse(export.function),lang,parameters,Seq(),None,None)
     }
   }
 
