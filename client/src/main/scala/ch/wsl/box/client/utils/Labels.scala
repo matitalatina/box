@@ -46,6 +46,7 @@ object Labels {
   }
 
   object navigation{
+    def recordFound = get("navigation.recordFound")
     def goAway = get("navigation.goAway")
     def first = get("navigation.first")
     def last = get("navigation.last")

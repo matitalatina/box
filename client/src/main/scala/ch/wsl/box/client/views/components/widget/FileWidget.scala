@@ -53,6 +53,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
 
   override def render() = {
+
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
       if(labelString.length > 0) label(labelString) else {},
       produce(prop.transform(_.string)) { name =>
@@ -60,7 +61,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
           produce(id) { idfile =>
             JSONID.fromString(idfile) match {
               case Some(_) => div(
-                  img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb", height := Conf.imageHeight),br,
+                  img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb",GlobalStyles.imageThumb) ,br,
                   a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
                 ).render
               case None => div().render

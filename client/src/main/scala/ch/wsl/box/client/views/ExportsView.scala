@@ -7,7 +7,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{Navigate, REST}
-import ch.wsl.box.client.styles.BootstrapCol
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{Labels, Session, UI}
 import ch.wsl.box.client.{ExportState, ExportsState}
 import io.udash._
@@ -48,7 +48,7 @@ class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsSt
 
 
   def updateExportsList() = {
-    model.subProp(_.filteredList).set(model.subProp(_.list).get.filter(m => m.startsWith(model.get.search)))
+    model.subProp(_.filteredList).set(model.subProp(_.list).get.filter(m => m.contains(model.get.search)))
   }
 
 }
@@ -56,7 +56,8 @@ class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsSt
 class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
-  import ch.wsl.box.model.shared.EntityKind._
+  import scalacss.ScalatagsCss._
+
 
   val sidebarGrid = BootstrapCol.md(2)
   def contentGrid =  BootstrapCol.md(10)
@@ -74,11 +75,10 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
 
   private val content: Element = div().render
 
-  private def sidebar: Element = if(UI.showEntitiesSidebar) {
-    div(sidebarGrid)(
+  private def sidebar: Element = div(sidebarGrid)(
       UdashForm.textInput()(Labels.exports.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateExportsList(), true)),
       produce(model.subProp(_.search)) { q =>
-        ul(
+        ul(GlobalStyles.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>
             li(produce(m) { export =>
               a(Navigate.click(ExportState(export).url),m.get).render
@@ -87,7 +87,6 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
         ).render
       }
     ).render
-  } else div().render
 
   override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.row)(
     sidebar,

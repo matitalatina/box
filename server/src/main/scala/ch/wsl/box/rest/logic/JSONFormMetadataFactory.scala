@@ -132,7 +132,12 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
       val jsonFields = {missingKeyFields ++ jsonFieldsPartial}.distinct
 
-      val layout = Layout.fromString(form.layout).getOrElse(Layout.fromFields(jsonFields))
+      def defaultLayout:Layout = { // for subform default with 12
+        val default = Layout.fromFields(jsonFields)
+        default.copy(blocks = default.blocks.map(_.copy(width = 12)))
+      }
+
+      val layout = Layout.fromString(form.layout).getOrElse(defaultLayout)
 
 
 

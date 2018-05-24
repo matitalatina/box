@@ -58,7 +58,7 @@ class RootView() extends View {
         div(GlobalStyles.notification,bind(notice)).render
       }
     ),
-    main()(
+    main(GlobalStyles.fullHeight)(
       div()(
         child
       )

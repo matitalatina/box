@@ -6,9 +6,16 @@ import ch.wsl.box.client.styles.constants.StyleConstants
 
 import scala.language.postfixOps
 import scalacss.Defaults._
+import scalacss.internal.{AV, CanIUse}
+import scalacss.internal.CanIUse.Agent
 import scalacss.internal.LengthUnit.px
+import scalatags.JsDom
+import scalatags.generic.Attr
 
 object GlobalStyles extends StyleSheet.Inline {
+
+  private def unsafeProp(key:String,value:String) = AV(scalacss.internal.Attr.real(key),value)
+
   import dsl._
 
   val inputDefaultWidth = width(50 %%)
@@ -16,7 +23,7 @@ object GlobalStyles extends StyleSheet.Inline {
   val global = style(
 
     unsafeRoot("body") (
-      backgroundColor(StyleConstants.Colors.wsl)
+      backgroundColor.white
     ),
 
     unsafeRoot("select")(
@@ -33,6 +40,10 @@ object GlobalStyles extends StyleSheet.Inline {
 
     unsafeRoot("input[type='number']")(
       textAlign.right
+    ),
+
+    unsafeRoot("input[type='file']")(
+      width(100 %%)
     ),
 
     unsafeRoot("textarea")(
@@ -52,7 +63,8 @@ object GlobalStyles extends StyleSheet.Inline {
       height(50 px),
       padding(10 px),
       borderBottom(1 px,solid,black),
-      color.white
+      color.white,
+      backgroundColor(StyleConstants.Colors.wsl)
     ),
 
     unsafeRoot(".form-control")(
@@ -73,7 +85,31 @@ object GlobalStyles extends StyleSheet.Inline {
       paddingLeft(30 px),
       paddingRight(30 px),
       backgroundColor.white
+    ),
+
+    unsafeRoot("footer")(
+      backgroundColor(StyleConstants.Colors.wsl)
+    ),
+
+    unsafeRoot("a")(
+      color(StyleConstants.Colors.wsl)
+    ),
+
+    unsafeRoot("#box-table table")(
+      backgroundColor.white
+    ),
+
+
+    //hide up/down arrow for input
+    unsafeRoot("input[type=\"number\"]::-webkit-outer-spin-button,\n  input[type=\"number\"]::-webkit-inner-spin-button")(
+      unsafeProp("-webkit-appearance","none"),
+      margin.`0`
+    ),
+
+    unsafeRoot("input[type=\"number\"]")(
+      unsafeProp("-moz-appearance","textfield")
     )
+
   )
 
 
@@ -138,6 +174,11 @@ object GlobalStyles extends StyleSheet.Inline {
     overflow.auto
   )
 
+  val fullHeight = style(
+    height :=! "calc(100vh - 98px)",
+    overflow.auto
+  )
+
   val noMargin = style(
     margin.`0`
   )
@@ -160,5 +201,26 @@ object GlobalStyles extends StyleSheet.Inline {
   val largeButton = style(
     inputDefaultWidth
   )
+
+  val fullWidth = style(
+    width(100 %%)
+  )
+
+  val maxFullWidth = style(
+    maxWidth(100 %%).important
+  )
+
+  val imageThumb = style(
+    maxHeight(300 px),
+    maxWidth(100 %%)
+  )
+
+  val noBullet = style(
+    listStyleType := "none"
+  )
+
+
+
+
 
 }

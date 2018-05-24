@@ -259,7 +259,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case _ => StringFrag(id)
     }
 
-    Select(fieldQuery.subProp(_.filterType), Filter.options(fieldQuery.get.field),label)()
+    Select(fieldQuery.subProp(_.filterType), Filter.options(fieldQuery.get.field),label)(GlobalStyles.fullWidth)
 
   }
 
@@ -281,7 +281,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     val pagination = {
 
       div(
-        "Records found:",bind(model.subProp(_.ids.count))," - ",
+        Labels.navigation.recordFound,br,bind(model.subProp(_.ids.count))," - ",
         showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(1), true), Labels.navigation.first).render },
         showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1), true), Labels.navigation.previous).render },
         span(
@@ -299,10 +299,10 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
 
     div(
-      h3(labelTitle),
+      h3(GlobalStyles.noMargin,labelTitle),
       div(BootstrapStyles.pullLeft) (
         if (model.get.kind != VIEW.kind)
-          a(Navigate.click(routes.add().url))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
+          a(GlobalStyles.boxButton,Navigate.click(routes.add().url))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
         else
           p()
       ),
@@ -337,14 +337,15 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           rowFactory = (el) => {
             val key = presenter.ids(el.get)
 
+            val hasKey = model.get.metadata.exists(_.keys.nonEmpty)
+
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
-            val kind = model.subProp(_.kind).get
 
             tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
               td(GlobalStyles.smallCells)(
-                kind match{
-                  case "view" => p(color := "grey")(Labels.entity.no_action)
-                  case _ => a(
+                hasKey match{
+                  case false => p(color := "grey")(Labels.entity.no_action)
+                  case true => a(
                     cls := "primary",
                     onclick :+= ((ev: Event) => presenter.edit(el.get), true)
                   )(Labels.entity.edit)

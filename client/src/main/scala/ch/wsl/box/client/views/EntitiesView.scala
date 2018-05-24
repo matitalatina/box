@@ -6,7 +6,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{Navigate, REST}
-import ch.wsl.box.client.styles.BootstrapCol
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{Labels, Session, UI}
 import ch.wsl.box.client.{EntitiesState, EntityFormState, EntityTableState}
 import io.udash._
@@ -15,7 +15,6 @@ import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.Context._
-
 import scalatags.generic
 
 case class Entities(list:Seq[String], currentEntity:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
@@ -55,7 +54,7 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
 
 
   def updateEntitiesList() = {
-    model.subProp(_.filteredList).set(model.subProp(_.list).get.filter(m => m.startsWith(model.get.search)))
+    model.subProp(_.filteredList).set(model.subProp(_.list).get.filter(m => m.contains(model.get.search)))
   }
 
 }
@@ -63,7 +62,8 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
 class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, sidebarWidth:Int, routes:Routes) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
-  import ch.wsl.box.model.shared.EntityKind._
+  import scalacss.ScalatagsCss._
+
 
   val sidebarGrid = BootstrapCol.md(sidebarWidth)
   def contentGrid = if(UI.showEntitiesSidebar) BootstrapCol.md(12-sidebarWidth) else BootstrapCol.md(12)
@@ -85,7 +85,7 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
     div(sidebarGrid)(
       UdashForm.textInput()(Labels.entities.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
       produce(model.subProp(_.search)) { q =>
-        ul(
+        ul(GlobalStyles.noBullet,
           repeat(model.subSeq(_.filteredList)){m =>
             li(a(Navigate.click(routes.entity(m.get).url),m.get)).render
           }
