@@ -277,14 +277,18 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
   }
 
-  def filterField(filter: Property[String], fieldQuery: FieldQuery):Modifier = {
+  def filterField(filter: Property[String], fieldQuery: FieldQuery, filterType:String):Modifier = {
 
+    println(s"FILTER TYPE:$filterType")
 
     fieldQuery.field.`type` match {
       case JSONFieldTypes.TIME => DateTimeWidget.Time(Property(""),"",filter.transform(_.asJson,_.string)).render()
       case JSONFieldTypes.DATE => DateTimeWidget.Date(Property(""),"",filter.transform(_.asJson,_.string)).render()
       case JSONFieldTypes.DATETIME => DateTimeWidget.DateTime(Property(""),"",filter.transform(_.asJson,_.string)).render()
-      case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty => NumberInput.debounced(filter,cls := "form-control")
+      case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterType != Filter.BETWEEN => {
+        println("AAAAA")
+        NumberInput.debounced(filter,cls := "form-control")
+      }
       case _ => TextInput.debounced(filter,cls := "form-control")
     }
 
@@ -342,7 +346,9 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                         Labels(Sort.label(sort.get))
                       ),br,
                       filterOptions(fieldQuery.asModel),
-                      filterField(filter,fieldQuery.get)
+                      produce(fieldQuery.asModel.subProp(_.filterType)) { ft =>
+                        span(filterField(filter, fieldQuery.get, ft)).render
+                      }
                     ).render
 
                 }

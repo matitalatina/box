@@ -243,8 +243,8 @@ trait UglyDBFilters extends DbFilters with Logging {
     val extremes = v.replace("to", "-").replace("and", "-").split('-')
 
     if (extremes.length == 2) {
-      val lbound = >=(col, extremes(0))//.getOrElse(false)
-      val ubound = <=(col, extremes(1))//.getOrElse(false)
+      val lbound = >=(col, extremes(0).trim)//.getOrElse(false)
+      val ubound = <=(col, extremes(1).trim)//.getOrElse(false)
       lbound && ubound //both need to be true
     } else {
       None
