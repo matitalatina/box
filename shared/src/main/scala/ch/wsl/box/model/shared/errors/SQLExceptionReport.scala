@@ -1,9 +1,9 @@
 package ch.wsl.box.model.shared.errors
 
 case class SQLExceptionReport(
-                               schema:String,
-                               table:String,
-                               column:String,
+                               schema:Option[String],
+                               table:Option[String],
+                               column:Option[String],
                                constraint:Option[String],
                                detail:Option[String],
                                hint:Option[String],

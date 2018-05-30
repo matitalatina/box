@@ -166,9 +166,16 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
 
         text = fieldI18n.lookupTextField.getOrElse(JSONMetadataFactory.lookupField(refEntity,lang,None))
       } yield {
+
+        import io.circe.generic.auto._
         for{
           keys <- JSONMetadataFactory.keysOf(refEntity)
-          lookupData <- EntityActionsRegistry().tableActions(refEntity).getEntity(JSONQuery.sortByKeys(keys))
+          filter = { for{
+            queryString <- field.lookupQuery
+            queryJson <- parse(queryString).right.toOption
+            query <- queryJson.as[JSONQuery].right.toOption
+          } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
+          lookupData <- EntityActionsRegistry().tableActions(refEntity).getEntity(filter)
         } yield {
           val options = lookupData.map{ lookupRow =>
             JSONLookup(lookupRow.get(value),lookupRow.get(text))

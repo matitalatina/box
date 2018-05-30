@@ -18,9 +18,9 @@ object BoxExceptionHandler {
 
   def psql2sqlReport(sql: PSQLException):SQLExceptionReport = {
     val result  = SQLExceptionReport(
-      sql.getServerErrorMessage.getSchema,
-      sql.getServerErrorMessage.getTable,
-      sql.getServerErrorMessage.getColumn,
+      Option(sql.getServerErrorMessage.getSchema),
+      Option(sql.getServerErrorMessage.getTable),
+      Option(sql.getServerErrorMessage.getColumn),
       Option(sql.getServerErrorMessage.getConstraint),
       Option(sql.getServerErrorMessage.getDetail),
       Option(sql.getServerErrorMessage.getHint),
@@ -32,7 +32,7 @@ object BoxExceptionHandler {
 
   def apply()  = ExceptionHandler {
     case sql: PSQLException => {
-      complete(StatusCodes.InternalServerError,psql2sqlReport(sql).asJson)
+      complete(StatusCodes.InternalServerError,psql2sqlReport(sql))
     }
     case JsonDecoderException(failure,json) => {
       import io.circe.CursorOp._
@@ -42,7 +42,7 @@ object BoxExceptionHandler {
       }
       val cursors = failure.history.map(showCursorOp.show)
       val report = JsonDecoderExceptionReport(fields,cursors,failure.message,Some(json))
-      complete(StatusCodes.InternalServerError,report.asJson)
+      complete(StatusCodes.InternalServerError,report)
     }
     case e: Exception => {
       e.printStackTrace();

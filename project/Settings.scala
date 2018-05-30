@@ -53,7 +53,7 @@ object Settings {
     val logback = "1.1.7"
 
     //json parsers
-    val circe = "0.8.0"
+    val circe = "0.9.3"
 
     //database
     val postgres = "9.4.1211"

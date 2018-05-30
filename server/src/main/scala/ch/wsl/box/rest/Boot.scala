@@ -1,6 +1,7 @@
 package ch.wsl.box.rest
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
@@ -39,9 +40,9 @@ object Boot extends App with Root {
   Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Warn))
 
   // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
-  val bindingFuture = Http().bindAndHandle(handleExceptions(BoxExceptionHandler()) {
-    route
-  }, host, port)     //attach the root route
+
+  implicit def handler:ExceptionHandler = BoxExceptionHandler()
+  val bindingFuture = Http().bindAndHandle(route, host, port)     //attach the root route
   println(s"Server online at http://localhost:8080/\nPress q to stop, r to reset cache...")
   var read = ""
   do{       //endless loop until q in sbt console is pressed

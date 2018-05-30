@@ -19,7 +19,7 @@ import scala.util.Try
   */
 object JSONSupport extends CirceSupport{
 
-  implicit def printer: Json => String = Printer.noSpaces.copy(dropNullKeys = true).pretty
+  implicit def printer: Json => String = Printer.noSpaces.copy(dropNullValues = true).pretty
 
 
   implicit val DateFormat : Encoder[java.sql.Date] with Decoder[java.sql.Date] = new Encoder[java.sql.Date] with Decoder[java.sql.Date] {
