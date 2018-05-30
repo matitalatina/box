@@ -61,7 +61,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
 
   def createThumbnail(file:Array[Byte],contentType:String):Option[Array[Byte]] = Try{
     val thumbnailer = new Thumbnailer(new PDFThumbnailer, new TextThumbnailer, new ImageThumbnailer, new DOCXThumbnailer)
-    thumbnailer.setSize(300,200)
+    thumbnailer.setSize(450,300)
     thumbnailer.generateThumbnail(new ByteArrayInputStream(file),contentType)
   }.toOption
 

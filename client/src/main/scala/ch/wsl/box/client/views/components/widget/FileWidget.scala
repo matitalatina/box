@@ -1,5 +1,7 @@
 package ch.wsl.box.client.views.components.widget
 
+import java.util.UUID
+
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.Conf
@@ -40,6 +42,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
         r
       }
     } yield {
+      logger.info("image saved")
       id.set(jsonid.asString)
     }
   }
@@ -59,9 +62,11 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       produce(prop.transform(_.string)) { name =>
         div(
           produce(id) { idfile =>
+            logger.info("rendering image")
+            val randomString = UUID.randomUUID().toString
             JSONID.fromString(idfile) match {
               case Some(_) => div(
-                  img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb",GlobalStyles.imageThumb) ,br,
+                  img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
                   a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
                 ).render
               case None => div().render

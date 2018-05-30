@@ -259,8 +259,8 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val imageThumb = style(
-    maxHeight(300 px),
-    maxWidth(100 %%)
+    height.auto,
+    width(100 %%)
   )
 
   val noBullet = style(
