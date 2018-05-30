@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Enhancer, Navigate, REST}
+import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.{Conf, Labels, Session}
 import ch.wsl.box.client.views.components.widget.DateTimeWidget
@@ -20,6 +20,7 @@ import org.scalajs.dom
 import scalacss.ScalatagsCss._
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.{Element, Event, KeyboardEvent, window}
+import scalacss.internal.Pseudo.Lang
 import scribe.Logging
 
 import scala.concurrent.Future
@@ -127,6 +128,19 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     val k = ids(el)
     val newState = routes.edit(k.asString)
     Navigate.to(newState.url)
+  }
+
+  def delete(el:Row) = {
+    val k = ids(el)
+    val confim = window.confirm(Labels.entity.confirmDelete)
+    if(confim) {
+      model.get.metadata.map(_.entity).foreach { entity =>
+        REST.delete(model.get.kind, Session.lang(),entity,k).map{ count =>
+          Notification.add("Deleted " + count.count + " rows")
+          reloadRows(model.get.ids.currentPage)
+        }
+      }
+    }
   }
 
   def saveIds(ids: IDs, query:JSONQuery) = {
@@ -345,10 +359,13 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
               td(GlobalStyles.smallCells)(
                 hasKey match{
                   case false => p(color := "grey")(Labels.entity.no_action)
-                  case true => a(
+                  case true => Seq(a(
                     cls := "primary",
                     onclick :+= ((ev: Event) => presenter.edit(el.get), true)
-                  )(Labels.entity.edit)
+                  )(Labels.entity.edit),span(" "),a(
+                    cls := "danger",
+                    onclick :+= ((ev: Event) => presenter.delete(el.get), true)
+                  )(Labels.entity.delete))
                 }
                 ),
               produce(model.subSeq(_.fieldQueries)) { fieldQueries =>

@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Enhancer, Navigate, REST}
+import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{Labels, Navigation, Navigator, Session}
 import ch.wsl.box.client.views.components.widget.Widget
@@ -20,6 +20,8 @@ import scribe.Logging
 import scala.concurrent.Future
 import scalatags.JsDom
 import scalacss.ScalatagsCss._
+
+import scala.scalajs.js.URIUtils
 
 
 /**
@@ -139,6 +141,22 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       }}.recover{ case e =>
         e.getStackTrace.foreach(x => logger.error(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
         e.printStackTrace()
+      }
+    }
+  }
+
+  def delete() = {
+
+    val confim = window.confirm(Labels.entity.confirmDelete)
+    if(confim) {
+      for{
+        entity <- model.get.metadata.map(_.entity)
+        key <- model.get.id.flatMap(JSONID.fromString)
+      } yield {
+        REST.delete(model.get.kind, Session.lang(),entity,key).map{ count =>
+          Notification.add("Deleted " + count.count + " rows")
+          Navigate.to(Routes(model.get.kind, entity).entity(entity).url)
+        }
       }
     }
   }
@@ -270,7 +288,9 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         produce(model.subProp(_.name)) { m =>
           div(
             a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).add().url))(Labels.entities.`new` + " ", labelTitle)," ",
-            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m).url))(Labels.entities.table + " ", labelTitle),br,
+            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m).url))(Labels.entities.table + " ", labelTitle)," ",
+            a(GlobalStyles.boxButtonDanger,onclick :+= ((e:Event) => presenter.delete()))(Labels.entity.delete + " ", labelTitle),
+            br,
             //save and stay on same record
             a(
               GlobalStyles.boxButton,

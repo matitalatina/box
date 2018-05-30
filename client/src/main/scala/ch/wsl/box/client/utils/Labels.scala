@@ -94,6 +94,8 @@ object Labels {
     def actions = get("table.actions")
     def edit = get("table.edit")
     def no_action = get("table.no_action")
+    def delete = get("table.delete")
+    def confirmDelete = get("table.confirmDelete")
   }
 
   object header{

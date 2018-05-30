@@ -73,22 +73,38 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
     }
   }
 
+  def deleteAll(id:JSONID) = {
+    for{
+      json <- getAllById(id)
+      subs <- Future.sequence(subAction(json,0,_.delete))
+      current <- delete(json)
+    } yield current + subs.flatten.sum
+  }
+
+  def delete(e:Json):Future[Int] = {
+    val id = e.ID(metadata.keys)
+    actions.delete(id)
+  }
+
+
+  def subAction[T](e:Json, nullElement:T,action: FormActions => (Json => Future[T])): Seq[Future[List[T]]] = metadata.fields.filter(_.child.isDefined).map { field =>
+    for {
+      form <- jsonCustomMetadataFactory.of(field.child.get.objId, metadata.lang)
+      dbSubforms <- getChild(e,field,form,field.child.get)
+      subJson = attachArrayIndex(e.seq(field.name),form)
+      deleted = deleteChild(form,subJson,dbSubforms)
+      result <- FutureUtils.seqFutures(subJson){ json => //order matters so we do it synchro
+        action(FormActions(form))(json).recover{case t => t.printStackTrace(); nullElement}
+      }
+    } yield result
+  }
+
   def updateAll(e:Json):Future[Json] = {
 
-    def submetadata = metadata.fields.filter(_.child.isDefined).map { field =>
-      for {
-        form <- jsonCustomMetadataFactory.of(field.child.get.objId, metadata.lang)
-        dbSubforms <- getChild(e,field,form,field.child.get)
-        subJson = attachArrayIndex(e.seq(field.name),form)
-        deleted = deleteChild(form,subJson,dbSubforms)
-        result <- FutureUtils.seqFutures(subJson){ json => //order matters so we do it synchro
-            FormActions(form).updateAll(json).recover{case t => t.printStackTrace(); Json.Null}
-        }
-      } yield result
-    }
+
     val id = e.ID(metadata.keys)
     for{
-      _ <- Future.sequence(submetadata)
+      _ <- Future.sequence(subAction(e,Json.Null,_.updateAll))
       dbData <- actions.getById(id).recover{ case t => logger.info("recovered future with none"); None }   //existing record in db
       result <- {
         if(dbData.isDefined) {

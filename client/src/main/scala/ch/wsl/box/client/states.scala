@@ -3,6 +3,7 @@ package ch.wsl.box.client
 import ch.wsl.box.client.routes.Routes
 import io.udash._
 
+import scala.scalajs.js.URIUtils
 import scala.util.Try
 
 sealed abstract class RoutingState(override val parentState: RoutingState) extends State {
@@ -28,8 +29,14 @@ case class EntityTableState(kind:String, entity:String) extends RoutingState(Ent
 case class EntityFormState(
                             kind:String,
                             entity:String,
-                            id:Option[String]
-                          ) extends RoutingState(EntitiesState(kind,entity))
+                            _id:Option[String]
+                          ) extends RoutingState(EntitiesState(kind,entity)) {
+  def id = {
+    val t = _id.map(URIUtils.decodeURI)
+    println(t)
+    t
+  }
+}
 
 case class MasterChildState(kind:String,
                             masterEntity:String,

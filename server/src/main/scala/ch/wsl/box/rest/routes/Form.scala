@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Dispo
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{JSONID, JSONMetadata, JSONQuery}
+import ch.wsl.box.model.shared.{JSONCount, JSONID, JSONMetadata, JSONQuery}
 import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory, Lookup}
 import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.rest.utils.Timer
@@ -74,7 +74,13 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
                   }
                 } ~
                 delete {
-                  ???
+                  complete {
+                    actions(metadata) { fs =>
+                      for {
+                        count <- fs.deleteAll(id)
+                      } yield JSONCount(count)
+                    }
+                  }
                 }
             case None => complete(StatusCodes.BadRequest,s"JSONID $strId not valid")
           }

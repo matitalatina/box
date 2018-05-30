@@ -198,6 +198,14 @@ object GlobalStyles extends StyleSheet.Inline {
     color(StyleConstants.Colors.wsl)
   )
 
+  val boxButtonDanger = style(
+    padding(3 px, 7 px),
+    fontSize(12 px),
+    lineHeight(28 px),
+    border(1 px,solid,StyleConstants.Colors.bordeaux),
+    color(StyleConstants.Colors.bordeaux)
+  )
+
   val largeButton = style(
     inputDefaultWidth
   )

@@ -20,7 +20,7 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
 
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Export.Export.result
-  }.map{_.map(_.name)}
+  }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
   def of(name:String, lang:String):Future[JSONMetadata]  = {
     val query = for{
