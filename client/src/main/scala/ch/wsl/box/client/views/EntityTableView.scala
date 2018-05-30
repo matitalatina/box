@@ -127,7 +127,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   def edit(el:Row) = {
     val k = ids(el)
     val newState = routes.edit(k.asString)
-    Navigate.to(newState.url)
+    Navigate.to(newState)
   }
 
   def delete(el:Row) = {
@@ -320,7 +320,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       h3(GlobalStyles.noMargin,labelTitle),
       div(BootstrapStyles.pullLeft) (
         if (model.get.kind != VIEW.kind)
-          a(GlobalStyles.boxButton,Navigate.click(routes.add().url))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
+          a(GlobalStyles.boxButton,Navigate.click(routes.add()))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
         else
           p()
       ),

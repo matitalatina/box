@@ -81,7 +81,7 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
         ul(GlobalStyles.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>
             li(produce(m) { export =>
-              a(Navigate.click(ExportState(export).url),m.get).render
+              a(Navigate.click(ExportState(export)),m.get).render
             }).render
           }
         ).render

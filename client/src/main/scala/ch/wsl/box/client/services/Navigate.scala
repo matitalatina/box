@@ -1,5 +1,7 @@
 package ch.wsl.box.client.services
 
+import ch.wsl.box.client.{Context, RoutingState}
+import io.udash.{State, Url}
 import org.scalajs.dom.{BeforeUnloadEvent, window}
 import scribe.Logging
 
@@ -14,9 +16,14 @@ object Navigate extends Logging {
   }
   def enable() = {enabled = true }
 
-  def to(url:String) = toAction{ () =>
+  def to(state:RoutingState) = toAction{ () =>
+    logger.debug(s"navigate to $state")
+    Context.applicationInstance.goTo(state)
+  }
+
+  def toUrl(url:String) = toAction{ () =>
     logger.debug(s"navigate to $url")
-    io.udash.routing.WindowUrlChangeProvider.changeUrl(url)
+    Context.applicationInstance.redirectTo(url)
   }
 
   def toAction(action: () => Unit) = {
@@ -36,7 +43,9 @@ object Navigate extends Logging {
   import io.udash._
 
 
-  def event(url:String) = (e:Event) => to(url)
+  def event(state:RoutingState) = (e:Event) => to(state)
 
-  def click(url:String) = onclick :+= event(url)
+  def click(state:RoutingState) = onclick :+= event(state)
+
+  def click(url:String) = onclick :+= ((e:Event) => toUrl(url))
 }

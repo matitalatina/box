@@ -23,7 +23,7 @@ object Header {
   import ch.wsl.box.client.Context
 
   private def linkFactory(l: MenuLink) =
-    a(Navigate.click(l.state.url))(span(l.name)).render
+    a(Navigate.click(l.state))(span(l.name)).render
 
 
 
@@ -32,12 +32,12 @@ object Header {
       div(BootstrapStyles.pullLeft)(logo.map(x => img(GlobalStyles.headerLogo,src := x)),b(title)),
       div(BootstrapStyles.pullRight) (
         links.map{link =>
-          frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.state.url))(
+          frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.state))(
             link.name
           )," ")
         },
         UI.menu.map{ link =>
-          frag(a(GlobalStyles.linkHeaderFooter,Navigate.click("#"+link.url))(
+          frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.url))(
             link.name
           )," ")
         },

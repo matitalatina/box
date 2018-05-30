@@ -136,7 +136,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         val newState =  toState(m.kind,m.name)
         model.subProp(_.data).set(resultSaved)
         enableGoAway
-        Navigate.to(newState.url)
+        Navigate.to(newState)
 
       }}.recover{ case e =>
         e.getStackTrace.foreach(x => logger.error(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
@@ -155,7 +155,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       } yield {
         REST.delete(model.get.kind, Session.lang(),entity,key).map{ count =>
           Notification.add("Deleted " + count.count + " rows")
-          Navigate.to(Routes(model.get.kind, entity).entity(entity).url)
+          Navigate.to(Routes(model.get.kind, entity).entity(entity))
         }
       }
     }
@@ -193,7 +193,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     model.subProp(_.loading).set(true)
     val m = model.get
     val newState = Routes(m.kind,m.name).edit(id)
-    Navigate.to(newState.url)
+    Navigate.to(newState)
   }
 
   model.subProp(_.data).listen { _ =>
@@ -287,8 +287,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       div(BootstrapStyles.pullLeft) (
         produce(model.subProp(_.name)) { m =>
           div(
-            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).add().url))(Labels.entities.`new` + " ", labelTitle)," ",
-            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m).url))(Labels.entities.table + " ", labelTitle)," ",
+            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new` + " ", labelTitle)," ",
+            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", labelTitle)," ",
             a(GlobalStyles.boxButtonDanger,onclick :+= ((e:Event) => presenter.delete()))(Labels.entity.delete + " ", labelTitle),
             br,
             //save and stay on same record

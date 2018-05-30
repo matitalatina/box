@@ -51,10 +51,10 @@ object Session extends Logging {
     } yield {
       if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined) {
         val state = dom.window.sessionStorage.getItem(STATE)
-        Navigate.to(state)
+        Navigate.toUrl(state)
         dom.window.sessionStorage.removeItem(STATE)
       } else {
-        Navigate.to(IndexState.url)
+        Navigate.to(IndexState)
       }
       dom.window.location.reload()
       true

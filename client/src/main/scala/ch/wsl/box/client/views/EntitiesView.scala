@@ -87,7 +87,7 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
       produce(model.subProp(_.search)) { q =>
         ul(GlobalStyles.noBullet,
           repeat(model.subSeq(_.filteredList)){m =>
-            li(a(Navigate.click(routes.entity(m.get).url),m.get)).render
+            li(a(Navigate.click(routes.entity(m.get)),m.get)).render
           }
         ).render
       }
