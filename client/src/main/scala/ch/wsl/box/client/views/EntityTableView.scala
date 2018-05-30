@@ -3,7 +3,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
-import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{Conf, Labels, Session}
 import ch.wsl.box.client.views.components.widget.DateTimeWidget
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
@@ -296,7 +296,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     val pagination = {
 
       div(
-        Labels.navigation.recordFound,br,bind(model.subProp(_.ids.count))," - ",
+        span(marginRight := 29.px,Labels.navigation.recordFound," ",bind(model.subProp(_.ids.count))),br,
         showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(1), true), Labels.navigation.first).render },
         showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1), true), Labels.navigation.previous).render },
         span(
@@ -314,17 +314,18 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
 
     div(
-      h3(GlobalStyles.noMargin,labelTitle),
-      div(BootstrapStyles.pullLeft) (
-        if (model.get.kind != VIEW.kind)
-          a(GlobalStyles.boxButton,Navigate.click(routes.add()))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
-        else
-          p()
+      div(BootstrapStyles.pullLeft,
+        h3(GlobalStyles.noMargin,labelTitle)
       ),
-      div(BootstrapStyles.pullRight) (
+      div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea,
         pagination.render
       ),
-
+      div(BootstrapStyles.pullRight,GlobalStyles.navigationArea,
+        if (model.get.kind != VIEW.kind)
+        a(GlobalStyles.boxButton,Navigate.click(routes.add()))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
+      else
+        p()
+      ),
       div(id := "box-table",
 //        pagination.render,
         UdashTable()(model.subSeq(_.rows))(

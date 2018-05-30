@@ -52,7 +52,7 @@ class RootView() extends View {
 
 
   private def content = div(BootstrapStyles.containerFluid)(
-    Header.navbar(UI.logo,UI.title,menu),
+    Header.navbar(UI.title,menu),
     div(GlobalStyles.notificationArea,
       repeat(Notification.list){ notice =>
         div(GlobalStyles.notification,bind(notice)).render
@@ -62,8 +62,8 @@ class RootView() extends View {
       div()(
         child
       )
-    )
-,Footer.getTemplate
+    ),
+    Footer.template(UI.logo)
   )
 
   override def getTemplate: Modifier = content

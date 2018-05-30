@@ -27,9 +27,9 @@ object Header {
 
 
 
-  def navbar(logo:Option[String],title:Option[String], links:Seq[MenuLink]) = {
+  def navbar(title:Option[String], links:Seq[MenuLink]) = {
     header(
-      div(BootstrapStyles.pullLeft)(logo.map(x => img(GlobalStyles.headerLogo,src := x)),b(title)),
+      div(BootstrapStyles.pullLeft)(b(title)),
       div(BootstrapStyles.pullRight) (
         links.map{link =>
           frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.state))(
@@ -44,7 +44,7 @@ object Header {
         if(Session.isLogged()) {
           frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => Session.logout() ),"Logout")," ")
         } else frag(),
-        b(" "+Labels.header.lang+ ": "),
+        Labels.header.lang + ": ",
         Labels.langs.map{ l =>
           span(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => Session.setLang(l) ),l)," ")
         }

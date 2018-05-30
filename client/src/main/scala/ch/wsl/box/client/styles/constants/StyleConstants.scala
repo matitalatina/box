@@ -29,7 +29,7 @@ object StyleConstants extends StyleSheet.Inline{
 
     val RedLight = c"#ff2727"
 
-    val GreyExtra = c"#ebebeb"
+    val GreyExtra = c"#fafafa"
 
     val GreySemi = c"#cfcfd6"
 

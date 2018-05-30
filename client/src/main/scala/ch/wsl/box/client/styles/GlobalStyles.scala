@@ -3,6 +3,7 @@ package ch.wsl.box.client.styles
 
 
 import ch.wsl.box.client.styles.constants.StyleConstants
+import ch.wsl.box.client.styles.utils.MediaQueries
 
 import scala.language.postfixOps
 import scalacss.Defaults._
@@ -62,9 +63,25 @@ object GlobalStyles extends StyleSheet.Inline {
       clear.both,
       height(50 px),
       padding(10 px),
+      lineHeight(29 px),
       borderBottom(1 px,solid,black),
       color.white,
       backgroundColor(StyleConstants.Colors.wsl)
+    ),
+
+    unsafeRoot("footer")(
+      borderTop(StyleConstants.Colors.wsl,5 px,solid),
+      backgroundColor.white,
+      fontSize(1.2 rem),
+      color.darkgray,
+      padding(15 px),
+      height(55 px),
+      MediaQueries.phone(
+        style(
+          height.auto,
+          padding(2 rem, `0`)
+        )
+      )
     ),
 
     unsafeRoot(".form-control")(
@@ -87,11 +104,10 @@ object GlobalStyles extends StyleSheet.Inline {
       backgroundColor.white
     ),
 
-    unsafeRoot("footer")(
-      backgroundColor(StyleConstants.Colors.wsl)
-    ),
-
     unsafeRoot("a")(
+      &.hover(
+        color(StyleConstants.Colors.wsl)
+      ),
       color(StyleConstants.Colors.wsl)
     ),
 
@@ -153,15 +169,20 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val headerLogo = style(
-    height(39 px),
-    marginTop(-5 px),
+    height(40 px),
+    marginTop(-10 px),
     marginBottom(-5 px),
     marginLeft(0 px),
     marginRight(10 px)
   )
 
   val linkHeaderFooter = style(
-    color(StyleConstants.Colors.wslLink)
+    &.hover(
+      color(StyleConstants.Colors.wslLink)
+    ),
+    color(StyleConstants.Colors.wslLink),
+    textTransform.uppercase,
+    fontWeight.bold
   )
 
   val contentMinHeight = style(
@@ -175,7 +196,7 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val fullHeight = style(
-    height :=! "calc(100vh - 98px)",
+    height :=! "calc(100vh - 105px)",
     overflow.auto
   )
 
@@ -195,7 +216,22 @@ object GlobalStyles extends StyleSheet.Inline {
     fontSize(12 px),
     lineHeight(28 px),
     border(1 px,solid,StyleConstants.Colors.wsl),
-    color(StyleConstants.Colors.wsl)
+    color(StyleConstants.Colors.wsl),
+    &.hover(
+      color(StyleConstants.Colors.wsl)
+    )
+  )
+
+  val boxButtonImportant = style(
+    padding(3 px, 7 px),
+    fontSize(12 px),
+    lineHeight(28 px),
+    border(1 px,solid,StyleConstants.Colors.wsl),
+    backgroundColor(StyleConstants.Colors.wsl),
+    color.white,
+    &.hover(
+      color.white
+    )
   )
 
   val boxButtonDanger = style(
@@ -203,7 +239,11 @@ object GlobalStyles extends StyleSheet.Inline {
     fontSize(12 px),
     lineHeight(28 px),
     border(1 px,solid,StyleConstants.Colors.bordeaux),
-    color(StyleConstants.Colors.bordeaux)
+    backgroundColor(StyleConstants.Colors.bordeaux),
+    color.white,
+    &.hover(
+      color.white
+    )
   )
 
   val largeButton = style(
@@ -226,6 +266,20 @@ object GlobalStyles extends StyleSheet.Inline {
   val noBullet = style(
     listStyleType := "none"
   )
+
+  val navigationArea = style(
+    paddingLeft(20 px),
+    paddingRight(20 px),
+    paddingTop(5 px),
+    paddingBottom(5 px)
+  )
+
+  val navigatorArea = style(
+    width(180 px),
+    textAlign.right
+  )
+
+
 
 
 

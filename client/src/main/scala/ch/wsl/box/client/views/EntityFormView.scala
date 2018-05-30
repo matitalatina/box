@@ -269,31 +269,41 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
 
     div(
-      h3(
-        GlobalStyles.noMargin,
-        labelTitle,
-        showIf(model.subProp(_.loading)) {
-          small(" - " + Labels.navigation.loading).render
-        },
-        showIf(model.subProp(_.changed)) {
-          small(style := "color: red"," - " + Labels.form.changed).render
-        },
-        produce(model.subProp(_.id)){ id =>
-          val subTitle = id.map(" - " + _).getOrElse("")
-          small(subTitle).render
-        }
+      div(BootstrapStyles.pullLeft,
+        h3(
+          GlobalStyles.noMargin,
+          labelTitle,
+          showIf(model.subProp(_.loading)) {
+            small(" - " + Labels.navigation.loading).render
+          },
+          showIf(model.subProp(_.changed)) {
+            small(style := "color: red"," - " + Labels.form.changed).render
+          },
+          produce(model.subProp(_.id)){ id =>
+            val subTitle = id.map(" - " + _).getOrElse("")
+            small(subTitle).render
+          }
 
+        )
       ),
+      div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea) (
+        recordNavigation
+      ),
+      div(BootstrapStyles.pullRight,GlobalStyles.navigationArea) (
+        produce(model.subProp(_.name)) { m =>
+          div(
+            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", labelTitle)," "
+          ).render
+        }
+      ),
+      div(BootstrapStyles.Visibility.clearfix),
       div(BootstrapStyles.pullLeft) (
         produce(model.subProp(_.name)) { m =>
           div(
-            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new` + " ", labelTitle)," ",
-            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", labelTitle)," ",
-            a(GlobalStyles.boxButtonDanger,onclick :+= ((e:Event) => presenter.delete()))(Labels.entity.delete + " ", labelTitle),
-            br,
+
             //save and stay on same record
             a(
-              GlobalStyles.boxButton,
+              GlobalStyles.boxButtonImportant,
               onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).edit(model.get.id.getOrElse(""))), true)
             )(Labels.form.save)," ",
             //save and go to table view
@@ -305,12 +315,11 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
             a(
               GlobalStyles.boxButton,
               onclick :+= ((ev: Event) => presenter.save((kind,name)=>Routes(kind,name).add()), true)
-            )(Labels.form.save_add)
+            )(Labels.form.save_add)," ",
+            a(GlobalStyles.boxButtonImportant,Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new` + " ", labelTitle)," ",
+            a(GlobalStyles.boxButtonDanger,onclick :+= ((e:Event) => presenter.delete()))(Labels.entity.delete + " ", labelTitle)
           ).render
         }
-      ),
-      div(BootstrapStyles.pullRight) (
-          recordNavigation
       ),
       div(BootstrapStyles.Visibility.clearfix),
       produce(model.subProp(_.error)){ error =>
