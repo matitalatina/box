@@ -4,7 +4,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
-import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper, UIProvider}
+import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper, TableAccess, UIProvider}
 import ch.wsl.box.rest.boxentities.{Conf, UITable}
 import ch.wsl.box.rest.utils.BoxSession
 import slick.jdbc.PostgresProfile.api._
@@ -123,6 +123,15 @@ trait Root extends enablers.Sessions with Logging {
               implicit val db = session.userProfile.db
 //              val accessLevel = session.userProfile.accessLevel.get
 
+              pathPrefix("access") {
+                pathPrefix("table") {
+                  pathPrefix(Segment) { table =>
+                    path("write") {
+                      complete(TableAccess.write(table,Auth.dbSchema,session.username))
+                    }
+                  }
+                }
+              } ~
               pathPrefix("export") {
                 Export.route
               } ~

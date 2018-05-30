@@ -9,6 +9,7 @@ import ch.wsl.box.client.{EntityFormState, EntityTableState, RoutingState}
 trait Routes{
   def add():RoutingState
   def edit(id:String):RoutingState
+  def show(id:String):RoutingState
   def entity():RoutingState
   def entity(name:String):RoutingState
 }
@@ -16,8 +17,9 @@ trait Routes{
 object Routes {
 
   def apply(kind:String, entityName:String) = new Routes{
-    def add() = EntityFormState(kind,entityName,None)
-    def edit(id:String) = EntityFormState(kind,entityName,Some(id))
+    def add() = EntityFormState(kind,entityName,"true",None)
+    def edit(id:String) = EntityFormState(kind,entityName,"true",Some(id))
+    def show(id:String) = EntityFormState(kind,entityName,"false",Some(id))
     def entity() = EntityTableState(kind,entityName)
     def entity(name:String) = EntityTableState(kind,name)
   }

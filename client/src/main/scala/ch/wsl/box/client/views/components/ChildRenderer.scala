@@ -16,6 +16,7 @@ import scala.concurrent.Future
 import scala.util.Random
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
+import scalatags.JsDom
 
 /**
   * Created by andre on 6/1/2017.
@@ -110,7 +111,12 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
     val entity: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
     val entitySize: Property[Int] = Property(entity.get.size)
 
-    override def render() =  {
+
+  override protected def show(): JsDom.all.Modifier = render(false)
+
+  override protected def edit(): JsDom.all.Modifier = render(true)
+
+  private def render(write:Boolean) =  {
 
       entity.listen(seq => entitySize.set(seq.size))
 
@@ -126,7 +132,7 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
                   val subResults = entity.transform(splitJsonFields(f, i), mergeJsonFields(entity, f, i))
                   val widget = findOrAdd(f, subResults, children)
                   div(GlobalStyles.subform,
-                    widget.render(Property(true)),
+                    widget.render(write,Property(true)),
                     div(
                       BootstrapStyles.row,
                       div(BootstrapCol.md(12),GlobalStyles.block,

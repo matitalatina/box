@@ -11,6 +11,7 @@ import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom.File
+import scalatags.JsDom
 import scribe.Logging
 
 import scala.concurrent.Future
@@ -55,7 +56,28 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   }
 
 
-  override def render() = {
+  override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),GlobalStyles.noPadding,
+    if(labelString.length > 0) label(labelString) else {},
+    produce(prop.transform(_.string)) { name =>
+      div(
+        produce(id) { idfile =>
+          logger.info("rendering image")
+          val randomString = UUID.randomUUID().toString
+          JSONID.fromString(idfile) match {
+            case Some(_) => div(
+              img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
+              a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
+            ).render
+            case None => div().render
+          }
+
+        }
+      ).render
+    },
+    div(BootstrapStyles.Visibility.clearfix)
+  ).render
+
+  override def edit() = {
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
       if(labelString.length > 0) label(labelString) else {},

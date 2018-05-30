@@ -9,6 +9,7 @@ import ch.wsl.box.shared.utils.JsonUtils._
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.client.Context._
+import scalatags.JsDom
 
 import scala.util.Try
 
@@ -21,15 +22,18 @@ object DateTimeWidget {
   import scalatags.JsDom.all._
 
   case class Date(key: Property[String], label: String, prop: Property[Json]) extends Widget {
-    override def render() = datetimepicker(key,label,prop,datePickerFormat)
+    override def edit() = datetimepicker(key,label,prop,datePickerFormat)
+    override protected def show(): JsDom.all.Modifier = showdate(label,prop)
   }
 
   case class DateTime(key: Property[String], label: String, prop: Property[Json]) extends Widget {
-    override def render() = datetimepicker(key,label,prop,dateTimePickerFormat)
+    override def edit() = datetimepicker(key,label,prop,dateTimePickerFormat)
+    override protected def show(): JsDom.all.Modifier = showdate(label,prop)
   }
 
   case class Time(key: Property[String], label: String, prop: Property[Json]) extends Widget {
-    override def render() = datetimepicker(key,label,prop,timePickerFormat)
+    override def edit() = datetimepicker(key,label,prop,timePickerFormat)
+    override protected def show(): JsDom.all.Modifier = showdate(label,prop)
   }
 
 
@@ -89,8 +93,14 @@ object DateTimeWidget {
   }
 
   import scalatags.JsDom.all._
-  private def datetimepicker(key:Property[String],modelLabel:String, model:Property[Json], format:String):Modifier = {
 
+  private def showdate(modelLabel:String, model:Property[Json]):Modifier = {
+    div(if (modelLabel.length > 0) label(modelLabel) else {},
+      bind(model)
+    ).render
+  }
+
+  private def datetimepicker(key:Property[String],modelLabel:String, model:Property[Json], format:String):Modifier = {
 
     val date = model.transform(toDate(format),fromDate(format))
 

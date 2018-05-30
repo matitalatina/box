@@ -30,10 +30,10 @@ import scala.util.Try
 case class Row(data: Seq[String])
 case class FieldQuery(field:JSONField, sort:String, filter:String, filterType:String)
 case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQueries:Seq[FieldQuery],
-                            metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDs, pages:Int)
+                            metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDs, pages:Int, write:Boolean)
 
 object EntityTableModel{
-  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDs(true,1,Seq(),0),1)
+  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDs(true,1,Seq(),0),1, false)
 }
 
 case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[EntityTableState] {
@@ -75,8 +75,6 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       emptyFieldsForm <- REST.metadata(state.kind,Session.lang(),state.entity)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
       form = emptyFieldsForm.copy(fields = fields)
-      //lookupEntities <- Enhancer.fetchLookupEntities(Seq(filteredForm))
-      //form = Enhancer.populateLookupValuesInFields(lookupEntities,filteredForm)
 
       defaultQuery:JSONQuery = form.query match {
         case None => emptyJsonQuery
@@ -88,6 +86,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         case Some(jsonquery) => jsonquery      //in case a query is already stored in Session
       }
 
+      access <- REST.writeAccess(form.baseTable)
       csv <- REST.csv(state.kind,Session.lang(),state.entity,query)
       ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
 //      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
@@ -110,7 +109,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         metadata = Some(form),
         selectedRow = None,
         ids = ids,
-        pages = pageCount(ids)
+        pages = pageCount(ids),
+        write = access
       )
 
       saveIds(ids,query)
@@ -128,6 +128,12 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   def edit(el:Row) = {
     val k = ids(el)
     val newState = routes.edit(k.asString)
+    Navigate.to(newState)
+  }
+
+  def show(el:Row) = {
+    val k = ids(el)
+    val newState = routes.show(k.asString)
     Navigate.to(newState)
   }
 
@@ -281,9 +287,9 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
   def filterField(filter: Property[String], fieldQuery: FieldQuery, filterType:String):Modifier = {
 
     fieldQuery.field.`type` match {
-      case JSONFieldTypes.TIME => DateTimeWidget.Time(Property(""),"",filter.transform(_.asJson,_.string)).render()
-      case JSONFieldTypes.DATE => DateTimeWidget.Date(Property(""),"",filter.transform(_.asJson,_.string)).render()
-      case JSONFieldTypes.DATETIME => DateTimeWidget.DateTime(Property(""),"",filter.transform(_.asJson,_.string)).render()
+      case JSONFieldTypes.TIME => DateTimeWidget.Time(Property(""),"",filter.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATE => DateTimeWidget.Date(Property(""),"",filter.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATETIME => DateTimeWidget.DateTime(Property(""),"",filter.transform(_.asJson,_.string)).edit()
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterType != Filter.BETWEEN => {
         if(Try(filter.get.toDouble).toOption.isEmpty) filter.set("")
         NumberInput.debounced(filter,cls := "form-control")
@@ -363,9 +369,13 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
             tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
               td(GlobalStyles.smallCells)(
-                hasKey match{
-                  case false => p(color := "grey")(Labels.entity.no_action)
-                  case true => Seq(a(
+                (hasKey,model.get.write) match{
+                  case (false,_) => p(color := "grey")(Labels.entity.no_action)
+                  case (true,false) => a(
+                    cls := "primary",
+                    onclick :+= ((ev: Event) => presenter.show(el.get), true)
+                  )(Labels.entity.show)
+                  case (true,true) => Seq(a(
                     cls := "primary",
                     onclick :+= ((ev: Event) => presenter.edit(el.get), true)
                   )(Labels.entity.edit),span(" "),a(

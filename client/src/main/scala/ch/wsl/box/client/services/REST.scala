@@ -62,4 +62,6 @@ object REST {
   def export(name:String,params:Seq[Json]) = client.post[Seq[Json],String](s"/export/$name",params).map(CSV.split)
   def exports() = client.get[Seq[String]](s"/export/list")
 
+  def writeAccess(table:String) = client.get[Boolean](s"/access/table/$table/write")
+
 }

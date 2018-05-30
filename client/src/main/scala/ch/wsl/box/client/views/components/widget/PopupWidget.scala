@@ -11,6 +11,7 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.button.{ButtonStyle, UdashButton, UdashButtonGroup}
 import io.udash.bootstrap.modal.{ModalSize, UdashModal}
 import org.scalajs.dom
+import scalatags.JsDom
 import scribe.Logging
 
 import scala.concurrent.duration._
@@ -27,7 +28,18 @@ import ch.wsl.box.client.Context._
 
   val sortedOptions = lookup.lookup //.sortBy(_.value)
 
-  override def render() = {
+
+  override protected def show(): JsDom.all.Modifier = {
+    val selectedItem: Property[String] = data.transform(value2Label,label2Value)
+    div(BootstrapCol.md(12),GlobalStyles.noPadding)(
+      if(label.length >0) lab(label) else {},
+      div(style := "text-align: right",
+        bind(selectedItem)
+      )
+    )
+  }
+
+  override def edit() = {
 
     object Status{
       val Closed = "closed"

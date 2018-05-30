@@ -1,14 +1,14 @@
 package ch.wsl.box.client.views.components.widget
 import io.circe._
 import io.circe.syntax._
-import io.udash.Checkbox
+import io.udash._
 import io.udash.properties.single.Property
 import ch.wsl.box.client.Context._
-
+import scalatags.JsDom
 import scalatags.JsDom.all._
 
 case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
-  override def render() = {
+  override def edit() = {
     def jsToBool(json:Json):Boolean = json.asNumber.flatMap(_.toInt).exists(_ == 1)
     def boolToJson(v:Boolean):Json = v match {
       case true => 1.asJson
@@ -19,4 +19,8 @@ case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
       Checkbox(booleanModel), " ", label
     )
   }
+
+  override protected def show(): JsDom.all.Modifier = div(
+    bind(prop), " ", label
+  )
 }

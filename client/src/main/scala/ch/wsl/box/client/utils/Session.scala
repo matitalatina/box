@@ -49,11 +49,13 @@ object Session extends Logging {
     val fut = for{
       _ <- REST.login(LoginRequest(username,password))
     } yield {
-      if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined) {
+      if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined && dom.window.sessionStorage.getItem(STATE).trim.length > 0) {
         val state = dom.window.sessionStorage.getItem(STATE)
+        logger.info(s"navigate to $state")
         Navigate.toUrl(state)
         dom.window.sessionStorage.removeItem(STATE)
       } else {
+        dom.window.sessionStorage.removeItem(STATE)
         Navigate.to(IndexState)
       }
       dom.window.location.reload()

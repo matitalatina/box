@@ -124,7 +124,7 @@ object JSONMetadataFactory extends Logging {
       fields <- Future.sequence(c.map(field2form))
       keys <- JSONMetadataFactory.keysOf(table)
     } yield {
-      JSONMetadata(1,table,table,fields, Layout.fromFields(fields),table,lang,fields.map(_.name),keys, None, None)
+      JSONMetadata(1,table,table,fields, Layout.fromFields(fields),table,lang,fields.map(_.name),keys, None, None, table)
     }
 
 

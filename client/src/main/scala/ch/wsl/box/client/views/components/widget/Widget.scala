@@ -19,9 +19,15 @@ trait Widget{
   def strToJson(str:String):Json = str.asJson
   def strToNumericJson(str:String):Json = str.toDouble.asJson
 
-  protected def render():Modifier
-  def render(conditional:ReadableProperty[Boolean]):Modifier = showIf(conditional) {
-    div(render()).render
+  protected def show():Modifier
+  protected def edit():Modifier
+
+  def render(write:Boolean,conditional:ReadableProperty[Boolean]):Modifier = showIf(conditional) {
+    if(write) {
+      div(edit()).render
+    } else {
+      div(show()).render
+    }
   }
 
   def beforeSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)

@@ -5,6 +5,7 @@ import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
+import scalatags.JsDom
 
 import scala.concurrent.Future
 import scalatags.JsDom.all._
@@ -13,6 +14,23 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
 
   import scalacss.ScalatagsCss._
+
+  private def showInput(prop:Property[Json],labelString:String):Modifier = {
+
+    val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
+
+    def withLabel = hasLabel && labelString.length > 0
+
+    div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
+      if(withLabel) label(labelString) else {},
+      if(withLabel)
+        div(inputRendererDefaultModifiers++modifiers, bind(prop))
+      else
+        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), bind(prop)),
+      div(BootstrapStyles.Visibility.clearfix)
+    )
+
+  }
 
   private def input(labelString:Option[String] = None)(inputRenderer:(Seq[Modifier]) => Modifier):Modifier = {
 
@@ -33,24 +51,27 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
   case class Text(label: String, prop: Property[Json]) extends Widget {
 
-    override def render() = input(Some(label)){ case y =>
+    override def edit() = input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
       TextInput.apply(stringModel,None,y:_*)
     }
+    override protected def show(): JsDom.all.Modifier = showInput(prop,label)
   }
 
   case class Textarea(label: String, prop: Property[Json]) extends Widget {
-    override def render() = input(Some(label)){ case y =>
+    override def edit() = input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
       TextArea.apply(stringModel,None,y:_*)
     }
+    override protected def show(): JsDom.all.Modifier = showInput(prop,label)
   }
 
   case class Number(label: String, prop: Property[Json]) extends Widget {
-    override def render() = input(Some(label)){ case y =>
+    override def edit() = input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
       NumberInput.apply(stringModel,None,y:_*)
     }
+    override protected def show(): JsDom.all.Modifier = showInput(prop,label)
   }
 }
 

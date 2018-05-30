@@ -92,6 +92,7 @@ object Labels {
 
   object entity{
     def actions = get("table.actions")
+    def show = get("table.show")
     def edit = get("table.edit")
     def no_action = get("table.no_action")
     def delete = get("table.delete")

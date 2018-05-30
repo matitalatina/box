@@ -29,10 +29,10 @@ import scala.scalajs.js.URIUtils
   */
 
 case class EntityFormModel(name:String, kind:String, id:Option[String], metadata:Option[JSONMetadata], data:Json,
-                           error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean, changed:Boolean)
+                           error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean, changed:Boolean, write:Boolean)
 
 object EntityFormModel{
-  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false)
+  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true)
 }
 
 object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
@@ -93,7 +93,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         children,
         Navigation.empty1,
         false,
-        false
+        false,
+        state.writeable
       ))
 
       //need to be called after setting data because we are listening for data changes
@@ -170,7 +171,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
   private var widget:Widget = new Widget {
     import scalatags.JsDom.all._
-    override def render(): JsDom.all.Modifier = div()
+    override protected def show(): JsDom.all.Modifier = div()
+    override protected def edit(): JsDom.all.Modifier = div()
   }
 
   def loadWidgets(f:JSONMetadata) = {
@@ -337,7 +339,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           form match {
             case None => p("Loading form")
             case Some(f) => {
-              presenter.loadWidgets(f).render(Property(true))
+              presenter.loadWidgets(f).render(model.get.write,Property(true))
             }
           }
         ).render

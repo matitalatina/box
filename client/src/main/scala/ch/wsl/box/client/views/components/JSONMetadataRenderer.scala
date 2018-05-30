@@ -108,8 +108,13 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override def afterSave(data:Json,form:JSONMetadata): Future[Unit] = widget.afterSave(data,form)
     override def beforeSave(data:Json,form:JSONMetadata): Future[Unit] = widget.beforeSave(data,form)
 
-    override def render(): JsDom.all.Modifier = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
-      widget.render(Property(true))
+
+    override protected def show(): JsDom.all.Modifier = render(false)
+
+    override protected def edit(): JsDom.all.Modifier = render(true)
+
+    private def render(write:Boolean): JsDom.all.Modifier = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
+      widget.render(write,Property(true))
     )
   })
 
@@ -140,10 +145,15 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override def afterSave(value:Json,metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,widgets.map(_.widget))
     override def beforeSave(value:Json,metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,widgets.map(_.widget))
 
-    override def render(): JsDom.all.Modifier = div(
+
+    override protected def show(): JsDom.all.Modifier = render(false)
+
+    override protected def edit(): JsDom.all.Modifier = render(true)
+
+    private def render(write:Boolean): JsDom.all.Modifier = div(
       widgets.zip(widths).map { case (widget, width) =>
         div(BootstrapCol.md(width), GlobalStyles.field,
-          widget.widget.render(widget.visibility)
+          widget.widget.render(write,widget.visibility)
         )
       }
 
@@ -163,13 +173,18 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override def afterSave(value:Json, metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,blocks.map(_._3))
     override def beforeSave(value:Json, metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,blocks.map(_._3))
 
-    override def render(): JsDom.all.Modifier = div(UdashForm(
+
+  override protected def show(): JsDom.all.Modifier = render(false)
+
+  override def edit(): JsDom.all.Modifier = render(true)
+
+  private def render(write:Boolean): JsDom.all.Modifier = div(UdashForm(
       Debug(data, "data"),
       div(BootstrapStyles.row)(
         blocks.map{ case (width,title,widget) =>
           div(BootstrapCol.md(width), GlobalStyles.block)(
             title.map{ title => h3(Labels(title)) },
-            widget.render(Property(true))
+            widget.render(write,Property(true))
           )
         }
       )

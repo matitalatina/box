@@ -29,6 +29,7 @@ case class EntityTableState(kind:String, entity:String) extends RoutingState(Ent
 case class EntityFormState(
                             kind:String,
                             entity:String,
+                            write:String,
                             _id:Option[String]
                           ) extends RoutingState(EntitiesState(kind,entity)) {
   def id = {
@@ -36,6 +37,8 @@ case class EntityFormState(
     println(t)
     t
   }
+
+  def writeable:Boolean = write == "true"
 }
 
 case class MasterChildState(kind:String,

@@ -2,19 +2,30 @@ package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup}
 import io.circe.Json
-import io.udash.Select
+import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
 import ch.wsl.box.client.Context._
 import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}
 import scalacss.ScalatagsCss._
+import scalatags.JsDom
 
 case class SelectWidget(lookup:JSONFieldLookup, field:JSONField, label: String, prop: Property[Json], modifiers: Modifier*) extends LookupWidget {
 
-  override def render() = {
 
-    val selectModel = prop.transform(value2Label,label2Value)
+  val selectModel = prop.transform(value2Label,label2Value)
+
+
+  override protected def show(): JsDom.all.Modifier = {
+    div(BootstrapCol.md(12),GlobalStyles.noPadding)(
+      if(label.length >0) lab(label) else {},
+      bind(selectModel)
+    )
+  }
+
+  override def edit() = {
+
 
     val opts = if(field.nullable) {
       Seq("") ++ lookup.lookup.map(_.value)
