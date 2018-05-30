@@ -19,12 +19,12 @@ object Enhancer extends Logging {
   import ch.wsl.box.client.Context._
 
   def fetchLookup(values:Seq[Json], field:JSONField, opts:JSONFieldLookup):JSONField = {
-    val options:Map[String,String] = values.map{ value =>
+    val options:Seq[JSONLookup] = values.map{ value =>
       val key:String = value.get(opts.map.valueProperty)
       val label:String = value.get(opts.map.textProperty)
-      (key,label)
-    }.toMap
-    field.copy(lookup = Some(field.lookup.get.copy(lookup = Map("" -> "") ++ options)))
+      JSONLookup(key,label)
+    }
+    field.copy(lookup = Some(field.lookup.get.copy(lookup = Seq(JSONLookup("","")) ++ options)))
   }
 
 

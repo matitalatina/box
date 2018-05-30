@@ -71,7 +71,9 @@ object JSONQuery{
     filter = List(),
     sort = List(),
     paging = None
- )
+  )
+
+  def sortByKeys(keys: Seq[String]) = empty.copy(sort = keys.map{k => JSONSort(k,Sort.ASC)}.toList)
 }
 
 object Sort{

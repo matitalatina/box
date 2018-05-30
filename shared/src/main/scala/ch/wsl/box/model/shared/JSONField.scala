@@ -20,7 +20,9 @@ case class JSONField(
                     )
 
 
-case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Map[String,String] = Map())
+case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSONLookup] = Seq())
+
+case class JSONLookup(id:String, value:String)
 
 case class FileReference(name_field:String, file_field:String, thumbnail_field:Option[String])
 

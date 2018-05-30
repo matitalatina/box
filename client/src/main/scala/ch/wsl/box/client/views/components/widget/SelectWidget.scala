@@ -17,9 +17,9 @@ case class SelectWidget(lookup:JSONFieldLookup, field:JSONField, label: String, 
     val selectModel = prop.transform(value2Label,label2Value)
 
     val opts = if(field.nullable) {
-      Seq("") ++ lookup.lookup.values.toSeq
+      Seq("") ++ lookup.lookup.map(_.value)
     } else {
-      lookup.lookup.values.toSeq
+      lookup.lookup.map(_.value)
     }
 
     val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.pullRight)++modifiers

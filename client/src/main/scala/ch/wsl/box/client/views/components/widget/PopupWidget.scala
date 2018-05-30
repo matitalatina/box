@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.model.shared.JSONFieldLookup
+import ch.wsl.box.model.shared.{JSONFieldLookup, JSONLookup}
 import io.circe._
 import io.circe.syntax._
 import io.udash._
@@ -25,7 +25,7 @@ import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
 
-  val sortedOptions = lookup.lookup.toSeq.sortBy(_._2)
+  val sortedOptions = lookup.lookup //.sortBy(_.value)
 
   override def render() = {
 
@@ -46,7 +46,7 @@ import ch.wsl.box.client.Context._
       showIf(modalStatus.transform(_ == Status.Open)) {
         div(produce(searchProp) { searchTerm =>
           div(
-              sortedOptions.filter(opt => searchTerm == "" || opt._2.toLowerCase.contains(searchTerm.toLowerCase)).map { case (key, value) =>
+              sortedOptions.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
                 li(a(value, onclick :+= ((e: Event) => {
                   modalStatus.set(Status.Closed)
                   selectedItem.set(value)

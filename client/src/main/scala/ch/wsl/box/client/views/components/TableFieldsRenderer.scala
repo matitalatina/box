@@ -33,7 +33,7 @@ object TableFieldsRenderer extends Logging{
 
     val contentFixed = field.lookup match {
       case Some(opts) => {
-        val label: String = opts.lookup.lift(value).getOrElse(value)
+        val label: String = opts.lookup.find(_.id == value).map(_.value).getOrElse(value)
         val finalLabel = if(label.trim.length > 0) label else value
         p(finalLabel)
 //        a(href := routes.edit(JSONKeys.fromMap(Map(field.key -> value)).asString).url,finalLabel)

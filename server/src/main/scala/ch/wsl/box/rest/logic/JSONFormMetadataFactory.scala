@@ -163,13 +163,16 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
       val lookup: Future[Option[JSONFieldLookup]] = {for{
         refEntity <- field.lookupEntity
         value <- field.lookupValueField
+
         text = fieldI18n.lookupTextField.getOrElse(JSONMetadataFactory.lookupField(refEntity,lang,None))
       } yield {
-
-        EntityActionsRegistry().tableActions(refEntity).getEntity().map{ lookupData =>   //JSONQuery.limit(100)
+        for{
+          keys <- JSONMetadataFactory.keysOf(refEntity)
+          lookupData <- EntityActionsRegistry().tableActions(refEntity).getEntity(JSONQuery.sortByKeys(keys))
+        } yield {
           val options = lookupData.map{ lookupRow =>
-            (lookupRow.get(value),lookupRow.get(text))
-          }.toMap
+            JSONLookup(lookupRow.get(value),lookupRow.get(text))
+          }
           Some(JSONFieldLookup(refEntity, JSONFieldMap(value,text),options))
         }
       }} match {

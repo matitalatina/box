@@ -274,24 +274,24 @@ trait UglyDBFilters extends DbFilters with Logging {
     }
 
   override def fkLike(c:Col,q:JSONQueryFilter):Rep[Option[Boolean]] = {
-    q.lookup.get.lookup.filter(_._2.toLowerCase.contains(q.value.toLowerCase()))
+    q.lookup.get.lookup.filter(_.value.toLowerCase.contains(q.value.toLowerCase()))
       .foldRight[Rep[Option[Boolean]]](Some(false)) { case (el, cond) =>
-      cond || ==(c,el._1)
+      cond || ==(c,el.id)
     }
 
   }
 
   override def fkEquals(c: Col,q:JSONQueryFilter):Rep[Option[Boolean]] = {
-    q.lookup.get.lookup.find(_._2 == q.value) match {
-      case Some(v) => ==(c,v._1)
+    q.lookup.get.lookup.find(_.value == q.value) match {
+      case Some(v) => ==(c,v.id)
       case None => Some(false)
     }
   }
 
 
   override def fkNot(c: Col, q:JSONQueryFilter):Rep[Option[Boolean]] = {
-    q.lookup.get.lookup.find(_._2 == q.value) match {
-      case Some(v) => not(c,v._1)
+    q.lookup.get.lookup.find(_.value == q.value) match {
+      case Some(v) => not(c,v.id)
       case None => Some(true)
     }
   }

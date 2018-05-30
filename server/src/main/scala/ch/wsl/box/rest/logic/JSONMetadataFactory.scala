@@ -78,10 +78,13 @@ object JSONMetadataFactory extends Logging {
 
 
                 import ch.wsl.box.shared.utils.JsonUtils._
-                BoxTablesRegistry().tableActions(model).getEntity().map { lookupData =>
+                for{
+                  keys <- keysOf(model)
+                  lookupData <- BoxTablesRegistry().tableActions(model).getEntity()
+                } yield {
                   val options = lookupData.map { lookupRow =>
-                    (lookupRow.get(value), lookupRow.get(text))
-                  }.toMap
+                    JSONLookup(lookupRow.get(value), lookupRow.get(text))
+                  }
 
                   JSONField(
                     field.jsonType,

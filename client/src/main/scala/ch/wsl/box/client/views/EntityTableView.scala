@@ -73,16 +73,16 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     for{
       emptyFieldsForm <- REST.metadata(state.kind,Session.lang(),state.entity)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
-      filteredForm = emptyFieldsForm.copy(fields = fields)
-      lookupEntities <- Enhancer.fetchLookupEntities(Seq(filteredForm))
-      form = Enhancer.populateLookupValuesInFields(lookupEntities,filteredForm)
+      form = emptyFieldsForm.copy(fields = fields)
+      //lookupEntities <- Enhancer.fetchLookupEntities(Seq(filteredForm))
+      //form = Enhancer.populateLookupValuesInFields(lookupEntities,filteredForm)
 
-      defaultQuery = form.query match {
+      defaultQuery:JSONQuery = form.query match {
         case None => emptyJsonQuery
         case Some(jsonquery) => jsonquery.copy(paging = emptyJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
       }
 
-      query = Session.getQuery() match {
+      query:JSONQuery = Session.getQuery() match {
         case None => defaultQuery
         case Some(jsonquery) => jsonquery      //in case a query is already stored in Session
       }
