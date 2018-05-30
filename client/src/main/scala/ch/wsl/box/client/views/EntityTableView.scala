@@ -24,6 +24,7 @@ import scalacss.internal.Pseudo.Lang
 import scribe.Logging
 
 import scala.concurrent.Future
+import scala.util.Try
 
 
 case class Row(data: Seq[String])
@@ -284,6 +285,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case JSONFieldTypes.DATE => DateTimeWidget.Date(Property(""),"",filter.transform(_.asJson,_.string)).render()
       case JSONFieldTypes.DATETIME => DateTimeWidget.DateTime(Property(""),"",filter.transform(_.asJson,_.string)).render()
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterType != Filter.BETWEEN => {
+        if(Try(filter.get.toDouble).toOption.isEmpty) filter.set("")
         NumberInput.debounced(filter,cls := "form-control")
       }
       case _ => TextInput.debounced(filter,cls := "form-control")
