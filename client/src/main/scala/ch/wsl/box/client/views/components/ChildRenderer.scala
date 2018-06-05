@@ -124,27 +124,29 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
         case None => p("child not found")
         case Some(f) => {
 
-          div()(
-              label(f.label),
+          div(
               produce(entitySize) { size =>
                 cleanSubwidget()
-                for {i <- 0 until size} yield {
-                  val subResults = entity.transform(splitJsonFields(f, i), mergeJsonFields(entity, f, i))
-                  val widget = findOrAdd(f, subResults, children)
-                  div(GlobalStyles.subform,
-                    widget.render(write,Property(true)),
-                    div(
-                      BootstrapStyles.row,
-                      div(BootstrapCol.md(12),GlobalStyles.block,
-                        div(BootstrapStyles.pullRight,
-                          a(onclick :+= ((e: Event) => removeItem(entity, entity.get(i), child)), Labels.subform.remove)
+                div(
+                  if(write || size > 0) label(f.label) else frag(),
+                  for {i <- 0 until size} yield {
+                    val subResults = entity.transform(splitJsonFields(f, i), mergeJsonFields(entity, f, i))
+                    val widget = findOrAdd(f, subResults, children)
+                    div(GlobalStyles.subform,
+                      widget.render(write,Property(true)),
+                      if(write) div(
+                        BootstrapStyles.row,
+                        div(BootstrapCol.md(12),GlobalStyles.block,
+                          div(BootstrapStyles.pullRight,
+                            a(onclick :+= ((e: Event) => removeItem(entity, entity.get(i), child)), Labels.subform.remove)
+                          )
                         )
-                      )
-                    )
-                  ).render
-                }
+                      ) else frag()
+                    ).render
+                  }
+                ).render
               },
-              a(onclick :+= ((e: Event) => addItem(entity, child, f)), Labels.subform.add)
+              if(write) a(onclick :+= ((e: Event) => addItem(entity, child, f)), Labels.subform.add) else frag()
           )
         }
       }

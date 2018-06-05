@@ -9,13 +9,14 @@ import scalatags.JsDom
 
 import scala.concurrent.Future
 import scalatags.JsDom.all._
+import ch.wsl.box.shared.utils.JsonUtils._
 
 class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
 
   import scalacss.ScalatagsCss._
 
-  private def showInput(prop:Property[Json],labelString:String):Modifier = {
+  private def showInput(prop:Property[Json],labelString:String):Modifier = WidgetUtils.showNotNull(prop){ p =>
 
     val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
 
@@ -24,11 +25,11 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
     div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
       if(withLabel) label(labelString) else {},
       if(withLabel)
-        div(inputRendererDefaultModifiers++modifiers, bind(prop))
+        div(inputRendererDefaultModifiers++modifiers, p.string)
       else
-        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), bind(prop)),
+        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), p.string),
       div(BootstrapStyles.Visibility.clearfix)
-    )
+    ).render
 
   }
 

@@ -94,9 +94,10 @@ object DateTimeWidget {
 
   import scalatags.JsDom.all._
 
-  private def showdate(modelLabel:String, model:Property[Json]):Modifier = {
+  private def showdate(modelLabel:String, model:Property[Json]):Modifier = WidgetUtils.showNotNull(model){ p =>
     div(if (modelLabel.length > 0) label(modelLabel) else {},
-      bind(model)
+      div(BootstrapStyles.pullRight,p.string),
+      div(BootstrapStyles.Visibility.clearfix)
     ).render
   }
 

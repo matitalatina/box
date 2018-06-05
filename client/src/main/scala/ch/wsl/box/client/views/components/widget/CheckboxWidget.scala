@@ -6,6 +6,7 @@ import io.udash.properties.single.Property
 import ch.wsl.box.client.Context._
 import scalatags.JsDom
 import scalatags.JsDom.all._
+import ch.wsl.box.shared.utils.JsonUtils._
 
 case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
   override def edit() = {
@@ -20,7 +21,12 @@ case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
     )
   }
 
-  override protected def show(): JsDom.all.Modifier = div(
-    bind(prop), " ", label
-  )
+  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(prop) { p =>
+    div(
+        if(
+          p.as[Boolean].right.toOption.contains(true) ||
+          p.as[Int].right.toOption.contains(1)
+        ) raw("&#10003;") else raw("&#10005;"), " ", label
+      ).render
+  }
 }

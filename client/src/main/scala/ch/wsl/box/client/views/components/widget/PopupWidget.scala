@@ -29,14 +29,15 @@ import ch.wsl.box.client.Context._
   val sortedOptions = lookup.lookup //.sortBy(_.value)
 
 
-  override protected def show(): JsDom.all.Modifier = {
+  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(data){ _ =>
     val selectedItem: Property[String] = data.transform(value2Label,label2Value)
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       if(label.length >0) lab(label) else {},
-      div(style := "text-align: right",
+      div(BootstrapStyles.pullRight,
         bind(selectedItem)
-      )
-    )
+      ),
+      div(BootstrapStyles.Visibility.clearfix)
+    ).render
   }
 
   override def edit() = {
