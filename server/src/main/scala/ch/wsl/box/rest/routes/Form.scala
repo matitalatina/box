@@ -172,7 +172,7 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
                   }
                 } yield {
                   val formActions = FormActions(metadata)
-                  Source.fromFuture(tabularMetadata.map(x => CSV.row(x.fields.map(_.name))))
+                  Source.fromFuture(tabularMetadata.map(x => CSV.row(x.tabularFields)))
                     .concat(formActions.csv(query,fkValues))
                 }
               }

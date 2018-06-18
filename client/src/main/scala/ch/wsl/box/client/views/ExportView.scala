@@ -71,7 +71,7 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
   }
 
   def csv() = {
-    val url = s"/api/v1/export/${model.get.metadata.get.entity}?q=${args.asJson.toString()}".replaceAll("\n","")
+    val url = s"/api/v1/export/${model.get.metadata.get.entity}/${Session.lang()}?q=${args.asJson.toString()}".replaceAll("\n","")
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }
