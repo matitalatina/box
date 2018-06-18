@@ -1,7 +1,10 @@
 TODO
 ====
 
-1. export page with sidebar
+1. package con index e js fullOpt
+1. view download form
+1. mobile cosmetics
+
 
 
 ##### Remarks

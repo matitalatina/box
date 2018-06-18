@@ -1,0 +1,36 @@
+<web-app>
+
+
+
+
+    <servlet>
+        <servlet-name>box</servlet-name>
+        <servlet-class>BoxServlet</servlet-class>
+        <init-param>
+            <param-name>forwardip</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>preserveHost</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>preserveCookies</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>targetUri</param-name>
+            <param-value>http://localhost:8088</param-value>
+        </init-param>
+        <init-param>
+            <param-name>log</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>box</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+
+</web-app>

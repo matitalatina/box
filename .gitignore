@@ -49,3 +49,4 @@ js/*
 /project/hydra.sbt
 /resources/application.test.conf
 /resources/db.test.conf
+/resources/js

@@ -2,6 +2,8 @@ package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.server.{Directives, Route}
 
+import akka.http.scaladsl.server.directives.ContentTypeResolver.Default
+
 /**
   *
   * Simple route to serve UI-client files
@@ -14,13 +16,11 @@ object UI {
 
   val clientFiles:Route =
     path("") {
-      get {
-        getFromFile("index.html")
-      }
+      getFromResource("index.html")
     } ~
     pathPrefix("js") {
       path(Segment) { file =>
-        getFromFile("client/target/scala-2.12/"+file)
+        getFromResource("js/"+file)
       }
     } ~
     pathPrefix("webjars") {
