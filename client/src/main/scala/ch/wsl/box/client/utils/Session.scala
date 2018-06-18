@@ -64,6 +64,7 @@ object Session extends Logging {
 
     fut.recover{ case t =>
       dom.window.sessionStorage.removeItem(USER)
+      dom.window.sessionStorage.removeItem(STATE) // don't persist state if something is wrong
       t.printStackTrace()
       false
     }
