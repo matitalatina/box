@@ -39,27 +39,35 @@ object Export extends Logging {
   }
 
   def route(implicit ec:ExecutionContext,db:Database, mat:Materializer):Route = {
-    path("list") {
-      complete(JSONExportMetadataFactory().list)
-    } ~ pathPrefix(Segment) { function =>
-      pathPrefix("metadata") {
-        path(Segment) { lang =>
-          get {
-            complete(JSONExportMetadataFactory().of(function,lang))
-          }
-        }
-      } ~
-      get {
-        parameters('q) { q =>
-          val params = parse(q).right.get.as[Seq[Json]].right.get
-          csv(function,params)
-        }
-      } ~
-      post {
-        entity(as[Seq[Json]]) { params =>
-          csv(function,params)
+    pathPrefix("list") {
+      //      complete(JSONExportMetadataFactory().list)
+      path(Segment) { lang =>
+        get {
+          complete(JSONExportMetadataFactory().list(lang))
         }
       }
-    }
+    } ~
+//      pathPrefix("") {
+        pathPrefix(Segment) { function =>
+          pathPrefix("metadata") {
+            path(Segment) { lang =>
+              get {
+                complete(JSONExportMetadataFactory().of(function, lang))
+              }
+            }
+          } ~
+          get {
+            parameters('q) { q =>
+              val params = parse(q).right.get.as[Seq[Json]].right.get
+              csv(function, params)
+            }
+          } ~
+          post {
+            entity(as[Seq[Json]]) { params =>
+              csv(function, params)
+            }
+          }
+        }
+//      }
   }
 }

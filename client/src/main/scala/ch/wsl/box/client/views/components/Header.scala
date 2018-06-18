@@ -3,7 +3,6 @@ package ch.wsl.box.client.views.components
 import ch.wsl.box.client.{IndexState, LoginState, RoutingState}
 import ch.wsl.box.client.styles.GlobalStyles
 import org.scalajs.dom.raw.Element
-
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import ch.wsl.box.client.Context._
@@ -14,6 +13,7 @@ import io.udash.bootstrap.dropdown.UdashDropdown
 import io.udash.bootstrap.navs.{UdashNav, UdashNavbar}
 import io.udash.properties.seq.SeqProperty
 import io.udash._
+import org.scalajs.dom
 import org.scalajs.dom.Event
 
 case class MenuLink(name:String, state:RoutingState)
@@ -29,7 +29,7 @@ object Header {
 
   def navbar(title:Option[String], links:Seq[MenuLink]) = {
     header(
-      div(BootstrapStyles.pullLeft)(b(title)),
+      div(BootstrapStyles.pullLeft)(b(title), small(Option(dom.window.sessionStorage.getItem(Session.USER)).map("   -   " + _))),
       div(BootstrapStyles.pullRight) (
         links.map{link =>
           frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.state))(
@@ -38,7 +38,7 @@ object Header {
         },
         UI.menu.map{ link =>
           frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.url))(
-            link.name
+            Labels(link.name)
           )," ")
         },
         if(Session.isLogged()) {

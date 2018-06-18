@@ -16,9 +16,10 @@ import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.Context._
+import ch.wsl.box.model.shared.ExportDef
 import scalatags.generic
 
-case class Exports(list:Seq[String], currentEntity:Option[String], search:String, filteredList:Seq[String])
+case class Exports(list:Seq[ExportDef], currentEntity:Option[ExportDef], search:String, filteredList:Seq[ExportDef])
 
 object ExportsViewPresenter extends ViewPresenter[ExportsState.type] {
 
@@ -40,7 +41,7 @@ class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsSt
 
 
   override def handleState(state: ExportsState.type ): Unit = {
-    REST.exports().map{ exports =>
+    REST.exports(Session.lang()).map{ exports =>
       model.subSeq(_.list).set(exports)
       model.subSeq(_.filteredList).set(exports)
     }
@@ -48,7 +49,7 @@ class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsSt
 
 
   def updateExportsList() = {
-    model.subProp(_.filteredList).set(model.subProp(_.list).get.filter(m => m.contains(model.get.search)))
+    model.subProp(_.filteredList).set(model.subProp(_.list).get.filter(m => m.label.contains(model.get.search)))
   }
 
 }
@@ -81,7 +82,7 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
         ul(GlobalStyles.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>
             li(produce(m) { export =>
-              a(Navigate.click(ExportState(export)),m.get).render
+              a(Navigate.click(ExportState(export.name)), m.get.label).render
             }).render
           }
         ).render

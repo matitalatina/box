@@ -275,15 +275,15 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         h3(
           GlobalStyles.noMargin,
           labelTitle,
+          produce(model.subProp(_.id)){ id =>
+            val subTitle = id.map(" - " + _).getOrElse("")
+            small(subTitle).render
+          },
           showIf(model.subProp(_.loading)) {
             small(" - " + Labels.navigation.loading).render
           },
           showIf(model.subProp(_.changed)) {
             small(style := "color: red"," - " + Labels.form.changed).render
-          },
-          produce(model.subProp(_.id)){ id =>
-            val subTitle = id.map(" - " + _).getOrElse("")
-            small(subTitle).render
           }
 
         )

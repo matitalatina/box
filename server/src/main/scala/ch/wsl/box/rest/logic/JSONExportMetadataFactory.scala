@@ -22,22 +22,37 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
     Export.Export.result
   }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
+  def list(lang:String): Future[Seq[ExportDef]] = {
+    val query = for {
+        (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
+
+  } yield (ei18.flatMap(_.label), e.name, e.order)
+
+    Auth.boxDB.run{
+      query.result
+    }.map(_.sortBy(_._3.getOrElse(Double.MaxValue))).map(_.map{ case (label,name,_) =>  ExportDef(name, label.getOrElse(name))})
+  }
+
   def of(name:String, lang:String):Future[JSONMetadata]  = {
-    val query = for{
-      export <- Export.Export if export.name === name
-      exportI18n <- Export.Export_i18n if exportI18n.lang === lang && exportI18n.export_id === export.export_id
+    val queryExport = for{
+      (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id) if export.name === name
+
     } yield (export,exportI18n)
 
     def queryField(exportId:Int) = for{
-      fields <- ExportField.ExportField join ExportField.ExportField_i18n on (_.field_id === _.field_id) if fields._1.export_id === exportId
-    } yield fields
+      (f, fi18n) <- ExportField.ExportField joinLeft ExportField.ExportField_i18n.filter(_.lang === lang) on (_.field_id === _.field_id)
+                if f.export_id === exportId
+    } yield (f, fi18n)
 
     for {
       (export,exportI18n) <- Auth.boxDB.run {
-        query.result
+        queryExport.result
       }.map(_.head)
+
       fields <- Auth.boxDB.run {
-        queryField(export.export_id.get).result
+        val r = queryField(export.export_id.get).result
+        println(r.statements.mkString("\n"))
+        r
       }
     } yield {
 
@@ -47,17 +62,17 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
 
       val parameters = export.parameters.toSeq.flatMap(_.split(","))
 
-      JSONMetadata(export.export_id.get,export.name,exportI18n.label.getOrElse(name),jsonFields,layout,exportI18n.function.getOrElse(export.function),lang,parameters,Seq(),None,None,"")
+      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,None,"")
     }
   }
 
-  private def fieldsMetadata(el:(ExportField_row,ExportField_i18n_row)):JSONField = {
+  private def fieldsMetadata(el:(ExportField_row, Option[ExportField_i18n_row])):JSONField = {
     val (field,fieldI18n) = el
 
     val lookup = for{
       entity <- field.lookupEntity
       value <- field.lookupValueField
-      text <- fieldI18n.lookupTextField
+      text <- fieldI18n.flatMap(_.lookupTextField)
     } yield JSONFieldLookup(entity,JSONFieldMap(value,text))
 
     val condition = for{
@@ -70,9 +85,9 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
       field.`type`,
       field.name,
       true,
-      fieldI18n.label,
+      fieldI18n.flatMap(_.label),
       lookup,
-      fieldI18n.placeholder,
+      fieldI18n.flatMap(_.placeholder),
       field.widget,
       None,
       field.default,
