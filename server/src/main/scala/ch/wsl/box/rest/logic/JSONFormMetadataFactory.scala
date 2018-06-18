@@ -93,13 +93,14 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
     import ch.wsl.box.shared.utils.Formatters._
 
     def fieldQuery(formId:Int) = for{
-      field <- Field.table if field.form_id === formId
-      fieldI18n <- Field.Field_i18n if fieldI18n.lang === lang && fieldI18n.field_id === field.field_id
+      (field,fieldI18n) <- Field.table joinLeft Field.Field_i18n.filter(_.lang === lang) on(_.field_id === _.field_id) if field.form_id === formId
     } yield (field,fieldI18n)
 
+    val fQuery = formQuery joinLeft Form.Form_i18n.filter(_.lang === lang) on (_.form_id === _.form_id)
+
+
     for{
-      form <- Auth.boxDB.run( formQuery.result ).map(_.head)
-      formI18n <- Auth.boxDB.run(  Form.Form_i18n.filter(f => f.form_id === form.form_id.get && f.lang === lang).result ).map(_.headOption)
+      (form,formI18n) <- Auth.boxDB.run( fQuery.result ).map(_.head)
       fields <- Auth.boxDB.run{fieldQuery(form.form_id.get).result}
       fieldsFile <- Future.sequence(fields.map { case (f, _) =>
         Auth.boxDB.run {
@@ -118,6 +119,8 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
       }
 
       logger.info(s"Missing Key fields $missingKeyFields")
+
+      if(formI18n.isEmpty) logger.warn(s"Form ${form.name} (form_id: ${form.form_id}) has no translation to $lang")
 
       val definedTableFields = form.tabularFields.toSeq.flatMap(_.split(","))
       val missingKeyTableFields = keys.filterNot(k => definedTableFields.contains(k))
@@ -156,15 +159,17 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
     }.map(_.headOption)
   }
 
-  private def fieldsToJsonFields(fields:Seq[(((Field_row,Field_i18n_row),Option[FieldFile_row]),Option[PgColumn])],lang:String): Future[Seq[JSONField]] = {
+  private def fieldsToJsonFields(fields:Seq[(((Field_row,Option[Field_i18n_row]),Option[FieldFile_row]),Option[PgColumn])],lang:String): Future[Seq[JSONField]] = {
 
     val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
+
+      if(fieldI18n.isEmpty) logger.warn(s"Field ${field.name} (field_id: ${field.field_id}) has no translation to $lang")
 
       val lookup: Future[Option[JSONFieldLookup]] = {for{
         refEntity <- field.lookupEntity
         value <- field.lookupValueField
 
-        text = fieldI18n.lookupTextField.getOrElse(JSONMetadataFactory.lookupField(refEntity,lang,None))
+        text = fieldI18n.flatMap(_.lookupTextField).getOrElse(JSONMetadataFactory.lookupField(refEntity,lang,None))
       } yield {
 
         import io.circe.generic.auto._
@@ -203,13 +208,17 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
       } yield Child(id,field.name,local,remote,queryFilter)
 
 
-      val label:Future[Option[String]] = {
+      val label:Future[String] = {
 
         field.child_form_id match {
-          case None => Future.successful(fieldI18n.label)
+          case None => Future.successful(fieldI18n.flatMap(_.label).getOrElse(field.name))
           case Some(subformId) => Auth.boxDB.run{
-            Form_i18n.filter(_.form_id === subformId).result
-          }.map(_.find(_.lang.contains(lang)).flatMap(_.label))
+            {
+              for{
+                (form,formI18n) <- Form.table joinLeft Form_i18n.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId
+              } yield (formI18n,form)
+            }.result.map{x => x.head._1.flatMap(_.label).getOrElse(x.head._2.name)}
+          }
         }
       }
 
@@ -230,7 +239,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
         look <- lookup
         lab <- label
       } yield {
-        JSONField(field.`type`, field.name, nullable, lab,look, fieldI18n.placeholder, field.widget, subform, field.default,file,condition)
+        JSONField(field.`type`, field.name, nullable, Some(lab),look, fieldI18n.flatMap(_.placeholder), field.widget, subform, field.default,file,condition)
       }
 
     }

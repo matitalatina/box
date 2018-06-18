@@ -79,7 +79,7 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
   def query() = {
 
     for{
-      data <- REST.export(model.get.metadata.get.entity,args)
+      data <- REST.export(model.get.metadata.get.entity,args,Session.lang())
     } yield {
       logger.warn(data)
       model.subProp(_.headers).set(data.headOption.getOrElse(Seq()))

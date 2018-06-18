@@ -50,13 +50,14 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
       }.map(_.head)
 
       fields <- Auth.boxDB.run {
-        val r = queryField(export.export_id.get).result
-        println(r.statements.mkString("\n"))
-        r
+        queryField(export.export_id.get).result
       }
     } yield {
 
-      val jsonFields = fields.map(fieldsMetadata)
+      if(exportI18n.isEmpty) logger.warn(s"Export ${export.name} (export_id: ${export.export_id}) has no translation to $lang")
+
+
+      val jsonFields = fields.map(fieldsMetadata(lang))
 
       val layout = Layout.fromString(export.layout).getOrElse(Layout.fromFields(jsonFields))
 
@@ -66,8 +67,11 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
     }
   }
 
-  private def fieldsMetadata(el:(ExportField_row, Option[ExportField_i18n_row])):JSONField = {
+  private def fieldsMetadata(lang:String)(el:(ExportField_row, Option[ExportField_i18n_row])):JSONField = {
     val (field,fieldI18n) = el
+
+    if(fieldI18n.isEmpty) logger.warn(s"Export field ${field.name} (export_id: ${field.field_id}) has no translation to $lang")
+
 
     val lookup = for{
       entity <- field.lookupEntity

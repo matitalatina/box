@@ -27,7 +27,7 @@ object Export extends Logging {
   import io.circe.generic.auto._
 
 
-  def csv(function:String,params:Seq[Json])(implicit ec:ExecutionContext,db:Database) = onSuccess(JdbcConnect.function(function, params)) {
+  def csv(function:String,params:Seq[Json],lang:String)(implicit ec:ExecutionContext,db:Database) = onSuccess(JdbcConnect.function(function, params,lang)) {
     case None => complete(StatusCodes.BadRequest)
     case Some(fr) =>
       respondWithHeaders(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$function.csv"))) {
@@ -56,16 +56,18 @@ object Export extends Logging {
               }
             }
           } ~
-          get {
-            parameters('q) { q =>
-              val params = parse(q).right.get.as[Seq[Json]].right.get
-              csv(function, params)
-            }
-          } ~
-          post {
-            entity(as[Seq[Json]]) { params =>
-              csv(function, params)
-            }
+          path(Segment) { lang =>
+            get {
+              parameters('q) { q =>
+                val params = parse(q).right.get.as[Seq[Json]].right.get
+                csv(function, params, lang)
+              }
+            } ~
+              post {
+                entity(as[Seq[Json]]) { params =>
+                  csv(function, params, lang)
+                }
+              }
           }
         }
 //      }

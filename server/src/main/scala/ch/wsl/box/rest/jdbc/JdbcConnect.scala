@@ -2,6 +2,9 @@ package ch.wsl.box.rest.jdbc
 
 import java.sql._
 
+import ch.wsl.box.rest.boxentities.ExportField
+import ch.wsl.box.rest.boxentities.ExportField.ExportHeader_i18n_row
+import ch.wsl.box.rest.utils.Auth
 import io.circe.Json
 import scribe.Logging
 
@@ -21,9 +24,9 @@ object JdbcConnect extends Logging {
 
   case class SQLFunctionResult(headers:Seq[String],rows:Seq[Seq[Json]])
 
-  def function(name:String,args: Seq[Json])(implicit ec:ExecutionContext,db:Database):Future[Option[SQLFunctionResult]] = {
+  def function(name:String,args: Seq[Json],lang:String)(implicit ec:ExecutionContext,db:Database):Future[Option[SQLFunctionResult]] = {
 
-    Future{
+    val result = Future{
       // make the connection
       val connection = db.source.createConnection()
       val result = Try {
@@ -40,6 +43,22 @@ object JdbcConnect extends Logging {
       result
     }
 
+    for{
+      r <- result
+      labels <- useI18nHeader(lang,r.toSeq.flatMap(_.headers))
+    } yield r.map(_.copy(headers = labels))
+
+
+
+  }
+
+  private def useI18nHeader(lang:String,keys: Seq[String])(implicit ec:ExecutionContext):Future[Seq[String]] = Future.sequence{
+    keys.map{ key =>
+      Auth.boxDB.run(ExportField.ExportHeader_i18n.filter(e => e.key === key && e.lang === lang).result).map { label =>
+        if(label.isEmpty) logger.warn(s"No translation for $key in $lang, insert translation in table export_header_i18n")
+        label.headOption.map(_.label).getOrElse(key)
+      }
+    }
   }
 
   private case class ColumnMeta(index: Int, label: String, datatype: String)

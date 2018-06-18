@@ -59,7 +59,7 @@ object REST {
 
   //export
   def exportMetadata(name:String,lang:String) = client.get[JSONMetadata](s"/export/$name/metadata/$lang")
-  def export(name:String,params:Seq[Json]) = client.post[Seq[Json],String](s"/export/$name",params).map(CSV.split)
+  def export(name:String,params:Seq[Json],lang:String) = client.post[Seq[Json],String](s"/export/$name/$lang",params).map(CSV.split)
   def exports(lang:String) = client.get[Seq[ExportDef]](s"/export/list/$lang")
 
   def writeAccess(table:String) = client.get[Boolean](s"/access/table/$table/write")

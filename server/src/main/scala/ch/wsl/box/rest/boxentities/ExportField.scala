@@ -97,6 +97,20 @@ object ExportField {
   lazy val ExportField_i18n = new TableQuery(tag => new ExportField_i18n(tag))
 
 
+  case class ExportHeader_i18n_row(id: Option[Int] = None, key:String, lang:String, label:String)
+
+  class ExportHeader_i18n(_tableTag: Tag) extends profile.api.Table[ExportHeader_i18n_row](_tableTag, "export_header_i18n") {
+    def * = (Rep.Some(id), key, lang, label) <> (ExportHeader_i18n_row.tupled, ExportHeader_i18n_row.unapply)
+
+    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    val key: Rep[String] = column[String]("key")
+    val lang: Rep[String] = column[String]("lang")
+    val label: Rep[String] = column[String]("label")
+
+
+  }
+  /** Collection-like TableQuery object for table Field_i18n */
+  lazy val ExportHeader_i18n = new TableQuery(tag => new ExportHeader_i18n(tag))
 
 
 }
