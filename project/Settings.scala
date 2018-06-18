@@ -116,7 +116,9 @@ object Settings {
     "org.webjars"              % "bootstrap"         % "3.3.7",
     "com.outr" %% "scribe" % versions.scribe,
     "com.outr" %% "scribe-slf4j" % versions.scribe,
-    "nz.co.rossphillips" %% "scala-thumbnailer" % "0.5.SNAPSHOT"
+    "nz.co.rossphillips" %% "scala-thumbnailer" % "0.5.SNAPSHOT",
+    "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
+    "org.mitre.dsmiley.httpproxy"  % "smiley-http-proxy-servlet" % "1.10"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

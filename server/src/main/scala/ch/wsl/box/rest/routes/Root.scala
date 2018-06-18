@@ -1,5 +1,7 @@
 package ch.wsl.box.rest.routes
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.{Directives, Route}
@@ -27,7 +29,14 @@ trait Root extends enablers.Sessions with Logging {
   implicit val materializer:Materializer
   implicit val executionContext:ExecutionContext
 
+  val binding: Future[Http.ServerBinding]
+  val system: ActorSystem
 
+  def stop() = {
+    binding
+      .flatMap(_.unbind()) // trigger unbinding from the port
+      .onComplete(_ => system.terminate())
+  }
 
   val route:Route = {
 

@@ -18,11 +18,6 @@ object UI {
         getFromFile("index.html")
       }
     } ~
-    path("test") {
-      get {
-        getFromFile("test.html")
-      }
-    } ~
     pathPrefix("js") {
       path(Segment) { file =>
         getFromFile("client/target/scala-2.12/"+file)
