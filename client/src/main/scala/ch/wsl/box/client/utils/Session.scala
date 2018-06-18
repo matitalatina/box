@@ -50,7 +50,7 @@ object Session extends Logging {
       _ <- REST.login(LoginRequest(username,password))
     } yield {
       if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined && dom.window.sessionStorage.getItem(STATE).trim.length > 0) {
-        val state = dom.window.sessionStorage.getItem(STATE)
+        val state = dom.window.sessionStorage.getItem(STATE).replaceAll("#","")
         logger.info(s"navigate to $state")
         Navigate.toUrl(state)
         dom.window.sessionStorage.removeItem(STATE)

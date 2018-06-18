@@ -50,7 +50,7 @@ object REST {
   def sendFile(file:File, id:JSONID, entity:String): Future[Int] = client.sendFile[Int](s"/file/$entity/${id.asString}",file)
 
   //other utilsString
-  def login(request:LoginRequest) = client.post[LoginRequest,String]("/login",request)
+  def login(request:LoginRequest) = client.post[LoginRequest,Json]("/login",request)
   def logout() = client.get[String]("/logout")
   def labels(lang:String):Future[Map[String,String]] = client.get[Map[String,String]](s"/labels/$lang")
   def conf():Future[Map[String,String]] = client.get[Map[String,String]](s"/conf")
