@@ -3,6 +3,7 @@ package ch.wsl.box.model.shared
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.shared.utils.JsonUtils._
+import io.circe.Json.{Folder, JArray}
 import scribe.Logging
 
 /**
@@ -50,7 +51,17 @@ object JSONMetadata extends Logging {
   }
 
   def hasData(json:Json,keys:Seq[String]):Boolean = {
+
+    def hasOnlyEmptyArray(js:Json):Boolean = js.foldWith(new Folder[Boolean]{
+      override def onNull: Boolean = true
+      override def onBoolean(value: Boolean): Boolean = false
+      override def onNumber(value: JsonNumber): Boolean = false
+      override def onString(value: String): Boolean = false
+      override def onArray(value: Vector[Json]): Boolean = value.forall(hasOnlyEmptyArray)
+      override def onObject(value: JsonObject): Boolean = value.values.forall(hasOnlyEmptyArray)
+    })
+
     logger.info(s"looking for data in $json with keys $keys")
-    !keys.forall(key => json.getOpt(key).isEmpty || json.js(key).asArray.exists(_.forall(!hasData(_,keys))))
+    !keys.forall(key => json.getOpt(key).isEmpty || hasOnlyEmptyArray(json.js(key)))
   }
 }

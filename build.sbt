@@ -27,8 +27,8 @@ lazy val server: Project  = (project in file("server"))
     scalacOptions ++= Settings.scalacOptionsServer,
     libraryDependencies ++= Settings.jvmDependencies.value,
     resolvers += Resolver.jcenterRepo,
-    slick <<= slickCodeGenTask, // register manual sbt command
-    sourceGenerators in Compile <+= slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
+    slick := slickCodeGenTask.value , // register manual sbt command
+    sourceGenerators in Compile +=  slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
     resourceDirectory in Compile := baseDirectory.value / "../resources",
     testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
   )
@@ -46,26 +46,22 @@ lazy val client: Project = (project in file("client"))
     scalacOptions ++= Settings.scalacOptions,
     libraryDependencies ++= Settings.scalajsDependencies.value,
     jsDependencies ++= Settings.jsDependencies.value,
-    // RuntimeDOM is needed for tests
-    jsDependencies += RuntimeDOM % "test",
     // yes, we want to package JS dependencies
     skip in packageJSDependencies := false,
     // use Scala.js provided launcher code to start the client app
-    persistLauncher := true,
-    persistLauncher in Test := false,
+    scalaJSUseMainModuleInitializer := true,
+    scalaJSUseMainModuleInitializer in Test := false,
     fork in fastOptJS := true,
     fork in fullOptJS := true,
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     // use uTest framework for tests
     testFrameworks += new TestFramework("utest.runner.Framework"),
-    //jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(org.scalajs.jsenv.selenium.Chrome()),
-    requiresDOM := true,
     // Compile tests to JS using fast-optimisation
     scalaJSStage in Test := FastOptStage,
     fullClasspath in Test ~= { _.filter(_.data.exists) },
     //scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) },
-    compile <<= (compile in Compile).dependsOn(compileStatics),
+    compile := ((compile in Compile).dependsOn(compileStatics)).value,
     compileStatics := {
       IO.copyDirectory(sourceDirectory.value / "main/assets/fonts", crossTarget.value / StaticFilesDir / WebContent / "assets/fonts")
       IO.copyDirectory(sourceDirectory.value / "main/assets/images", crossTarget.value / StaticFilesDir / WebContent / "assets/images")
@@ -158,9 +154,13 @@ lazy val cleanAll = taskKey[Unit]("clean all projects")
 
 // code generation task that calls the customized code generator
 lazy val slick = TaskKey[Seq[File]]("gen-tables")
-lazy val slickCodeGenTask = (sourceManaged, dependencyClasspath in Compile, runner in Compile, streams).map { (dir, cp, r, s) =>
+lazy val slickCodeGenTask = Def.task{
+  val dir = sourceManaged.value
+  val cp = (dependencyClasspath in Compile).value
+  val r = (runner in Compile).value
+  val s = streams.value
   val outputDir = (dir / "slick").getPath // place generated files in sbt's managed sources folder
-  toError(r.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log))
+  r.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log) foreach sys.error
   val fname = outputDir + "/ch/wsl/box/model/Entities.scala"
   val ffname = outputDir + "/ch/wsl/box/model/FileTables.scala"
   val rname = outputDir + "/ch/wsl/box/rest/routes/GeneratedRoutes.scala"
