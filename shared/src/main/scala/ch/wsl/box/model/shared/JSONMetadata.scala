@@ -51,6 +51,6 @@ object JSONMetadata extends Logging {
 
   def hasData(json:Json,keys:Seq[String]):Boolean = {
     logger.info(s"looking for data in $json with keys $keys")
-    !keys.forall(key => json.getOpt(key).isEmpty && !hasData(json.js(key),keys))
+    !keys.forall(key => json.getOpt(key).isEmpty || json.js(key).asArray.exists(_.forall(!hasData(_,keys))))
   }
 }

@@ -112,24 +112,24 @@ lazy val client: Project = (project in file("client"))
 
 lazy val root: Project = (project in file("."))
   .settings(
-    serve := {
-        cleanUi.value
-        //cleanAll.value
-        (fastOptJS in Compile in client).toTask.value
-        copyUiFilesDev.value
-        (run in Compile in server).toTask("").value
-      },
+    serve := Def.sequential(
+        cleanUi,
+        //cleanAll.value,
+        (fastOptJS in Compile in client).toTask,
+        copyUiFilesDev,
+        (run in Compile in server).toTask("")
+      ).value,
       cleanAll := {
         (clean in Compile in client).toTask.value
         (clean in Compile in server).toTask.value
       },
-      box := {
-        cleanUi.value
-        cleanAll.value
-        (fullOptJS in Compile in client).value
-        copyUiFiles.value
-        (packageBin in Universal in server).value
-      }
+      box := Def.sequential(
+        cleanUi,
+        cleanAll,
+        (fullOptJS in Compile in client),
+        copyUiFiles,
+        (packageBin in Universal in server)
+      ).value
   )
 
 // Client projects (just one in this case)
