@@ -72,16 +72,11 @@ object GlobalStyles extends StyleSheet.Inline {
     unsafeRoot("footer")(
       borderTop(StyleConstants.Colors.wsl,5 px,solid),
       backgroundColor.white,
+      overflow.hidden,
       fontSize(1.2 rem),
       color.darkgray,
       padding(15 px),
-      height(55 px),
-      MediaQueries.phone(
-        style(
-          height.auto,
-          padding(2 rem, `0`)
-        )
-      )
+      height(55 px)
     ),
 
     unsafeRoot(".form-control")(
@@ -170,6 +165,7 @@ object GlobalStyles extends StyleSheet.Inline {
 
   val headerLogo = style(
     height(40 px),
+    maxWidth( 100 %%),
     marginTop(-10 px),
     marginBottom(-5 px),
     marginLeft(0 px),
@@ -212,6 +208,7 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val boxButton = style(
+    whiteSpace.nowrap,
     padding(3 px, 7 px),
     fontSize(12 px),
     lineHeight(28 px),
@@ -223,6 +220,7 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val boxButtonImportant = style(
+    whiteSpace.nowrap,
     padding(3 px, 7 px),
     fontSize(12 px),
     lineHeight(28 px),
@@ -235,6 +233,7 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val boxButtonDanger = style(
+    whiteSpace.nowrap,
     padding(3 px, 7 px),
     fontSize(12 px),
     lineHeight(28 px),
@@ -277,6 +276,33 @@ object GlobalStyles extends StyleSheet.Inline {
   val navigatorArea = style(
     width(180 px),
     textAlign.right
+  )
+
+  val noMobile = style(
+    media.maxWidth(600 px)(
+      display.none
+    )
+  )
+
+  val mobileOnly = style(
+    display.none,
+    media.maxWidth(600 px)(
+      display.block
+    )
+  )
+
+  val mobileMenu = style(
+    position.absolute,
+    padding(10 px),
+    top(50 px),
+    left.`0`,
+    width(100 %%),
+    backgroundColor(StyleConstants.Colors.wsl),
+    zIndex(10),
+    textAlign.right,
+    unsafeChild("a") {
+      color(StyleConstants.Colors.wslLink)
+    }
   )
 
 

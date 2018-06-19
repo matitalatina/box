@@ -172,8 +172,7 @@ lazy val slickCodeGenTask = Def.task{
 lazy val copyUiFiles = Def.task{
   val mappings: Seq[(File,File)] = Seq(
     file("client/target/scala-2.12/client-jsdeps.js") -> file("resources/js/deps.js"),
-    file("client/target/scala-2.12/client-opt.js") -> file("resources/js/app.js"),
-    file("client/target/scala-2.12/client-launcher.js") -> file("resources/js/launcher.js")
+    file("client/target/scala-2.12/client-opt.js") -> file("resources/js/app.js")
   )
   IO.copy(mappings)
 }
@@ -181,8 +180,7 @@ lazy val copyUiFiles = Def.task{
 lazy val cleanUi = Def.task{
   IO.delete(Seq(
     file("resources/js/deps.js"),
-    file("resources/js/app.js"),
-    file("resources/js/launcher.js")
+    file("resources/js/app.js")
   ))
 }
 
@@ -190,8 +188,7 @@ lazy val copyUiFilesDev = Def.task{
   val mappings: Seq[(File,File)] = Seq(
     file("client/target/scala-2.12/client-jsdeps.js") -> file("resources/js/deps.js"),
     file("client/target/scala-2.12/client-fastopt.js") -> file("resources/js/app.js"),
-    file("client/target/scala-2.12/client-fastopt.js.map") -> file("resources/js/app.js.map"),
-    file("client/target/scala-2.12/client-launcher.js") -> file("resources/js/launcher.js")
+    file("client/target/scala-2.12/client-fastopt.js.map") -> file("resources/js/app.js.map")
   )
   IO.copy(mappings)
 }

@@ -349,7 +349,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea,
         pagination.render
       ),
-      div(BootstrapStyles.pullRight,GlobalStyles.navigationArea,
+      div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea,
         if (model.get.kind != VIEW.kind)
         a(GlobalStyles.boxButton,Navigate.click(routes.add()))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
       else

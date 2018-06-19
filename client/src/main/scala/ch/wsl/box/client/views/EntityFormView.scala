@@ -291,7 +291,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea) (
         recordNavigation
       ),
-      div(BootstrapStyles.pullRight,GlobalStyles.navigationArea) (
+      div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea) (
         produce(model.subProp(_.name)) { m =>
           div(
             a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", labelTitle)," "
@@ -312,16 +312,16 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
               )(Labels.form.save), " ",
               //save and go to table view
               a(
-                GlobalStyles.boxButton,
+                GlobalStyles.boxButton,GlobalStyles.noMobile,
                 onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).entity()), true)
               )(Labels.form.save_table), " ",
               //save and go insert new record
               a(
-                GlobalStyles.boxButton,
+                GlobalStyles.boxButton,GlobalStyles.noMobile,
                 onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).add()), true)
               )(Labels.form.save_add), " ",
-              a(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new` + " ", labelTitle), " ",
-              a(GlobalStyles.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete + " ", labelTitle)
+              a(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
+              a(GlobalStyles.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete)
             ).render
           }
         ).render
