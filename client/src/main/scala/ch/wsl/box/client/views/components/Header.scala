@@ -28,24 +28,24 @@ object Header {
 
 
   def menuLinks(links:Seq[MenuLink]):Seq[generic.Frag[Element, Node]] =  links.map{link =>
-    frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.state))(
+    frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => {Navigate.event(link.state); showMenu.set(false)} ))(
       link.name
     )," ")
   }
 
   def uiMenu = UI.menu.map{ link =>
-    frag(a(GlobalStyles.linkHeaderFooter,Navigate.click(link.url))(
+    frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => {Navigate.toUrl(link.url); showMenu.set(false)} ))(
       Labels(link.name)
     )," ")
   }
 
   def otherMenu:Seq[generic.Frag[Element, Node]] = Seq(
     if(Session.isLogged()) {
-      frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => Session.logout() ),"Logout")," ")
+      frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => { Session.logout(); showMenu.set(false) } ),"Logout")," ")
     } else frag(),
     Labels.header.lang + ": ",
     Labels.langs.map{ l =>
-      span(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => Session.setLang(l) ),l)," ")
+      span(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => { Session.setLang(l); showMenu.set(false) } ),l)," ")
     }
   )
 
