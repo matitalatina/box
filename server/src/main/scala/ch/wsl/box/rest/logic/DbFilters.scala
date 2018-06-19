@@ -24,9 +24,6 @@ trait DbFilters {
   def like(c:Col,v:String):Rep[Option[Boolean]]
   def in(c:Col,v:String):Rep[Option[Boolean]]
   def between(c:Col,v:String):Rep[Option[Boolean]]
-  def fkLike(c:Col,q:JSONQueryFilter):Rep[Option[Boolean]]
-  def fkEquals(c:Col,q:JSONQueryFilter):Rep[Option[Boolean]]
-  def fkNot(c:Col,q:JSONQueryFilter):Rep[Option[Boolean]]
 
   def operator(op:String)(c:Col,q:JSONQueryFilter) ={
 
@@ -41,9 +38,6 @@ trait DbFilters {
       case Filter.LIKE    => like(c, q.value)
       case Filter.IN      => in(c, q.value)
       case Filter.BETWEEN   => between(c, q.value)
-      case Filter.FK_LIKE   => fkLike(c, q)
-      case Filter.FK_EQUALS   => fkEquals(c, q)
-      case Filter.FK_NOT  => fkNot(c, q)
     }
   }
 
@@ -273,26 +267,5 @@ trait UglyDBFilters extends DbFilters with Logging {
 
     }
 
-  override def fkLike(c:Col,q:JSONQueryFilter):Rep[Option[Boolean]] = {
-    q.lookup.get.lookup.filter(_.value.toLowerCase.contains(q.value.toLowerCase()))
-      .foldRight[Rep[Option[Boolean]]](Some(false)) { case (el, cond) =>
-      cond || ==(c,el.id)
-    }
 
-  }
-
-  override def fkEquals(c: Col,q:JSONQueryFilter):Rep[Option[Boolean]] = {
-    q.lookup.get.lookup.find(_.value == q.value) match {
-      case Some(v) => ==(c,v.id)
-      case None => Some(false)
-    }
-  }
-
-
-  override def fkNot(c: Col, q:JSONQueryFilter):Rep[Option[Boolean]] = {
-    q.lookup.get.lookup.find(_.value == q.value) match {
-      case Some(v) => not(c,v.id)
-      case None => Some(true)
-    }
-  }
 }

@@ -159,7 +159,29 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   private def query():JSONQuery = {
     val fieldQueries = model.subProp(_.fieldQueries).get
     val sort = fieldQueries.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.name, s.sort)).toList
-    val filter = fieldQueries.filter(_.filter != "").map(f => JSONQueryFilter(f.field.name,Some(f.filterType),f.filter,f.field.lookup)).toList
+    val filter = fieldQueries.filter(_.filter != "").map{f =>
+      f.filterType match {
+        case Filter.FK_LIKE => {
+          val ids = f .field.lookup.toSeq.flatMap(_.lookup)
+                      .filter(_.value.toLowerCase.contains(f.filter.toLowerCase()))
+                      .map(_.id)
+          JSONQueryFilter(f.field.name,Some(Filter.IN),ids.mkString(","))
+        }
+        case Filter.FK_EQUALS => {
+          val id = f  .field.lookup.toSeq.flatMap(_.lookup)
+                      .find(_.value == f.filter)
+                      .map(_.value)
+          JSONQueryFilter(f.field.name,Some(Filter.EQUALS),id.getOrElse(""))
+        }
+        case Filter.FK_NOT => {
+          val id = f  .field.lookup.toSeq.flatMap(_.lookup)
+            .find(_.value == f.filter)
+            .map(_.value)
+          JSONQueryFilter(f.field.name,Some(Filter.NOT),id.getOrElse(""))
+        }
+        case _ => JSONQueryFilter(f.field.name,Some(f.filterType),f.filter)
+      }
+    }.toList
     JSONQuery(filter, sort, None)
   }
 
@@ -241,7 +263,6 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def downloadCSV() = {
-    query().asJson.toString()
     val (kind,modelName) = model.get.metadata.flatMap(_.exportView) match {
       case Some(view) => ("entity",view)
       case None => (EntityKind(model.subProp(_.kind).get).entityOrForm,model.subProp(_.name).get)

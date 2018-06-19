@@ -36,18 +36,8 @@ case class JSONQueryPaging(pageLength:Int, currentPage:Int=1)
 case class JSONQueryFilter(
                             column:String,
                             operator:Option[String],
-                            value:String,
-                            lookup: Option[JSONFieldLookup]
-                          ) {
-  def lookUpQuery(operator:String):JSONQuery = lookup match {
-    case None => JSONQuery.empty
-    case Some(l) => JSONQuery(
-      filter = List(JSONQueryFilter(l.map.textProperty,Some(operator),value,None)),
-      sort = List(),
-      paging = None
-    )
-  }
-}
+                            value:String
+                          )
 
 /**
   * Sort data by column
