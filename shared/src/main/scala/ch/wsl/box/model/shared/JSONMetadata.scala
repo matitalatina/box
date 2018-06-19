@@ -2,6 +2,8 @@ package ch.wsl.box.model.shared
 
 import io.circe._
 import io.circe.syntax._
+import ch.wsl.box.shared.utils.JsonUtils._
+import scribe.Logging
 
 /**
   * Created by andre on 5/16/2017.
@@ -21,7 +23,7 @@ case class JSONMetadata(
                          baseTable:String
                        )
 
-object JSONMetadata{
+object JSONMetadata extends Logging {
   def jsonPlaceholder(form:JSONMetadata, subforms:Seq[JSONMetadata] = Seq()):Map[String,Json] = {
     form.fields.flatMap{ field =>
       val value:Option[Json] = (field.default,field.`type`) match {
@@ -40,5 +42,15 @@ object JSONMetadata{
       }
       value.map{ v => field.name -> v }
     }.toMap
+  }
+
+  def extractFields(fields:Seq[Either[String,SubLayoutBlock]]):Seq[String] = fields.flatMap{
+    case Left(s) => Seq(s)
+    case Right(sub) => extractFields(sub.fields)
+  }
+
+  def hasData(json:Json,keys:Seq[String]):Boolean = {
+    logger.info(s"looking for data in $json with keys $keys")
+    !keys.forall(key => json.getOpt(key).isEmpty && !hasData(json.js(key),keys))
   }
 }

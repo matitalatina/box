@@ -9,7 +9,7 @@ import ch.wsl.box.shared.utils.JsonUtils._
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
-import io.udash.properties.single.{Property, ReadableProperty}
+import io.udash._
 
 import scala.concurrent.Future
 import scalatags.JsDom
@@ -162,29 +162,40 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
 
 
+
     val blocks = metadata.layout.blocks.map { block =>
       (
-        block.width,
-        block.title,
+        block,
         fieldsRenderer(block.fields)
       )
     }
 
-    override def afterSave(value:Json, metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,blocks.map(_._3))
-    override def beforeSave(value:Json, metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,blocks.map(_._3))
+    override def afterSave(value:Json, metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,blocks.map(_._2))
+    override def beforeSave(value:Json, metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,blocks.map(_._2))
 
 
   override protected def show(): JsDom.all.Modifier = render(false)
 
   override def edit(): JsDom.all.Modifier = render(true)
 
+  import io.udash._
+
+
   private def render(write:Boolean): JsDom.all.Modifier = div(UdashForm(
       Debug(data, "data"),
       div(BootstrapStyles.row)(
-        blocks.map{ case (width,title,widget) =>
-          div(BootstrapCol.md(width), GlobalStyles.block)(
-            title.map{ title => h3(Labels(title)) },
-            widget.render(write,Property(true))
+        blocks.map{ case (block,widget) =>
+          div(BootstrapCol.md(block.width), GlobalStyles.block)(
+            produce(data) { d =>
+              if(write || JSONMetadata.hasData(d,JSONMetadata.extractFields(block.fields))) {
+                div(
+                  h3(block.title.map { title => Labels(title) }),
+                  widget.render(write, Property {
+                    true
+                  })
+                ).render
+              } else div().render
+            }
           )
         }
       )

@@ -113,20 +113,23 @@ lazy val client: Project = (project in file("client"))
 lazy val root: Project = (project in file("."))
   .settings(
     serve := {
-      (fastOptJS in Compile in client).toTask.value
-      copyUiFiles.value
-      (run in Compile in server).toTask("").value
-    },
-    cleanAll := {
-      (clean in Compile in client).toTask.value
-      (clean in Compile in server).toTask.value
-    },
-    box := {
-      cleanAll.value
-      (fullOptJS in Compile in client).value
-      copyUiFiles.value
-      (packageBin in Universal in server).value
-    }
+        cleanUi.value
+        //cleanAll.value
+        (fastOptJS in Compile in client).toTask.value
+        copyUiFilesDev.value
+        (run in Compile in server).toTask("").value
+      },
+      cleanAll := {
+        (clean in Compile in client).toTask.value
+        (clean in Compile in server).toTask.value
+      },
+      box := {
+        cleanUi.value
+        cleanAll.value
+        (fullOptJS in Compile in client).value
+        copyUiFiles.value
+        (packageBin in Universal in server).value
+      }
   )
 
 // Client projects (just one in this case)
@@ -170,6 +173,24 @@ lazy val copyUiFiles = Def.task{
   val mappings: Seq[(File,File)] = Seq(
     file("client/target/scala-2.12/client-jsdeps.js") -> file("resources/js/deps.js"),
     file("client/target/scala-2.12/client-opt.js") -> file("resources/js/app.js"),
+    file("client/target/scala-2.12/client-launcher.js") -> file("resources/js/launcher.js")
+  )
+  IO.copy(mappings)
+}
+
+lazy val cleanUi = Def.task{
+  IO.delete(Seq(
+    file("resources/js/deps.js"),
+    file("resources/js/app.js"),
+    file("resources/js/launcher.js")
+  ))
+}
+
+lazy val copyUiFilesDev = Def.task{
+  val mappings: Seq[(File,File)] = Seq(
+    file("client/target/scala-2.12/client-jsdeps.js") -> file("resources/js/deps.js"),
+    file("client/target/scala-2.12/client-fastopt.js") -> file("resources/js/app.js"),
+    file("client/target/scala-2.12/client-fastopt.js.map") -> file("resources/js/app.js.map"),
     file("client/target/scala-2.12/client-launcher.js") -> file("resources/js/launcher.js")
   )
   IO.copy(mappings)
