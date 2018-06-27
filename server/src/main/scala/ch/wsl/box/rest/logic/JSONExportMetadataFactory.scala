@@ -26,16 +26,16 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
     val query = for {
         (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
 
-  } yield (ei18.flatMap(_.label), e.name, e.order)
+  } yield (ei18.flatMap(_.label), e.function, e.name, e.order)
 
     Auth.boxDB.run{
       query.result
-    }.map(_.sortBy(_._3.getOrElse(Double.MaxValue))).map(_.map{ case (label,name,_) =>  ExportDef(name, label.getOrElse(name))})
+    }.map(_.sortBy(_._4.getOrElse(Double.MaxValue))).map(_.map{ case (label, function, name, _) =>  ExportDef(function, label.getOrElse(name))})
   }
 
-  def of(name:String, lang:String):Future[JSONMetadata]  = {
+  def of(function:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
-      (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id) if export.name === name
+      (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id) if export.function === function
 
     } yield (export,exportI18n)
 
@@ -63,7 +63,7 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
 
       val parameters = export.parameters.toSeq.flatMap(_.split(","))
 
-      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,None,"")
+      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,None,"")
     }
   }
 
