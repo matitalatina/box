@@ -1,9 +1,6 @@
 TODO
 ====
 
-1. mobile cosmetics
-1. read only cosmetics
-
 
 
 ##### Remarks
