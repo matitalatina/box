@@ -1,6 +1,7 @@
 package ch.wsl.box.client
 
 import ch.wsl.box.client.routes.Routes
+import ch.wsl.box.model.shared.ExportDef
 import io.udash._
 
 import scala.scalajs.js.URIUtils
@@ -47,5 +48,5 @@ case class MasterChildState(kind:String,
                            ) extends RoutingState(EntitiesState(kind,masterEntity))
 
 
-case object ExportsState extends RoutingState(RootState)
-case class ExportState(name:String) extends RoutingState(ExportsState)
+case class ExportsState(currentExport:String) extends RoutingState(RootState)
+case class ExportState(export:String) extends RoutingState(ExportsState(export))

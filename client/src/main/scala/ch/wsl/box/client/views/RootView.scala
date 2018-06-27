@@ -44,7 +44,7 @@ class RootView() extends View {
           MenuLink("Tables",EntitiesState("table","")),
           MenuLink("Views",EntitiesState("view","")),
           MenuLink(Labels.header.forms,EntitiesState("form","")),
-          MenuLink("Exports",ExportsState)
+          MenuLink("Exports",ExportsState(""))
         )
       } else Seq()}
 //      Seq(MenuLink("BoxTables", EntitiesState("table","")))

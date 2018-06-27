@@ -58,7 +58,7 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
 
   override def handleState(state: ExportState): Unit = {
     for{
-      metadata <- REST.exportMetadata(state.name,Session.lang())
+      metadata <- REST.exportMetadata(state.export,Session.lang())
     } yield {
       model.subProp(_.metadata).set(Some(metadata))
       model.subProp(_.queryData).set(Json.obj(JSONMetadata.jsonPlaceholder(metadata,Seq()).toSeq :_*))

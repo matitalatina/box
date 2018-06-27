@@ -21,11 +21,11 @@ import scalatags.generic
 
 case class Exports(list:Seq[ExportDef], currentEntity:Option[ExportDef], search:String, filteredList:Seq[ExportDef])
 
-object ExportsViewPresenter extends ViewPresenter[ExportsState.type] {
+case class ExportsViewPresenter(modelName:String) extends ViewPresenter[ExportsState] {
 
 
 
-  override def create(): (View, Presenter[ExportsState.type]) = {
+  override def create(): (View, Presenter[ExportsState]) = {
     val model = ModelProperty{
       Exports(Seq(),None,"",Seq())
     }
@@ -36,14 +36,18 @@ object ExportsViewPresenter extends ViewPresenter[ExportsState.type] {
   }
 }
 
-class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsState.type] {
+class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsState] {
 
 
 
-  override def handleState(state: ExportsState.type ): Unit = {
+  override def handleState(state: ExportsState ): Unit = {
+    //println(state.currentExport)
     REST.exports(Session.lang()).map{ exports =>
       model.subSeq(_.list).set(exports)
       model.subSeq(_.filteredList).set(exports)
+      val current = exports.find(_.name == state.currentExport)
+
+      model.subProp(_.currentEntity).set(current)
     }
   }
 
@@ -92,10 +96,10 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
   override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.row)(
     sidebar,
     div(contentGrid)(
+      div(h1(Labels.exports.title)).render,
       produce(model)( m =>
         m.currentEntity match {
           case None => div(
-            h1(Labels.exports.title),
             p(Labels.exports.select)
           ).render
           case Some(model) => div().render
