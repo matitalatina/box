@@ -41,11 +41,11 @@ class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsSt
 
 
   override def handleState(state: ExportsState ): Unit = {
-    //println(state.currentExport)
+//    println(state.currentExport)
     REST.exports(Session.lang()).map{ exports =>
       model.subSeq(_.list).set(exports)
       model.subSeq(_.filteredList).set(exports)
-      val current = exports.find(_.name == state.currentExport)
+      val current = exports.find(_.function == state.currentExport)
 
       model.subProp(_.currentEntity).set(current)
     }
@@ -86,7 +86,7 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
         ul(GlobalStyles.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>
             li(produce(m) { export =>
-              a(Navigate.click(ExportState(export.name)), m.get.label).render
+              a(Navigate.click(ExportState(export.function)), m.get.label).render
             }).render
           }
         ).render
