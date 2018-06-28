@@ -121,8 +121,21 @@ object GlobalStyles extends StyleSheet.Inline {
       unsafeProp("-moz-appearance","textfield")
     )
 
+
   )
 
+  val dateTimePicker = style(
+    inputDefaultWidth,
+    textAlign.right,
+    float.right
+
+  )
+
+  val dateTimePickerFullWidth = style(
+    width(100 %%),
+    textAlign.right,
+    float.right
+  )
 
   val smallCells = style(
     padding(3 px).important,

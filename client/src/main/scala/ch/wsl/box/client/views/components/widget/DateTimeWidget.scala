@@ -9,6 +9,8 @@ import ch.wsl.box.shared.utils.JsonUtils._
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.client.Context._
+import ch.wsl.box.client.styles.GlobalStyles
+import scalacss.internal.StyleA
 import scalatags.JsDom
 
 import scala.util.Try
@@ -22,17 +24,32 @@ object DateTimeWidget {
   import scalatags.JsDom.all._
 
   case class Date(key: Property[String], label: String, prop: Property[Json]) extends Widget {
-    override def edit() = datetimepicker(key,label,prop,datePickerFormat)
+    override def edit() = datetimepicker(key,label,prop,datePickerFormat,GlobalStyles.dateTimePicker)
     override protected def show(): JsDom.all.Modifier = showdate(label,prop)
   }
 
   case class DateTime(key: Property[String], label: String, prop: Property[Json]) extends Widget {
-    override def edit() = datetimepicker(key,label,prop,dateTimePickerFormat)
+    override def edit() = datetimepicker(key,label,prop,dateTimePickerFormat,GlobalStyles.dateTimePicker)
     override protected def show(): JsDom.all.Modifier = showdate(label,prop)
   }
 
   case class Time(key: Property[String], label: String, prop: Property[Json]) extends Widget {
-    override def edit() = datetimepicker(key,label,prop,timePickerFormat)
+    override def edit() = datetimepicker(key,label,prop,timePickerFormat,GlobalStyles.dateTimePicker)
+    override protected def show(): JsDom.all.Modifier = showdate(label,prop)
+  }
+
+  case class DateFullWidth(key: Property[String], label: String, prop: Property[Json]) extends Widget {
+    override def edit() = datetimepicker(key,label,prop,datePickerFormat,GlobalStyles.dateTimePickerFullWidth)
+    override protected def show(): JsDom.all.Modifier = showdate(label,prop)
+  }
+
+  case class DateTimeFullWidth(key: Property[String], label: String, prop: Property[Json]) extends Widget {
+    override def edit() = datetimepicker(key,label,prop,dateTimePickerFormat,GlobalStyles.dateTimePickerFullWidth)
+    override protected def show(): JsDom.all.Modifier = showdate(label,prop)
+  }
+
+  case class TimeFullWidth(key: Property[String], label: String, prop: Property[Json]) extends Widget {
+    override def edit() = datetimepicker(key,label,prop,timePickerFormat,GlobalStyles.dateTimePickerFullWidth)
     override protected def show(): JsDom.all.Modifier = showdate(label,prop)
   }
 
@@ -93,6 +110,7 @@ object DateTimeWidget {
   }
 
   import scalatags.JsDom.all._
+  import scalacss.ScalatagsCss._
 
   private def showdate(modelLabel:String, model:Property[Json]):Modifier = WidgetUtils.showNotNull(model){ p =>
     div(if (modelLabel.length > 0) label(modelLabel) else {},
@@ -101,7 +119,7 @@ object DateTimeWidget {
     ).render
   }
 
-  private def datetimepicker(key:Property[String],modelLabel:String, model:Property[Json], format:String):Modifier = {
+  private def datetimepicker(key:Property[String],modelLabel:String, model:Property[Json], format:String, style:StyleA):Modifier = {
 
     val date = model.transform(toDate(format),fromDate(format))
 
@@ -116,7 +134,10 @@ object DateTimeWidget {
       val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
       div(
         if (modelLabel.length > 0) label(modelLabel) else {},
-        picker.render
+        div(style)(
+          picker.render
+        ),
+        div(BootstrapStyles.Visibility.clearfix)
       ).render
     }
   }
