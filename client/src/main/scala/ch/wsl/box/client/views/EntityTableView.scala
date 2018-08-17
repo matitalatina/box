@@ -269,7 +269,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     }
 
 
-    val url = s"/api/v1/$kind/${Session.lang()}/${modelName}/csv?q=${query().asJson.toString()}".replaceAll("\n","")
+    val url = s"api/v1/$kind/${Session.lang()}/${modelName}/csv?q=${query().asJson.toString()}".replaceAll("\n","")
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }

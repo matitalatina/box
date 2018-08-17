@@ -19,7 +19,7 @@ object REST {
   import ch.wsl.box.client.Context._
   import ch.wsl.box.model.shared.EntityKind._
 
-  private def client = HttpClient("/api/v1")
+  private def client = HttpClient("api/v1")
 
 
   def entities(kind:String):Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).plural}")
