@@ -65,8 +65,8 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
           val randomString = UUID.randomUUID().toString
           JSONID.fromString(idfile) match {
             case Some(_) => div(
-              img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
-              a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
+              img(src := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
+              a(href := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
             ).render
             case None => div().render
           }
@@ -88,8 +88,8 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
             val randomString = UUID.randomUUID().toString
             JSONID.fromString(idfile) match {
               case Some(_) => div(
-                  img(src := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
-                  a(href := s"/api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
+                  img(src := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
+                  a(href := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
                 ).render
               case None => div().render
             }
