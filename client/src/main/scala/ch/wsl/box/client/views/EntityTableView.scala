@@ -62,6 +62,24 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   import ch.wsl.box.client.Context._
   import Enhancer._
 
+
+  private var filterUpdateHandler: Int = 0
+//  final private val SKIP_RELOAD_ROWS:Int = 999
+
+  model.subProp(_.fieldQueries).listen{ fq =>
+
+    logger.info("filterUpdateHandler " + filterUpdateHandler)
+
+    if (filterUpdateHandler != 0) window.clearTimeout(filterUpdateHandler)
+
+    filterUpdateHandler = window.setTimeout(() => {
+      reloadRows(1)
+    }, 500)
+
+  }
+
+
+
   override def handleState(state: EntityTableState): Unit = {
     model.set(EntityTableModel.empty)
     model.subProp(_.name).set(state.entity)
@@ -93,7 +111,6 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       specificKind <- REST.specificKind(state.kind, Session.lang(), state.entity)
     } yield {
 
-
       val m = EntityTableModel(
         name = state.entity,
         kind = specificKind,
@@ -116,6 +133,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       saveIds(ids,query)
 
       model.set(m)
+
     }
   }
 
@@ -187,40 +205,31 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
   def reloadRows(page:Int): Future[Unit] = {
     logger.info("reloading rows")
+    logger.info("filterUpdateHandler "+filterUpdateHandler)
 
-    val q = query().copy(paging = Some(JSONQueryPaging(Conf.pageLength,page)))
+    val q = query().copy(paging = Some(JSONQueryPaging(Conf.pageLength, page)))
 
     for {
-      csv <- REST.csv(model.subProp(_.kind).get,Session.lang(),model.subProp(_.name).get,q)
-      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,q)
+      csv <- REST.csv(model.subProp(_.kind).get, Session.lang(), model.subProp(_.name).get, q)
+      ids <- REST.ids(model.get.kind, Session.lang(), model.get.name, q)
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
       model.subProp(_.ids).set(ids)
       model.subProp(_.pages).set(pageCount(ids))
-      saveIds(ids,q)
+      saveIds(ids, q)
     }
 
   }
 
   def filterById(id:JSONID) = {
-    val newMetadata = model.subProp(_.fieldQueries).get.map{ m =>
+    val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
       id.id.headOption.exists(_.key == m.field.name) match {
         case true => m.copy(filter = id.id.head.value, filterType = Filter.EQUALS)
         case false => m
       }
     }
-    model.subProp(_.fieldQueries).set(newMetadata)
-    reloadRows(1)
-  }
-
-  private var filterUpdateHandler: Int = 0
-
-  model.subProp(_.fieldQueries).listen{ fq =>
-    if (filterUpdateHandler != 0) window.clearTimeout(filterUpdateHandler)
-
-    filterUpdateHandler = window.setTimeout(() => {
-      reloadRows(1)
-    }, 500)
+    model.subProp(_.fieldQueries).set(newFieldQueries)
+//    reloadRows(1)
   }
 
 

@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
+import ch.wsl.box.rest.logic.JSONMetadataFactory
 import ch.wsl.box.rest.logic.JSONFormMetadataFactory
 import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.Auth
@@ -58,6 +59,7 @@ object Boot extends App  {
     read match {
       case "r" => {
         JSONFormMetadataFactory.resetCache()
+        JSONMetadataFactory.resetCache()
         println("reset cache")
       }
       case _ => {}

@@ -94,7 +94,7 @@ class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=S
     usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
   } yield (usage.column_name, usage.constraint_name)
 
-  def pk:Future[PrimaryKey] = Auth.adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
+  val pk:Future[PrimaryKey] = Auth.adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
       pkQ.result
         .map(x => x.unzip)    //change seq of tuple into tuple of seqs
         .map(x => PrimaryKey(x._1, x._2.headOption.getOrElse("")))   //as constraint_name take only first element (should be the same)

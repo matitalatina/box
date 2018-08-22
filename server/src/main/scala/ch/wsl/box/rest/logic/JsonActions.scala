@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import ch.wsl.box.model.shared.{IDs, JSONCount, JSONID, JSONQuery}
+import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
 import scribe.Logging

@@ -45,7 +45,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
   }
 
   def count(query:JSONQuery)(implicit db:Database):Future[Int] = {
-    val q = entity.where(query.filter).sort(query.sort)
+    val q = entity.where(query.filter) //.sort(query.sort)
 
     for {
       c <- db.run{
