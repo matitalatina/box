@@ -18,8 +18,8 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 
 trait EntityJsonViewActions {
-  def getEntity(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): Future[Seq[Json]] = Source.fromPublisher(getEntityStreamed(query)).runFold(Seq[Json]())(_ ++ Seq(_))
-  def getEntityStreamed(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): DatabasePublisher[Json]
+  def get(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): Future[Seq[Json]] = Source.fromPublisher(getStreamed(query)).runFold(Seq[Json]())(_ ++ Seq(_))
+  def getStreamed(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): DatabasePublisher[Json]
 
   def getById(id: JSONID=JSONID.empty)(implicit db: Database): Future[Option[Json]]
 
@@ -40,27 +40,21 @@ case class JsonViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
 
   val utils = new DbActions[T,M](table)
 
-  override def getEntityStreamed(query: JSONQuery=JSONQuery.empty)(implicit db:Database, mat:Materializer): DatabasePublisher[Json] = utils.findStreamed(query).mapResult(_.asJson)
+  override def getStreamed(query: JSONQuery=JSONQuery.empty)(implicit db:Database, mat:Materializer): DatabasePublisher[Json] = utils.findStreamed(query).mapResult(_.asJson)
 
   override def getById(id: JSONID=JSONID.empty)(implicit db:Database): Future[Option[Json]] = utils.getById(id).map(_.map(_.asJson))
 
 
-  override def count()(implicit db:Database) = {
-    db.run {
-      table.length.result
-    }.map { result =>
-      JSONCount(result)
-    }
-  }
+  override def count()(implicit db:Database) = utils.count().map(JSONCount(_))
+
+
 
   override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = {
     for{
       data <- utils.find(query)
       keys <- JSONMetadataFactory.keysOf(table.baseTableRow.tableName)
-      //countAllRows <- count().map(_.count) //added by bp
     } yield {
-      //println(data.toString().take(100))
-      //println(keys)
+
       val last = query.paging match {
         case None => true
         case Some(paging) =>  paging.currentPage * paging.pageLength >= data.count
@@ -81,7 +75,7 @@ case class JsonTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
 
   lazy val jsonView = JsonViewActions[T,M](table)
 
-  override def getEntityStreamed(query: JSONQuery)(implicit db:Database, mat:Materializer):DatabasePublisher[Json] = jsonView.getEntityStreamed(query)
+  override def getStreamed(query: JSONQuery)(implicit db:Database, mat:Materializer):DatabasePublisher[Json] = jsonView.getStreamed(query)
 
   override def getById(id: JSONID)(implicit db:Database): Future[Option[Json]] = jsonView.getById(id)
 
