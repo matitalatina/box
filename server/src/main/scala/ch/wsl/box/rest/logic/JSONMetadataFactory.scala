@@ -90,7 +90,7 @@ object JSONMetadataFactory extends Logging {
                     import ch.wsl.box.shared.utils.JsonUtils._
                     for {
                       keys <- keysOf(model)
-                      lookupData <- BoxTablesRegistry().tableActions(model).getEntity()
+                      lookupData <- BoxTablesRegistry().tableActions(model).find()
                     } yield {
                       val options = lookupData.map { lookupRow =>
                         JSONLookup(lookupRow.get(value), lookupRow.get(text))
@@ -149,7 +149,7 @@ object JSONMetadataFactory extends Logging {
         logger.info(s"Metadata keys cache miss! cache key: ($table), cache: ${cacheKeys}")
 
         val result = new PgInformationSchema(table, Auth.adminDB).pk.map { pk => //map to enter the future
-          logger.info(pk)
+          logger.info(pk.toString)
           pk.boxKeys
         }
 

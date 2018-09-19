@@ -7,11 +7,13 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
 import ch.wsl.box.rest.logic.JSONMetadataFactory
 import ch.wsl.box.rest.logic.JSONFormMetadataFactory
-import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
+import
+
+ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.Auth
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
-import scribe.{Level, Logger}
+import scribe._
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.io.StdIn
@@ -29,13 +31,15 @@ object Box {
     val host = conf.as[String]("host")
     val port = conf.as[Int]("port")
 
-    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Info))
+    Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Info)).replace()
+//    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Info))
 
     //TODO need to be reworked now it's based on an hack, it call generated root to populate models
     GeneratedRoutes()(Auth.adminDB, materializer, executionContext)
     BoxRoutes()(Auth.adminDB, materializer, executionContext)
 
-    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Warn))
+//    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Warn))
+    Logger.root.clearHandlers().withHandler(minimumLevel = Some(Level.Warn)).replace()
 
     // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
 

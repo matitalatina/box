@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.{complete, failWith}
 import akka.http.scaladsl.server.ExceptionHandler
 import ch.wsl.box.model.shared.errors.{JsonDecoderExceptionReport, SQLExceptionReport}
-import ch.wsl.box.rest.logic.JsonDecoderException
+import ch.wsl.box.rest.logic.JSONDecoderException
 import ch.wsl.box.rest.utils.JSONSupport
 import org.postgresql.util.PSQLException
 
@@ -34,7 +34,7 @@ object BoxExceptionHandler {
     case sql: PSQLException => {
       complete(StatusCodes.InternalServerError,psql2sqlReport(sql))
     }
-    case JsonDecoderException(failure,json) => {
+    case JSONDecoderException(failure,json) => {
       import io.circe.CursorOp._
       val fields = failure.history.flatMap{
         case DownField(field) => Some(field)

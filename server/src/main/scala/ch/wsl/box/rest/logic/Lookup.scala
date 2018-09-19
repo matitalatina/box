@@ -19,7 +19,7 @@ object Lookup {
 
       Future.sequence{
         metadata.fields.flatMap(_.lookup.map(_.lookupEntity)).map{ lookupEntity =>
-          actionsRegistry.tableActions(lookupEntity).getEntity(JSONQuery.empty).map{ jq => lookupEntity -> jq}
+          actionsRegistry.tableActions(lookupEntity).find(JSONQuery.empty).map{ jq => lookupEntity -> jq}
         }
       }.map(_.toMap)
   }

@@ -5,7 +5,7 @@ import ch.wsl.box.shared.utils.CSV
 /**
   * Created by andreaminetti on 03/03/16.
   */
-case class JSONData[M <: Product](data:List[M], count:Int) {
+case class JSONData[M <: Product](data:Seq[M], count:Int) {
 
   import JSONData._
   def csv:String = CSV.of(data.map(_.values()))

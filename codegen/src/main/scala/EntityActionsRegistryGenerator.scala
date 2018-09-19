@@ -9,11 +9,11 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
 
 
     def mapTable(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
-      s"""   case "${table.model.name.table}" => JsonTableActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name})"""
+      s"""   case "${table.model.name.table}" => JSONTableActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name})"""
     }
 
     def mapView(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
-      s"""   case "${table.model.name.table}" => JsonViewActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name})"""
+      s"""   case "${table.model.name.table}" => JSONViewActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name})"""
     }
 
 
@@ -21,7 +21,7 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
       s"""package ${pkg}
          |
          |import scala.concurrent.ExecutionContext
-         |import ch.wsl.box.rest.logic.{JsonTableActions, JsonViewActions, EntityJsonTableActions, EntityJsonViewActions}
+         |import ch.wsl.box.rest.logic.{JSONTableActions, JSONViewActions, EntityJSONTableActions, EntityJSONViewActions}
          |import $modelPackages._
          |
          |class EntityActionsRegistry(implicit ec:ExecutionContext) {
@@ -30,11 +30,11 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |  import io.circe.generic.auto._
          |  import ch.wsl.box.rest.utils.JSONSupport._
          |
-         |  def tableActions:String => EntityJsonTableActions = {
+         |  def tableActions:String => EntityJSONTableActions = {
          |    ${tableList.flatMap(mapTable).mkString("\n")}
          |  }
          |
-         |  def viewActions:String => EntityJsonViewActions = {
+         |  def viewActions:String => EntityJSONViewActions = {
          |    ${viewList.flatMap(mapView).mkString("\n")}
          |  }
          |}

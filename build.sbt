@@ -26,7 +26,7 @@ lazy val server: Project  = (project in file("server"))
     scalaBinaryVersion := "2.12",
     scalacOptions ++= Settings.scalacOptionsServer,
     libraryDependencies ++= Settings.jvmDependencies.value,
-    resolvers += Resolver.jcenterRepo,
+    resolvers ++= Seq(Resolver.jcenterRepo, Resolver.bintrayRepo("hseeberger", "maven")),
     slick := slickCodeGenTask.value , // register manual sbt command
     sourceGenerators in Compile +=  slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
     resourceDirectory in Compile := baseDirectory.value / "../resources",
@@ -66,7 +66,7 @@ lazy val client: Project = (project in file("client"))
       IO.copyDirectory(sourceDirectory.value / "main/assets/fonts", crossTarget.value / StaticFilesDir / WebContent / "assets/fonts")
       IO.copyDirectory(sourceDirectory.value / "main/assets/images", crossTarget.value / StaticFilesDir / WebContent / "assets/images")
       val statics = compileStaticsForRelease.value
-      (crossTarget.value / StaticFilesDir).***.get
+      (crossTarget.value / StaticFilesDir).get
     },
     //      artifactPath in(Compile, fastOptJS) :=
     //        (crossTarget in(Compile, fastOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl-fast.js",
@@ -160,7 +160,7 @@ lazy val slickCodeGenTask = Def.task{
   val r = (runner in Compile).value
   val s = streams.value
   val outputDir = (dir / "slick").getPath // place generated files in sbt's managed sources folder
-  r.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log) foreach sys.error
+  r.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log) foreach sys.error(_:String)
   val fname = outputDir + "/ch/wsl/box/model/Entities.scala"
   val ffname = outputDir + "/ch/wsl/box/model/FileTables.scala"
   val rname = outputDir + "/ch/wsl/box/rest/routes/GeneratedRoutes.scala"

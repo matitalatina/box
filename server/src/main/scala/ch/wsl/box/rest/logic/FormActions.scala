@@ -172,7 +172,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
 
   private def extractSeq(query:JSONQuery):Source[Json,NotUsed] = {
     Source
-      .fromPublisher(EntityActionsRegistry().tableActions(metadata.entity).getEntityStreamed(query))
+      .fromPublisher(EntityActionsRegistry().tableActions(metadata.entity).findStreamed(query))
       .flatMapConcat( json => Source.fromFuture(expandJson(json)))
   }
 

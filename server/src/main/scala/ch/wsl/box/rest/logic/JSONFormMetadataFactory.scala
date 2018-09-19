@@ -180,7 +180,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
             queryJson <- parse(queryString).right.toOption
             query <- queryJson.as[JSONQuery].right.toOption
           } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
-          lookupData <- EntityActionsRegistry().tableActions(refEntity).getEntity(filter)
+          lookupData <- EntityActionsRegistry().tableActions(refEntity).find(filter)
         } yield {
           val options = lookupData.map{ lookupRow =>
             JSONLookup(lookupRow.get(value),lookupRow.get(text))

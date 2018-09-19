@@ -3,10 +3,12 @@ package ch.wsl.box.rest.utils
 import java.sql.{Time, Timestamp}
 import java.text.SimpleDateFormat
 
-import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+//import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
+import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
 import io.circe._
-import akka.http.scaladsl.model.MediaTypes.`application/json`
+import io.circe.generic.auto._
+
+//import akka.http.scaladsl.model.MediaTypes.`application/json`
 import io.circe.Decoder.Result
 
 import scala.util.Try
@@ -17,7 +19,7 @@ import scala.util.Try
   * this contains the serializer between the JSON and the Scala objects  (in the server)
   *
   */
-object JSONSupport extends CirceSupport{
+object JSONSupport extends ErrorAccumulatingCirceSupport{
 
   implicit def printer: Json => String = Printer.noSpaces.copy(dropNullValues = true).pretty
 

@@ -42,8 +42,8 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
 
     import Directives._
     import JSONSupport._
-  import JSONData._
-  import io.circe.generic.auto._
+    import JSONData._
+    import io.circe.generic.auto._
     import ch.wsl.box.shared.utils.Formatters._
     import ch.wsl.box.model.shared.EntityKind
     import io.circe.syntax._

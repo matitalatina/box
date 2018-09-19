@@ -56,7 +56,7 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
               get {
                 complete(actions(metadata) { fs =>
                   fs.getAllById(id).map { record =>
-                    logger.info(record)
+                    logger.info(record.toString)
                     HttpEntity(ContentTypes.`application/json`, record)
                   }
                 })

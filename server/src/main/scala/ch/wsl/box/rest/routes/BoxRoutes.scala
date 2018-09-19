@@ -1,8 +1,13 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.server.{Directives, Route}
-import akka.stream.Materializer
+import akka.stream.{ ActorMaterializer, Materializer }
 import ch.wsl.box.rest.boxentities._
+import io.circe._
+import io.circe.generic.auto._
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+
 
 import scala.concurrent.ExecutionContext
 

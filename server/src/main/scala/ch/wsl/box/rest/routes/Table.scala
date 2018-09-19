@@ -23,6 +23,7 @@ import net.ceedubs.ficus.Ficus._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
+
 /**
  * Created by andreaminetti on 16/02/16.
  */
@@ -44,14 +45,15 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
                                                              db:Database,
                                                              ec: ExecutionContext) extends enablers.CSVDownload with Logging {
 
+
 //    println(s"adding table: $name" )
     isBoxTable match{
       case false => Table.tables = Set(name) ++ Table.tables
       case true => Table.boxTables = Set(name) ++ Table.boxTables
     }
 
-
-    val utils = new DbActions[T,M](table)
+//    val jsonActions= new JsonTableActions(table)
+    val dbActions = new DbActions[T,M](table)
     val limitLookupFromFk: Int = ConfigFactory.load().as[Int]("limitLookupFromFk")
 
     import JSONSupport._
@@ -73,7 +75,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
             JSONID.fromString(strId) match {
               case Some(id) =>
                 get {
-                  onComplete(utils.getById(id)) {
+                  onComplete(dbActions.getById(id)) {
                     case Success(data) => {
                       complete(data)
                     }
@@ -82,14 +84,14 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
                 } ~
                   put {
                     entity(as[M]) { e =>
-                      onComplete(utils.updateById(id, e)) {
+                      onComplete(dbActions.updateById(id, e)) {
                         case Success(entity) => complete(e)
                         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                       }
                     }
                   } ~
                   delete {
-                    onComplete(utils.deleteById(id)) {
+                    onComplete(dbActions.deleteById(id)) {
                       case Success(affectedRow) => complete(JSONCount(affectedRow))
                       case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                     }
@@ -137,7 +139,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
         post {
           entity(as[JSONQuery]) { query =>
             logger.info("list")
-            complete(utils.find(query))
+            complete(dbActions.find(query))
           }
         }
       } ~
@@ -145,7 +147,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("csv")
-              complete(Source.fromPublisher(utils.findStreamed(query)))
+              complete(Source.fromPublisher(dbActions.findStreamed(query)))
             }
           } ~
           respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -154,7 +156,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
                 val query = parse(q).right.get.as[JSONQuery].right.get
                 val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en", limitLookupFromFk).map{ metadata =>
                   CSV.row(metadata.fields.map(_.name))
-                }).concat(Source.fromPublisher(utils.findStreamed(query)).map(x => CSV.row(x.values())))
+                }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.row(x.values())))
                 complete(csv)
               }
             }
