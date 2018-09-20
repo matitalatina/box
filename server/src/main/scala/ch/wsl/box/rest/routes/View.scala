@@ -12,6 +12,7 @@ import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory, Lookup}
 import ch.wsl.box.rest.utils.JSONSupport
 import ch.wsl.box.shared.utils.CSV
+import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
 import scribe.Logging
 import slick.lifted.TableQuery
@@ -29,24 +30,23 @@ object View {
 }
 
 case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])(implicit
+                                                                                                             enc: Encoder[M],
+                                                                                                             dec:Decoder[M],
                                                                                                          mat:Materializer,
-                                                                                                         unmarshaller: FromRequestUnmarshaller[M],
-                                                                                                         marshaller:ToResponseMarshaller[M],
-                                                                                                         seqmarshaller: ToResponseMarshaller[Seq[M]],
-                                                                                                         jsonmarshaller:ToResponseMarshaller[JSONData[M]],
                                                                                                          db:Database,
                                                                                                          ec: ExecutionContext
                                                                                               ) extends enablers.CSVDownload with Logging {
 
     View.views = Set(name) ++ View.views
 
-    import Directives._
-    import JSONSupport._
-    import JSONData._
-    import io.circe.generic.auto._
-    import ch.wsl.box.shared.utils.Formatters._
-    import ch.wsl.box.model.shared.EntityKind
-    import io.circe.syntax._
+  import JSONSupport._
+  import akka.http.scaladsl.model._
+  import akka.http.scaladsl.server.Directives._
+  import ch.wsl.box.shared.utils.Formatters._
+  import io.circe.generic.auto._
+  import io.circe.syntax._
+  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.model.shared.EntityKind
 
     val helper = new DbActions[T,M](table)
 
@@ -99,7 +99,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
               entity(as[JSONQuery]) { query =>
                 logger.info("csv")
                 Source
-                complete(Source.fromPublisher(helper.findStreamed(query)))
+                complete(Source.fromPublisher(helper.findStreamed(query).mapResult(_.asJson)))
               }
             } ~
               respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -121,9 +121,9 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
                           CSV.row(metadata.fields.map(_.name))
                         )).concat(Source.fromPublisher(helper.findStreamed(query)).map{x =>
 
-                          val row = metadata.fields.map(_.name).zip(x.values()).map{ case (field,v) => lookup(field,v)}
-
-                          CSV.row(row)
+                          //val row = metadata.fields.map(_.name).zip(x.values()).map{ case (field,v) => lookup(field,v)}
+                          //TODO ??? what we are tring to do here?
+                          CSV.row(Seq(""))
                         })
                       }
                     }

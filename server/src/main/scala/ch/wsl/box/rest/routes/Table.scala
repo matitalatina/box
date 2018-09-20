@@ -1,10 +1,12 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.common.EntityStreamingSupport
-import akka.http.scaladsl.marshalling.{Marshaller, Marshalling, ToResponseMarshaller}
+import akka.http.scaladsl.marshalling.{Marshaller, Marshalling, ToEntityMarshaller, ToResponseMarshaller}
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
+import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromRequestUnmarshaller, Unmarshaller}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
@@ -12,12 +14,16 @@ import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
+import ch.wsl.box.rest.utils.JSONSupport.jsonContentTypes
 import ch.wsl.box.shared.utils.CSV
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
 import com.typesafe.config._
+import io.circe.parser.decode
+import io.circe.syntax._
+import io.circe.{Decoder, Encoder, Json}
 import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,14 +43,20 @@ object Table {
 
 case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], isBoxTable:Boolean = false)
                                                             (implicit
+                                                             enc: Encoder[M],
+                                                             dec:Decoder[M],
                                                              mat:Materializer,
-                                                             unmarshaller: FromRequestUnmarshaller[M],
-                                                             marshaller:ToResponseMarshaller[M],
-                                                             seqmarshaller: ToResponseMarshaller[Seq[M]],
-                                                             jsonmarshaller:ToResponseMarshaller[JSONData[M]],
                                                              db:Database,
                                                              ec: ExecutionContext) extends enablers.CSVDownload with Logging {
 
+
+  import JSONSupport._
+  import akka.http.scaladsl.model._
+  import akka.http.scaladsl.server.Directives._
+  import ch.wsl.box.shared.utils.Formatters._
+  import io.circe.generic.auto._
+  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.model.shared.EntityKind
 
 //    println(s"adding table: $name" )
     isBoxTable match{
@@ -147,7 +159,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("csv")
-              complete(Source.fromPublisher(dbActions.findStreamed(query)))
+              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => x.asJson)))
             }
           } ~
           respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
