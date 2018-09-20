@@ -5,6 +5,7 @@ import ch.wsl.box.client.styles.GlobalStyles
 import org.scalajs.dom.raw.Element
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
+import io.udash.css.CssView._
 import ch.wsl.box.client.Context._
 import ch.wsl.box.client.services.Navigate
 import ch.wsl.box.client.utils.{Labels, Session, UI}

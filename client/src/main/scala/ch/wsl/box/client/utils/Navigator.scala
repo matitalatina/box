@@ -5,6 +5,7 @@ import ch.wsl.box.model.shared.{IDs, JSONQuery}
 
 import scala.concurrent.Future
 import ch.wsl.box.client.Context._
+import io.udash.properties.HasModelPropertyCreator
 
 /**
   * Created by andre on 5/24/2017.
@@ -25,7 +26,7 @@ case class Navigation(hasNext:Boolean, hasPrevious:Boolean, count:Int, currentIn
 //  def maxIndexLastPage = count % pageLength
 }
 
-object Navigation{
+object Navigation extends HasModelPropertyCreator[Navigation] {
   def empty0 = Navigation(false,false,0,0, false, false, 0,0,0, Seq())
   def empty1 = Navigation(false,false,1,1, false, false, 1,1,1, Seq())
   def indexInPage(nav:Navigation) = {                //1-based

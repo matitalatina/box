@@ -35,15 +35,16 @@ import scala.util.Try
 
 case class ExportModel(metadata:Option[JSONMetadata], queryData:Json, headers:Seq[String],data:Seq[Seq[String]])
 
-object ExportModel{
-  def empty = ExportModel(None,Json.Null,Seq(),Seq())
+object ExportModel extends HasModelPropertyCreator[ExportModel]{
+  implicit val blank: Blank[ExportModel] =
+    Blank.Simple(ExportModel(None,Json.Null,Seq(),Seq()))
 }
 
 object ExportViewPresenter extends ViewPresenter[ExportState] {
 
   import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[ExportState]) = {
-    val model = ModelProperty{ExportModel.empty}
+    val model = ModelProperty.blank[ExportModel]
     val presenter = ExportPresenter(model)
     (ExportView(model,presenter),presenter)
   }
@@ -81,7 +82,6 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
     for{
       data <- REST.export(model.get.metadata.get.entity,args,Session.lang())
     } yield {
-      logger.warn(data)
       model.subProp(_.headers).set(data.headOption.getOrElse(Seq()))
       model.subProp(_.data).set(Try(data.tail).getOrElse(Seq()))
     }
@@ -92,8 +92,8 @@ case class ExportView(model:ModelProperty[ExportModel], presenter:ExportPresente
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
 
-  override def renderChild(view: View): Unit = {}
 
   override def getTemplate = div(
     produce(model.subProp(_.metadata)) {

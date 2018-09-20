@@ -82,7 +82,7 @@ object Session extends Logging {
     Navigate.toAction{ () =>
       dom.window.sessionStorage.removeItem(USER)
       REST.logout().map { result =>
-        io.udash.routing.WindowUrlChangeProvider.changeUrl(LoginState.url)
+        io.udash.routing.WindowUrlPathChangeProvider.changeUrl(LoginState.url)
       }
     }
   }

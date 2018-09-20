@@ -46,7 +46,7 @@ object Box {
     implicit def handler: ExceptionHandler = BoxExceptionHandler()
 
     val binding: Future[Http.ServerBinding] = Http().bindAndHandle(route, host, port) //attach the root route
-    logger.info(s"Server online at http://localhost:$port")
+    println(s"Server online at http://localhost:$port")
 
 
   }

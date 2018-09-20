@@ -9,6 +9,7 @@ import ch.wsl.box.client.Context._
 import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}
 import scalacss.ScalatagsCss._
+import io.udash.css.CssView._
 import scalatags.JsDom
 
 case class SelectWidget(lookup:JSONFieldLookup, field:JSONField, label: String, prop: Property[Json], modifiers: Modifier*) extends LookupWidget {

@@ -25,6 +25,7 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
   import io.circe._
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JsonUtils._

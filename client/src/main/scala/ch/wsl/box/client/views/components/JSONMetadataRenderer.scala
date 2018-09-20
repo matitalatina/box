@@ -27,6 +27,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
   import scalacss.ScalatagsCss._
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
 
 
   private def getId(data:Json): String = {
