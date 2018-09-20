@@ -123,7 +123,7 @@ object Settings {
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */
   val scalajsDependencies = Def.setting(Seq(
-    "io.udash" %%% "udash-core-frontend" % versions.udash,serverss
+    "io.udash" %%% "udash-core-frontend" % versions.udash,
     "io.udash" %%% "udash-rpc-frontend" % versions.udash,
     "io.udash" %%% "udash-bootstrap" % versions.udash,
     "io.udash" %%% "udash-jquery" % versions.udashJQuery,
