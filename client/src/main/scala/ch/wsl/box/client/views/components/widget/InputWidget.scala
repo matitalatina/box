@@ -10,6 +10,7 @@ import scalatags.JsDom
 import scala.concurrent.Future
 import scalatags.JsDom.all._
 import ch.wsl.box.shared.utils.JsonUtils._
+import io.udash.bindings.modifiers.Binding
 
 class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
@@ -17,7 +18,7 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
   import scalacss.ScalatagsCss._
   import io.udash.css.CssView._
 
-  private def showInput(prop:Property[Json],labelString:String):Modifier = WidgetUtils.showNotNull(prop){ p =>
+  private def showInput(prop:Property[Json],labelString:String):Binding = WidgetUtils.showNotNull(prop){ p =>
 
     val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
 
@@ -57,7 +58,7 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
       TextInput.apply(stringModel,None,y:_*)
     }
-    override protected def show(): JsDom.all.Modifier = showInput(prop,label)
+    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,label))
   }
 
   case class Textarea(label: String, prop: Property[Json]) extends Widget {
@@ -65,7 +66,7 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
       TextArea.apply(stringModel,None,y:_*)
     }
-    override protected def show(): JsDom.all.Modifier = showInput(prop,label)
+    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,label))
   }
 
   case class Number(label: String, prop: Property[Json]) extends Widget {
@@ -73,7 +74,7 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
       val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
       NumberInput.apply(stringModel,None,y:_*)
     }
-    override protected def show(): JsDom.all.Modifier = showInput(prop,label)
+    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,label))
   }
 }
 

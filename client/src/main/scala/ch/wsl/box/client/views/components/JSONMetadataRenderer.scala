@@ -112,6 +112,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override def afterSave(data:Json,form:JSONMetadata): Future[Unit] = widget.afterSave(data,form)
     override def beforeSave(data:Json,form:JSONMetadata): Future[Unit] = widget.beforeSave(data,form)
 
+    override def killWidget(): Unit = widget.killWidget()
 
     override protected def show(): JsDom.all.Modifier = render(false)
 
@@ -149,6 +150,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override def afterSave(value:Json,metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,widgets.map(_.widget))
     override def beforeSave(value:Json,metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,widgets.map(_.widget))
 
+    override def killWidget(): Unit = widgets.foreach(_.widget.killWidget())
 
     override protected def show(): JsDom.all.Modifier = render(false)
 
@@ -177,6 +179,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override def afterSave(value:Json, metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,blocks.map(_._2))
     override def beforeSave(value:Json, metadata:JSONMetadata): Future[Unit] = beforeSaveAll(value,metadata,blocks.map(_._2))
 
+  override def killWidget(): Unit = blocks.foreach(_._2.killWidget())
+
 
   override protected def show(): JsDom.all.Modifier = render(false)
 
@@ -185,25 +189,30 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   import io.udash._
 
 
-  private def render(write:Boolean): JsDom.all.Modifier = div(UdashForm(
-      Debug(data, "data"),
+  private def render(write:Boolean): JsDom.all.Modifier = {
+    def renderer(block: LayoutBlock, widget:Widget) = {
+      div(
+        h3(block.title.map { title => Labels(title) }),
+        widget.render(write, Property {
+          true
+        })
+      ).render
+    }
+
+    div(UdashForm(
+      Debug(data,autoRelease, "data"),
       div(BootstrapStyles.row)(
         blocks.map{ case (block,widget) =>
           div(BootstrapCol.md(block.width), GlobalStyles.block)(
-            produce(data) { d =>
-              if(write || JSONMetadata.hasData(d,JSONMetadata.extractFields(block.fields))) {
-                div(
-                  h3(block.title.map { title => Labels(title) }),
-                  widget.render(write, Property {
-                    true
-                  })
-                ).render
-              } else div().render
+            if(write) renderer(block,widget) else {
+              val hasData = data.transform(JSONMetadata.hasData(_,JSONMetadata.extractFields(block.fields)))
+              autoRelease(showIf(hasData) { renderer(block,widget) })
             }
           )
         }
       )
     ).render)
+  }
 
 
 }

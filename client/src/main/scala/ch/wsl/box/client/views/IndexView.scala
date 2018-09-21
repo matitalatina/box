@@ -52,7 +52,7 @@ class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
     div(raw(UI.info)),
     if(UI.enableNews) {
       div(h2("News"),
-        Debug(viewModel, "indexView"),
+        Debug(viewModel, name = "indexView"),
         repeat(viewModel.subSeq(_.news)) { news =>
           div(
             div(news.get.get("news_id")),
