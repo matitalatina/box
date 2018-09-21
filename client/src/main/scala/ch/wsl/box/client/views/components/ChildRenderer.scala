@@ -95,10 +95,14 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
     }
     override def beforeSave(data:Json, metadata:JSONMetadata): Future[Unit] = propagate(data,metadata,_.beforeSave)
 
+    override def killWidget(): Unit = childWidgets.foreach(_.killWidget())
+
     var childWidgets:Seq[WidgetBinded] = Seq()
 
     def cleanSubwidget() = {
+      val widgetToKill = childWidgets.filterNot(w => entity.get.exists(js => w.isOf(js)))
       childWidgets = childWidgets.filter(w => entity.get.exists(js => w.isOf(js)))
+      widgetToKill.foreach(_.killWidget())
     }
     def findOrAdd(f:JSONMetadata, childValues:Property[Json], children: Seq[JSONMetadata]) = {
       childWidgets.find(_.isOf(childValues.get)).getOrElse {
@@ -126,7 +130,7 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
         case Some(f) => {
 
           div(
-              produce(entitySize) { size =>
+              autoRelease(produce(entitySize) { size =>
                 cleanSubwidget()
                 div(
                   if(write || size > 0) label(f.label) else frag(),
@@ -146,7 +150,7 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
                     ).render
                   }
                 ).render
-              },
+              }),
               if(write) a(onclick :+= ((e: Event) => addItem(entity, child, f)), Labels.subform.add) else frag()
           )
         }

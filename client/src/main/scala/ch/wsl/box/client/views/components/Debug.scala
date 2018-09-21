@@ -2,17 +2,17 @@ package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.utils.UI
 import io.udash.properties.model.ModelProperty
-
 import scalatags.JsDom.all._
 import io.udash._
 import io.circe.syntax._
+import io.udash.bindings.modifiers.Binding
 import org.scalajs.dom.Event
 
 object Debug {
 
   import ch.wsl.box.client.Context._
 
-  def apply[T](model: Property[T], name:String ="")(implicit enc:io.circe.Encoder[T]) = {
+  def apply[T](model: Property[T],releaser:Binding=>Binding = b => b, name:String ="")(implicit enc:io.circe.Encoder[T]) = {
     val show = Property {
       false
     }
@@ -23,14 +23,14 @@ object Debug {
     if (UI.debug) {
       div(
         a(""),
-        produce(show) {
+        releaser(produce(show) {
             case true => div(
               a("Hide debug " + name, onclick :+= ((e: Event) => show.set(false))),
               pre(bind(out))
             ).render
             case false => a("Show debug " + name, onclick :+= ((e: Event) => show.set(true))).render
         }
-      )
+      ))
     } else frag()
   }
 }

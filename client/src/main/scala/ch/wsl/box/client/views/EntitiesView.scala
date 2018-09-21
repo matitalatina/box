@@ -87,11 +87,11 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
   private def sidebar: Element = if(UI.showEntitiesSidebar) {
     div(sidebarGrid)(
       UdashForm.textInput()(Labels.entities.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
-      produce(model.subProp(_.search)) { q =>
+      produceWithNested(model.subProp(_.search)) { (q,releaser) =>
         ul(GlobalStyles.noBullet,
-          repeat(model.subSeq(_.filteredList)){m =>
+          releaser(repeat(model.subSeq(_.filteredList)){m =>
             li(a(Navigate.click(routes.entity(m.get)),m.get)).render
-          }
+          })
         ).render
       }
     ).render

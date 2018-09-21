@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{Conf, Labels, Session}
+import ch.wsl.box.client.utils.{Conf, Labels, Navigation, Session}
 import ch.wsl.box.client.views.components.widget.DateTimeWidget
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
 import ch.wsl.box.model.shared.EntityKind.VIEW
@@ -350,10 +350,10 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
     val pagination = {
 
-      div(
-        span(marginRight := 29.px,Labels.navigation.recordFound," ",bind(model.subProp(_.ids.count))),br,
-        showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(1), true), Labels.navigation.first).render },
-        showIf(model.subProp(_.ids.currentPage).transform(_ != 1)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1), true), Labels.navigation.previous).render },
+      div(GlobalStyles.boxNavigationLabel,
+        div(Labels.navigation.recordFound," ",bind(model.subProp(_.ids.count))),
+        Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(1),Labels.navigation.first,_.pullLeft),
+        Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1),Labels.navigation.previous,_.pullLeft),
         span(
           " " + Labels.navigation.page + " ",
           bind(model.subProp(_.ids.currentPage)),
@@ -361,8 +361,8 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           bind(model.subProp(_.pages)),
           " "
         ),
-        showIf(model.subModel(_.ids).subProp(_.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
-        showIf(model.subModel(_.ids).subProp(_.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.pages).get ), true),Labels.navigation.last).render },
+        Navigation.button(model.subModel(_.ids).subProp(_.isLastPage).transform(!_),() => presenter.reloadRows(model.subProp(_.pages).get),Labels.navigation.last,_.pullRight),
+        Navigation.button(model.subModel(_.ids).subProp(_.isLastPage).transform(!_),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1),Labels.navigation.next,_.pullRight),
         br,br
       )
     }
@@ -377,7 +377,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       ),
       div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea,
         if (model.get.kind != VIEW.kind)
-        a(GlobalStyles.boxButton,Navigate.click(routes.add()))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
+        button(GlobalStyles.boxButton,Navigate.click(routes.add()))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
       else
         p()
       ),

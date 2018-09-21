@@ -18,13 +18,13 @@ case class SelectWidget(lookup:JSONFieldLookup, field:JSONField, label: String, 
   val selectModel = prop.transform(value2Label,label2Value)
 
 
-  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(prop){ _ =>
+  override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(prop){ _ =>
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       if(label.length >0) lab(label) else {},
       div(BootstrapStyles.pullRight, bind(selectModel)),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
-  }
+  })
 
   override def edit() = {
 

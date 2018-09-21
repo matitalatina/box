@@ -18,16 +18,16 @@ case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
     }
     val booleanModel = prop.transform[Boolean](jsToBool _ ,boolToJson _)
     div(
-      Checkbox(booleanModel)(), " ", label
+      autoRelease(Checkbox(booleanModel)()), " ", label
     )
   }
 
-  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(prop) { p =>
+  override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(prop) { p =>
     div(
         if(
           p.as[Boolean].right.toOption.contains(true) ||
           p.as[Int].right.toOption.contains(1)
         ) raw("&#10003;") else raw("&#10005;"), " ", label
       ).render
-  }
+  })
 }

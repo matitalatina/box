@@ -31,7 +31,7 @@ import ch.wsl.box.client.Context._
   val sortedOptions = lookup.lookup //.sortBy(_.value)
 
 
-  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(data){ _ =>
+  override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
     val selectedItem: Property[String] = data.transform(value2Label,label2Value)
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       if(label.length >0) lab(label) else {},
@@ -40,7 +40,7 @@ import ch.wsl.box.client.Context._
       ),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
-  }
+  })
 
   override def edit() = {
 
@@ -58,8 +58,8 @@ import ch.wsl.box.client.Context._
     val optionList:Modifier = div(
       lab("Search"),br,
       TextInput(searchProp,Some(500 milliseconds)),br,br,
-      showIf(modalStatus.transform(_ == Status.Open)) {
-        div(produce(searchProp) { searchTerm =>
+      autoRelease(showIf(modalStatus.transform(_ == Status.Open)) {
+        div(autoRelease(produce(searchProp) { searchTerm =>
           div(
               sortedOptions.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
                 li(a(value, onclick :+= ((e: Event) => {
@@ -68,9 +68,9 @@ import ch.wsl.box.client.Context._
                 })))
               }
           ).render
-        }).render
+        })).render
       }
-    )
+    ))
 
     val header = () => div(
       label,
@@ -110,7 +110,7 @@ import ch.wsl.box.client.Context._
       modal.render,
       if(label.length >0) lab(label) else {},
       div(style := "text-align: right",
-        button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem))
+        button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),autoRelease(bind(selectedItem)))
       )
     )
   }

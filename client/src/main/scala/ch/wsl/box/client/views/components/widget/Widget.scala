@@ -12,6 +12,8 @@ import scribe.Logging
 import scala.concurrent.{ExecutionContext, Future}
 import scalatags.JsDom.all._
 import io.udash._
+import io.udash.bindings.Bindings
+import io.udash.bindings.modifiers.Binding
 import org.scalajs.dom.Element
 
 trait Widget{
@@ -33,6 +35,16 @@ trait Widget{
 
   def beforeSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
   def afterSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
+
+  def killWidget() = {
+    bindings.foreach(_.kill())
+  }
+  private var bindings:List[Binding] = List()
+
+  def autoRelease(b:Binding):Binding = {
+    bindings = b :: bindings
+    b
+  }
 
 
   protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave(data,metadata))).map(_ => Unit)

@@ -222,15 +222,30 @@ object GlobalStyles extends StyleSheet.Inline {
 
   val boxButton = style(
     whiteSpace.nowrap,
+    height(22 px),
     padding(3 px, 7 px),
     fontSize(12 px),
-    lineHeight(28 px),
+    lineHeight(12 px),
+    margin(3 px, 1 px),
     border(1 px,solid,StyleConstants.Colors.wsl),
     color(StyleConstants.Colors.wsl),
+    backgroundColor(white),
     &.hover(
-      color(StyleConstants.Colors.wsl)
+      color(white),
+      backgroundColor(StyleConstants.Colors.wsl)
+    ),
+    &.attrExists("disabled") (
+      backgroundColor(lightgray),
+      color(gray),
+      borderColor(gray)
     )
   )
+
+  val boxNavigationLabel = style(
+    textAlign.center,
+    lineHeight(26 px)
+  )
+
 
   val boxButtonImportant = style(
     whiteSpace.nowrap,
@@ -287,7 +302,7 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val navigatorArea = style(
-    width(180 px),
+    width(260 px),
     textAlign.right
   )
 
