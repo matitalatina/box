@@ -15,13 +15,16 @@ import org.scalajs.dom.Event
 
 
 case class LoginData(username:String,password:String,message:String)
+object LoginData extends HasModelPropertyCreator[LoginData] {
+  implicit val blank: Blank[LoginData] =
+    Blank.Simple(LoginData("","",""))
+}
+
 
 case object LoginViewPresenter extends ViewPresenter[LoginState.type] {
   import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[LoginState.type]) = {
-    val model = ModelProperty{
-      LoginData("","","")
-    }
+    val model = ModelProperty.blank[LoginData]
     val presenter = LoginPresenter(model)
     (LoginView(model,presenter),presenter)
   }
@@ -46,8 +49,8 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
+  import io.udash.css.CssView._
 
-  override def renderChild(view: View): Unit = {}
 
   override def getTemplate = div(
     div(BootstrapStyles.container)(
@@ -68,9 +71,9 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
             strong(bind(model.subProp(_.message))),
             br,
             label(Labels.login.username),br,
-            TextInput(model.subProp(_.username)),br,
+            TextInput(model.subProp(_.username))(),br,
             label(Labels.login.password),br,
-            PasswordInput(model.subProp(_.password)),br,br,
+            PasswordInput(model.subProp(_.password))(),br,br,
             button(`type` := "submit",Labels.login.button)
           )
         )

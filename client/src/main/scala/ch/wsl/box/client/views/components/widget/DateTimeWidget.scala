@@ -22,6 +22,7 @@ object DateTimeWidget {
   final val timePickerFormat = "HH:mm"
 
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
 
   case class Date(key: Property[String], label: String, prop: Property[Json]) extends Widget {
     override def edit() = datetimepicker(key,label,prop,datePickerFormat,GlobalStyles.dateTimePicker)
@@ -123,7 +124,7 @@ object DateTimeWidget {
 
     val date = model.transform(toDate(format),fromDate(format))
 
-    val pickerOptions = ModelProperty(UdashDatePicker.DatePickerOptions(
+    val pickerOptions:Property[UdashDatePicker.DatePickerOptions] = ModelProperty(new UdashDatePicker.DatePickerOptions(
       format = format,
       locale = Some("en_GB"),
       showClear = true,

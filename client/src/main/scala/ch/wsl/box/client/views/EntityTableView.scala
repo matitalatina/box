@@ -26,15 +26,32 @@ import scribe.Logging
 import scala.concurrent.Future
 import scala.util.Try
 
-
+case class IDsVM(isLastPage:Boolean,
+                    currentPage:Int,
+                    ids:Seq[String],
+                    count:Int    //stores the number of rows resulting from the query without paging
+                   )
 case class Row(data: Seq[String])
 case class FieldQuery(field:JSONField, sort:String, filter:String, filterType:String)
 case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQueries:Seq[FieldQuery],
-                            metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDs, pages:Int, write:Boolean)
+                            metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDsVM, pages:Int, write:Boolean)
 
-object EntityTableModel{
-  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDs(true,1,Seq(),0),1, false)
+object EntityTableModel extends HasModelPropertyCreator[EntityTableModel]{
+  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDsVM(true,1,Seq(),0),1, false)
+  implicit val blank: Blank[EntityTableModel] =
+    Blank.Simple(empty)
 }
+
+object FieldQuery extends HasModelPropertyCreator[FieldQuery]
+object IDsVM extends HasModelPropertyCreator[IDsVM] {
+  def fromIDs(ids:IDs) = IDsVM(
+    ids.isLastPage,
+    ids.currentPage,
+    ids.ids,
+    ids.count
+  )
+}
+
 
 case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[EntityTableState] {
 
@@ -44,7 +61,7 @@ case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,Strin
 
   override def create(): (View, Presenter[EntityTableState]) = {
 
-    val model = ModelProperty(EntityTableModel.empty)
+    val model = ModelProperty.blank[EntityTableModel]
 
     val presenter = EntityTablePresenter(model,onSelect,routes)
     (EntityTableView(model,presenter,routes),presenter)
@@ -125,7 +142,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         },
         metadata = Some(form),
         selectedRow = None,
-        ids = ids,
+        ids = IDsVM.fromIDs(ids),
         pages = pageCount(ids),
         write = access
       )
@@ -214,7 +231,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       ids <- REST.ids(model.get.kind, Session.lang(), model.get.name, q)
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
-      model.subProp(_.ids).set(ids)
+      model.subProp(_.ids).set(IDsVM.fromIDs(ids))
       model.subProp(_.pages).set(pageCount(ids))
       saveIds(ids, q)
     }
@@ -287,11 +304,11 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:EntityTablePresenter, routes:Routes) extends View with Logging {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
   import ch.wsl.box.shared.utils.JsonUtils._
 
   import Enhancer._
 
-  override def renderChild(view: View): Unit = {}
 
 
   def labelTitle = produce(model.subProp(_.metadata)) { m =>
@@ -344,8 +361,8 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           bind(model.subProp(_.pages)),
           " "
         ),
-        showIf(model.subProp(_.ids.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
-        showIf(model.subProp(_.ids.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.pages).get ), true),Labels.navigation.last).render },
+        showIf(model.subModel(_.ids).subProp(_.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1), true),Labels.navigation.next).render },
+        showIf(model.subModel(_.ids).subProp(_.isLastPage).transform(!_)) { a(onclick :+= ((ev: Event) => presenter.reloadRows(model.subProp(_.pages).get ), true),Labels.navigation.last).render },
         br,br
       )
     }

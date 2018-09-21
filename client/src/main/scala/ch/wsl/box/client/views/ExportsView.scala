@@ -20,15 +20,17 @@ import ch.wsl.box.model.shared.ExportDef
 import scalatags.generic
 
 case class Exports(list:Seq[ExportDef], currentEntity:Option[ExportDef], search:String, filteredList:Seq[ExportDef])
+object Exports extends HasModelPropertyCreator[Exports] {
+  implicit val blank: Blank[Exports] =
+    Blank.Simple(Exports(Seq(),None,"",Seq()))
+}
 
 case class ExportsViewPresenter(modelName:String) extends ViewPresenter[ExportsState] {
 
 
 
   override def create(): (View, Presenter[ExportsState]) = {
-    val model = ModelProperty{
-      Exports(Seq(),None,"",Seq())
-    }
+    val model = ModelProperty.blank[Exports]
 
     val presenter = new ExportsPresenter(model)
     val view = new ExportsView(model,presenter)
@@ -58,21 +60,22 @@ class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsSt
 
 }
 
-class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) extends View {
+class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) extends ContainerView {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
+  import io.udash.css.CssView._
 
 
   val sidebarGrid = BootstrapCol.md(2)
   def contentGrid =  BootstrapCol.md(10)
 
-  override def renderChild(view: View): Unit = {
+  override def renderChild(view: Option[View]): Unit = {
 
     import io.udash.wrappers.jquery._
     jQ(content).children().remove()
-    if(view != null) {
-      view.getTemplate.applyTo(content)
+    if(view.isDefined) {
+      view.get.getTemplate.applyTo(content)
     }
 
   }

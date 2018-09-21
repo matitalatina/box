@@ -60,8 +60,8 @@ case class MasterChildView(master:View,child:View) extends View {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
 
-  override def renderChild(view: View): Unit = {}
 
   override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.row,
     h1("Master-Child"),

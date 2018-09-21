@@ -15,6 +15,7 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
 
 
   import scalacss.ScalatagsCss._
+  import io.udash.css.CssView._
 
   private def showInput(prop:Property[Json],labelString:String):Modifier = WidgetUtils.showNotNull(prop){ p =>
 

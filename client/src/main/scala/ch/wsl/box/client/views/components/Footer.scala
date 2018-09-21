@@ -4,6 +4,7 @@ import ch.wsl.box.client.utils.UI
 import io.udash.bootstrap.BootstrapStyles
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
+import io.udash.css.CssView._
 
 object Footer {
 

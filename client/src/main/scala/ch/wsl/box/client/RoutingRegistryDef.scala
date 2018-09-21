@@ -2,7 +2,6 @@ package ch.wsl.box.client
 
 import ch.wsl.box.client.utils.Session
 import io.udash._
-import io.udash.utils.Bidirectional
 import Context._
 import scribe.Logging
 
@@ -24,7 +23,7 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {
   }
 
 
-  private val (loggedInUrl2State, loggedInState2Url) = Bidirectional[String, RoutingState] {
+  private val (loggedInUrl2State, loggedInState2Url) = bidirectional {
     case "/home" => IndexState
     case "/entities" => EntitiesState("entity","")
 //    case "/boxtables" => EntitiesState("table","")
@@ -32,14 +31,14 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {
     case "/views" => EntitiesState("view","")
     case "/forms" => EntitiesState("form","")
     case "/exports"  => ExportsState("")
-    case "/box" /:/ "export" /:/ exportFunction  => ExportState(exportFunction)
-    case "/box" /:/ kind /:/ entity /:/ "insert" => EntityFormState(kind,entity,"true",None)
-    case "/box" /:/ kind /:/ entity /:/ "row" /:/ write /:/ id  => EntityFormState(kind,entity,write,Some(id))
-    case "/box" /:/ kind /:/ entity /:/ "child" /:/ childEntity => MasterChildState(kind,entity,childEntity)
-    case "/box" /:/ kind /:/ entity => EntityTableState(kind,entity)
+    case "/box" / "export" / exportFunction  => ExportState(exportFunction)
+    case "/box" / kind / entity / "insert" => EntityFormState(kind,entity,"true",None)
+    case "/box" / kind / entity / "row" / write / id  => EntityFormState(kind,entity,write,Some(id))
+    case "/box" / kind / entity / "child" / childEntity => MasterChildState(kind,entity,childEntity)
+    case "/box" / kind / entity => EntityTableState(kind,entity)
   }
 
-  private val (loggedOutUrl2State, loggedOutState2Url) = Bidirectional[String, RoutingState] {
+  private val (loggedOutUrl2State, loggedOutState2Url) = bidirectional {
     case "" => LoginState
   }
 }

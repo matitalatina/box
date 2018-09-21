@@ -22,8 +22,10 @@ case class PopupWidget(lookup:JSONFieldLookup, label: String, data: Property[Jso
 
 import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._
+
   import scalatags.JsDom.all.{label => lab}
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
 
 
   val sortedOptions = lookup.lookup //.sortBy(_.value)

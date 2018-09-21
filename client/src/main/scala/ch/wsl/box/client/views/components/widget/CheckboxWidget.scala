@@ -6,6 +6,7 @@ import io.udash.properties.single.Property
 import ch.wsl.box.client.Context._
 import scalatags.JsDom
 import scalatags.JsDom.all._
+import io.udash.css.CssView._
 import ch.wsl.box.shared.utils.JsonUtils._
 
 case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
@@ -17,7 +18,7 @@ case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
     }
     val booleanModel = prop.transform[Boolean](jsToBool _ ,boolToJson _)
     div(
-      Checkbox(booleanModel), " ", label
+      Checkbox(booleanModel)(), " ", label
     )
   }
 

@@ -7,32 +7,37 @@ import io.udash._
 import scala.scalajs.js.URIUtils
 import scala.util.Try
 
-sealed abstract class RoutingState(override val parentState: RoutingState) extends State {
-  def url(implicit application: Application[RoutingState]): String = Try{application.matchState(this).value}.toOption match {
-    case Some(v) => s"#$v"
-    case None => ""
-  }
+
+
+sealed abstract class RoutingState(val parentState: Option[ContainerRoutingState]) extends State {
+  type HierarchyRoot = RoutingState
+
+  def url(implicit application: Application[RoutingState]): String =
+    s"#${application.matchState(this).value}"
 }
 
+sealed abstract class ContainerRoutingState(parentState: Option[ContainerRoutingState]) extends RoutingState(parentState) with ContainerState
+sealed abstract class FinalRoutingState(parentState: Option[ContainerRoutingState]) extends RoutingState(parentState) with FinalState
 
-case object LoginState extends RoutingState(RootState)
 
-case object RootState extends RoutingState(null)
+case object LoginState extends FinalRoutingState(Some(RootState))
 
-case object ErrorState extends RoutingState(RootState)
+case object RootState extends ContainerRoutingState(None)
 
-case object IndexState extends RoutingState(RootState)
+case object ErrorState extends FinalRoutingState(Some(RootState))
 
-case class EntitiesState(kind:String, currentEntity:String) extends RoutingState(RootState)
+case object IndexState extends FinalRoutingState(Some(RootState))
 
-case class EntityTableState(kind:String, entity:String) extends RoutingState(EntitiesState(kind,entity))
+case class EntitiesState(kind:String, currentEntity:String) extends ContainerRoutingState(Some(RootState))
+
+case class EntityTableState(kind:String, entity:String) extends FinalRoutingState(Some(EntitiesState(kind,entity)))
 
 case class EntityFormState(
                             kind:String,
                             entity:String,
                             write:String,
                             _id:Option[String]
-                          ) extends RoutingState(EntitiesState(kind,entity)) {
+                          ) extends FinalRoutingState(Some(EntitiesState(kind,entity))) {
   def id = {
     val t = _id.map(URIUtils.decodeURI)
     println(t)
@@ -45,8 +50,8 @@ case class EntityFormState(
 case class MasterChildState(kind:String,
                             masterEntity:String,
                             childEntity:String
-                           ) extends RoutingState(EntitiesState(kind,masterEntity))
+                           ) extends FinalRoutingState(Some(EntitiesState(kind,masterEntity)))
 
 
-case class ExportsState(currentExport:String) extends RoutingState(RootState)
-case class ExportState(export:String) extends RoutingState(ExportsState(export))
+case class ExportsState(currentExport:String) extends ContainerRoutingState(Some(RootState))
+case class ExportState(export:String) extends FinalRoutingState(Some(ExportsState(export)))

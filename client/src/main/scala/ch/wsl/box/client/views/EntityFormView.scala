@@ -31,15 +31,16 @@ import scala.scalajs.js.URIUtils
 case class EntityFormModel(name:String, kind:String, id:Option[String], metadata:Option[JSONMetadata], data:Json,
                            error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean, changed:Boolean, write:Boolean)
 
-object EntityFormModel{
-  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true)
+object EntityFormModel extends HasModelPropertyCreator[EntityFormModel] {
+  implicit val blank: Blank[EntityFormModel] =
+    Blank.Simple(EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true))
 }
 
 object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
 
   import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[EntityFormState]) = {
-    val model = ModelProperty{EntityFormModel.empty}
+    val model = ModelProperty.blank[EntityFormModel]
     val presenter = EntityFormPresenter(model)
     (EntityFormView(model,presenter),presenter)
   }
@@ -228,8 +229,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.circe.generic.auto._
+  import io.udash.css.CssView._
 
-  override def renderChild(view: View): Unit = {}
 
   def labelTitle = produce(model.subProp(_.metadata)) { m =>
     val name = m.map(_.label).getOrElse(model.get.name)
@@ -241,22 +242,22 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
     val recordNavigation = {
 
       div(
-        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.first(), true), Labels.navigation.first).render },
-        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), Labels.navigation.previous).render },
+        showIf(model.subModel(_.navigation).subProp(_.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.first(), true), Labels.navigation.first).render },
+        showIf(model.subModel(_.navigation).subProp(_.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), Labels.navigation.previous).render },
         span(
           " " + Labels.navigation.record + " ",
-          bind(model.subProp(_.navigation.currentIndex)),
+          bind(model.subModel(_.navigation).subProp(_.currentIndex)),
           " " + Labels.navigation.of + " ",
-          bind(model.subProp(_.navigation.count)),
+          bind(model.subModel(_.navigation).subProp(_.count)),
           " "
         ),
-        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),Labels.navigation.next).render },
-        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.last(), true),Labels.navigation.last).render },
+        showIf(model.subModel(_.navigation).subProp(_.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),Labels.navigation.next).render },
+        showIf(model.subModel(_.navigation).subProp(_.hasNext)) { a(onclick :+= ((ev: Event) => presenter.last(), true),Labels.navigation.last).render },
 
         br,
 
-        showIf(model.subProp(_.navigation.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.firstPage(), true), Labels.navigation.firstPage).render },
-        showIf(model.subProp(_.navigation.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.prevPage(), true), Labels.navigation.previousPage).render },
+        showIf(model.subModel(_.navigation).subProp(_.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.firstPage(), true), Labels.navigation.firstPage).render },
+        showIf(model.subModel(_.navigation).subProp(_.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.prevPage(), true), Labels.navigation.previousPage).render },
         span(
           " " + Labels.navigation.page + " ",
           bind(model.subProp(_.navigation.currentPage)),
@@ -264,8 +265,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           bind(model.subProp(_.navigation.pages)),
           " "
         ),
-        showIf(model.subProp(_.navigation.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.nextPage(), true),Labels.navigation.nextPage).render },
-        showIf(model.subProp(_.navigation.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.lastPage(), true),Labels.navigation.lastPage).render }
+        showIf(model.subModel(_.navigation).subProp(_.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.nextPage(), true),Labels.navigation.nextPage).render },
+        showIf(model.subModel(_.navigation).subProp(_.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.lastPage(), true),Labels.navigation.lastPage).render }
       )
     }
 

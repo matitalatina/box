@@ -29,9 +29,10 @@ class RootPresenter() extends Presenter[RootState.type] {
   }
 }
 
-class RootView() extends View {
+class RootView() extends ContainerView {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
 
   private val child: Element = div().render
 
@@ -68,9 +69,9 @@ class RootView() extends View {
 
   override def getTemplate: Modifier = content
 
-  override def renderChild(view: View): Unit = {
+  override def renderChild(view: Option[View]): Unit = {
     import io.udash.wrappers.jquery._
     jQ(child).children().remove()
-    view.getTemplate.applyTo(child)
+    view.foreach(_.getTemplate.applyTo(child))
   }
 }

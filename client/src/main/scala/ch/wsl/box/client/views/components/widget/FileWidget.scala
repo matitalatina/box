@@ -29,6 +29,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
+  import io.udash.css.CssView._
   import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JsonUtils._
   import io.circe.syntax._
