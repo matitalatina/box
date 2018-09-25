@@ -11,12 +11,12 @@ object CSV {
     //        case true => "\""+str.replaceAll("\"","\\\"")+"\""
     //        case false => str
     //      }
-    "\""+str.replaceAll("\"","\\\"")+"\""
+    "\""+str.replaceAll("\"","\\\"").replaceAll("\n","\\\\n")+"\""
   }
 
   def of(data:Seq[Seq[String]]):String = data.map(row).mkString("\n")
 
   def row(row:Seq[String]):String = row.map(escape).mkString(",")
 
-  def split(data:String):Seq[Seq[String]] = data.split("\n").toSeq.map{x => x.substring(1,x.length-1).split("\",\"").toSeq}
+  def split(data:String):Seq[Seq[String]] = data.split("\n").toSeq.map{x => x.replaceAll("\\\\n","\n").substring(1,x.length-1).split("\",\"").toSeq}
 }

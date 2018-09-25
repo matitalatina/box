@@ -113,8 +113,8 @@ case class ChildRenderer(child:Child, children:Seq[JSONMetadata], prop:Property[
     }
 
 
-    val entity: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
-    val entitySize: Property[Int] = Property(entity.get.size)
+  val entity: Property[Seq[Json]] = prop.transform(splitJson, mergeJson)
+  val entitySize: Property[Int] = Property(entity.get.size)
 
 
   override protected def show(): JsDom.all.Modifier = render(false)

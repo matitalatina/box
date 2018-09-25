@@ -62,7 +62,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
   override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),GlobalStyles.noPadding,
     if(labelString.length > 0) label(labelString) else {},
-    autoRelease(produceWithNested(prop.transform(_.string)) { (name,nested) =>
+    produceWithNested(prop.transform(_.string)) { (name,nested) =>
       div(
         nested(produce(id) { idfile =>
           logger.info("rendering image")
@@ -77,7 +77,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
         })
       ).render
-    }),
+    },
     div(BootstrapStyles.Visibility.clearfix)
   ).render
 
@@ -85,7 +85,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
       if(labelString.length > 0) label(labelString) else {},
-      autoRelease(produceWithNested(prop) { (name,nested) =>
+      produceWithNested(prop) { (name,nested) =>
         div(
           nested(produce(id) { idfile =>
             logger.info("rendering image")
@@ -100,7 +100,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
           })
         ).render
-      }),
+      },
       input,
       div(BootstrapStyles.Visibility.clearfix)
     ).render

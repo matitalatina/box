@@ -43,8 +43,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     }
   }
 
-
-  private def checkCondition(field: JSONField):ReadableProperty[Boolean] = {
+  private def checkCondition(fieldData: ReadableProperty[Json],field: JSONField) = {
     field.condition match {
       case None => Property(true)
       case Some(condition) => {
@@ -56,14 +55,15 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           r
         }
 
-        val property = Property(evaluate(data.get))
-        data.listen{d =>
+
+        val visibility = Property(evaluate(data.get))
+        fieldData.listen{d =>
           val r = evaluate(d)
-          if(r == !property.get) { //change only when the status changes
-            property.set(r)
+          if(r == !visibility.get) { //change only when the status changes
+            visibility.set(r)
           }
         }
-        property
+        visibility
       }
     }
   }
@@ -127,15 +127,25 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     field <- metadata.fields.find(_.name == fieldName)
   } yield {
 
-    def toSingle(all:Json):Json = {
-      val result = all.js(field.name)
-      //println(s"all: $all \n\n record: $record")
-      result
-    }
-    def toAll(single:Json):Json = dataWithChildId.get.deepMerge(Json.obj((field.name,single)))
-    //results.listen(js => println("record changed"))
 
-    WidgetVisibility(widgetSelector(field, id, dataWithChildId.transform(toSingle,toAll)),checkCondition(field))
+
+    val fieldData = Property(dataWithChildId.get.js(field.name))
+
+
+    dataWithChildId.listen{ d =>
+      val newJs = d.js(field.name)
+      if( newJs != fieldData.get) {
+        fieldData.set(newJs)
+      }
+    }
+
+    fieldData.listen{ fd =>
+      if(dataWithChildId.get.js(field.name) != fd) {
+        dataWithChildId.set(dataWithChildId.get.deepMerge(Json.obj((field.name,fd))))
+      }
+    }
+
+    WidgetVisibility(widgetSelector(field, id, fieldData),checkCondition(fieldData,field))
 
   }}.getOrElse(WidgetVisibility(HiddenWidget))
 
