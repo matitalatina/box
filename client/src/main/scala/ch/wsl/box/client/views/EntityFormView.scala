@@ -201,7 +201,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   def goTo(id:String) = {
     model.subProp(_.loading).set(true)
     val m = model.get
-    val newState = Routes(m.kind,m.name).edit(id)
+    val r = Routes(m.kind,m.name)
+    val newState = if(model.get.write) {
+      r.edit(id)
+    } else {
+      r.show(id)
+    }
     Navigate.to(newState)
   }
 

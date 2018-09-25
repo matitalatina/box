@@ -204,10 +204,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
       div(BootstrapStyles.row)(
         blocks.map{ case (block,widget) =>
           div(BootstrapCol.md(block.width), GlobalStyles.block)(
-            if(write) renderer(block,widget) else {
-              val hasData = data.transform(JSONMetadata.hasData(_,JSONMetadata.extractFields(block.fields)))
-              autoRelease(showIf(hasData) { renderer(block,widget) })
-            }
+            renderer(block,widget)
           )
         }
       )

@@ -27,9 +27,9 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
     div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
       if(withLabel) label(labelString) else {},
       if(withLabel)
-        div(inputRendererDefaultModifiers++modifiers, p.string)
+        div(inputRendererDefaultModifiers++modifiers, bind(prop.transform(_.string)))
       else
-        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), p.string),
+        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), bind(prop.transform(_.string))),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
 

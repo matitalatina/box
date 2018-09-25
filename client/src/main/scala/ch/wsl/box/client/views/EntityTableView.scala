@@ -331,9 +331,9 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
   def filterField(filter: Property[String], fieldQuery: FieldQuery, filterType:String):Modifier = {
 
     fieldQuery.field.`type` match {
-      case JSONFieldTypes.TIME => DateTimeWidget.Time(Property(""),"",filter.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATE => DateTimeWidget.Date(Property(""),"",filter.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATETIME => DateTimeWidget.DateTime(Property(""),"",filter.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),"",filter.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),"",filter.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATETIME => DateTimeWidget.DateTimeFullWidth(Property(""),"",filter.transform(_.asJson,_.string)).edit()
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterType != Filter.BETWEEN => {
         if(Try(filter.get.toDouble).toOption.isEmpty) filter.set("")
         NumberInput.debounced(filter,cls := "form-control")

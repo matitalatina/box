@@ -22,12 +22,12 @@ case class CheckboxWidget(label: String, prop: Property[Json]) extends Widget {
     )
   }
 
-  override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(prop) { p =>
+  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(prop) { p =>
     div(
         if(
           p.as[Boolean].right.toOption.contains(true) ||
           p.as[Int].right.toOption.contains(1)
         ) raw("&#10003;") else raw("&#10005;"), " ", label
       ).render
-  })
+  }
 }

@@ -83,7 +83,7 @@ trait DateTimeWidget extends Widget {
 
   protected def showdate(modelLabel:String, model:Property[Json]):Modifier = autoRelease(WidgetUtils.showNotNull(model){ p =>
     div(if (modelLabel.length > 0) label(modelLabel) else {},
-      div(BootstrapStyles.pullRight,p.string),
+      div(BootstrapStyles.pullRight,bind(model.transform(_.string))),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
   })
