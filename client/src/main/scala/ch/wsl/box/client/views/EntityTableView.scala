@@ -143,7 +143,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         metadata = Some(form),
         selectedRow = None,
         ids = IDsVM.fromIDs(ids),
-        pages = pageCount(ids),
+        pages = Navigation.pageCount(ids.count),
         write = access
       )
 
@@ -154,9 +154,6 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     }
   }
 
-  private def pageCount(ids: IDs):Int = {
-    math.ceil(ids.count.toDouble / Conf.pageLength.toDouble).toInt
-  }
 
   def ids(el:Row): JSONID = Enhancer.extractID(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
 
@@ -232,7 +229,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
       model.subProp(_.ids).set(IDsVM.fromIDs(ids))
-      model.subProp(_.pages).set(pageCount(ids))
+      model.subProp(_.pages).set(Navigation.pageCount(ids.count))
       saveIds(ids, q)
     }
 

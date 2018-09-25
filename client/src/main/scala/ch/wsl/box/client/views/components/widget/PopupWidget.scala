@@ -9,6 +9,7 @@ import org.scalajs.dom.Event
 import ch.wsl.box.shared.utils.JsonUtils._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.button.{ButtonStyle, UdashButton, UdashButtonGroup}
+import io.udash.bootstrap.modal.UdashModal.ModalHiddenEvent
 import io.udash.bootstrap.modal.{ModalSize, UdashModal}
 import org.scalajs.dom
 import scalatags.JsDom
@@ -62,10 +63,10 @@ import ch.wsl.box.client.Context._
         div(autoRelease(produce(searchProp) { searchTerm =>
           div(
               sortedOptions.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
-                li(a(value, onclick :+= ((e: Event) => {
+                a(value, onclick :+= ((e: Event) => {
                   modalStatus.set(Status.Closed)
                   selectedItem.set(value)
-                })))
+                }))
               }
           ).render
         })).render
@@ -81,7 +82,7 @@ import ch.wsl.box.client.Context._
     ).render
 
     val body = () => div(
-      ul(
+      div(
         optionList
       )
     ).render
@@ -90,12 +91,13 @@ import ch.wsl.box.client.Context._
       button(onclick :+= ((e:Event) => modalStatus.set(Status.Closed),true),"Close")
     ).render
 
-    val modal:UdashModal = UdashModal(modalSize = ModalSize.Large)(
+    val modal:UdashModal = UdashModal(modalSize = ModalSize.Small)(
       headerFactory = Some(header),
       bodyFactory = Some(body),
       footerFactory = Some(footer)
     )
 
+    modal.listen { case ev:ModalHiddenEvent => modalStatus.set(Status.Closed) }
 
     modalStatus.listen{ state =>
       logger.info(s"State changed to:$state")

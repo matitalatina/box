@@ -47,8 +47,9 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JsonUtils._
   import ch.wsl.box.model.shared.EntityKind
+  import JSONData._
 
-    val helper = new DbActions[T,M](table)
+    val dbActions = new DbActions[T,M](table)
 
     def route = pathPrefix(name) {
         logger.info(s"view with name: $name")
@@ -90,7 +91,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("list")
-              complete(helper.find(query))
+              complete(dbActions.find(query))
             }
           }
         } ~
@@ -98,8 +99,8 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
             post {
               entity(as[JSONQuery]) { query =>
                 logger.info("csv")
-                Source
-                complete(Source.fromPublisher(helper.findStreamed(query).mapResult(_.asJson)))
+                //Source
+                complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.row(x.values()))))
               }
             } ~
               respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -119,12 +120,9 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
 
                         Source.fromFuture(Future.successful(
                           CSV.row(metadata.fields.map(_.name))
-                        )).concat(Source.fromPublisher(helper.findStreamed(query)).map{x =>
-
-                          //val row = metadata.fields.map(_.name).zip(x.values()).map{ case (field,v) => lookup(field,v)}
-                          //TODO ??? what we are tring to do here?
-                          CSV.row(Seq(""))
-                        })
+                        )).concat(Source.fromPublisher(dbActions.findStreamed(query).mapResult{x =>
+                          CSV.row(x.values())
+                        }))
                       }
                     }
                   }

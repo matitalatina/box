@@ -50,3 +50,10 @@ js/*
 /resources/application.test.conf
 /resources/db.test.conf
 /resources/js
+
+
+/resources/application.conf
+/resources/db.conf
+
+resources/application.conf
+resources/db.conf

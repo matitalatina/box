@@ -38,7 +38,7 @@ object Navigation extends HasModelPropertyCreator[Navigation] {
       val i = nav.currentIndex % nav.pageLength
       if (i==0) nav.pageLength else i
     }
-  def maxIndexLastPage(nav:Navigation) = nav.count % nav.pageLength   //1-based
+  def maxIndexLastPage(nav:Navigation) = (nav.count -1) % nav.pageLength + 1  //1-based
 
   import io.udash._
   import scalatags.JsDom.all._
@@ -51,6 +51,8 @@ object Navigation extends HasModelPropertyCreator[Navigation] {
     onclick :+= ((ev: Event) => callback(), true),
     label
   )
+
+  def pageCount(recordCount:Int) = math.ceil(recordCount.toDouble / Conf.pageLength.toDouble).toInt
 }
 
 
@@ -71,7 +73,7 @@ case class Navigator(currentId:Option[String], kind:String = "", model:String = 
       currentIndex = (query.currentPage-1)*query.pageLength(ids.ids.size) + indexInPage_0based + 1,
       hasNextPage = !ids.isLastPage,
       hasPreviousPage = ids.currentPage>1,
-      pages = ids.count / query.pageLength(ids.ids.size) +1 ,
+      pages = Navigation.pageCount(ids.count),
       currentPage = query.currentPage,
       pageLength = query.paging.map(_.pageLength).getOrElse(ids.ids.size),
       pageIDs = ids.ids
@@ -111,7 +113,14 @@ case class Navigator(currentId:Option[String], kind:String = "", model:String = 
   def last():Future[Option[String]] = navigation.map(nav =>
     (hasNext(), hasNextPage()) match {
       case (false, _) => Future.successful(None)
-      case (true, true) => lastPage()
+      case (true, true) => {
+        val newQuery = Session.getQuery().map(q => q.copy(paging = q.paging.map(p => p.copy(currentPage = navigation().map(_.pages).getOrElse(0))))).getOrElse(JSONQuery.empty)
+        REST.ids(kind, Session.lang(), model, newQuery).map { ids =>
+          Session.setQuery(newQuery)
+          Session.setIDs(ids)
+          ids.ids.lastOption
+        }
+      }
       case (true, false) => Future.successful(nav.pageIDs.lift(Navigation.maxIndexLastPage(nav) -1))
     }).getOrElse(Future.successful(None))
 

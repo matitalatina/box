@@ -29,6 +29,8 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
     import io.circe.generic.auto._
     import ch.wsl.box.shared.utils.JsonUtils._
     import ch.wsl.box.model.shared.EntityKind
+    import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
+
 
 
     private def actions[T](futForm:Future[JSONMetadata])(f:FormActions => T):Future[T] = for{
@@ -37,10 +39,6 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
     } yield {
       f(formActions)
     }
-
-
-
-
 
       val jsonCustomMetadataFactory = JSONFormMetadataFactory()
       val metadata: Future[JSONMetadata] = jsonCustomMetadataFactory.of(name,lang)

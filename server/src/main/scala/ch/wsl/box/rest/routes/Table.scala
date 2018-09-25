@@ -159,7 +159,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("csv")
-              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => x.asJson)))
+              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.row(x.values()))))
             }
           } ~
           respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
