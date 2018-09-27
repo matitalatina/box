@@ -112,7 +112,7 @@ import ch.wsl.box.client.Context._
       modal.render,
       if(label.length >0) lab(label) else {},
       div(style := "text-align: right",
-        button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),autoRelease(bind(selectedItem)))
+        button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem))
       )
     )
   }
