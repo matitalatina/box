@@ -24,7 +24,7 @@ object Lookup {
       }.map(_.toMap)
   }
 
-  def valueExtractor(lookupElements:Option[Map[String,Seq[Json]]],metadata:JSONMetadata)(field:String,value:String) = {
+  def valueExtractor(lookupElements:Option[Map[String,Seq[Json]]],metadata:JSONMetadata)(field:String, value:String) = {
     lookupElements.flatMap { le =>
       def lookup = metadata.fields.find(_.name == field).flatMap(_.lookup)
       le(lookup.get.lookupEntity).find(_.get(lookup.get.map.valueProperty) == value).map { lookupRow =>

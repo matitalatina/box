@@ -63,10 +63,10 @@ import ch.wsl.box.client.Context._
         div(autoRelease(produce(searchProp) { searchTerm =>
           div(
               sortedOptions.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
-                a(value, onclick :+= ((e: Event) => {
+                div(a(value, onclick :+= ((e: Event) => {
                   modalStatus.set(Status.Closed)
                   selectedItem.set(value)
-                }))
+                })))
               }
           ).render
         })).render

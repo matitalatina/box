@@ -21,7 +21,7 @@ object LoginData extends HasModelPropertyCreator[LoginData] {
 }
 
 
-case object LoginViewPresenter extends ViewPresenter[LoginState.type] {
+case object LoginViewPresenter extends ViewFactory[LoginState.type] {
   import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[LoginState.type]) = {
     val model = ModelProperty.blank[LoginData]

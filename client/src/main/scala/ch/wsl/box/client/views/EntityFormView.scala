@@ -36,7 +36,7 @@ object EntityFormModel extends HasModelPropertyCreator[EntityFormModel] {
     Blank.Simple(EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true))
 }
 
-object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
+object EntityFormViewPresenter extends ViewFactory[EntityFormState] {
 
   import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[EntityFormState]) = {
@@ -256,20 +256,6 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
       div(
         div(GlobalStyles.boxNavigationLabel,
-          Navigation.button(navigation.subProp(_.hasPrevious),presenter.first,Labels.navigation.first,_.pullLeft),
-          Navigation.button(navigation.subProp(_.hasPrevious),presenter.prev,Labels.navigation.previous,_.pullLeft),
-          span(
-            " " + Labels.navigation.record + " ",
-            bind(model.subModel(_.navigation).subProp(_.currentIndex)),
-            " " + Labels.navigation.of + " ",
-            bind(model.subModel(_.navigation).subProp(_.count)),
-            " "
-          ),
-          Navigation.button(navigation.subProp(_.hasNext),presenter.last,Labels.navigation.last,_.pullRight),
-          Navigation.button(navigation.subProp(_.hasNext),presenter.next,Labels.navigation.next,_.pullRight)
-        ),
-        div(BootstrapStyles.Visibility.clearfix),
-        div(GlobalStyles.boxNavigationLabel,
           Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.firstPage,Labels.navigation.firstPage,_.pullLeft),
           Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.prevPage,Labels.navigation.previousPage,_.pullLeft),
           span(
@@ -282,6 +268,20 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           ),
           Navigation.button(navigation.subProp(_.hasNextPage),presenter.lastPage,Labels.navigation.lastPage,_.pullRight),
           Navigation.button(navigation.subProp(_.hasNextPage),presenter.nextPage,Labels.navigation.nextPage,_.pullRight)
+        ),
+        div(BootstrapStyles.Visibility.clearfix),
+        div(GlobalStyles.boxNavigationLabel,
+          Navigation.button(navigation.subProp(_.hasPrevious),presenter.first,Labels.navigation.first,_.pullLeft),
+          Navigation.button(navigation.subProp(_.hasPrevious),presenter.prev,Labels.navigation.previous,_.pullLeft),
+          span(
+            " " + Labels.navigation.record + " ",
+            bind(model.subModel(_.navigation).subProp(_.currentIndex)),
+            " " + Labels.navigation.of + " ",
+            bind(model.subModel(_.navigation).subProp(_.count)),
+            " "
+          ),
+          Navigation.button(navigation.subProp(_.hasNext),presenter.last,Labels.navigation.last,_.pullRight),
+          Navigation.button(navigation.subProp(_.hasNext),presenter.next,Labels.navigation.next,_.pullRight)
         )
       )
     }
@@ -353,7 +353,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           }
         ).render
       },
-      hr,
+      hr(GlobalStyles.hrThin),
       produce(model.subProp(_.metadata)){ form =>
         div(BootstrapCol.md(12),GlobalStyles.fullHeightMax,
           form match {

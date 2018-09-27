@@ -145,6 +145,24 @@ object GlobalStyles extends StyleSheet.Inline {
     )
   )
 
+  val numberCells = style(
+    textAlign.right,
+    paddingRight(3 px)
+  )
+
+  val textCells = style(
+    textAlign.left,
+    paddingLeft(3 px)
+  )
+
+  val lookupCells = style(
+    textAlign.center
+  )
+
+  val dateCells = style(
+    textAlign.center
+  )
+
   val noPadding = style( padding.`0` )
   val smallBottomMargin = style( marginBottom(5 px) )
 
@@ -200,7 +218,7 @@ object GlobalStyles extends StyleSheet.Inline {
   )
 
   val fullHeightMax = style(
-    maxHeight :=! "calc(100vh - 230px)",
+    maxHeight :=! "calc(100vh - 206px)",
     overflow.auto
   )
 
@@ -333,10 +351,22 @@ object GlobalStyles extends StyleSheet.Inline {
     }
   )
 
-
-
-
-
+  val hrThin = style(
+    marginTop(2 px),
+    marginBottom(10 px)
+  )
+//  val fixedHeader = style(
+//    unsafeRoot("tbody")(
+////    display.block,
+//    overflow.auto,
+//      maxHeight :=! "calc(100vh - 330px)",
+////    height(200 px),
+////    width(100 %%)
+//  ),
+//    unsafeRoot("thead")(
+////    display.block
+//  )
+//  )
 
 
 }

@@ -25,7 +25,7 @@ object Exports extends HasModelPropertyCreator[Exports] {
     Blank.Simple(Exports(Seq(),None,"",Seq()))
 }
 
-case class ExportsViewPresenter(modelName:String) extends ViewPresenter[ExportsState] {
+case class ExportsViewPresenter(modelName:String) extends ViewFactory[ExportsState] {
 
 
 

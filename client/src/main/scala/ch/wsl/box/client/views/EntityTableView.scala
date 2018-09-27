@@ -13,7 +13,8 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.udash._
-import io.udash.bootstrap.BootstrapStyles
+import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
+import io.udash.bootstrap.label.UdashLabel
 import io.udash.bootstrap.table.UdashTable
 import io.udash.properties.single.Property
 import org.scalajs.dom
@@ -21,6 +22,7 @@ import scalacss.ScalatagsCss._
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.{Element, Event, KeyboardEvent, window}
 import scalacss.internal.Pseudo.Lang
+import scalatags.JsDom.all.a
 import scribe.Logging
 
 import scala.concurrent.Future
@@ -53,7 +55,7 @@ object IDsVM extends HasModelPropertyCreator[IDsVM] {
 }
 
 
-case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewPresenter[EntityTableState] {
+case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewFactory[EntityTableState] {
 
   import ch.wsl.box.client.Context._
 
@@ -348,7 +350,6 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     val pagination = {
 
       div(GlobalStyles.boxNavigationLabel,
-        div(Labels.navigation.recordFound," ",bind(model.subProp(_.ids.count))),
         Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(1),Labels.navigation.first,_.pullLeft),
         Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1),Labels.navigation.previous,_.pullLeft),
         span(
@@ -360,7 +361,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
         ),
         Navigation.button(model.subModel(_.ids).subProp(_.isLastPage).transform(!_),() => presenter.reloadRows(model.subProp(_.pages).get),Labels.navigation.last,_.pullRight),
         Navigation.button(model.subModel(_.ids).subProp(_.isLastPage).transform(!_),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1),Labels.navigation.next,_.pullRight),
-        br,br
+        div(Labels.navigation.recordFound," ",bind(model.subProp(_.ids.count)))
       )
     }
 
@@ -372,15 +373,22 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea,
         pagination.render
       ),
-      div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea,
-        if (model.get.kind != VIEW.kind)
-        button(GlobalStyles.boxButton,Navigate.click(routes.add()))(Labels.entities.`new` + " ",bind(model.subProp(_.name)))
-      else
-        p()
-      ),
-      div(id := "box-table",
-//        pagination.render,
+      div(BootstrapStyles.Visibility.clearfix),
+      produceWithNested(model.subProp(_.write)) { (w,realeser) =>
+        if(!w) Seq() else
+          div(BootstrapStyles.pullLeft)(
+            realeser(produce(model.subProp(_.name)) { m =>
+              div(
+                a(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`)
+              ).render
+            })
+          ).render
+      },
+      div(BootstrapStyles.Visibility.clearfix),
+      hr(GlobalStyles.hrThin),
+      div(id := "box-table", GlobalStyles.fullHeightMax,
         UdashTable()(model.subSeq(_.rows))(
+
           headerFactory = Some(() => {
               tr(
                 th(GlobalStyles.smallCells)(Labels.entity.actions),
@@ -404,11 +412,10 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                 }
             ).render
           }),
+
           rowFactory = (el) => {
             val key = presenter.ids(el.get)
-
             val hasKey = model.get.metadata.exists(_.keys.nonEmpty)
-
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
 
             tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
@@ -427,7 +434,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                     onclick :+= ((ev: Event) => presenter.delete(el.get), true)
                   )(Labels.entity.delete))
                 }
-                ),
+              ),
               produce(model.subSeq(_.fieldQueries)) { fieldQueries =>
                 for {(fieldQuery, i) <- fieldQueries.zipWithIndex} yield {
 
@@ -443,6 +450,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             ).render
           }
         ).render,
+
         a(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),GlobalStyles.boxButton,"Download CSV"),
         showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render },
         br,br

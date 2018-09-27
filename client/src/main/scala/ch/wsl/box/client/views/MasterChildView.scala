@@ -5,11 +5,10 @@ import ch.wsl.box.client.{EntityTableState, MasterChildState}
 import ch.wsl.box.model.shared.{Filter, JSONField, JSONID}
 import io.udash.ViewPresenter
 import io.udash.bootstrap.BootstrapStyles
-import io.udash.core.{Presenter, View}
+import io.udash.core.{Presenter, View, ViewFactory}
 import io.udash.properties.model.ModelProperty
 import org.scalajs.dom.Element
 import scribe.Logging
-
 import scalatags.generic.Modifier
 
 /**
@@ -17,7 +16,7 @@ import scalatags.generic.Modifier
   */
 
 
-case class MasterChildViewPresenter(master:String,child:String) extends ViewPresenter[MasterChildState] with Logging {
+case class MasterChildViewPresenter(master:String,child:String) extends ViewFactory[MasterChildState] with Logging {
 
   override def create(): (View, Presenter[MasterChildState]) = {
 

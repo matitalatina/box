@@ -46,6 +46,7 @@ trait DbFilters {
 trait UglyDBFilters extends DbFilters with Logging {
 
   val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
+  val timestampFormatterMinute = new SimpleDateFormat("yyyy-MM-dd HH:mm")  //attention the format is different to that in the client for datetimepicker
 
 
   val dateTimeFormats = List(

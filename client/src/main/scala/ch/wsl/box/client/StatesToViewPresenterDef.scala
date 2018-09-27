@@ -4,8 +4,8 @@ import ch.wsl.box.client.routes.Routes
 import io.udash._
 import ch.wsl.box.client.views._
 
-class StatesToViewPresenterDef extends ViewPresenterRegistry[RoutingState] {
-  def matchStateToResolver(state: RoutingState): ViewPresenter[_ <: RoutingState] = state match {
+class StatesToViewPresenterDef extends ViewFactoryRegistry[RoutingState] {
+  def matchStateToResolver(state: RoutingState): ViewFactory[_ <: RoutingState] = state match {
     case RootState => RootViewPresenter
     case IndexState => IndexViewPresenter
     case LoginState => LoginViewPresenter

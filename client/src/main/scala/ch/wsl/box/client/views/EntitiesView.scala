@@ -23,7 +23,7 @@ object Entities extends HasModelPropertyCreator[Entities] {
     Blank.Simple(Entities(Seq(),None,None,"",Seq()))
 }
 
-case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int) extends ViewPresenter[EntitiesState] {
+case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int) extends ViewFactory[EntitiesState] {
 
 
 

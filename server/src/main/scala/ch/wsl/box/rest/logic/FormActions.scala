@@ -43,7 +43,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
 
   def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):Source[String,NotUsed] = {
 
-      val lookup = Lookup.valueExtractor(lookupElements,metadata) _
+      val lookup = Lookup.valueExtractor(lookupElements, metadata) _
 
       extractSeq(query).map { json =>
         val row = metadata.tabularFields.map { field =>
