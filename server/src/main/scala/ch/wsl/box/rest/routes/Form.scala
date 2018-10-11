@@ -6,8 +6,7 @@ import akka.stream.scaladsl.Source
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONID, JSONMetadata, JSONQuery}
 import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory, Lookup}
-import ch.wsl.box.rest.utils.JSONSupport
-import ch.wsl.box.rest.utils.Timer
+import ch.wsl.box.rest.utils.{JSONSupport, Timer, UserProfile}
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
 import io.circe.parser.parse
@@ -20,7 +19,7 @@ import scala.util.{Failure, Success}
 /**
   * Created by andre on 5/15/2017.
   */
-case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload with Logging {
+case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload with Logging {
 
     import JSONSupport._
     import akka.http.scaladsl.model._
@@ -31,7 +30,7 @@ case class Form(name:String,lang:String)(implicit db:Database, ec: ExecutionCont
     import ch.wsl.box.model.shared.EntityKind
     import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
 
-
+    implicit val db = up.db
 
     private def actions[T](futForm:Future[JSONMetadata])(f:FormActions => T):Future[T] = for{
       form <- futForm

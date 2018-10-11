@@ -48,6 +48,23 @@ object Auth {
   )
 
 
+  def adminUserProfile = UserProfile(
+    name=dbConf.as[String]("user"),
+    db=adminDB,
+    boxDb=adminDB
+  )
+
+  def boxUserProfile = UserProfile(
+    name=boxDbConf.as[String]("user"),
+    db=boxDB,
+    boxDb=boxDB
+  )
+
+
+
+
+
+
   /**
     * check if this is a valid user on your system and return his profile,
     * that include his username and the connection to the DB

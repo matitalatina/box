@@ -1,14 +1,14 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.server.{Directives, Route}
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ActorMaterializer, Materializer}
 import ch.wsl.box.rest.boxentities._
 import io.circe._
 import io.circe.syntax._
 import io.circe.generic.auto._
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-
+import ch.wsl.box.rest.utils.UserProfile
 
 import scala.concurrent.ExecutionContext
 
@@ -17,8 +17,9 @@ object BoxRoutes {
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
 
-  def apply()(implicit db:slick.driver.PostgresDriver.api.Database, mat:Materializer, ec: ExecutionContext):Route = {
+  def apply()(implicit up:UserProfile, mat:Materializer, ec: ExecutionContext):Route = {
     import io.circe.generic.auto._
+    implicit val db = up.db
     
     Table[Conf.Conf,Conf.Conf_row]("conf",Conf.table,true).route ~
     Table[Field.Field,Field.Field_row]("field",Field.table,true).route ~

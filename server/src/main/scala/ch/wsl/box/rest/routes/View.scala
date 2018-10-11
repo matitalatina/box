@@ -10,7 +10,7 @@ import akka.stream.scaladsl.Source
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory, Lookup}
-import ch.wsl.box.rest.utils.JSONSupport
+import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
 import ch.wsl.box.shared.utils.CSV
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
@@ -29,13 +29,14 @@ object View {
 
 }
 
-case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])(implicit
-                                                                                                             enc: Encoder[M],
-                                                                                                             dec:Decoder[M],
-                                                                                                         mat:Materializer,
-                                                                                                         db:Database,
-                                                                                                         ec: ExecutionContext
-                                                                                              ) extends enablers.CSVDownload with Logging {
+case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])
+                                                    (implicit
+                                                     enc: Encoder[M],
+                                                     dec:Decoder[M],
+                                                     mat:Materializer,
+                                                     up:UserProfile,
+                                                     ec: ExecutionContext) extends enablers.CSVDownload with Logging {
+
 
     View.views = Set(name) ++ View.views
 
@@ -48,6 +49,8 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
   import ch.wsl.box.shared.utils.JsonUtils._
   import ch.wsl.box.model.shared.EntityKind
   import JSONData._
+
+    implicit val db  = up.db
 
     val dbActions = new DbActions[T,M](table)
 

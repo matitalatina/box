@@ -23,6 +23,7 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
        |import akka.http.scaladsl.server.{Directives, Route}
        |import akka.stream.Materializer
        |import scala.concurrent.ExecutionContext
+       |import ch.wsl.box.rest.utils.UserProfile
        |import $modelPackages._
        |
              |object $name {
@@ -30,7 +31,9 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
        |  import Directives._
        |  import io.circe.generic.auto._
        |
-             |  def apply()(implicit db:slick.driver.PostgresDriver.api.Database, mat:Materializer, ec: ExecutionContext):Route = {
+             |  def apply()(implicit up:UserProfile, mat:Materializer, ec: ExecutionContext):Route = {
+             |  implicit val db = up.db
+             |
        |    ${composeRoutes()}
        |  }
        |}

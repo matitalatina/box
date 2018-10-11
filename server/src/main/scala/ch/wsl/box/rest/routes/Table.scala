@@ -13,7 +13,7 @@ import akka.util.ByteString
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
-import ch.wsl.box.rest.utils.JSONSupport
+import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
 import ch.wsl.box.rest.utils.JSONSupport.jsonContentTypes
 import ch.wsl.box.shared.utils.CSV
 import com.typesafe.config.{Config, ConfigFactory}
@@ -46,7 +46,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
                                                              enc: Encoder[M],
                                                              dec:Decoder[M],
                                                              mat:Materializer,
-                                                             db:Database,
+                                                             up:UserProfile,
                                                              ec: ExecutionContext) extends enablers.CSVDownload with Logging {
 
 
@@ -57,6 +57,8 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
   import io.circe.generic.auto._
   import ch.wsl.box.shared.utils.JsonUtils._
   import ch.wsl.box.model.shared.EntityKind
+
+    implicit val db = up.db
 
 //    println(s"adding table: $name" )
     isBoxTable match{

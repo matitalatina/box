@@ -7,7 +7,7 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.rest.utils.{FutureUtils, Timer}
+import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
 import ch.wsl.box.shared.utils.CSV
 import io.circe.Json
 import scribe.Logging
@@ -26,9 +26,11 @@ import scala.concurrent.{ExecutionContext, Future}
 case class ReferenceKey(localField:String,remoteField:String,value:String)
 case class Reference(association:Seq[ReferenceKey])
 
-case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters with Logging {
+case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters with Logging {
 
   import ch.wsl.box.shared.utils.JsonUtils._
+
+  implicit val db = up.db
 
 
   val actionRegistry = EntityActionsRegistry()

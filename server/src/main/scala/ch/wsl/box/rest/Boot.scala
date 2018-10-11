@@ -7,10 +7,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
 import ch.wsl.box.rest.logic.JSONMetadataFactory
 import ch.wsl.box.rest.logic.JSONFormMetadataFactory
-import
-
-ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
-import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
 import scribe._
@@ -35,8 +33,8 @@ object Box {
 //    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Info))
 
     //TODO need to be reworked now it's based on an hack, it call generated root to populate models
-    GeneratedRoutes()(Auth.adminDB, materializer, executionContext)
-    BoxRoutes()(Auth.adminDB, materializer, executionContext)
+    GeneratedRoutes()(Auth.adminUserProfile, materializer, executionContext)
+    BoxRoutes()(Auth.boxUserProfile, materializer, executionContext)
 
 //    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Warn))
     Logger.root.clearHandlers().withHandler(minimumLevel = Some(Level.Warn)).replace()

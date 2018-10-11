@@ -100,15 +100,17 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
 
   override def handleState(state: EntityTableState): Unit = {
+
+    logger.info(s"handling Entity table state name=${state.entity} and kind=${state.kind}")
+
     model.set(EntityTableModel.empty)
     model.subProp(_.name).set(state.entity)
     model.subProp(_.kind).set(state.kind)
 
     val emptyJsonQuery = JSONQuery.empty.limit(Conf.pageLength)
 
-    logger.info("handling state")
 
-    for{
+    {for{
       emptyFieldsForm <- REST.metadata(state.kind,Session.lang(),state.entity)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
       form = emptyFieldsForm.copy(fields = fields)
@@ -124,8 +126,9 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       }
 
       access <- REST.writeAccess(form.baseTable)
-      csv <- REST.csv(state.kind,Session.lang(),state.entity,query)
-      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
+      csv <- REST.csv(state.kind, Session.lang(), state.entity, query)
+      ids <- REST.ids(state.kind, Session.lang(), state.entity, query)
+//      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
 //      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
       specificKind <- REST.specificKind(state.kind, Session.lang(), state.entity)
     } yield {
@@ -152,8 +155,9 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       saveIds(ids,query)
 
       model.set(m)
+      model.subProp(_.name).set(state.entity)  //it is not set by the above line
 
-    }
+    }}.recover{ case e => e.printStackTrace() }
   }
 
 
@@ -288,13 +292,23 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def downloadCSV() = {
-    val (kind,modelName) = model.get.metadata.flatMap(_.exportView) match {
-      case Some(view) => ("entity",view)
-      case None => (EntityKind(model.subProp(_.kind).get).entityOrForm,model.subProp(_.name).get)
-    }
+//    val (kind, modelName) = model.get.metadata.flatMap(_.exportView) match {     //this does not get modelName assigned in case of None!!!
+//      case Some(view) => ("entity", view)
+//      case None => (EntityKind(model.subProp(_.kind).get).entityOrForm, model.subProp(_.name).get)
+//    }
 
+    val modelName = model.subProp(_.name).get
 
-    val url = s"api/v1/$kind/${Session.lang()}/${modelName}/csv?q=${query().asJson.toString()}".replaceAll("\n","")
+    logger.info(s" exportView=${model.get.metadata.flatMap(_.exportView)}-----")
+
+    val kind = model.get.metadata.flatMap(_.exportView).getOrElse("") match {
+            case "" => EntityKind(model.subProp(_.kind).get).entityOrForm
+            case _ => "entity"
+          }
+
+    logger.info(s" model.subProp(_.name)=${model.subProp(_.name).get},  modelName=$modelName , kind=$kind")
+
+    val url = s"api/v1/$kind/${Session.lang()}/$modelName/csv?q=${query().asJson.toString()}".replaceAll("\n","")
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }

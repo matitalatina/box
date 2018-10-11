@@ -4,7 +4,7 @@ import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.model.BoxTablesRegistry
-import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 import scribe.Logging
@@ -26,7 +26,7 @@ object JSONMetadataFactory extends Logging {
 //  private val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes")
   private val excludeFields:Seq[String] = dbConf.as[Seq[String]]("generator.excludeFields")
 
-  private var cacheTable = Map[(String,String, Int), Future[JSONMetadata]]()
+  private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()
   private var cacheKeys = Map[String, Future[Seq[String]]]()
 
   def resetCache() = {
@@ -49,8 +49,13 @@ object JSONMetadataFactory extends Logging {
     config.as[Option[String]](referencingTable).getOrElse(myDefaultTableLookupField)
   }
 
-  def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit db:Database, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
-    cacheTable.lift((table,lang,lookupMaxRows)) match {
+  def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
+
+    implicit val db = up.db
+
+    logger.warn("searching cache table for " + Seq(up.name, table, lang, lookupMaxRows).mkString)
+
+    cacheTable.lift((up.name, table, lang,lookupMaxRows)) match {
       case Some(r) => r
       case None => {
         logger.info(s"Metadata table cache miss! cache key: ($table,$lang,$lookupMaxRows), cache: ${cacheTable}")
@@ -58,7 +63,6 @@ object JSONMetadataFactory extends Logging {
         val schema = new PgInformationSchema(table, db, excludeFields)
 
         //    println(schema.fk)
-
 
         var constraints = List[String]()
 
@@ -136,7 +140,8 @@ object JSONMetadataFactory extends Logging {
           JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fields.map(_.name), keys, None, None, table)
         }
 
-        cacheTable = cacheTable ++ Map((table, lang, lookupMaxRows) -> result)
+        logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)
+        cacheTable = cacheTable ++ Map((up.name, table, lang, lookupMaxRows) -> result)
         result
       }
     }

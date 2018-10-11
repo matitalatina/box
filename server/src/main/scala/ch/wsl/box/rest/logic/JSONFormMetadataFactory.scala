@@ -6,7 +6,7 @@ import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
 import ch.wsl.box.rest.boxentities.Form.{Form, Form_i18n, Form_i18n_row, Form_row}
 import ch.wsl.box.rest.boxentities.{Field, Form}
-import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -23,8 +23,8 @@ import scala.util.{Failure, Success, Try}
   * mapping from form specs in box schema into JSONForm
   */
 object JSONFormMetadataFactory{
-  private var cacheName = Map[(String,String),Future[JSONMetadata]]()
-  private var cacheId = Map[(Int,String),Future[JSONMetadata]]()
+  private var cacheName = Map[(String, String, String),Future[JSONMetadata]]()
+  private var cacheId = Map[(String, Int, String),Future[JSONMetadata]]()
 
   def resetCache() = {
     cacheName = Map()
@@ -32,7 +32,10 @@ object JSONFormMetadataFactory{
   }
 }
 
-case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends Logging {
+case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging {
+
+  implicit val db = up.db
+
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Form.table.result
   }.map{_.map(_.name)}
@@ -40,7 +43,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
   import ch.wsl.box.shared.utils.JsonUtils._
 
   def of(id:Int, lang:String):Future[JSONMetadata] = {
-    JSONFormMetadataFactory.cacheId.lift((id,lang)) match {
+    JSONFormMetadataFactory.cacheId.lift((up.name, id,lang)) match {
       case Some(r) => r
       case None => {
         logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${JSONFormMetadataFactory.cacheName}")
@@ -48,14 +51,14 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
           form <- Form.table if form.form_id === id
         } yield form
         val result = getForm(formQuery,lang)
-        JSONFormMetadataFactory.cacheId = JSONFormMetadataFactory.cacheId ++ Map((id,lang) -> result)
+        JSONFormMetadataFactory.cacheId = JSONFormMetadataFactory.cacheId ++ Map((up.name, id,lang) -> result)
         result
       }
     }
   }
 
   def of(name:String, lang:String):Future[JSONMetadata] = {
-    JSONFormMetadataFactory.cacheName.lift((name,lang)) match {
+    JSONFormMetadataFactory.cacheName.lift((up.name, name,lang)) match {
       case Some(r) => r
       case None => {
         logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${JSONFormMetadataFactory.cacheName}")
@@ -63,7 +66,7 @@ case class JSONFormMetadataFactory(implicit db:Database, mat:Materializer, ec:Ex
           form <- Form.table if form.name === name
         } yield form
         val result = getForm(formQuery,lang)
-        JSONFormMetadataFactory.cacheName = JSONFormMetadataFactory.cacheName ++ Map((name,lang) -> result)
+        JSONFormMetadataFactory.cacheName = JSONFormMetadataFactory.cacheName ++ Map((up.name, name,lang) -> result)
         result
       }
     }
