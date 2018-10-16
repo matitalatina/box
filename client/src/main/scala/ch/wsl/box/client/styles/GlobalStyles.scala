@@ -303,6 +303,10 @@ object GlobalStyles extends StyleSheet.Inline {
     maxWidth(100 %%).important
   )
 
+  val notNullable = style(
+    borderColor( StyleConstants.Colors.bordeaux)
+  )
+
   val imageThumb = style(
     height.auto,
     width(100 %%)

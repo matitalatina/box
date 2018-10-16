@@ -84,13 +84,13 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
         (field.`type`, field.widget, field.lookup, metadata.keys.contains(field.name), field.child) match {
           case (_, Some(WidgetsNames.hidden), _, _, _)                => HiddenWidget
-          case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidget(options,field,label,fieldData,width := 100.pct)
+          case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidget(options,field,label,fieldData,width := 100.pct, toNullable(field.nullable))
           case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidget(options,label,fieldData)
-          case (_, _, Some(lookup), _, _)                             => SelectWidget(lookup, field,label,fieldData)
-          case (_, _, _, true, _)                                     => InputWidget(disabled := Conf.manualEditKeyFields, textAlign.right, toPlaceholder(field.placeholder)).Text(label,fieldData)
+          case (_, _, Some(lookup), _, _)                             => SelectWidget(lookup, field,label,fieldData, toNullable(field.nullable))
+          case (_, _, _, true, _)                                     => InputWidget(disabled := Conf.manualEditKeyFields, textAlign.right, toPlaceholder(field.placeholder), toNullable(field.nullable)).Text(label,fieldData)
           case (NUMBER, Some(WidgetsNames.checkbox), _, _, _)         => CheckboxWidget(label,fieldData)
-          case (NUMBER, Some(WidgetsNames.nolabel), _, _, _)          => InputWidget.noLabel(toPlaceholder(field.placeholder)).Number(label,fieldData)
-          case (NUMBER, _, _, _, _)                                   => InputWidget(toPlaceholder(field.placeholder)).Number(label,fieldData)
+          case (NUMBER, Some(WidgetsNames.nolabel), _, _, _)          => InputWidget.noLabel(toPlaceholder(field.placeholder), toNullable(field.nullable)).Number(label,fieldData)
+          case (NUMBER, _, _, _, _)                                   => InputWidget(toPlaceholder(field.placeholder), toNullable(field.nullable)).Number(label,fieldData)
           case (TIME, Some(WidgetsNames.timepicker), _, _, _)         => DateTimeWidget.Time(id,label,fieldData)
           case (DATE, Some(WidgetsNames.datepicker), _, _, _)         => DateTimeWidget.Date(id,label,fieldData)
           case (DATETIME, Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime(id,label,fieldData)
@@ -98,11 +98,11 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (DATE, Some(WidgetsNames.datepickerFullWidth), _, _, _) => DateTimeWidget.DateFullWidth(id,label,fieldData)
           case (DATETIME, Some(WidgetsNames.datetimePickerFullWidth), _, _, _) => DateTimeWidget.DateTimeFullWidth(id,label,fieldData)
           case (CHILD, _, _, _, Some(child))                          => ChildRenderer(child,children,fieldData,dataWithChildId)
-          case (_, Some(WidgetsNames.nolabel), _, _, _)               => InputWidget.noLabel(toPlaceholder(field.placeholder)).Text(label,fieldData)
-          case (_, Some(WidgetsNames.twoLines), _, _, _)              => InputWidget(rows := 2,toPlaceholder(field.placeholder)).Textarea(label,fieldData)
-          case (_, Some(WidgetsNames.textarea), _, _, _)              => InputWidget(toPlaceholder(field.placeholder)).Textarea(label,fieldData)
+          case (_, Some(WidgetsNames.nolabel), _, _, _)               => InputWidget.noLabel(toPlaceholder(field.placeholder), toNullable(field.nullable)).Text(label,fieldData)
+          case (_, Some(WidgetsNames.twoLines), _, _, _)              => InputWidget(rows := 2,toPlaceholder(field.placeholder), toNullable(field.nullable)).Textarea(label,fieldData)
+          case (_, Some(WidgetsNames.textarea), _, _, _)              => InputWidget(toPlaceholder(field.placeholder), toNullable(field.nullable)).Textarea(label,fieldData)
           case (FILE, _, _, _, _)                                     => FileWidget(id,fieldData,field,label,metadata.entity)
-          case (_, _, _, _, _)                                        => InputWidget(toPlaceholder(field.placeholder)).Text(label,fieldData)
+          case (_, _, _, _, _)                                        => InputWidget(toPlaceholder(field.placeholder), toNullable(field.nullable)).Text(label,fieldData)
     }
 
     widg
@@ -117,6 +117,12 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     }
   }
 
+  private def toNullable(nullable: Boolean):Seq[Modifier]={
+    nullable match{
+      case true => Seq.empty
+      case false => Seq(GlobalStyles.notNullable)
+    }
+  }
 
 
   case class WidgetVisibility(widget:Widget,visibility: ReadableProperty[Boolean])

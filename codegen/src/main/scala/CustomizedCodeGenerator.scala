@@ -40,8 +40,8 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
 
 
 
-    val calculatedViews = enabledViews.map(_.name.name)
-    val calculatedTables= enabledTables.map(_.name.name)
+    val calculatedViews = enabledViews.map(_.name.name).distinct
+    val calculatedTables= enabledTables.map(_.name.name).distinct
 
 
     RoutesGenerator(calculatedViews,calculatedTables,dbModel).writeToFile(
