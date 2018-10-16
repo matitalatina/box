@@ -190,6 +190,7 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
           }
           Some(JSONFieldLookup(refEntity, JSONFieldMap(value,text),options))
         }
+
       }} match {
         case Some(a) => a
         case None => Future.successful(None)
@@ -201,7 +202,8 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
         filter <- field.childFilter
         json <- parse(filter).right.toOption
         result <- json.as[Seq[JSONQueryFilter]].right.toOption
-      } yield result }.toSeq.flatten
+      } yield
+        result }.toSeq.flatten
 
 
       val subform = for{
@@ -227,6 +229,8 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
 
       val tooltip:Future[Option[String]] = Future.successful(fieldI18n.flatMap(_.tooltip))
 
+      val placeholder:Future[Option[String]] = Future.successful(fieldI18n.flatMap(_.placeholder))
+
       val nullable = pgColumn.map(_.nullable).getOrElse(true)
 
       val file = fieldFile.map{ ff =>
@@ -243,9 +247,11 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       for{
         look <- lookup
         lab <- label
-        tip <- tooltip
+        placeHolder <- placeholder
+//        tip <- tooltip
       } yield {
-        JSONField(field.`type`, field.name, nullable, Some(lab),look, fieldI18n.flatMap(_.placeholder), field.widget, subform, field.default,file,condition, tip)
+//        JSONField(field.`type`, field.name, nullable, Some(lab),look, fieldI18n.flatMap(_.placeholder), field.widget, subform, field.default,file,condition, tip)
+        JSONField(field.`type`, field.name, nullable, Some(lab),look, placeHolder, field.widget, subform, field.default,file,condition)
       }
 
     }
