@@ -16,7 +16,8 @@ case class JSONField(
                       child: Option[Child] = None,
                       default: Option[String] = None,
                       file: Option[FileReference] = None,
-                      condition: Option[ConditionalField] = None
+                      condition: Option[ConditionalField] = None,
+                      tooltip: Option[String] = None
                     )
 
 

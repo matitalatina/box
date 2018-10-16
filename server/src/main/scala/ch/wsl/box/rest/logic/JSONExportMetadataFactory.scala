@@ -96,7 +96,8 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
       None,
       field.default,
       None,
-      condition
+      condition,
+      fieldI18n.flatMap(_.tooltip)
     )
 
   }

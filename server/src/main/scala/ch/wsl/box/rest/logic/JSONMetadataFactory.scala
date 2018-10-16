@@ -200,7 +200,8 @@ object JSONMetadataFactory extends Logging {
     "numeric" -> JSONFieldTypes.NUMBER,
     "text" -> JSONFieldTypes.STRING,
     "USER-DEFINED" -> JSONFieldTypes.STRING,
-    "time without time zone" -> JSONFieldTypes.TIME
+    "time without time zone" -> JSONFieldTypes.TIME,
+    "ARRAY" -> JSONFieldTypes.STRING                              //todo: works only for visualisation
   )
 
   val defaultWidgetMapping = Map(
@@ -218,6 +219,7 @@ object JSONMetadataFactory extends Logging {
     "numeric" -> None,
     "text" -> Some(WidgetsNames.textinput),
     "USER-DEFINED" -> None,
-    "time without time zone" -> Some(WidgetsNames.timepicker)
+    "time without time zone" -> Some(WidgetsNames.timepicker),
+    "ARRAY" -> Some(WidgetsNames.textinput)                          //todo: orks only for visualisation -> provide widget
   )
 }

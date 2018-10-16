@@ -225,6 +225,8 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
         }
       }
 
+      val tooltip:Future[Option[String]] = Future.successful(fieldI18n.flatMap(_.tooltip))
+
       val nullable = pgColumn.map(_.nullable).getOrElse(true)
 
       val file = fieldFile.map{ ff =>
@@ -241,8 +243,9 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       for{
         look <- lookup
         lab <- label
+        tip <- tooltip
       } yield {
-        JSONField(field.`type`, field.name, nullable, Some(lab),look, fieldI18n.flatMap(_.placeholder), field.widget, subform, field.default,file,condition)
+        JSONField(field.`type`, field.name, nullable, Some(lab),look, fieldI18n.flatMap(_.placeholder), field.widget, subform, field.default,file,condition, tip)
       }
 
     }

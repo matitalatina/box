@@ -11,10 +11,14 @@ import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalatags.JsDom.all._
+import scalatags.JsDom
 import io.udash._
 import io.udash.bindings.Bindings
 import io.udash.bindings.modifiers.Binding
+import io.udash.bootstrap.tooltip.UdashTooltip
 import org.scalajs.dom.Element
+import org.scalajs.dom
+import scala.concurrent.duration._
 
 trait Widget{
 
@@ -50,6 +54,11 @@ trait Widget{
   protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave(data,metadata))).map(_ => Unit)
   protected def afterSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(data,metadata))).map(_ => Unit)
 
+//  protected def tooltip(tip:String)(el: dom.Node) = UdashTooltip(
+//      trigger = Seq(UdashTooltip.HoverTrigger),
+//      delay = UdashTooltip.Delay(500 millis, 250 millis),
+//      title = (_) => tip
+//    )(el)
 }
 
 trait WidgetBinded extends Widget with Logging {

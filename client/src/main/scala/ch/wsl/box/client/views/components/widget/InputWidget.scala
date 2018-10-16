@@ -1,6 +1,7 @@
 package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
@@ -23,6 +24,8 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
     val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
 
     def withLabel = hasLabel && labelString.length > 0
+
+//    def withTooltip = hasTooltip && labelString.length > 0
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
       if(withLabel) label(labelString) else {},
@@ -70,12 +73,22 @@ class InputWidget(hasLabel:Boolean,modifiers:Modifier*) {
   }
 
   case class Number(label: String, prop: Property[Json]) extends Widget {
-    override def edit() = input(Some(label)){ case y =>
+    override def edit():JsDom.all.Modifier = (input(Some(label)){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
       NumberInput.apply(stringModel,None,y:_*)
-    }
+    })
     override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,label))
   }
+
+//  case class TextJ(field: JSONField, prop: Property[Json]) extends Text(field.label.getOrElse(""), prop) {
+//
+//    override def edit() = input(field.label){ case y =>
+//      val stringModel = prop.transform[String](jsonToString _,strToJson _)
+//      TextInput.apply(stringModel,None,y:_*)
+//    }
+//    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,field.label.getOrElse("")))
+//  }
+
 }
 
 object InputWidget {

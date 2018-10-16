@@ -292,21 +292,10 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def downloadCSV() = {
-//    val (kind, modelName) = model.get.metadata.flatMap(_.exportView) match {     //this does not get modelName assigned in case of None!!!
-//      case Some(view) => ("entity", view)
-//      case None => (EntityKind(model.subProp(_.kind).get).entityOrForm, model.subProp(_.name).get)
-//    }
-
-    val modelName = model.subProp(_.name).get
-
-    logger.info(s" exportView=${model.get.metadata.flatMap(_.exportView)}-----")
-
-    val kind = model.get.metadata.flatMap(_.exportView).getOrElse("") match {
-            case "" => EntityKind(model.subProp(_.kind).get).entityOrForm
-            case _ => "entity"
-          }
-
-    logger.info(s" model.subProp(_.name)=${model.subProp(_.name).get},  modelName=$modelName , kind=$kind")
+    val (kind, modelName) = model.get.metadata.flatMap(_.exportView).getOrElse("") match {
+      case "" => (EntityKind(model.subProp(_.kind).get).entityOrForm, model.subProp(_.name).get)
+      case view => ("entity", view)
+    }
 
     val url = s"api/v1/$kind/${Session.lang()}/$modelName/csv?q=${query().asJson.toString()}".replaceAll("\n","")
     logger.info(s"downloading: $url")
