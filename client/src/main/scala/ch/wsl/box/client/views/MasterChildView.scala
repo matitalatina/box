@@ -35,7 +35,7 @@ case class MasterChildViewPresenter(master:String,child:String) extends ViewFact
         metadata <- childForeignMetadata
         value <- rows.find(_._1.name == metadata.field.lookup.get.map.valueProperty)
       } yield {
-        childTable.filter(metadata.copy(filter = value._2,filterType = Filter.EQUALS),value._2)
+        childTable.filter(metadata.copy(filterValue = value._2,filterOperator = Filter.EQUALS),value._2)
       }
 
 

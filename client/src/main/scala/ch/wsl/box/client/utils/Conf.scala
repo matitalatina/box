@@ -1,6 +1,10 @@
 package ch.wsl.box.client.utils
 
+import java.sql.Timestamp
+import java.time.temporal.ChronoUnit
+
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.model.shared.JSONFieldTypes
 
 import scala.util.Try
 
@@ -21,4 +25,29 @@ object Conf {
   def lookupMaxRows  = Try(conf("fk_rows").toInt).getOrElse(30)
 
   def manualEditKeyFields = Try(conf("manual_edit.key_fields").toBoolean).getOrElse(false)
+
+  def filterEqualityPrecisionDatetime = Try(conf("filterEqualityPrecision.datetime").toUpperCase).toOption match {
+      case Some("DATE") => JSONFieldTypes.DATE
+      case Some("DATETIME") => JSONFieldTypes.DATETIME
+      case _ => JSONFieldTypes.DATETIME     //for None or wrong values
+    }
+
+  def prepareDatetime = filterEqualityPrecisionDatetime match{
+    case JSONFieldTypes.DATE => ((x: Timestamp) => Timestamp.valueOf(x.toLocalDateTime.truncatedTo(ChronoUnit.DAYS)))
+    case JSONFieldTypes.DATETIME => ((x:Timestamp) => x)
+    case _ => ((x:Timestamp) => x)
+  }
+
+//  def filterEqualityPrecisionDouble:Option[Int] = Try(conf("filterEqualityPrecision.double").toInt).toOption
+//
+//  def prepareDouble = filterEqualityPrecisionDouble match{
+//    case None => ((x:Double) => x)
+//    case Some(p) => ((x:Double) => roundAt(p)(x))
+////    case Some(p) if p<0 => ((x:Double) => roundAt(-p)(x))
+//  }
+//
+//
+//
+//  def roundAt(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.round(n) * s) / s }
+//  def truncateAt(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.floor(n) * s) / s }
 }

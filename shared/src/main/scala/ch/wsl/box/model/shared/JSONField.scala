@@ -18,6 +18,7 @@ case class JSONField(
                       file: Option[FileReference] = None,
                       condition: Option[ConditionalField] = None
 //                      tooltip: Option[String] = None
+//                      filterEqualityPrecision: Option[String] = None
                     )
 
 

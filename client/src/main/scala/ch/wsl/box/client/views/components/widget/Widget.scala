@@ -82,6 +82,6 @@ trait WidgetBinded extends Widget with Logging {
 trait LookupWidget extends Widget{
   def lookup:JSONFieldLookup
 
-  def value2Label(org:Json):String = lookup.lookup.find(_.id == org.string).map(_.value).getOrElse("Value not found")
+  def value2Label(org:Json):String = lookup.lookup.find(_.id == org.string).map(_.value).getOrElse("Value not found")  //todo:   set a Label with translations
   def label2Value(v:String):Json = lookup.lookup.find(_.value == v).map(_.id.asJson).getOrElse(Json.Null)
 }
