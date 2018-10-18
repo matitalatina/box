@@ -33,10 +33,14 @@ case class IDsVM(isLastPage:Boolean,
                     ids:Seq[String],
                     count:Int    //stores the number of rows resulting from the query without paging
                    )
+
 case class Row(data: Seq[String])
-case class FieldQuery(field:JSONField, sort:String, filter:String, filterType:String)
+
+case class FieldQuery(field:JSONField, sort:String, filterValue:String, filterOperator:String)
+
 case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQueries:Seq[FieldQuery],
                             metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDsVM, pages:Int, write:Boolean)
+
 
 object EntityTableModel extends HasModelPropertyCreator[EntityTableModel]{
   def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDsVM(true,1,Seq(),0),1, false)
@@ -141,8 +145,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
           FieldQuery(
             field = field,
             sort = form.query.flatMap(_.sort.find(_.column == field.name).map(_.order)).getOrElse(Sort.IGNORE),
-            filter = form.query.flatMap(_.filter.find(_.column == field.name).map(_.value)).getOrElse(""),
-            filterType = form.query.flatMap(_.filter.find(_.column == field.name).flatMap(_.operator)).getOrElse(Filter.default(field))
+            filterValue = form.query.flatMap(_.filter.find(_.column == field.name).map(_.value)).getOrElse(""),
+            filterOperator = form.query.flatMap(_.filter.find(_.column == field.name).flatMap(_.operator)).getOrElse(Filter.default(field))
           )
         },
         metadata = Some(form),
@@ -196,30 +200,33 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
   private def query():JSONQuery = {
     val fieldQueries = model.subProp(_.fieldQueries).get
+
     val sort = fieldQueries.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.name, s.sort)).toList
-    val filter = fieldQueries.filter(_.filter != "").map{f =>
-      f.filterType match {
+
+    val filter = fieldQueries.filter(_.filterValue != "").map{ f =>
+      f.filterOperator match {
         case Filter.FK_LIKE => {
           val ids = f .field.lookup.toSeq.flatMap(_.lookup)
-                      .filter(_.value.toLowerCase.contains(f.filter.toLowerCase()))
+                      .filter(_.value.toLowerCase.contains(f.filterValue.toLowerCase()))
                       .map(_.id)
           JSONQueryFilter(f.field.name,Some(Filter.IN),ids.mkString(","))
         }
         case Filter.FK_EQUALS => {
           val id = f  .field.lookup.toSeq.flatMap(_.lookup)
-                      .find(_.value == f.filter)
+                      .find(_.value == f.filterValue)
                       .map(_.value)
           JSONQueryFilter(f.field.name,Some(Filter.EQUALS),id.getOrElse(""))
         }
         case Filter.FK_NOT => {
           val id = f  .field.lookup.toSeq.flatMap(_.lookup)
-            .find(_.value == f.filter)
+            .find(_.value == f.filterValue)
             .map(_.value)
           JSONQueryFilter(f.field.name,Some(Filter.NOT),id.getOrElse(""))
         }
-        case _ => JSONQueryFilter(f.field.name,Some(f.filterType),f.filter)
+        case _ => JSONQueryFilter(f.field.name,Some(f.filterOperator),f.filterValue)
       }
     }.toList
+
     JSONQuery(filter, sort, None)
   }
 
@@ -244,7 +251,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   def filterById(id:JSONID) = {
     val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
       id.id.headOption.exists(_.key == m.field.name) match {
-        case true => m.copy(filter = id.id.head.value, filterType = Filter.EQUALS)
+        case true => m.copy(filterValue = id.id.head.value, filterOperator = Filter.EQUALS)
         case false => m
       }
     }
@@ -253,11 +260,11 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
 
-  def filter(metadata: FieldQuery, filter:String) = {
+  def filter(metadata: FieldQuery, filterValue:String) = {
     logger.info("filtering")
     val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
       m.field.name == metadata.field.name match {
-        case true => m.copy(filter = filter)
+        case true => m.copy(filterValue = filterValue)
         case false => m
       }
     }
@@ -329,21 +336,24 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case _ => StringFrag(id)
     }
 
-    Select(fieldQuery.subProp(_.filterType), Filter.options(fieldQuery.get.field),label)(GlobalStyles.fullWidth)
+    Select(fieldQuery.subProp(_.filterOperator), Filter.options(fieldQuery.get.field),label)(GlobalStyles.fullWidth)
 
   }
 
-  def filterField(filter: Property[String], fieldQuery: FieldQuery, filterType:String):Modifier = {
+  def filterField(filterValue: Property[String], fieldQuery: FieldQuery, filterOperator:String):Modifier = {
 
     fieldQuery.field.`type` match {
-      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),JSONField.empty,filter.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filter.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATETIME => DateTimeWidget.DateTimeFullWidth(Property(""),JSONField.empty,filter.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterType != Filter.BETWEEN => {
-        if(Try(filter.get.toDouble).toOption.isEmpty) filter.set("")
-        NumberInput.debounced(filter,cls := "form-control")
+      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),"",filterValue.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),"",filterValue.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATETIME => Conf.filterEqualityPrecisionDatetime match{
+        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),"",filterValue.transform(_.asJson,_.string)).edit()
+        case _ => DateTimeWidget.DateTimeFullWidth(Property(""),"",filterValue.transform(_.asJson,_.string)).edit()
       }
-      case _ => TextInput.debounced(filter,cls := "form-control")
+      case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterOperator != Filter.BETWEEN => {
+        if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
+        NumberInput.debounced(filterValue,cls := "form-control")
+      }
+      case _ => TextInput.debounced(filterValue,cls := "form-control")
     }
 
   }
@@ -397,7 +407,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                 th(GlobalStyles.smallCells)(Labels.entity.actions),
                   repeat(model.subSeq(_.fieldQueries)) { fieldQuery =>
                       val title: String = fieldQuery.get.field.label.getOrElse(fieldQuery.get.field.name)
-                      val filter = fieldQuery.asModel.subProp(_.filter)
+                      val filter = fieldQuery.asModel.subProp(_.filterValue)
                       val sort = fieldQuery.asModel.subProp(_.sort)
 
                     th(GlobalStyles.smallCells)(
@@ -407,7 +417,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                         Labels(Sort.label(sort.get))
                       ),br,
                       filterOptions(fieldQuery.asModel),
-                      produce(fieldQuery.asModel.subProp(_.filterType)) { ft =>
+                      produce(fieldQuery.asModel.subProp(_.filterOperator)) { ft =>
                         span(filterField(filter, fieldQuery.get, ft)).render
                       }
                     ).render

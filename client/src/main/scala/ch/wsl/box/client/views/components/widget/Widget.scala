@@ -92,6 +92,6 @@ trait LookupWidget extends Widget {
   def field:JSONField
   def lookup:JSONFieldLookup = field.lookup.get
 
-  def value2Label(org:Json):String = lookup.lookup.find(_.id == org.string).map(_.value).getOrElse("Value not found")
+  def value2Label(org:Json):String = lookup.lookup.find(_.id == org.string).map(_.value).getOrElse("Value not found")  //todo:   set a Label with translations
   def label2Value(v:String):Json = lookup.lookup.find(_.value == v).map(_.id.asJson).getOrElse(Json.Null)
 }

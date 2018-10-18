@@ -5,10 +5,9 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
-import ch.wsl.box.rest.logic.JSONMetadataFactory
-import ch.wsl.box.rest.logic.JSONFormMetadataFactory
+import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
 import scribe._
@@ -46,6 +45,7 @@ object Box {
     val binding: Future[Http.ServerBinding] = Http().bindAndHandle(route, host, port) //attach the root route
     println(s"Server online at http://localhost:$port")
 
+    val tableConf = BoxConf.load()
 
   }
 }
