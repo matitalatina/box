@@ -48,21 +48,31 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     }
   }
 
-  private def checkCondition(fieldData: ReadableProperty[Json],field: JSONField) = {
+  private def checkCondition(field: JSONField) = {
     field.condition match {
       case None => Property(true)
       case Some(condition) => {
 
+        val observedData = Property(dataWithChildId.get.js(condition.conditionFieldId))
+
+
+        dataWithChildId.listen{ d =>
+          val newJs = d.js(condition.conditionFieldId)
+          if( newJs != observedData.get) {
+            observedData.set(newJs)
+          }
+        }
+
         def evaluate(d:Json):Boolean = {
-          val value = d.js(condition.conditionFieldId)
+          val value = d
           val r = condition.conditionValues.contains(value)
           logger.info(s"evaluating condition for field: ${field.name} against $value with accepted values: ${condition.conditionValues} with result: $r")
           r
         }
 
 
-        val visibility = Property(evaluate(data.get))
-        fieldData.listen{d =>
+        val visibility = Property(evaluate(observedData.get))
+        observedData.listen{d =>
           val r = evaluate(d)
           if(r == !visibility.get) { //change only when the status changes
             visibility.set(r)
@@ -159,7 +169,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
       }
     }
 
-    WidgetVisibility(widgetSelector(field, id, fieldData),checkCondition(fieldData,field))
+    WidgetVisibility(widgetSelector(field, id, fieldData),checkCondition(field))
 
   }}.getOrElse(WidgetVisibility(HiddenWidget.HiddenWidgetImpl))
 

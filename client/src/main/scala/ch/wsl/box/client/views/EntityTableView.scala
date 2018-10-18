@@ -343,11 +343,11 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
   def filterField(filterValue: Property[String], fieldQuery: FieldQuery, filterOperator:String):Modifier = {
 
     fieldQuery.field.`type` match {
-      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),"",filterValue.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),"",filterValue.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
       case JSONFieldTypes.DATETIME => Conf.filterEqualityPrecisionDatetime match{
-        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),"",filterValue.transform(_.asJson,_.string)).edit()
-        case _ => DateTimeWidget.DateTimeFullWidth(Property(""),"",filterValue.transform(_.asJson,_.string)).edit()
+        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
+        case _ => DateTimeWidget.DateTimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
       }
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterOperator != Filter.BETWEEN => {
         if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
