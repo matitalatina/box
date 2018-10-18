@@ -336,9 +336,9 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
   def filterField(filter: Property[String], fieldQuery: FieldQuery, filterType:String):Modifier = {
 
     fieldQuery.field.`type` match {
-      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),"",filter.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),"",filter.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATETIME => DateTimeWidget.DateTimeFullWidth(Property(""),"",filter.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),JSONField.empty,filter.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filter.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATETIME => DateTimeWidget.DateTimeFullWidth(Property(""),JSONField.empty,filter.transform(_.asJson,_.string)).edit()
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterType != Filter.BETWEEN => {
         if(Try(filter.get.toDouble).toOption.isEmpty) filter.set("")
         NumberInput.debounced(filter,cls := "form-control")
@@ -382,7 +382,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           div(BootstrapStyles.pullLeft)(
             realeser(produce(model.subProp(_.name)) { m =>
               div(
-                a(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`)
+                button(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`)
               ).render
             })
           ).render
@@ -454,7 +454,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           }
         ).render,
 
-        a(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),GlobalStyles.boxButton,"Download CSV"),
+        button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),GlobalStyles.boxButton,"Download CSV"),
         showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render },
         br,br
       ),

@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.model.shared.{JSONFieldLookup, JSONLookup}
+import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
 import io.udash._
@@ -19,7 +19,11 @@ import scala.concurrent.duration._
 
 
 
-case class PopupWidget(lookup:JSONFieldLookup, label: String, data: Property[Json]) extends LookupWidget with Logging {
+object PopupWidget extends ComponentWidgetFactory  {
+  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = PopupWidget(field,prop)
+}
+
+case class PopupWidget(field:JSONField, data: Property[Json]) extends LookupWidget with Logging {
 
 import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._
@@ -29,13 +33,15 @@ import ch.wsl.box.client.Context._
   import io.udash.css.CssView._
 
 
+
+
   val sortedOptions = lookup.lookup //.sortBy(_.value)
 
 
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
     val selectedItem: Property[String] = data.transform(value2Label,label2Value)
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
-      if(label.length >0) lab(label) else {},
+      lab(field.title),
       div(BootstrapStyles.pullRight,
         bind(selectedItem)
       ),
@@ -106,13 +112,13 @@ import ch.wsl.box.client.Context._
         case Status.Closed => modal.hide()
       }
     }
-
+    val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       modal.render,
-      if(label.length >0) lab(label) else {},
+      WidgetUtils.toLabel(field),
       div(style := "text-align: right",
-        button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem))
+        tooltip(button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render)
       )
     )
   }

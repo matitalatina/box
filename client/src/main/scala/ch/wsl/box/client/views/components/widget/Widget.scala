@@ -2,10 +2,10 @@ package ch.wsl.box.client.views.components.widget
 
 import java.util.UUID
 
-import ch.wsl.box.model.shared.{JSONFieldLookup, JSONMetadata}
+import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup, JSONMetadata}
 import io.circe._
 import io.circe.syntax._
-import io.udash.properties.single.{Property, ReadableProperty}
 import ch.wsl.box.shared.utils.JsonUtils._
 import scribe.Logging
 
@@ -18,6 +18,7 @@ import io.udash.bindings.modifiers.Binding
 import io.udash.bootstrap.tooltip.UdashTooltip
 import org.scalajs.dom.Element
 import org.scalajs.dom
+
 import scala.concurrent.duration._
 
 trait Widget{
@@ -51,15 +52,22 @@ trait Widget{
   }
 
 
+  import scalacss.ScalatagsCss._
+  import scalatags.JsDom.all._
+  import io.udash.css.CssView._
+
+
   protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave(data,metadata))).map(_ => Unit)
   protected def afterSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(data,metadata))).map(_ => Unit)
 
-//  protected def tooltip(tip:String)(el: dom.Node) = UdashTooltip(
-//      trigger = Seq(UdashTooltip.HoverTrigger),
-//      delay = UdashTooltip.Delay(500 millis, 250 millis),
-//      title = (_) => tip
-//    )(el)
+
 }
+
+trait ComponentWidgetFactory{
+
+  def create(id:Property[String], prop:Property[Json], field:JSONField):Widget
+}
+
 
 trait WidgetBinded extends Widget with Logging {
 
@@ -79,8 +87,10 @@ trait WidgetBinded extends Widget with Logging {
 }
 
 
-trait LookupWidget extends Widget{
-  def lookup:JSONFieldLookup
+trait LookupWidget extends Widget {
+
+  def field:JSONField
+  def lookup:JSONFieldLookup = field.lookup.get
 
   def value2Label(org:Json):String = lookup.lookup.find(_.id == org.string).map(_.value).getOrElse("Value not found")
   def label2Value(v:String):Json = lookup.lookup.find(_.value == v).map(_.id.asJson).getOrElse(Json.Null)

@@ -248,10 +248,9 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
         look <- lookup
         lab <- label
         placeHolder <- placeholder
-//        tip <- tooltip
+        tip <- tooltip
       } yield {
-//        JSONField(field.`type`, field.name, nullable, Some(lab),look, fieldI18n.flatMap(_.placeholder), field.widget, subform, field.default,file,condition, tip)
-        JSONField(field.`type`, field.name, nullable, Some(lab),look, placeHolder, field.widget, subform, field.default,file,condition)
+        JSONField(field.`type`, field.name, nullable, Some(lab),look, placeHolder, field.widget, subform, field.default,file,condition,tip)
       }
 
     }

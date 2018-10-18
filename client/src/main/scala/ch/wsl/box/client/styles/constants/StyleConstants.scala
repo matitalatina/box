@@ -42,6 +42,8 @@ object StyleConstants extends StyleSheet.Inline{
     val bordeaux = c"#4c1c24"
     val wsl = c"#006268"
     val wslLink = c"#fbf0b2"
+
+    val orange = c"#ffa500"
   }
 
   /**

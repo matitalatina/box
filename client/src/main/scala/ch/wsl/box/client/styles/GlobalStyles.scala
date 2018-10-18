@@ -28,15 +28,29 @@ object GlobalStyles extends StyleSheet.Inline {
     ),
 
     unsafeRoot("select")(
-      inputDefaultWidth
+      inputDefaultWidth,
+      borderStyle.solid,
+      borderWidth(1 px),
+      borderRadius.`0`,
+      borderColor(rgb(169, 169, 169)),
+      height(21 px)
     ),
 
     unsafeRoot("input")(
-      inputDefaultWidth
+      inputDefaultWidth,
+      borderStyle.solid,
+      borderWidth(1 px),
+      borderRadius.`0`,
+      backgroundColor.white,
+      borderColor(rgb(169, 169, 169)),
+      height(21 px),
+      paddingLeft(5 px),
+      paddingRight(5 px),
     ),
 
     unsafeRoot("input[type='checkbox']")(
-      width.auto
+      width.auto,
+      height.auto
     ),
 
     unsafeRoot("input[type='number']")(
@@ -48,7 +62,12 @@ object GlobalStyles extends StyleSheet.Inline {
     ),
 
     unsafeRoot("textarea")(
-      inputDefaultWidth
+      inputDefaultWidth,
+      borderStyle.solid,
+      borderWidth(1 px),
+      borderRadius.`0`,
+      backgroundColor.white,
+      borderColor(rgb(169, 169, 169))
     ),
 
     unsafeRoot("select")(
@@ -79,14 +98,18 @@ object GlobalStyles extends StyleSheet.Inline {
       height(55 px)
     ),
 
-    unsafeRoot(".form-control")(
+    unsafeRoot(".form-control")( // this controls the datetime input
       paddingTop(1 px),
       paddingBottom(1 px),
       paddingRight(5 px),
       textAlign.left,
       lineHeight(14 px),
+      height(21 px),
+      borderStyle.solid,
+      borderWidth(1 px),
       borderRadius.`0`,
-      height(21 px)
+      backgroundColor.white,
+      borderColor(rgb(169, 169, 169))
     ),
 
     unsafeRoot(".container-fluid")(
@@ -128,7 +151,6 @@ object GlobalStyles extends StyleSheet.Inline {
     inputDefaultWidth,
     textAlign.right,
     float.right
-
   )
 
   val dateTimePickerFullWidth = style(
@@ -184,8 +206,9 @@ object GlobalStyles extends StyleSheet.Inline {
 
   val notificationArea = style(
     position.fixed,
-    top(20 px),
-    right(20 px)
+    top(40 px),
+    right(40 px),
+    zIndex(2000)
   )
 
   val notification = style(
@@ -267,27 +290,33 @@ object GlobalStyles extends StyleSheet.Inline {
 
   val boxButtonImportant = style(
     whiteSpace.nowrap,
+    height(22 px),
     padding(3 px, 7 px),
     fontSize(12 px),
-    lineHeight(28 px),
+    lineHeight(12 px),
+    margin(3 px, 1 px),
     border(1 px,solid,StyleConstants.Colors.wsl),
     backgroundColor(StyleConstants.Colors.wsl),
     color.white,
     &.hover(
-      color.white
+      backgroundColor.white,
+      color(StyleConstants.Colors.wsl)
     )
   )
 
   val boxButtonDanger = style(
     whiteSpace.nowrap,
+    height(22 px),
     padding(3 px, 7 px),
     fontSize(12 px),
-    lineHeight(28 px),
+    lineHeight(12 px),
+    margin(3 px, 1 px),
     border(1 px,solid,StyleConstants.Colors.bordeaux),
     backgroundColor(StyleConstants.Colors.bordeaux),
     color.white,
     &.hover(
-      color.white
+      backgroundColor.white,
+      color(StyleConstants.Colors.bordeaux)
     )
   )
 
@@ -303,9 +332,7 @@ object GlobalStyles extends StyleSheet.Inline {
     maxWidth(100 %%).important
   )
 
-  val notNullable = style(
-    borderColor( StyleConstants.Colors.bordeaux)
-  )
+
 
   val imageThumb = style(
     height.auto,
@@ -359,6 +386,26 @@ object GlobalStyles extends StyleSheet.Inline {
     marginTop(2 px),
     marginBottom(10 px)
   )
+
+  val labelRequired = style(
+    fontWeight.bolder
+  )
+
+  val notNullable = style(
+//    borderColor(StyleConstants.Colors.orange),
+//    borderStyle.solid,
+//    borderWidth(2 px)
+  )
+
+  val smallLabelRequired = style(
+    fontSize(8.px),
+    color(StyleConstants.Colors.orange)
+  )
+
+  val labelNonRequred = style(
+    fontWeight.bold
+  )
+
 //  val fixedHeader = style(
 //    unsafeRoot("tbody")(
 ////    display.block,

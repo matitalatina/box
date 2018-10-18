@@ -68,6 +68,7 @@ object Labels {
   }
 
   object form{
+    def required = get("form.required")
     def save = get("form.save")
     def save_add = get("form.save_add")
     def save_table = get("form.save_table")
