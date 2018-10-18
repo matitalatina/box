@@ -129,24 +129,30 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         case Some(jsonquery) => jsonquery      //in case a query is already stored in Session
       }
 
+      qEncoded = encodeFk(fields,query)
+
       access <- REST.writeAccess(form.baseTable)
-      csv <- REST.csv(state.kind, Session.lang(), state.entity, query)
-      ids <- REST.ids(state.kind, Session.lang(), state.entity, query)
+      csv <- REST.csv(state.kind, Session.lang(), state.entity, qEncoded)
+      ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
 //      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
       specificKind <- REST.specificKind(state.kind, Session.lang(), state.entity)
     } yield {
+
 
       val m = EntityTableModel(
         name = state.entity,
         kind = specificKind,
         rows = csv.map(Row(_)),
         fieldQueries = form.tabularFields.flatMap(x => form.fields.find(_.name == x)).map{ field =>
+
+          val operator = query.filter.find(_.column == field.name).flatMap(_.operator).getOrElse(Filter.default(field))
+          val rawValue = query.filter.find(_.column == field.name).map(_.value).getOrElse("")
           FieldQuery(
             field = field,
-            sort = form.query.flatMap(_.sort.find(_.column == field.name).map(_.order)).getOrElse(Sort.IGNORE),
-            filterValue = form.query.flatMap(_.filter.find(_.column == field.name).map(_.value)).getOrElse(""),
-            filterOperator = form.query.flatMap(_.filter.find(_.column == field.name).flatMap(_.operator)).getOrElse(Filter.default(field))
+            sort = query.sort.find(_.column == field.name).map(_.order).getOrElse(Sort.IGNORE),
+            filterValue = rawValue,
+            filterOperator = operator
           )
         },
         metadata = Some(form),
@@ -197,6 +203,37 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     Session.setIDs(ids)
   }
 
+  private def encodeFk(fields:Seq[JSONField],query:JSONQuery):JSONQuery = {
+
+    def getFieldLookup(name:String) = fields.find(_.name == name).toSeq.flatMap(_.lookup).flatMap(_.lookup)
+
+    val filters = query.filter.map{ field =>
+      field.operator match {
+        case Some(Filter.FK_LIKE) => {
+          val ids = getFieldLookup(field.column)
+            .filter(_.value.toLowerCase.contains(field.value.toLowerCase()))
+            .map(_.id)
+          JSONQueryFilter(field.column,Some(Filter.IN),ids.mkString(","))
+        }
+        case Some(Filter.FK_EQUALS) => {
+          val id = getFieldLookup(field.column)
+            .find(_.value == field.value.toLowerCase())
+            .map(_.value)
+          JSONQueryFilter(field.column,Some(Filter.EQUALS),id.getOrElse(""))
+        }
+        case Some(Filter.FK_NOT) => {
+          val id = getFieldLookup(field.column)
+            .find(_.value == field.value.toLowerCase())
+            .map(_.value)
+          JSONQueryFilter(field.column,Some(Filter.NOT),id.getOrElse(""))
+        }
+        case _ => field
+      }
+    }
+
+    query.copy(filter = filters)
+
+  }
 
   private def query():JSONQuery = {
     val fieldQueries = model.subProp(_.fieldQueries).get
@@ -204,27 +241,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     val sort = fieldQueries.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.name, s.sort)).toList
 
     val filter = fieldQueries.filter(_.filterValue != "").map{ f =>
-      f.filterOperator match {
-        case Filter.FK_LIKE => {
-          val ids = f .field.lookup.toSeq.flatMap(_.lookup)
-                      .filter(_.value.toLowerCase.contains(f.filterValue.toLowerCase()))
-                      .map(_.id)
-          JSONQueryFilter(f.field.name,Some(Filter.IN),ids.mkString(","))
-        }
-        case Filter.FK_EQUALS => {
-          val id = f  .field.lookup.toSeq.flatMap(_.lookup)
-                      .find(_.value == f.filterValue)
-                      .map(_.value)
-          JSONQueryFilter(f.field.name,Some(Filter.EQUALS),id.getOrElse(""))
-        }
-        case Filter.FK_NOT => {
-          val id = f  .field.lookup.toSeq.flatMap(_.lookup)
-            .find(_.value == f.filterValue)
-            .map(_.value)
-          JSONQueryFilter(f.field.name,Some(Filter.NOT),id.getOrElse(""))
-        }
-        case _ => JSONQueryFilter(f.field.name,Some(f.filterOperator),f.filterValue)
-      }
+      JSONQueryFilter(f.field.name,Some(f.filterOperator),f.filterValue)
     }.toList
 
     JSONQuery(filter, sort, None)
@@ -235,10 +252,11 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     logger.info("filterUpdateHandler "+filterUpdateHandler)
 
     val q = query().copy(paging = Some(JSONQueryPaging(Conf.pageLength, page)))
+    val qEncoded = encodeFk(model.get.metadata.toSeq.flatMap(_.fields),q)
 
     for {
-      csv <- REST.csv(model.subProp(_.kind).get, Session.lang(), model.subProp(_.name).get, q)
-      ids <- REST.ids(model.get.kind, Session.lang(), model.get.name, q)
+      csv <- REST.csv(model.subProp(_.kind).get, Session.lang(), model.subProp(_.name).get, qEncoded)
+      ids <- REST.ids(model.get.kind, Session.lang(), model.get.name, qEncoded)
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
       model.subProp(_.ids).set(IDsVM.fromIDs(ids))
