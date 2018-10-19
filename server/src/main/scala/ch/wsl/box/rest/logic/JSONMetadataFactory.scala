@@ -137,7 +137,8 @@ object JSONMetadataFactory extends Logging {
           fields <- Future.sequence(c.map(field2form))
           keys <- JSONMetadataFactory.keysOf(table)
         } yield {
-          JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fields.map(_.name), keys, None, None, table)
+          val fieldList = fields.map(_.name)
+          JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fieldList, keys, None, fieldList, table)
         }
 
         logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)

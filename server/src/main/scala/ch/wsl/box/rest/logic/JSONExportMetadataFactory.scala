@@ -63,7 +63,7 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
 
       val parameters = export.parameters.toSeq.flatMap(_.split(","))
 
-      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,None,"")
+      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq(),"")
     }
   }
 

@@ -11,7 +11,7 @@ import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory, Lookup}
 import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
-import ch.wsl.box.shared.utils.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
 import scribe.Logging
@@ -36,6 +36,8 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
                                                      mat:Materializer,
                                                      up:UserProfile,
                                                      ec: ExecutionContext) extends enablers.CSVDownload with Logging {
+
+
 
 
     View.views = Set(name) ++ View.views
@@ -103,7 +105,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
               entity(as[JSONQuery]) { query =>
                 logger.info("csv")
                 //Source
-                complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.row(x.values()))))
+                complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))))
               }
             } ~
               respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -122,9 +124,9 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
                         val lookup = Lookup.valueExtractor(fkValues,metadata) _
 
                         Source.fromFuture(Future.successful(
-                          CSV.row(metadata.fields.map(_.name))
+                          CSV.writeRow(metadata.fields.map(_.name))
                         )).concat(Source.fromPublisher(dbActions.findStreamed(query).mapResult{x =>
-                          CSV.row(x.values())
+                          CSV.writeRow(x.values())
                         }))
                       }
                     }

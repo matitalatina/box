@@ -69,6 +69,7 @@ object Settings {
     val udashJQuery = "1.2.0"
 
     val scribe = "2.6.0"
+    val scalaCSV = "1.3.6-SNAPSHOT-scalajs"
 
   }
 
@@ -81,7 +82,8 @@ object Settings {
     "io.circe" %%% "circe-core" % versions.circe,
     "io.circe" %%% "circe-generic" % versions.circe,
     "io.circe" %%% "circe-parser" % versions.circe,
-    "com.outr" %%% "scribe" % versions.scribe
+    "com.outr" %%% "scribe" % versions.scribe,
+    "com.github.tototoshi" %%% "scala-csv" % versions.scalaCSV
   ))
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(

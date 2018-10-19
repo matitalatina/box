@@ -16,7 +16,6 @@ import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.LoginRequest
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.shared.utils.CSV
 import scribe.Logging
 
 import scala.util.{Failure, Success}

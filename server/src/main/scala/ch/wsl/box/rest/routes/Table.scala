@@ -15,7 +15,7 @@ import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
 import ch.wsl.box.rest.utils.JSONSupport.jsonContentTypes
-import ch.wsl.box.shared.utils.CSV
+import com.github.tototoshi.csv.CSV
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
@@ -161,7 +161,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("csv")
-              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.row(x.values()))))
+              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))))
             }
           } ~
           respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -169,8 +169,8 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
               parameters('q) { q =>
                 val query = parse(q).right.get.as[JSONQuery].right.get
                 val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en", limitLookupFromFk).map{ metadata =>
-                  CSV.row(metadata.fields.map(_.name))
-                }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.row(x.values())))
+                  CSV.writeRow(metadata.fields.map(_.name))
+                }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.writeRow(x.values())))
                 complete(csv)
               }
             }

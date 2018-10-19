@@ -7,8 +7,9 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.model.EntityActionsRegistry
+import ch.wsl.box.rest.routes.enablers.CSVDownload
 import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
-import ch.wsl.box.shared.utils.CSV
+import com.github.tototoshi.csv.CSV
 import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher
@@ -43,15 +44,15 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
   def extractArray(query:JSONQuery):Source[Json,NotUsed] = extractSeq(query)     // todo adapt JSONQuery to select only fields in form
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
 
-  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):Source[String,NotUsed] = {
+  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {
 
       val lookup = Lookup.valueExtractor(lookupElements, metadata) _
 
       extractSeq(query).map { json =>
-        val row = metadata.tabularFields.map { field =>
+        val row = fields(metadata).map { field =>
           lookup(field,json.get(field))
         }
-        CSV.row(row)
+        CSV.writeRow(row)
       }
 
   }

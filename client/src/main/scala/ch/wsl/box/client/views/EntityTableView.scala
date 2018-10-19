@@ -317,12 +317,16 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def downloadCSV() = {
-    val (kind, modelName) = model.get.metadata.flatMap(_.exportView).getOrElse("") match {
-      case "" => (EntityKind(model.subProp(_.kind).get).entityOrForm, model.subProp(_.name).get)
-      case view => ("entity", view)
-    }
 
-    val url = s"api/v1/$kind/${Session.lang()}/$modelName/csv?q=${query().asJson.toString()}".replaceAll("\n","")
+    val kind = EntityKind(model.subProp(_.kind).get).entityOrForm
+    val modelName =  model.subProp(_.name).get
+    val exportFields = model.get.metadata.map(_.exportFields).getOrElse(Seq())
+    val fields = model.get.metadata.map(_.fields).getOrElse(Seq())
+
+    val queryWithFK = encodeFk(fields,query())
+
+
+    val url = s"api/v1/$kind/${Session.lang()}/$modelName/csv?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }

@@ -147,7 +147,7 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
 
 
 
-      val result = JSONMetadata(form.form_id.get,form.name,formI18n.flatMap(_.label).getOrElse(form.name),jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery, formI18n.flatMap(_.exportView), form.entity)
+      val result = JSONMetadata(form.form_id.get,form.name,formI18n.flatMap(_.label).getOrElse(form.name),jsonFields,layout,form.entity,lang,tableFields,keys,defaultQuery, form.exportFields.map(_.split(",").toSeq).getOrElse(tableFields), form.entity)
       //println(s"resulting form: $result")
       result
     }

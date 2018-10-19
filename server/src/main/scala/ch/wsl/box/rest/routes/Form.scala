@@ -4,10 +4,10 @@ import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Dispo
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{JSONCount, JSONID, JSONMetadata, JSONQuery}
+import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory, Lookup}
 import ch.wsl.box.rest.utils.{JSONSupport, Timer, UserProfile}
-import ch.wsl.box.shared.utils.CSV
+import com.github.tototoshi.csv.CSV
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
@@ -41,8 +41,11 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
 
       val jsonCustomMetadataFactory = JSONFormMetadataFactory()
       val metadata: Future[JSONMetadata] = jsonCustomMetadataFactory.of(name,lang)
-      val tabularMetadata = metadata.map{ f =>
-        val filteredFields = f.fields.filter(field => f.tabularFields.contains(field.name))
+      def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.map{ f =>
+        val filteredFields = fields match {
+          case Some(fields) => f.fields.filter(field => fields.contains(field.name))
+          case None => f.fields.filter(field => f.tabularFields.contains(field.name))
+        }
         f.copy(fields = filteredFields)
       }
 
@@ -134,7 +137,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
         post {
           entity(as[JSONQuery]) { query =>
             logger.info("list")
-            complete(actions(tabularMetadata){ fs =>
+            complete(actions(tabularMetadata()){ fs =>
               fs.extractArray(query).map{arr =>
                 HttpEntity(ContentTypes.`text/plain(UTF-8)`,arr)
               }
@@ -148,7 +151,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
             logger.info("csv")
             complete{
               for{
-                metadata <- tabularMetadata
+                metadata <- tabularMetadata()
               } yield {
                 val formActions = FormActions(metadata)
                 formActions.csv(query,None)
@@ -158,19 +161,25 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
         } ~
         respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
           get {
-            parameters('q, 'lang.?) { (q,resolveFk) =>
+            parameters('q, 'fk.?,'fields.?) { (q,fk,fields) =>
               val query = parse(q).right.get.as[JSONQuery].right.get
+              val tabMetadata = tabularMetadata(fields.map(_.split(",").toSeq))
               complete{
                 for {
-                  metadata <- tabularMetadata
-                  fkValues <- resolveFk match {
-                    case None => Future.successful(None)
-                    case Some(_) => Lookup.valuesForEntity(metadata).map(Some(_))
+                  metadata <- tabMetadata
+                  fkValues <- fk match {
+                    case Some(ExportMode.RESOLVE_FK) => Lookup.valuesForEntity(metadata).map(Some(_))
+                    case _ => Future.successful(None)
                   }
                 } yield {
+
+                  logger.info(s"fk: ${fkValues.toString.take(50)}...")
                   val formActions = FormActions(metadata)
-                  Source.fromFuture(tabularMetadata.map(x => CSV.row(x.tabularFields)))
-                    .concat(formActions.csv(query,fkValues))
+
+                  val headers = metadata.exportFields.map(ef => metadata.fields.find(_.name == ef).map(_.title).getOrElse(ef))
+
+                  Source.fromFuture(Future.successful(CSV.writeRow(headers)))
+                    .concat(formActions.csv(query,fkValues,_.exportFields))
                 }
               }
             }
