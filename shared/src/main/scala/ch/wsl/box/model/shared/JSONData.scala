@@ -2,7 +2,7 @@ package ch.wsl.box.model.shared
 
 import java.text.SimpleDateFormat
 
-import com.github.tototoshi.csv.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 
 
 

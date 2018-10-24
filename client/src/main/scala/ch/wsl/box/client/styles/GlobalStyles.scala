@@ -58,7 +58,10 @@ object GlobalStyles extends StyleSheet.Inline {
     ),
 
     unsafeRoot("input[type='file']")(
-      width(100 %%)
+      width(100 %%),
+      height.auto,
+      borderWidth(0 px),
+      backgroundColor.transparent
     ),
 
     unsafeRoot("textarea")(

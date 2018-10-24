@@ -13,6 +13,7 @@ import scala.concurrent.Future
 import scalatags.JsDom.all._
 import ch.wsl.box.shared.utils.JsonUtils._
 import io.udash.bindings.modifiers.Binding
+import org.scalajs.dom.Node
 
 object InputWidgetFactory {
 
@@ -58,45 +59,47 @@ object InputWidget {
   import io.udash.css.CssView._
 
 
-  private def showInput(prop:Property[Json],labelString:Option[String],modifiers:Seq[Modifier] = Seq()):Binding = WidgetUtils.showNotNull(prop){ p =>
+  //used in read-only mode
+  private def showInput(prop:Property[Json],field:JSONField, withLabel:Boolean, modifiers:Seq[Modifier] = Seq()):Binding = WidgetUtils.showNotNull(prop){ p =>
 
     val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
 
-    def withLabel = labelString.exists(_.length > 0)
+    def reallyWithLabel = withLabel & (field.title.length > 0)
 
-//    def withTooltip = hasTooltip && labelString.length > 0
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
-      if(withLabel) label(labelString) else {},
-      if(withLabel)
-        div(inputRendererDefaultModifiers++modifiers, bind(prop.transform(_.string)))
+      if(reallyWithLabel) label(field.title) else {},
+      if(reallyWithLabel)
+        div(inputRendererDefaultModifiers++modifiers, (bind(prop.transform(_.string))))
       else
-        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), bind(prop.transform(_.string))),
+        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), (bind(prop.transform(_.string)))),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
 
   }
 
-  private def input(field:JSONField, withLabel:Boolean,modifiers:Seq[Modifier] = Seq())(inputRenderer:(Seq[Modifier]) => Modifier):Modifier = {
+  private def input(field:JSONField, withLabel:Boolean, skipRequiredInfo:Boolean=false, modifiers:Seq[Modifier] = Seq())(inputRenderer:(Seq[Modifier]) => Node):Modifier = {
 
     val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
 
+    def reallyWithLabel = withLabel & (field.title.length > 0)
 
     val ph = field.placeholder match{
       case Some(p) if p.nonEmpty => Seq(placeholder := p)
       case _ => Seq.empty
     }
 
+    val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
 
     val allModifiers = inputRendererDefaultModifiers++ph++ WidgetUtils.toNullable(field.nullable) ++modifiers
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
-      if(withLabel) WidgetUtils.toLabel(field) else {},
-      if(withLabel)
-        inputRenderer(allModifiers)
+      if(reallyWithLabel) WidgetUtils.toLabel(field, skipRequiredInfo) else {},
+      if(reallyWithLabel)
+        tooltip(inputRenderer(allModifiers))
       else
-        inputRenderer(allModifiers++Seq(width := 100.pct)),
+        tooltip(inputRenderer(allModifiers++Seq(width := 100.pct))),
       div(BootstrapStyles.Visibility.clearfix)
     )
 
@@ -107,36 +110,52 @@ object InputWidget {
     val modifiers:Seq[Modifier] = Seq()
 
 
-    override def edit() = input(field,true,modifiers){ case y =>
+    override def edit() = input(field,true, false, modifiers){ case y =>
+
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
-      TextInput.apply(stringModel,None,y:_*)
+      TextInput(stringModel)(y:_*).render
     }
-    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,field.label,modifiers))
+    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,field,true, modifiers))
   }
 
   class TextDisabled(field:JSONField, prop: Property[Json]) extends Text(field,prop) {
-    override val modifiers = Seq(disabled := Conf.manualEditKeyFields, textAlign.right)
+
+    override def edit() = Conf.manualEditKeyFields match{
+//      case false =>{    //todo : mimic an input with a label (otherwise it is not safe: can change dom and save new key!)
+//        show()
+//      }
+//      case true => {
+        case _ => {
+        input(field,true, !Conf.manualEditKeyFields, modifiers){ case y =>
+          val stringModel = prop.transform[String](jsonToString _,strToJson _)
+          TextInput(stringModel)(y:_*).render
+        }
+      }
+
+    }
+
+    override val modifiers = Seq({if (!Conf.manualEditKeyFields) {disabled := true} else {}} , textAlign.right)
   }
 
   case class TextNoLabel(field:JSONField, prop: Property[Json]) extends Widget {
 
 
-    override def edit() = input(field,false){ case y =>
+    override def edit() = input(field,false, false){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
-      TextInput.apply(stringModel,None,y:_*)
+      TextInput(stringModel)(y:_*).render
     }
-    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,None))
+    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,field, false))
   }
 
   class Textarea(val field:JSONField, prop: Property[Json]) extends Widget {
 
     val modifiers:Seq[Modifier] = Seq()
 
-    override def edit() = input(field,true,modifiers){ case y =>
+    override def edit() = input(field,true, false, modifiers){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToJson _)
-      TextArea.apply(stringModel,None,y:_*)
+      TextArea(stringModel)(y:_*).render
     }
-    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,field.label,modifiers))
+    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,field,true,modifiers))
   }
 
   class TwoLines(field:JSONField, prop: Property[Json]) extends Textarea(field,prop) {
@@ -150,22 +169,22 @@ object InputWidget {
 
 
 
-    override def edit():JsDom.all.Modifier = (input(field,true){ case y =>
+    override def edit():JsDom.all.Modifier = (input(field, true, false){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
-      NumberInput.apply(stringModel,None,y:_*)
+      NumberInput(stringModel)(y:_*).render
     })
-    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,field.label))
+    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop, field, true))
   }
 
   case class NumberNoLabel(field:JSONField, prop: Property[Json]) extends Widget {
 
 
 
-    override def edit():JsDom.all.Modifier = (input(field,false){ case y =>
+    override def edit():JsDom.all.Modifier = (input(field,false, false){ case y =>
       val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
-      NumberInput.apply(stringModel,None,y:_*)
+      NumberInput(stringModel)(y:_*).render
     })
-    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop,None,Seq()))
+    override protected def show(): JsDom.all.Modifier = autoRelease(showInput(prop, field, false,Seq()))
   }
 
 

@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.styles.GlobalStyles
-import ch.wsl.box.client.utils.Labels
+import ch.wsl.box.client.utils.{Conf, Labels}
 import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash.bindings.modifiers.Binding
@@ -11,10 +11,11 @@ import io.udash.properties.single.Property
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import scalatags.JsDom.all.{Modifier, label}
+import scribe.{Logger, Logging}
 
 import scala.concurrent.duration.DurationInt
 
-object WidgetUtils {
+object WidgetUtils extends Logging{
 
   import scalacss.ScalatagsCss._
   import scalatags.JsDom.all._
@@ -38,7 +39,7 @@ object WidgetUtils {
     el
   }
 
-  def toLabel(field:JSONField) = {
+  def toLabel(field:JSONField, skipRequiredInfo:Boolean=false) = {
 
     val labelStyle = field.nullable match {
       case true => GlobalStyles.labelNonRequred
@@ -48,7 +49,11 @@ object WidgetUtils {
 
     val boxLabel = label(
       labelStyle,
-      field.title,if(!field.nullable) small(GlobalStyles.smallLabelRequired ," - " + Labels.form.required) else {}
+      field.title,
+      (skipRequiredInfo, field.nullable, field.title.length > 0, field.default) match{
+        case (false, false, true, None) => small(GlobalStyles.smallLabelRequired ," - " + Labels.form.required)
+        case _ => {}//logger.warn(field.title +": "+ Seq(field.nullable, field.label.getOrElse("").length>0, field.default, Conf.manualEditKeyFields).mkString("\n"))}
+      }
     ).render
 
     //addTooltip(field.tooltip,boxLabel)

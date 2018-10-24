@@ -7,7 +7,7 @@ import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory, JSONMetadataFactory, Lookup}
 import ch.wsl.box.rest.utils.{JSONSupport, Timer, UserProfile}
-import com.github.tototoshi.csv.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging

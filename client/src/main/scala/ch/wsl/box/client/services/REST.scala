@@ -2,7 +2,7 @@ package ch.wsl.box.client.services
 
 import ch.wsl.box.client.services.REST.get
 import ch.wsl.box.model.shared._
-import com.github.tototoshi.csv.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import org.scalajs.dom.File
 

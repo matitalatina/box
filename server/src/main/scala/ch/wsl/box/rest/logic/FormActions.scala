@@ -9,7 +9,7 @@ import ch.wsl.box.model.shared._
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.rest.routes.enablers.CSVDownload
 import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
-import com.github.tototoshi.csv.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher

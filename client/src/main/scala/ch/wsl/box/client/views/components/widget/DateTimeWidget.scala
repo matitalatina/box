@@ -104,7 +104,7 @@ trait DateTimeWidget extends Widget {
     autoRelease(produce(key) { k =>
       val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
       div(
-        if (field.label.exists(_.length > 0)) WidgetUtils.toLabel(field) else {},
+        if (field.title.length > 0) WidgetUtils.toLabel(field, false) else {},
         tooltip(div(style,if(field.nullable) {} else GlobalStyles.notNullable)(
           picker.render
         ).render),

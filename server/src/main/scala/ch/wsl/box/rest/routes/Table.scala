@@ -15,7 +15,7 @@ import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
 import ch.wsl.box.rest.utils.JSONSupport.jsonContentTypes
-import com.github.tototoshi.csv.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
