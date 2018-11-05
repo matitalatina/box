@@ -34,8 +34,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
   implicit val db = up.db
 
 
-  val actionRegistry = EntityActionsRegistry()
-  val actions = actionRegistry.tableActions(metadata.entity)
+  val jsonActions = EntityActionsRegistry().tableActions(metadata.entity)
 
   val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
@@ -86,7 +85,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
 
   def delete(e:Json):Future[Int] = {
     val id = e.ID(metadata.keys)
-    actions.delete(id)
+    jsonActions.delete(id)
   }
 
 
@@ -108,14 +107,14 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     val id = e.ID(metadata.keys)
     for{
       _ <- Future.sequence(subAction(e,Json.Null,_.updateAll))
-      dbData <- actions.getById(id).recover{ case t => logger.info("recovered future with none"); None }   //existing record in db
+      dbData <- jsonActions.getById(id).recover{ case t => logger.info("recovered future with none"); None } //existing record in db
       result <- {
         if(dbData.isDefined) {
           logger.info(s"update $id")
-          actions.update(id,e)
+          jsonActions.update(id,e)
         } else {
           logger.info(s"insert into ${metadata.entity} with id $id")
-          actions.insert(e)
+          jsonActions.insert(e)
         }
       }
     } yield result
@@ -123,7 +122,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
   }
 
   def insertAll(e:Json):Future[Json] = for{
-    inserted <- actions.insert(e)
+    inserted <- jsonActions.insert(e)
     _ <- Future.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
       for {
         metadata <- jsonCustomMetadataFactory.of(field.child.get.objId, metadata.lang)

@@ -57,7 +57,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
   import io.circe.generic.auto._
 
 
-  val utils = new DbActions[T,M](table)
+  val dbActions = new DbActions[T,M](table)
 
   def createThumbnail(file:Array[Byte],contentType:String):Option[Array[Byte]] = Try{
     val thumbnailer = new Thumbnailer(new PDFThumbnailer, new TextThumbnailer, new ImageThumbnailer, new DOCXThumbnailer)
@@ -68,7 +68,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
   def upload(id:JSONID)(metadata:FileInfo, byteSource:Source[ByteString, Any]) = {
     for{
       bytea <- byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray)
-      row <- utils.getById(id)
+      row <- dbActions.getById(id)
       rowWithFile = handler.inject(row.get,bytea,metadata)
       rowWithFileAndThumb <- Future{
         createThumbnail(bytea,metadata.contentType.mediaType.toString) match {
@@ -77,7 +77,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
         }
 
       }
-      result <- utils.updateById(id,rowWithFileAndThumb)
+      result <- dbActions.updateById(id,rowWithFileAndThumb)
     } yield result
   }
 
@@ -96,7 +96,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
           } ~
             path("thumb") {
               get {
-                onSuccess(utils.getById(id)) { result =>
+                onSuccess(dbActions.getById(id)) { result =>
                   val f = handler.extractThumbnail(result.head)
                   if(f.file.isEmpty) {
                     val originalFile = handler.extract(result.head)
@@ -106,7 +106,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
                       thumb <- createThumbnail(file,mime)
                     } yield {
                       val row = handler.injectThumbnail(result.head,thumb)
-                      utils.updateById(id,row)
+                      dbActions.updateById(id,row)
                       handler.extractThumbnail(row)
                     }
                     thumbnailFile match {
@@ -122,7 +122,7 @@ case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field
             } ~
             pathEnd {
               get {
-                onSuccess(utils.getById(id)) { result =>
+                onSuccess(dbActions.getById(id)) { result =>
                   val f = handler.extract(result.head)
                   File.completeFile(f)
                 }

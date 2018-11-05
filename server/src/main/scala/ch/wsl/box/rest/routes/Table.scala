@@ -9,12 +9,9 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromRequestUnmarshaller, Unmarshaller}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import akka.util.ByteString
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
-import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
+import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory, JSONTableActions}
 import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
-import ch.wsl.box.rest.utils.JSONSupport.jsonContentTypes
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
@@ -68,6 +65,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
 
 //    val jsonActions= new JsonTableActions(table)
     val dbActions = new DbActions[T,M](table)
+    val jsonActions = JSONTableActions[T,M](table)
     val limitLookupFromFk: Int = ConfigFactory.load().as[Int]("limitLookupFromFk")
 
     import JSONSupport._
@@ -133,7 +131,8 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
         post {
           entity(as[JSONQuery]) { query =>
             complete {
-              EntityActionsRegistry().tableActions(name).ids(query)
+              jsonActions.ids(query)
+//              EntityActionsRegistry().tableActions(name).ids(query)
             }
           }
         }
