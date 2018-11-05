@@ -48,6 +48,7 @@ case class LayoutBlock(
 
 
 case class SubLayoutBlock(
+                         title: Option[String],
                          fieldsWidth:Seq[Int],
                          fields:Seq[Either[String,SubLayoutBlock]]
                          )
