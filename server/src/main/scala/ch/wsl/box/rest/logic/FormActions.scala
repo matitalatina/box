@@ -123,14 +123,19 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
   }
 
   def insertAll(e:Json):Future[Json] = for{
+    inserted <- actions.insert(e)
     _ <- Future.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
       for {
         metadata <- jsonCustomMetadataFactory.of(field.child.get.objId, metadata.lang)
         rows = attachArrayIndex(e.seq(field.name),metadata)
-        result <- FutureUtils.seqFutures(rows)(row => FormActions(metadata).insertAll(row))
+        //attach parent id
+        rowsWithId = rows.map{ row =>
+          val masterChild: Seq[(String, String)] = field.child.get.masterFields.split(",").zip(field.child.get.childFields.split(",")).toSeq
+          masterChild.foldLeft(row){ case (acc,(master,child)) => acc.deepMerge(Json.obj(child -> inserted.js(master)))}
+        }
+        result <- FutureUtils.seqFutures(rowsWithId)(row => FormActions(metadata).insertAll(row))
       } yield result
     })
-    inserted <- actions.insert(e)
     data <- getAllById(inserted.ID(metadata.keys))
   } yield data
 
