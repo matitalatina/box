@@ -15,10 +15,14 @@ import ch.wsl.box.client.views.components.Debug
 import io.udash.bootstrap.BootstrapStyles
 
 case class IndexViewModel(news:Seq[Json])
+object IndexViewModel extends HasModelPropertyCreator[IndexViewModel] {
+  implicit val blank: Blank[IndexViewModel] =
+    Blank.Simple(IndexViewModel(Seq()))
+}
 
 object IndexViewPresenter extends ViewPresenter[IndexState.type]{
 
-  val prop = ModelProperty{IndexViewModel(Seq())}
+  val prop = ModelProperty.blank[IndexViewModel]
 
   override def create() = (new IndexView(prop),new IndexPresenter(prop))
 }
@@ -38,6 +42,7 @@ class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
   import scalatags.JsDom.all._
   import io.circe.generic.auto._
   import ch.wsl.box.shared.utils.JsonUtils._
+  import io.udash.css.CssView._
 
 
   import org.scalajs.dom.File
@@ -47,7 +52,7 @@ class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
     div(raw(UI.info)),
     if(UI.enableNews) {
       div(h2("News"),
-        Debug(viewModel, "indexView"),
+        Debug(viewModel, name = "indexView"),
         repeat(viewModel.subSeq(_.news)) { news =>
           div(
             div(news.get.get("news_id")),
@@ -62,5 +67,4 @@ class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
 
   override def getTemplate: Modifier = content
 
-  override def renderChild(view: View): Unit = {}
 }

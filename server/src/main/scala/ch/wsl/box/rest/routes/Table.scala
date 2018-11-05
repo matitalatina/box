@@ -1,27 +1,31 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.common.EntityStreamingSupport
-import akka.http.scaladsl.marshalling.{Marshaller, Marshalling, ToResponseMarshaller}
+import akka.http.scaladsl.marshalling.{Marshaller, Marshalling, ToEntityMarshaller, ToResponseMarshaller}
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
+import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromRequestUnmarshaller, Unmarshaller}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import akka.util.ByteString
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
-import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory}
-import ch.wsl.box.rest.utils.JSONSupport
-import ch.wsl.box.shared.utils.CSV
+import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory, JSONTableActions}
+import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
 import com.typesafe.config._
+import io.circe.parser.decode
+import io.circe.syntax._
+import io.circe.{Decoder, Encoder, Json}
 import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+
 
 /**
  * Created by andreaminetti on 16/02/16.
@@ -36,13 +40,22 @@ object Table {
 
 case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], isBoxTable:Boolean = false)
                                                             (implicit
+                                                             enc: Encoder[M],
+                                                             dec:Decoder[M],
                                                              mat:Materializer,
-                                                             unmarshaller: FromRequestUnmarshaller[M],
-                                                             marshaller:ToResponseMarshaller[M],
-                                                             seqmarshaller: ToResponseMarshaller[Seq[M]],
-                                                             jsonmarshaller:ToResponseMarshaller[JSONData[M]],
-                                                             db:Database,
+                                                             up:UserProfile,
                                                              ec: ExecutionContext) extends enablers.CSVDownload with Logging {
+
+
+  import JSONSupport._
+  import akka.http.scaladsl.model._
+  import akka.http.scaladsl.server.Directives._
+  import ch.wsl.box.shared.utils.Formatters._
+  import io.circe.generic.auto._
+  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.model.shared.EntityKind
+
+    implicit val db = up.db
 
 //    println(s"adding table: $name" )
     isBoxTable match{
@@ -50,8 +63,9 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
       case true => Table.boxTables = Set(name) ++ Table.boxTables
     }
 
-
-    val utils = new DbActions[T,M](table)
+//    val jsonActions= new JsonTableActions(table)
+    val dbActions = new DbActions[T,M](table)
+    val jsonActions = JSONTableActions[T,M](table)
     val limitLookupFromFk: Int = ConfigFactory.load().as[Int]("limitLookupFromFk")
 
     import JSONSupport._
@@ -73,7 +87,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
             JSONID.fromString(strId) match {
               case Some(id) =>
                 get {
-                  onComplete(utils.getById(id)) {
+                  onComplete(dbActions.getById(id)) {
                     case Success(data) => {
                       complete(data)
                     }
@@ -82,14 +96,14 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
                 } ~
                   put {
                     entity(as[M]) { e =>
-                      onComplete(utils.updateById(id, e)) {
+                      onComplete(dbActions.updateById(id, e)) {
                         case Success(entity) => complete(e)
                         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                       }
                     }
                   } ~
                   delete {
-                    onComplete(utils.deleteById(id)) {
+                    onComplete(dbActions.deleteById(id)) {
                       case Success(affectedRow) => complete(JSONCount(affectedRow))
                       case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                     }
@@ -117,7 +131,8 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
         post {
           entity(as[JSONQuery]) { query =>
             complete {
-              EntityActionsRegistry().tableActions(name).ids(query)
+              jsonActions.ids(query)
+//              EntityActionsRegistry().tableActions(name).ids(query)
             }
           }
         }
@@ -137,7 +152,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
         post {
           entity(as[JSONQuery]) { query =>
             logger.info("list")
-            complete(utils.find(query))
+            complete(dbActions.find(query))
           }
         }
       } ~
@@ -145,7 +160,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("csv")
-              complete(Source.fromPublisher(utils.findStreamed(query)))
+              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))))
             }
           } ~
           respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -153,8 +168,8 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
               parameters('q) { q =>
                 val query = parse(q).right.get.as[JSONQuery].right.get
                 val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en", limitLookupFromFk).map{ metadata =>
-                  CSV.row(metadata.fields.map(_.name))
-                }).concat(Source.fromPublisher(utils.findStreamed(query)).map(x => CSV.row(x.values())))
+                  CSV.writeRow(metadata.fields.map(_.name))
+                }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.writeRow(x.values())))
                 complete(csv)
               }
             }

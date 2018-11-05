@@ -5,7 +5,9 @@ import io.udash._
 import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.properties.PropertyCreator
 import io.udash.wrappers.jquery._
+import org.scalajs.dom
 import org.scalajs.dom.{Element, document}
+import scalatags.Text.TypedTag
 import scribe.{Level, Logger, Logging}
 
 import scala.concurrent.Future
@@ -17,7 +19,7 @@ object Context {
   val routingRegistry = new RoutingRegistryDef
   private val viewPresenterRegistry = new StatesToViewPresenterDef
 
-  implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry, RootState)   //udash application
+  implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry)   //udash application
 
   implicit val pc: PropertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]]
   implicit val pcfr: PropertyCreator[Option[ch.wsl.box.model.shared.FileReference]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.FileReference]]
@@ -29,7 +31,8 @@ object Init extends JSApp with Logging {
   @JSExport
   override def main(): Unit = {
 
-    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Info))
+    Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Info)).replace()
+
 
     logger.debug("Box started")
 
@@ -46,10 +49,10 @@ object Init extends JSApp with Logging {
           applicationInstance.run(appRoot.get)
 
           import scalacss.Defaults._
-          import scalacss.ScalatagsCss._
-          import scalatags.JsDom._
           import ch.wsl.box.client.styles.GlobalStyles
-          jQ(GlobalStyles.render[TypedTag[org.scalajs.dom.raw.HTMLStyleElement]].render).insertBefore(appRoot.get)
+
+
+          jQ(s"<style>${GlobalStyles.render}</style>").insertBefore(appRoot.get)
           jQ(UdashDatePicker.loadBootstrapDatePickerStyles()).insertBefore(appRoot.get)
         }
       })

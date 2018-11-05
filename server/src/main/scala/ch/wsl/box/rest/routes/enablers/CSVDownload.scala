@@ -3,9 +3,10 @@ package ch.wsl.box.rest.routes.enablers
 import akka.http.scaladsl.common.EntityStreamingSupport
 import akka.http.scaladsl.marshalling.{Marshaller, Marshalling}
 import akka.http.scaladsl.model.ContentTypes
+import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 import ch.wsl.box.model.shared.JSONData
-import ch.wsl.box.shared.utils.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 
 trait CSVDownload {
 
@@ -13,7 +14,7 @@ trait CSVDownload {
   implicit def asCsv[M <: Product] = Marshaller.strict[M, ByteString] { t =>
     Marshalling.WithFixedContentType(ContentTypes.`text/csv(UTF-8)`, () => {
       import JSONData._
-      ByteString(CSV.row(t.values()))
+      ByteString(CSV.writeRow(t.values()))
     })
   }
 
@@ -25,4 +26,5 @@ trait CSVDownload {
 
   // [2] enable csv streaming:
   implicit val csvStreaming = EntityStreamingSupport.csv()
+    .withFramingRenderer(Flow[ByteString].map(bs => bs)) //no new line, let the CSV library manage the new lines
 }

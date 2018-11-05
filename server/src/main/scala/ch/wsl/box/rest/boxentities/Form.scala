@@ -22,14 +22,14 @@ object Form {
     *  @param description Database column description SqlType(text), Default(None)
     *  @param layout Database column layout SqlType(text), Default(None) */
   case class Form_row(form_id: Option[Int] = None, name: String, entity:String, description: Option[String] = None, layout: Option[String] = None,
-                      tabularFields: Option[String] = None, query: Option[String] = None)
+                      tabularFields: Option[String] = None, query: Option[String] = None,exportFields: Option[String] = None)
   /** GetResult implicit for fetching Form_row objects using plain SQL queries */
 
   /** Table description of table form. Objects of this class serve as prototypes for rows in queries. */
   class Form(_tableTag: Tag) extends profile.api.Table[Form_row](_tableTag, "form") {
-    def * = (Rep.Some(form_id), name, entity, description, layout, tabularFields, query) <> (Form_row.tupled, Form_row.unapply)
+    def * = (Rep.Some(form_id), name, entity, description, layout, tabularFields, query,exportFields) <> (Form_row.tupled, Form_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(form_id), name, entity, description, layout, tabularFields, query).shaped.<>({ r=>import r._; _1.map(_=> Form_row.tupled((_1, _2, _3, _4, _5, _6, _7)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(form_id), name, entity, description, layout, tabularFields, query,exportFields).shaped.<>({ r=>import r._; _1.map(_=> Form_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val form_id: Rep[Int] = column[Int]("form_id", O.AutoInc, O.PrimaryKey)
@@ -43,6 +43,8 @@ object Form {
     val layout: Rep[Option[String]] = column[Option[String]]("layout", O.Default(None))
 
     val tabularFields: Rep[Option[String]] = column[Option[String]]("tabularFields", O.Default(None))
+
+    val exportFields: Rep[Option[String]] = column[Option[String]]("exportfields", O.Default(None))
     val query: Rep[Option[String]] = column[Option[String]]("query", O.Default(None))
 
 
@@ -61,14 +63,14 @@ object Form {
     *  @param hint Database column hint SqlType(text), Default(None)*/
   case class Form_i18n_row(id: Option[Int] = None, field_id: Option[Int] = None,
                            lang: Option[String] = None, label: Option[String] = None,
-                           tooltip: Option[String] = None, hint: Option[String] = None, exportView:Option[String] = None)
+                           tooltip: Option[String] = None, hint: Option[String] = None)
   /** GetResult implicit for fetching Form_i18n_row objects using plain SQL queries */
 
   /** Table description of table form_i18n. Objects of this class serve as prototypes for rows in queries. */
   class Form_i18n(_tableTag: Tag) extends profile.api.Table[Form_i18n_row](_tableTag, "form_i18n") {
-    def * = (Rep.Some(id), form_id, lang, label, tooltip, hint, exportView) <> (Form_i18n_row.tupled, Form_i18n_row.unapply)
+    def * = (Rep.Some(id), form_id, lang, label, tooltip, hint) <> (Form_i18n_row.tupled, Form_i18n_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), form_id, lang, label, tooltip, hint, exportView).shaped.<>({ r=>import r._; _1.map(_=> Form_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), form_id, lang, label, tooltip, hint).shaped.<>({ r=>import r._; _1.map(_=> Form_i18n_row.tupled((_1, _2, _3, _4, _5, _6)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -83,7 +85,6 @@ object Form {
     /** Database column hint SqlType(text), Default(None) */
     val hint: Rep[Option[String]] = column[Option[String]]("hint", O.Default(None))
 
-    val exportView: Rep[Option[String]] = column[Option[String]]("exportView", O.Default(None))
 
     /** Foreign key referencing Field (database name fkey_field) */
     lazy val fieldFk = foreignKey("fkey_form", form_id, table)(r => Rep.Some(r.form_id), onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)

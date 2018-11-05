@@ -5,13 +5,12 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
-import ch.wsl.box.rest.logic.JSONMetadataFactory
-import ch.wsl.box.rest.logic.JSONFormMetadataFactory
+import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
-import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
-import scribe.{Level, Logger}
+import scribe._
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.io.StdIn
@@ -29,21 +28,24 @@ object Box {
     val host = conf.as[String]("host")
     val port = conf.as[Int]("port")
 
-    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Info))
+    Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Info)).replace()
+//    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Info))
 
     //TODO need to be reworked now it's based on an hack, it call generated root to populate models
-    GeneratedRoutes()(Auth.adminDB, materializer, executionContext)
-    BoxRoutes()(Auth.adminDB, materializer, executionContext)
+    GeneratedRoutes()(Auth.adminUserProfile, materializer, executionContext)
+    BoxRoutes()(Auth.boxUserProfile, materializer, executionContext)
 
-    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Warn))
+//    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Warn))
+    Logger.root.clearHandlers().withHandler(minimumLevel = Some(Level.Warn)).replace()
 
     // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
 
     implicit def handler: ExceptionHandler = BoxExceptionHandler()
 
     val binding: Future[Http.ServerBinding] = Http().bindAndHandle(route, host, port) //attach the root route
-    logger.info(s"Server online at http://localhost:$port")
+    println(s"Server online at http://localhost:$port")
 
+    val tableConf = BoxConf.load()
 
   }
 }

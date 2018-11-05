@@ -4,9 +4,12 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import ch.wsl.box.model.shared._
 import scribe.Logging
+import slick.ast.Node
 import slick.basic.DatabasePublisher
+import slick.dbio.Effect
 import slick.jdbc.{ResultSetConcurrency, ResultSetType}
 import slick.lifted.{ColumnOrdered, TableQuery}
+import slick.sql.FixedSqlStreamingAction
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -19,6 +22,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
   implicit class QueryBuilder(base:Query[T,M,Seq]) {
+
     def where(filters: Seq[JSONQueryFilter]): Query[T, M, Seq] = {
       filters.foldRight[Query[T, M, Seq]](base) { case (jsFilter, query) =>
         //println(jsFilter)
@@ -42,10 +46,16 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
       case None => base
       case Some(paging) => base.drop ((paging.currentPage - 1) * paging.pageLength).take (paging.pageLength)
     }
+
+//    def select(fields:Seq[String]): Query[T, _, Seq] =  base.map(x => x.reps(fields))
+  }
+
+  def count()(implicit db:Database):Future[Int] =  db.run {
+          entity.length.result
   }
 
   def count(query:JSONQuery)(implicit db:Database):Future[Int] = {
-    val q = entity.where(query.filter) //.sort(query.sort)
+    val q = entity.where(query.filter)
 
     for {
       c <- db.run{
@@ -64,18 +74,96 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
 
   }
 
-  def find(query:JSONQuery)(implicit db:Database, mat: Materializer): Future[JSONData[M]] = {
+  def find(query:JSONQuery)(implicit db:Database, mat: Materializer): Future[Seq[M]] = {
 
     val q = entity.where(query.filter).sort(query.sort)
     val qPaged = q.page(query.paging).result
 
     for{
       data <- db.run(qPaged)
-      count <- count(query)
     } yield {
-      JSONData(data.toList,count)
+      data
     }
   }
+
+  def findJSON(query:JSONQuery)(implicit db:Database, mat: Materializer): Future[JSONData[M]] = {
+    for{
+      data <- find(query)
+      n <- count(query)
+    }yield{
+      JSONData(data, n)
+    }
+  }
+
+  def keys() = for{
+    k <- JSONMetadataFactory.keysOf(entity.baseTableRow.tableName)
+  } yield{
+    k
+  }
+
+
+//  def write(table:String,schema:String,user:String)(implicit ec:ExecutionContext) = Auth.adminDB.run {
+//    sql"""SELECT 1
+//          FROM information_schema.role_table_grants
+//          WHERE table_name=$table and table_schema=$schema and grantee=$user and privilege_type='UPDATE'""".as[Int].headOption.map(_.isDefined)
+//  }
+
+//  def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = {
+////    val x: Seq[Node] = entity.baseTableRow.primaryKeys.flatMap(_.columns).toIndexedSeq
+////
+////    entity.baseTableRow.primaryKeys.flatMap(_.columns).toSeq.qu
+//
+//    val q = entity.where(query.filter).sort(query.sort)
+//    val qPaged = q.page(query.paging)
+//
+//    for{
+//     keys <-  keys()
+//     idsel <- qPaged.map(x => x.reps(keys)).result
+//     n <- count()
+//
+//    } yield {
+//
+//      val last = query.paging match {
+//        case None => true
+//        case Some(paging) =>  paging.currentPage * paging.pageLength >= n
+//      }
+//      import ch.wsl.box.shared.utils.JsonUtils._
+//      IDs(
+//        last,
+//        query.paging.map(_.currentPage).getOrElse(1),
+//        idsel.map(x => keys.zip(x).map{case (k,v) => k+"::"+v.toString}.mkString(",")),
+////        (Seq.tabulate(idsel.length)(_ => keys)).flatten.zip(idsel).toSeq.map((k,v)=> k+"::"+v.toString).mkString(","),
+//        n
+//      )
+//    }
+
+//
+//    val kstr = k.mkString(",")
+//    db.run(
+//      sql"""SELECT #$
+//                FROM information_schema.role_table_grants
+//                WHERE table_name=$table and table_schema=$schema and grantee=$user and privilege_type='UPDATE'""".as[Int].headOption.map(_.isDefined))
+//
+//
+//    for{
+//      data <- find(query)
+//      keys <- keys()
+//      n <- count()
+//    } yield {
+//
+//      val last = query.paging match {
+//        case None => true
+//        case Some(paging) =>  paging.currentPage * paging.pageLength >= n
+//      }
+//      import ch.wsl.box.shared.utils.JsonUtils._
+//      IDs(
+//        last,
+//        query.paging.map(_.currentPage).getOrElse(1),
+//        data.map{_.asJson.ID(keys).asString},
+//        n
+//      )
+//    }
+//  }
 
   private def filter(id:JSONID):Query[T, M, Seq]  = {
     if(id.id.isEmpty) throw new Exception("No key is defined")
@@ -92,7 +180,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
       case Some(f) => for {
         result <- db.run {
           val action = f.take(1).result
-          logger.debug(action.statements)
+          logger.debug(action.statements.toString)
           action
         }
       } yield result.headOption
@@ -116,7 +204,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     for{
       result <- db.run {
         val action = filter(id).update(e)
-        logger.debug (action.statements)
+        logger.debug (action.statements.toString)
         action
       }
     } yield result

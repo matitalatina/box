@@ -6,9 +6,10 @@ import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.Conf
 import ch.wsl.box.client.views.components.Debug
-import ch.wsl.box.model.shared.{JSONField, JSONID, JSONMetadata}
+import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash._
+import io.udash.bindings.Bindings
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom.File
 import scalatags.JsDom
@@ -25,13 +26,15 @@ import scala.concurrent.Future
   * @param labelString
   * @param entity
   */
-case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, labelString:String, entity:String) extends Widget with Logging {
+case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
+  import io.udash.css.CssView._
   import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JsonUtils._
   import io.circe.syntax._
+
 
   override def afterSave(result:Json, metadata: JSONMetadata) = {
     logger.info(s"File after save with result: $result with selected file: ${selectedFile.get.headOption.map(_.name)}")
@@ -57,10 +60,10 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
 
   override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),GlobalStyles.noPadding,
-    if(labelString.length > 0) label(labelString) else {},
-    produce(prop.transform(_.string)) { name =>
+    label(field.title),
+    produceWithNested(prop.transform(_.string)) { (name,nested) =>
       div(
-        produce(id) { idfile =>
+        nested(produce(id) { idfile =>
           logger.info("rendering image")
           val randomString = UUID.randomUUID().toString
           JSONID.fromString(idfile) match {
@@ -71,7 +74,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
             case None => div().render
           }
 
-        }
+        })
       ).render
     },
     div(BootstrapStyles.Visibility.clearfix)
@@ -80,21 +83,21 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   override def edit() = {
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding,
-      if(labelString.length > 0) label(labelString) else {},
-      produce(prop.transform(_.string)) { name =>
+      WidgetUtils.toLabel(field),
+      produceWithNested(prop) { (name,nested) =>
         div(
-          produce(id) { idfile =>
+          nested(produce(id) { idfile =>
             logger.info("rendering image")
             val randomString = UUID.randomUUID().toString
             JSONID.fromString(idfile) match {
               case Some(_) => div(
-                  img(src := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
-                  a(href := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
-                ).render
+                img(src := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
+                a(href := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name.string)
+              ).render
               case None => div().render
             }
 
-          }
+          })
         ).render
       },
       input,
@@ -103,4 +106,8 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   }
 
 
+}
+
+case class FileWidgetFactory( entity:String) extends ComponentWidgetFactory {
+  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = FileWidget(id,prop,field,entity)
 }

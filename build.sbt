@@ -3,7 +3,9 @@
 //import com.typesafe.sbt.web.SbtWeb
 
 import UDashBuild._
-import org.scalajs.sbtplugin.cross.CrossProject
+
+
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 
 
@@ -16,6 +18,10 @@ lazy val codegen  = (project in file("codegen")).settings(
   resourceDirectory in Compile := baseDirectory.value / "../resources"
 )
 
+lazy val hello = taskKey[Unit]("Prints 'Hello World'")
+
+
+
 lazy val server: Project  = (project in file("server"))
   .settings(
     name := "server",
@@ -26,8 +32,9 @@ lazy val server: Project  = (project in file("server"))
     scalaBinaryVersion := "2.12",
     scalacOptions ++= Settings.scalacOptionsServer,
     libraryDependencies ++= Settings.jvmDependencies.value,
-    resolvers += Resolver.jcenterRepo,
+    resolvers ++= Seq(Resolver.jcenterRepo, Resolver.bintrayRepo("hseeberger", "maven")),
     slick := slickCodeGenTask.value , // register manual sbt command
+    hello := println("hello"),
     sourceGenerators in Compile +=  slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
     resourceDirectory in Compile := baseDirectory.value / "../resources",
     testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
@@ -66,7 +73,7 @@ lazy val client: Project = (project in file("client"))
       IO.copyDirectory(sourceDirectory.value / "main/assets/fonts", crossTarget.value / StaticFilesDir / WebContent / "assets/fonts")
       IO.copyDirectory(sourceDirectory.value / "main/assets/images", crossTarget.value / StaticFilesDir / WebContent / "assets/images")
       val statics = compileStaticsForRelease.value
-      (crossTarget.value / StaticFilesDir).***.get
+      (crossTarget.value / StaticFilesDir).get
     },
     //      artifactPath in(Compile, fastOptJS) :=
     //        (crossTarget in(Compile, fastOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl-fast.js",
@@ -133,7 +140,7 @@ lazy val clients = Seq(client)
 
 
 //CrossProject is a Project compiled with both java and javascript
-lazy val shared: CrossProject = (crossProject.crossType(CrossType.Pure) in file("shared"))
+lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure) in file("shared"))
   .settings(
     name := "shared",
     scalaVersion := Settings.versions.scala,
@@ -152,15 +159,16 @@ lazy val serve = taskKey[Unit]("start server")
 lazy val cleanAll = taskKey[Unit]("clean all projects")
 
 
+
+
 // code generation task that calls the customized code generator
-lazy val slick = TaskKey[Seq[File]]("gen-tables")
+lazy val slick = taskKey[Seq[File]]("gen-tables")
 lazy val slickCodeGenTask = Def.task{
   val dir = sourceManaged.value
   val cp = (dependencyClasspath in Compile).value
-  val r = (runner in Compile).value
   val s = streams.value
   val outputDir = (dir / "slick").getPath // place generated files in sbt's managed sources folder
-  r.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log) foreach sys.error
+  runner.value.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log).failed foreach (sys error _.getMessage)
   val fname = outputDir + "/ch/wsl/box/model/Entities.scala"
   val ffname = outputDir + "/ch/wsl/box/model/FileTables.scala"
   val rname = outputDir + "/ch/wsl/box/rest/routes/GeneratedRoutes.scala"

@@ -1,6 +1,6 @@
 import sbt._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 //scalaJs version is setinto the plugin.sbt file
 
@@ -35,40 +35,41 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.12.4"
+    val scala = "2.12.6"
     val ficus = "1.4.0"
 
     //HTTP actors
-    val akka = "2.5.9"
-    val akkaHttp = "10.1.0-RC2"
-    val akkaHttpJson = "1.12.0"
+    val akka = "2.5.16"
+    val akkaHttp = "10.1.5"
+    val akkaHttpJson = "1.21.1"
 
     //Testing
-    val specs2 = "3.8.6"
+    val specs2 = "4.3.4"
     val junit = "4.12"
-    val scalatest = "3.0.1"
-    val selenium = "2.53.1"
+    val scalatest = "3.0.5"
+    val selenium = "3.14.0"
 
     //logs
-    val logback = "1.1.7"
+    val logback = "1.2.3"
 
     //json parsers
     val circe = "0.9.3"
 
     //database
     val postgres = "9.4.1211"
-    val slick = "3.2.1"
+    val slick = "3.2.3"
 
     //frontend
     val scalaCss = "0.5.3-RC1"
 
     //js
-    val bootstrap =  "3.3.1-1"
+    val bootstrap =  "3.3.7-1"
 
-    val udash = "0.5.0"
-    val udashJQuery = "1.1.0"
+    val udash = "0.7.1"
+    val udashJQuery = "1.2.0"
 
-    val scribe = "2.1.0"
+    val scribe = "2.6.0"
+    val scalaCSV = "1.3.6-SNAPSHOT-scalajs"
 
   }
 
@@ -77,11 +78,12 @@ object Settings {
     * the special %%% function selects the correct version for each project
     */
   val sharedJVMJSDependencies = Def.setting(Seq(
-    "io.udash"                 %%% "udash-core-shared" % versions.udash,
+    "io.udash" %%% "udash-core-shared" % versions.udash,
     "io.circe" %%% "circe-core" % versions.circe,
     "io.circe" %%% "circe-generic" % versions.circe,
     "io.circe" %%% "circe-parser" % versions.circe,
-    "com.outr" %%% "scribe" % versions.scribe
+    "com.outr" %%% "scribe" % versions.scribe,
+    "com.github.tototoshi" %%% "scala-csv" % versions.scalaCSV
   ))
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(

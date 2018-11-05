@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.model.shared.{JSONFieldLookup, JSONLookup}
+import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
 import io.udash._
@@ -9,6 +9,7 @@ import org.scalajs.dom.Event
 import ch.wsl.box.shared.utils.JsonUtils._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.button.{ButtonStyle, UdashButton, UdashButtonGroup}
+import io.udash.bootstrap.modal.UdashModal.ModalHiddenEvent
 import io.udash.bootstrap.modal.{ModalSize, UdashModal}
 import org.scalajs.dom
 import scalatags.JsDom
@@ -18,27 +19,35 @@ import scala.concurrent.duration._
 
 
 
-case class PopupWidget(lookup:JSONFieldLookup, label: String, data: Property[Json]) extends LookupWidget with Logging {
+object PopupWidget extends ComponentWidgetFactory  {
+  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = PopupWidget(field,prop)
+}
+
+case class PopupWidget(field:JSONField, data: Property[Json]) extends LookupWidget with Logging {
 
 import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._
+
   import scalatags.JsDom.all.{label => lab}
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
+
+
 
 
   val sortedOptions = lookup.lookup //.sortBy(_.value)
 
 
-  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(data){ _ =>
+  override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
     val selectedItem: Property[String] = data.transform(value2Label,label2Value)
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
-      if(label.length >0) lab(label) else {},
+      lab(field.title),
       div(BootstrapStyles.pullRight,
         bind(selectedItem)
       ),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
-  }
+  })
 
   override def edit() = {
 
@@ -56,19 +65,19 @@ import ch.wsl.box.client.Context._
     val optionList:Modifier = div(
       lab("Search"),br,
       TextInput(searchProp,Some(500 milliseconds)),br,br,
-      showIf(modalStatus.transform(_ == Status.Open)) {
-        div(produce(searchProp) { searchTerm =>
+      autoRelease(showIf(modalStatus.transform(_ == Status.Open)) {
+        div(autoRelease(produce(searchProp) { searchTerm =>
           div(
               sortedOptions.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
-                li(a(value, onclick :+= ((e: Event) => {
+                div(a(value, onclick :+= ((e: Event) => {
                   modalStatus.set(Status.Closed)
                   selectedItem.set(value)
                 })))
               }
           ).render
-        }).render
+        })).render
       }
-    )
+    ))
 
     val header = () => div(
       label,
@@ -79,7 +88,7 @@ import ch.wsl.box.client.Context._
     ).render
 
     val body = () => div(
-      ul(
+      div(
         optionList
       )
     ).render
@@ -88,12 +97,13 @@ import ch.wsl.box.client.Context._
       button(onclick :+= ((e:Event) => modalStatus.set(Status.Closed),true),"Close")
     ).render
 
-    val modal:UdashModal = UdashModal(modalSize = ModalSize.Large)(
+    val modal:UdashModal = UdashModal(modalSize = ModalSize.Small)(
       headerFactory = Some(header),
       bodyFactory = Some(body),
       footerFactory = Some(footer)
     )
 
+    modal.listen { case ev:ModalHiddenEvent => modalStatus.set(Status.Closed) }
 
     modalStatus.listen{ state =>
       logger.info(s"State changed to:$state")
@@ -102,13 +112,13 @@ import ch.wsl.box.client.Context._
         case Status.Closed => modal.hide()
       }
     }
-
+    val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
     div(BootstrapCol.md(12),GlobalStyles.noPadding)(
       modal.render,
-      if(label.length >0) lab(label) else {},
+      WidgetUtils.toLabel(field),
       div(style := "text-align: right",
-        button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem))
+        tooltip(button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render)
       )
     )
   }

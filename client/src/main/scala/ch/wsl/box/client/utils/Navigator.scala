@@ -5,6 +5,12 @@ import ch.wsl.box.model.shared.{IDs, JSONQuery}
 
 import scala.concurrent.Future
 import ch.wsl.box.client.Context._
+import ch.wsl.box.client.styles.GlobalStyles
+import io.udash.bootstrap.BootstrapStyles
+import io.udash.css.CssStyleName
+import io.udash.properties.HasModelPropertyCreator
+import org.scalajs.dom.Event
+import scalatags.JsDom.all.{disabled, onclick}
 
 /**
   * Created by andre on 5/24/2017.
@@ -25,14 +31,28 @@ case class Navigation(hasNext:Boolean, hasPrevious:Boolean, count:Int, currentIn
 //  def maxIndexLastPage = count % pageLength
 }
 
-object Navigation{
+object Navigation extends HasModelPropertyCreator[Navigation] {
   def empty0 = Navigation(false,false,0,0, false, false, 0,0,0, Seq())
   def empty1 = Navigation(false,false,1,1, false, false, 1,1,1, Seq())
   def indexInPage(nav:Navigation) = {                //1-based
       val i = nav.currentIndex % nav.pageLength
       if (i==0) nav.pageLength else i
     }
-  def maxIndexLastPage(nav:Navigation) = nav.count % nav.pageLength   //1-based
+  def maxIndexLastPage(nav:Navigation) = (nav.count -1) % nav.pageLength + 1  //1-based
+
+  import io.udash._
+  import scalatags.JsDom.all._
+  import scalacss.ScalatagsCss._
+  import io.udash.css.CssView._
+
+  def button(navProp:ReadableProperty[Boolean],callback: () => Unit,label:String,pull:BootstrapStyles.type => CssStyleName) = scalatags.JsDom.all.button(
+    disabled.attrIfNot(navProp),
+    pull(BootstrapStyles),GlobalStyles.boxButton,
+    onclick :+= ((ev: Event) => callback(), true),
+    label
+  )
+
+  def pageCount(recordCount:Int) = math.ceil(recordCount.toDouble / Conf.pageLength.toDouble).toInt
 }
 
 
@@ -53,7 +73,7 @@ case class Navigator(currentId:Option[String], kind:String = "", model:String = 
       currentIndex = (query.currentPage-1)*query.pageLength(ids.ids.size) + indexInPage_0based + 1,
       hasNextPage = !ids.isLastPage,
       hasPreviousPage = ids.currentPage>1,
-      pages = ids.count / query.pageLength(ids.ids.size) +1 ,
+      pages = Navigation.pageCount(ids.count),
       currentPage = query.currentPage,
       pageLength = query.paging.map(_.pageLength).getOrElse(ids.ids.size),
       pageIDs = ids.ids
@@ -93,7 +113,14 @@ case class Navigator(currentId:Option[String], kind:String = "", model:String = 
   def last():Future[Option[String]] = navigation.map(nav =>
     (hasNext(), hasNextPage()) match {
       case (false, _) => Future.successful(None)
-      case (true, true) => lastPage()
+      case (true, true) => {
+        val newQuery = Session.getQuery().map(q => q.copy(paging = q.paging.map(p => p.copy(currentPage = navigation().map(_.pages).getOrElse(0))))).getOrElse(JSONQuery.empty)
+        REST.ids(kind, Session.lang(), model, newQuery).map { ids =>
+          Session.setQuery(newQuery)
+          Session.setIDs(ids)
+          ids.ids.lastOption
+        }
+      }
       case (true, false) => Future.successful(nav.pageIDs.lift(Navigation.maxIndexLastPage(nav) -1))
     }).getOrElse(Future.successful(None))
 

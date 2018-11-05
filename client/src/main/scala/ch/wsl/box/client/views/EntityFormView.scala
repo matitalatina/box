@@ -31,15 +31,16 @@ import scala.scalajs.js.URIUtils
 case class EntityFormModel(name:String, kind:String, id:Option[String], metadata:Option[JSONMetadata], data:Json,
                            error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean, changed:Boolean, write:Boolean)
 
-object EntityFormModel{
-  def empty = EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true)
+object EntityFormModel extends HasModelPropertyCreator[EntityFormModel] {
+  implicit val blank: Blank[EntityFormModel] =
+    Blank.Simple(EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true))
 }
 
-object EntityFormViewPresenter extends ViewPresenter[EntityFormState] {
+object EntityFormViewPresenter extends ViewFactory[EntityFormState] {
 
   import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[EntityFormState]) = {
-    val model = ModelProperty{EntityFormModel.empty}
+    val model = ModelProperty.blank[EntityFormModel]
     val presenter = EntityFormPresenter(model)
     (EntityFormView(model,presenter),presenter)
   }
@@ -180,21 +181,32 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     widget
   }
 
-  def next() = nav.next().map(_.map(goTo))
-  def prev() = nav.previous().map(_.map(goTo))
-  def first() = nav.first().map(_.map(goTo))
-  def last() = nav.last().map(_.map(goTo))
-  def nextPage() = nav.nextPage().map(_.map(goTo))
-  def prevPage() = nav.prevPage().map(_.map(goTo))
-  def firstPage() = nav.firstPage().map(_.map(goTo))
-  def lastPage() = nav.lastPage().map(_.map(goTo))
+
+  def navigate(n: Navigator => Future[Option[String]]) = {
+    widget.killWidget()
+    n(nav).map(_.map(goTo))
+  }
+
+  def next() = navigate(_.next())
+  def prev() = navigate(_.previous())
+  def first() = navigate(_.first())
+  def last() = navigate(_.last())
+  def nextPage() = navigate(_.nextPage())
+  def prevPage() = navigate(_.prevPage())
+  def firstPage() = navigate(_.firstPage())
+  def lastPage() = navigate(_.lastPage())
 
   def nav = Navigator(model.get.id, model.get.kind,model.get.name)
 
   def goTo(id:String) = {
     model.subProp(_.loading).set(true)
     val m = model.get
-    val newState = Routes(m.kind,m.name).edit(id)
+    val r = Routes(m.kind,m.name)
+    val newState = if(model.get.write) {
+      r.edit(id)
+    } else {
+      r.show(id)
+    }
     Navigate.to(newState)
   }
 
@@ -228,8 +240,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.circe.generic.auto._
+  import io.udash.css.CssView._
 
-  override def renderChild(view: View): Unit = {}
 
   def labelTitle = produce(model.subProp(_.metadata)) { m =>
     val name = m.map(_.label).getOrElse(model.get.name)
@@ -240,32 +252,37 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
     val recordNavigation = {
 
+      def navigation = model.subModel(_.navigation)
+
       div(
-        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.first(), true), Labels.navigation.first).render },
-        showIf(model.subProp(_.navigation.hasPrevious)) { a(onclick :+= ((ev: Event) => presenter.prev(), true), Labels.navigation.previous).render },
-        span(
-          " " + Labels.navigation.record + " ",
-          bind(model.subProp(_.navigation.currentIndex)),
-          " " + Labels.navigation.of + " ",
-          bind(model.subProp(_.navigation.count)),
-          " "
+        div(GlobalStyles.boxNavigationLabel,
+          Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.firstPage,Labels.navigation.firstPage,_.pullLeft),
+          Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.prevPage,Labels.navigation.previousPage,_.pullLeft),
+          span(
+            GlobalStyles.boxNavigationLabel,
+            " " + Labels.navigation.page + " ",
+            bind(model.subProp(_.navigation.currentPage)),
+            " " + Labels.navigation.of + " ",
+            bind(model.subProp(_.navigation.pages)),
+            " "
+          ),
+          Navigation.button(navigation.subProp(_.hasNextPage),presenter.lastPage,Labels.navigation.lastPage,_.pullRight),
+          Navigation.button(navigation.subProp(_.hasNextPage),presenter.nextPage,Labels.navigation.nextPage,_.pullRight)
         ),
-        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.next(), true),Labels.navigation.next).render },
-        showIf(model.subProp(_.navigation.hasNext)) { a(onclick :+= ((ev: Event) => presenter.last(), true),Labels.navigation.last).render },
-
-        br,
-
-        showIf(model.subProp(_.navigation.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.firstPage(), true), Labels.navigation.firstPage).render },
-        showIf(model.subProp(_.navigation.hasPreviousPage)) { a(onclick :+= ((ev: Event) => presenter.prevPage(), true), Labels.navigation.previousPage).render },
-        span(
-          " " + Labels.navigation.page + " ",
-          bind(model.subProp(_.navigation.currentPage)),
-          " " + Labels.navigation.of + " ",
-          bind(model.subProp(_.navigation.pages)),
-          " "
-        ),
-        showIf(model.subProp(_.navigation.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.nextPage(), true),Labels.navigation.nextPage).render },
-        showIf(model.subProp(_.navigation.hasNextPage)) { a(onclick :+= ((ev: Event) => presenter.lastPage(), true),Labels.navigation.lastPage).render }
+        div(BootstrapStyles.Visibility.clearfix),
+        div(GlobalStyles.boxNavigationLabel,
+          Navigation.button(navigation.subProp(_.hasPrevious),presenter.first,Labels.navigation.first,_.pullLeft),
+          Navigation.button(navigation.subProp(_.hasPrevious),presenter.prev,Labels.navigation.previous,_.pullLeft),
+          span(
+            " " + Labels.navigation.record + " ",
+            bind(model.subModel(_.navigation).subProp(_.currentIndex)),
+            " " + Labels.navigation.of + " ",
+            bind(model.subModel(_.navigation).subProp(_.count)),
+            " "
+          ),
+          Navigation.button(navigation.subProp(_.hasNext),presenter.last,Labels.navigation.last,_.pullRight),
+          Navigation.button(navigation.subProp(_.hasNext),presenter.next,Labels.navigation.next,_.pullRight)
+        )
       )
     }
 
@@ -292,38 +309,38 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         recordNavigation
       ),
       div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea) (
-        produce(model.subProp(_.name)) { m =>
+        produceWithNested(model.subProp(_.name)) { (m,release) =>
           div(
-            a(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", labelTitle)," "
+            button(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", release(labelTitle))," "
           ).render
         }
       ),
       div(BootstrapStyles.Visibility.clearfix),
-      produce(model.subProp(_.write)) { w =>
+      produceWithNested(model.subProp(_.write)) { (w,realeser) =>
         if(!w) Seq() else
         div(BootstrapStyles.pullLeft)(
-          produce(model.subProp(_.name)) { m =>
+          realeser(produce(model.subProp(_.name)) { m =>
             div(
 
               //save and stay on same record
-              a(
+              button(
                 GlobalStyles.boxButtonImportant,
                 onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).edit(model.get.id.getOrElse(""))), true)
               )(Labels.form.save), " ",
               //save and go to table view
-              a(
+              button(
                 GlobalStyles.boxButton,GlobalStyles.noMobile,
                 onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).entity()), true)
               )(Labels.form.save_table), " ",
               //save and go insert new record
-              a(
+              button(
                 GlobalStyles.boxButton,GlobalStyles.noMobile,
                 onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).add()), true)
               )(Labels.form.save_add), " ",
-              a(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
-              a(GlobalStyles.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete)
+              button(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
+              button(GlobalStyles.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete)
             ).render
-          }
+          })
         ).render
       },
       div(BootstrapStyles.Visibility.clearfix),
@@ -336,7 +353,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           }
         ).render
       },
-      hr,
+      hr(GlobalStyles.hrThin),
       produce(model.subProp(_.metadata)){ form =>
         div(BootstrapCol.md(12),GlobalStyles.fullHeightMax,
           form match {
@@ -348,8 +365,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         ).render
       },br,br,
 
-      Debug(model.subProp(_.data), "data"),
-      Debug(model.subProp(_.metadata), "metadata")
+      Debug(model.subProp(_.data),b => b, "data"),
+      Debug(model.subProp(_.metadata),b => b, "metadata")
     )
   }
 }

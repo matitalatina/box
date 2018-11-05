@@ -1,13 +1,15 @@
 package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.routes.Routes
+import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.model.shared.{JSONField, JSONID}
+import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, JSONID}
 import io.circe.Json
+import org.scalajs.dom
+import scalacss.ScalatagsCss._
 import org.scalajs.dom.{Element, Event}
 import io.udash._
 import scribe.Logging
-
 import scalatags.JsDom.TypedTag
 
 /**
@@ -19,8 +21,8 @@ object TableFieldsRenderer extends Logging{
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
-
   import ch.wsl.box.client.services.Enhancer._
+
 
 
   def toggleEdit(editing:Property[Boolean]) = {
@@ -49,7 +51,13 @@ object TableFieldsRenderer extends Logging{
 //      showIf(editing)(div(JSONSchemaRenderer.fieldRenderer(field,model,keys.keys.map(_.key),false)).render)
 //    )
 
-    div(contentFixed)
+    def align = field.`type` match{
+      case JSONFieldTypes.NUMBER => if (field.lookup.isEmpty) GlobalStyles.numberCells else GlobalStyles.lookupCells
+      case JSONFieldTypes.DATE | JSONFieldTypes.DATETIME | JSONFieldTypes.TIME => GlobalStyles.dateCells
+      case _ => GlobalStyles.textCells
+    }
+
+    div(align)(contentFixed)
 
 
   }

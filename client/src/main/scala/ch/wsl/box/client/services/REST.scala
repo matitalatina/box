@@ -2,7 +2,7 @@ package ch.wsl.box.client.services
 
 import ch.wsl.box.client.services.REST.get
 import ch.wsl.box.model.shared._
-import ch.wsl.box.shared.utils.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import org.scalajs.dom.File
 
@@ -26,10 +26,10 @@ object REST {
 
   //for entities and forms
   def specificKind(kind:String, lang:String, entity:String):Future[String] = client.get[String](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/kind")     //distinguish entities into table or view
-  def list(kind:String, lang:String, entity:String, limit:Int): Future[Seq[Json]] = client.post[JSONQuery,JSONData[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",JSONQuery.empty.limit(limit)).map(_.data)
-  def list(kind:String, lang:String, entity:String, query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,JSONData[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",query).map(_.data)
+  def list(kind:String, lang:String, entity:String, limit:Int): Future[Seq[Json]] = client.post[JSONQuery,Seq[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",JSONQuery.empty.limit(limit))
+  def list(kind:String, lang:String, entity:String, query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,Seq[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",query)
   def csv(kind:String, lang:String, entity:String, q:JSONQuery): Future[Seq[Seq[String]]] = client.post[JSONQuery,String](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/csv",q).map{ result =>
-    CSV.split(result)
+    CSV.read(result)
   }
   def count(kind:String, lang:String, entity:String): Future[Int] = client.get[Int](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/count")
   def keys(kind:String, lang:String, entity:String): Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/keys")
@@ -59,7 +59,7 @@ object REST {
 
   //export
   def exportMetadata(name:String,lang:String) = client.get[JSONMetadata](s"/export/$name/metadata/$lang")
-  def export(name:String,params:Seq[Json],lang:String) = client.post[Seq[Json],String](s"/export/$name/$lang",params).map(CSV.split)
+  def export(name:String,params:Seq[Json],lang:String):Future[Seq[Seq[String]]] = client.post[Seq[Json],String](s"/export/$name/$lang",params).map(CSV.read)
   def exports(lang:String) = client.get[Seq[ExportDef]](s"/export/list/$lang")
 
   def writeAccess(table:String) = client.get[Boolean](s"/access/table/$table/write")

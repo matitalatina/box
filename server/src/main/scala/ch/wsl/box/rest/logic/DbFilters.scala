@@ -3,11 +3,12 @@ package ch.wsl.box.rest.logic
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
-import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAccessor
+import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
+import java.time.temporal.{ChronoField, ChronoUnit, TemporalAccessor}
 
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{Filter, JSONQuery, JSONQueryFilter}
+import ch.wsl.box.model.shared.{Filter, JSONFieldTypes, JSONQuery, JSONQueryFilter}
+import ch.wsl.box.rest.utils.BoxConf
 import scribe.Logging
 import slick.driver.PostgresDriver
 import slick.driver.PostgresDriver.api._
@@ -46,26 +47,39 @@ trait DbFilters {
 trait UglyDBFilters extends DbFilters with Logging {
 
   val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
+  val timestampFormatterMinute = new SimpleDateFormat("yyyy-MM-dd HH:mm")  //attention the format is different to that in the client for datetimepicker
 
+//this is to format a timestamp with data only and add time to 00:00
+  val dateOnlyFormatter = new DateTimeFormatterBuilder().append(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+    .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
+    .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+    .toFormatter();
 
   val dateTimeFormats = List(
     "yyyy-MM-dd HH:mm:ss.S",
     "yyyy-MM-dd HH:mm:ss",
-    "yyyy-MM-dd HH:mm",
-  ).map(p => DateTimeFormatter.ofPattern(p))
+    "yyyy-MM-dd HH:mm"
+    //    "yyyy-MM-dd",   //"yyyy-MM-dd[ HH:mm]",  //this is not parsed successfully (missing time info)
+  ).map(p => DateTimeFormatter.ofPattern(p)).+:(dateOnlyFormatter)
 
 
   def toTimestamp(dateStr: String): Option[Timestamp] = {
+    logger.info(s"parsing $dateStr" )
     val trimmedDate = dateStr.trim
 
     def normalize(patterns: Seq[DateTimeFormatter]): Try[LocalDateTime] = patterns match {
       case head::tail => {
-        val resultTry = Try(LocalDateTime.parse(trimmedDate,head))
+        val resultTry = Try(LocalDateTime.parse(trimmedDate, head))
+        logger.info(s"trying format $head ... ${resultTry.isSuccess}" )
+
         if(resultTry.isSuccess) resultTry else normalize(tail)
       }
       case _ => Failure(new RuntimeException(s"no formatter match found for $dateStr"))
     }
-    if(trimmedDate.isEmpty) None
+
+    if(trimmedDate.isEmpty)
+      None
     else {
       normalize(dateTimeFormats).toOption.map{ ldt =>
         Timestamp.from(ldt.toInstant(ZoneOffset.ofHours(0)))
@@ -73,6 +87,43 @@ trait UglyDBFilters extends DbFilters with Logging {
     }
   }
 
+  final val typINT = 0
+  final val typLONG = 1
+  final val typSHORT =  2
+  final val typDOUBLE = 3
+  final val typBOOLEAN = 4
+  final val typSTRING = 5
+  final val typTIMESTAMP = 6
+  final val typOptINT = 10
+  final val typOptLONG = 11
+  final val typOptSHORT =  12
+  final val typOptDOUBLE = 13
+  final val typOptBOOLEAN = 14
+  final val typOptSTRING = 15
+  final val typOptTIMESTAMP = 16
+  final val typError = 100
+
+
+  def typ(myType:String):Int = myType match{
+    case "scala.Short" | "Short" => typSHORT
+    case "Double" | "scala.Double" => typDOUBLE
+    case "scala.Int" | "java.lang.Integer" | "Int" => typINT
+    case "scala.Long" | "Long" => typLONG
+    case "String" => typSTRING
+    case "scala.Boolean" => typBOOLEAN
+    case "java.sql.Timestamp" => typTIMESTAMP
+    case "scala.Option[scala.Short]" | "Option[Short]" =>  typOptSHORT
+    case "scala.Option[scala.Double]" | "Option[Double]" => typOptDOUBLE
+    case "scala.Option[scala.Int]" | "scala.Option[java.lang.Integer]" | "Option[Int]" | "Option[java.lang.Integer]" => typOptINT
+    case "scala.Option[scala.Long]"  | "Option[Long]" => typOptLONG
+    case "scala.Option[String]" | "Option[String]" => typOptSTRING
+    case "scala.Option[scala.Boolean]" | "Option[Boolean]" => typOptBOOLEAN
+    case "scala.Option[java.sql.Timestamp]" | "Option[java.sql.Timestamp]" => typOptTIMESTAMP
+    case _ => {
+      logger.error("Type mapping for: " + myType + " not found")
+      typError
+    }
+  }
 
 
   def ==(col:Col,value:String):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
@@ -80,25 +131,27 @@ trait UglyDBFilters extends DbFilters with Logging {
       val v = value.toString
       val c:Rep[_] = col.rep
 
-      col.`type` match {
-          case "scala.Short" | "Short" => c.asInstanceOf[Rep[Short]] === v.toShort
-          case "Double" | "scala.Double" => c.asInstanceOf[Rep[Double]] === v.toDouble
-          case "scala.Int" | "java.lang.Integer" | "Int" => c.asInstanceOf[Rep[Int]] === v.toInt
-          case "scala.Long" | "Long" => c.asInstanceOf[Rep[Long]] === v.toLong
-          case "String" => c.asInstanceOf[Rep[String]] === v
-          case "scala.Boolean" => c.asInstanceOf[Rep[Boolean]] === v.toBoolean
-          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] === toTimestamp(v).get
-          case "scala.Option[scala.Short]" =>  c.asInstanceOf[Rep[Option[Short]]] === v.toShort
-          case "scala.Option[scala.Double]" => c.asInstanceOf[Rep[Option[Double]]] === v.toDouble
-          case "scala.Option[scala.Int]" | "scala.Option[java.lang.Integer]" => c.asInstanceOf[Rep[Option[Int]]] === v.toInt
-          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] === v.toLong
-          case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] === v
-          case "scala.Option[scala.Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] === v.toBoolean
-          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] === toTimestamp(v).get
-          case _ => {
-                logger.error("Type mapping for: " + col.`type`+ " not found")
-                None
+      typ(col.`type`) match {
+          case `typSHORT` => c.asInstanceOf[Rep[Short]] === v.toShort
+          case `typDOUBLE` => c.asInstanceOf[Rep[Double]] === v.toDouble
+          case `typINT` => c.asInstanceOf[Rep[Int]] === v.toInt
+          case `typLONG` => c.asInstanceOf[Rep[Long]] === v.toLong
+          case `typSTRING` => c.asInstanceOf[Rep[String]] === v
+          case `typBOOLEAN` => c.asInstanceOf[Rep[Boolean]] === v.toBoolean
+          case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] === toTimestamp(v).get
+            case JSONFieldTypes.DATE => {c.asInstanceOf[Rep[Timestamp]] >= BoxConf.prepareDatetime(toTimestamp(v).get) &&
+                                         c.asInstanceOf[Rep[Timestamp]] < BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS))) }
           }
+          case `typOptSHORT` =>  c.asInstanceOf[Rep[Option[Short]]] === v.toShort
+          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] === v.toDouble
+          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] === v.toInt
+          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] === v.toLong
+          case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]] === v
+          case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]] === v.toBoolean
+          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] === toTimestamp(v).get
+          case `typError`  => None
+          case _ => None
       }
    }
 
@@ -107,25 +160,27 @@ trait UglyDBFilters extends DbFilters with Logging {
 
     val c:Rep[_] = col.rep
 
-    col.`type` match {
-          case "scala.Short" | "Short" => c.asInstanceOf[Rep[Short]] =!= v.toShort
-          case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] =!= v.toInt
-          case "scala.Long" | "Int" => c.asInstanceOf[Rep[Long]] =!= v.toLong
-          case "Double" | "scala.Double" => c.asInstanceOf[Rep[Double]] =!= v.toDouble
-          case "String" => c.asInstanceOf[Rep[String]] =!= v
-          case "scala.Boolean" => c.asInstanceOf[Rep[Boolean]] =!= v.toBoolean
-          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] =!= toTimestamp(v).get
-          case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] =!= v.toShort
-          case "scala.Option[scala.Double]" => c.asInstanceOf[Rep[Option[Double]]] =!= v.toDouble
-          case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] =!= v.toInt
-          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] =!= v.toLong
-          case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]] =!= v
-          case "scala.Option[scala.Boolean]" => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.toBoolean
-          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] =!= toTimestamp(v).get
-          case _ => {
-            logger.error("Type mapping for: " + col.`type` + " not found")
-            None
+    typ(col.`type`) match {
+          case `typSHORT` => c.asInstanceOf[Rep[Short]] =!= v.toShort
+          case `typINT` => c.asInstanceOf[Rep[Int]] =!= v.toInt
+          case `typLONG` => c.asInstanceOf[Rep[Long]] =!= v.toLong
+          case `typDOUBLE` => c.asInstanceOf[Rep[Double]] =!= v.toDouble
+          case `typSTRING` => c.asInstanceOf[Rep[String]] =!= v
+          case `typBOOLEAN` => c.asInstanceOf[Rep[Boolean]] =!= v.toBoolean
+          case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] =!= toTimestamp(v).get
+            case JSONFieldTypes.DATE => {c.asInstanceOf[Rep[Timestamp]] < BoxConf.prepareDatetime(toTimestamp(v).get) ||
+              c.asInstanceOf[Rep[Timestamp]] >= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS))) }
           }
+          case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] =!= v.toShort
+          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] =!= v.toDouble
+          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] =!= v.toInt
+          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] =!= v.toLong
+          case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]] =!= v
+          case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.toBoolean
+          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] =!= toTimestamp(v).get
+          case `typError` => None
+          case _ => None
       }
    }
 
@@ -133,42 +188,44 @@ trait UglyDBFilters extends DbFilters with Logging {
 
     val c:Rep[_] = col.rep
 
-    col.`type` match {
-          case "scala.Short" | "Short" => c.asInstanceOf[Rep[Short]] > v.toShort
-          case "scala.Double" | "Double" => c.asInstanceOf[Rep[Double]] > v.toDouble
-          case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] > v.toInt
-          case "scala.Long" | "Long" => c.asInstanceOf[Rep[Long]] > v.toLong
-          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] > toTimestamp(v).get
-          case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] > v.toShort
-          case "scala.Option[scala.Double]" => c.asInstanceOf[Rep[Option[Double]]] > v.toDouble
-          case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] > v.toInt
-          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] > v.toLong
-          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] > toTimestamp(v).get
-          case _ => {
-              logger.error("Type mapping for: " + col.`type` + " not found")
-              None
+    typ(col.`type`) match {
+          case `typSHORT` => c.asInstanceOf[Rep[Short]] > v.toShort
+          case `typDOUBLE` => c.asInstanceOf[Rep[Double]] > v.toDouble
+          case `typINT` => c.asInstanceOf[Rep[Int]] > v.toInt
+          case `typLONG` => c.asInstanceOf[Rep[Long]] > v.toLong
+          case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] > toTimestamp(v).get
+            case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Timestamp]] >= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS)))
           }
+          case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] > v.toShort
+          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] > v.toDouble
+          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] > v.toInt
+          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] > v.toLong
+          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] > toTimestamp(v).get
+          case `typError` => None
+          case _ => None
       }
    }
    def >=(col:Col, v:String):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
 
     val c:Rep[_] = col.rep
 
-    col.`type` match {
-          case "scala.Short" | "Short" => c.asInstanceOf[Rep[Short]] >= v.toShort
-          case "scala.Double" | "Double" => c.asInstanceOf[Rep[Double]] >= v.toDouble
-          case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] >= v.toInt
-          case "scala.Long" | "Long" => c.asInstanceOf[Rep[Long]] >= v.toLong
-          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] >= toTimestamp(v).get
-          case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] >= v.toShort
-          case "scala.Option[scala.Double]" => c.asInstanceOf[Rep[Option[Double]]] >= v.toDouble
-          case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] >= v.toInt
-          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] >= v.toLong
-          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] >= toTimestamp(v).get
-          case _ => {
-              logger.error("Type mapping for: " + col.`type` + " not found")
-              None
+     typ(col.`type`) match {
+          case `typSHORT` => c.asInstanceOf[Rep[Short]] >= v.toShort
+          case `typDOUBLE` => c.asInstanceOf[Rep[Double]] >= v.toDouble
+          case `typINT` => c.asInstanceOf[Rep[Int]] >= v.toInt
+          case `typLONG` => c.asInstanceOf[Rep[Long]] >= v.toLong
+          case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] >= toTimestamp(v).get
+            case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Timestamp]] >= BoxConf.prepareDatetime(toTimestamp(v).get)
           }
+          case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] >= v.toShort
+          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] >= v.toDouble
+          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] >= v.toInt
+          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] >= v.toLong
+          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] >= toTimestamp(v).get
+          case `typError` => None
+          case _ => None
       }
    }
 
@@ -176,21 +233,22 @@ trait UglyDBFilters extends DbFilters with Logging {
 
     val c:Rep[_] = col.rep
 
-    col.`type` match {
-          case "scala.Short" | "Short" => c.asInstanceOf[Rep[Short]] < v.toShort
-          case "scala.Double" | "Double" => c.asInstanceOf[Rep[Double]] < v.toDouble
-          case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] < v.toInt
-          case "scala.Long" | "Long" => c.asInstanceOf[Rep[Long]] < v.toLong
-          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] < toTimestamp(v).get
-          case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] < v.toShort
-          case "scala.Option[scala.Double]" => c.asInstanceOf[Rep[Option[Double]]] < v.toDouble
-          case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] < v.toInt
-          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] < v.toLong
-          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] < toTimestamp(v).get
-          case _ => {
-            logger.error("Type mapping for: " + col.`type` + " not found")
-            None
+    typ(col.`type`) match {
+          case `typSHORT` => c.asInstanceOf[Rep[Short]] < v.toShort
+          case `typDOUBLE` => c.asInstanceOf[Rep[Double]] < v.toDouble
+          case `typINT` => c.asInstanceOf[Rep[Int]] < v.toInt
+          case `typLONG` => c.asInstanceOf[Rep[Long]] < v.toLong
+          case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] < toTimestamp(v).get
+            case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Timestamp]] < BoxConf.prepareDatetime(toTimestamp(v).get)
           }
+          case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] < v.toShort
+          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] < v.toDouble
+          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] < v.toInt
+          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] < v.toLong
+          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] < toTimestamp(v).get
+          case `typError` => None
+          case _ => None
       }
    }
 
@@ -198,21 +256,22 @@ trait UglyDBFilters extends DbFilters with Logging {
 
     val c:Rep[_] = col.rep
 
-    col.`type` match {
-          case "scala.Short" | "Short" => c.asInstanceOf[Rep[Short]] <= v.toShort
-          case "scala.Double" | "Double" => c.asInstanceOf[Rep[Double]] <= v.toDouble
-          case "scala.Int" | "Int" => c.asInstanceOf[Rep[Int]] <= v.toInt
-          case "scala.Long" | "Long" => c.asInstanceOf[Rep[Long]] <= v.toLong
-          case "java.sql.Timestamp" => c.asInstanceOf[Rep[Timestamp]] <= toTimestamp(v).get
-          case "scala.Option[scala.Short]" => c.asInstanceOf[Rep[Option[Short]]] <= v.toShort
-          case "scala.Option[scala.Double]" => c.asInstanceOf[Rep[Option[Double]]] <= v.toDouble
-          case "scala.Option[scala.Int]" => c.asInstanceOf[Rep[Option[Int]]] <= v.toInt
-          case "scala.Option[scala.Long]" => c.asInstanceOf[Rep[Option[Long]]] <= v.toLong
-          case "scala.Option[java.sql.Timestamp]" => c.asInstanceOf[Rep[Option[Timestamp]]] <= toTimestamp(v).get
-          case _ => {
-            logger.error("Type mapping for: " + col.`type` + " not found")
-            None
+    typ(col.`type`) match {
+          case `typSHORT` => c.asInstanceOf[Rep[Short]] <= v.toShort
+          case `typDOUBLE` => c.asInstanceOf[Rep[Double]] <= v.toDouble
+          case `typINT` => c.asInstanceOf[Rep[Int]] <= v.toInt
+          case `typLONG` => c.asInstanceOf[Rep[Long]] <= v.toLong
+          case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] <= toTimestamp(v).get
+            case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Timestamp]] <= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS)))
           }
+          case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] <= v.toShort
+          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] <= v.toDouble
+          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] <= v.toInt
+          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] <= v.toLong
+          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] <= toTimestamp(v).get
+          case `typError` => None
+          case _ => None
       }
    }
 
@@ -222,13 +281,11 @@ trait UglyDBFilters extends DbFilters with Logging {
 
     logger.info("Executing like on" + col.toString)
 
-    col.`type` match {
-          case "String" => c.asInstanceOf[Rep[String]].toLowerCase like "%"+v.toLowerCase+"%"
-          case "scala.Option[String]" => c.asInstanceOf[Rep[Option[String]]].toLowerCase like "%"+v.toLowerCase+"%"
-          case _ => {
-            logger.error("Type mapping for: " + col.`type` + " not found")
-            None
-          }
+    typ(col.`type`) match {
+          case `typSTRING` => c.asInstanceOf[Rep[String]].toLowerCase like "%"+v.toLowerCase+"%"
+          case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]].toLowerCase like "%"+v.toLowerCase+"%"
+          case `typError` => None
+          case _ => None
       }
    }
 
@@ -250,7 +307,7 @@ trait UglyDBFilters extends DbFilters with Logging {
 
       val elements = v.split(',').toSeq
 
-      if (elements.size >0) {
+      if (elements.size >0 && elements.head.nonEmpty) {
 
         //      val reps: Seq[Rep[Boolean]] = elements.map(x => ==(col, x).getOrElse(false))
         val reps: Seq[Rep[Option[Boolean]]] = elements.map(x => this.==(col, x))

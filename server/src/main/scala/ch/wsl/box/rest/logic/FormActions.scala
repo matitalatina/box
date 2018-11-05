@@ -7,8 +7,9 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.rest.utils.{FutureUtils, Timer}
-import ch.wsl.box.shared.utils.CSV
+import ch.wsl.box.rest.routes.enablers.CSVDownload
+import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher
@@ -26,13 +27,14 @@ import scala.concurrent.{ExecutionContext, Future}
 case class ReferenceKey(localField:String,remoteField:String,value:String)
 case class Reference(association:Seq[ReferenceKey])
 
-case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters with Logging {
+case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters with Logging {
 
   import ch.wsl.box.shared.utils.JsonUtils._
 
+  implicit val db = up.db
 
-  val actionRegistry = EntityActionsRegistry()
-  val actions = actionRegistry.tableActions(metadata.entity)
+
+  val jsonActions = EntityActionsRegistry().tableActions(metadata.entity)
 
   val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
@@ -41,15 +43,15 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
   def extractArray(query:JSONQuery):Source[Json,NotUsed] = extractSeq(query)     // todo adapt JSONQuery to select only fields in form
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
 
-  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):Source[String,NotUsed] = {
+  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {
 
-      val lookup = Lookup.valueExtractor(lookupElements,metadata) _
+      val lookup = Lookup.valueExtractor(lookupElements, metadata) _
 
       extractSeq(query).map { json =>
-        val row = metadata.tabularFields.map { field =>
+        val row = fields(metadata).map { field =>
           lookup(field,json.get(field))
         }
-        CSV.row(row)
+        CSV.writeRow(row)
       }
 
   }
@@ -83,7 +85,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
 
   def delete(e:Json):Future[Int] = {
     val id = e.ID(metadata.keys)
-    actions.delete(id)
+    jsonActions.delete(id)
   }
 
 
@@ -105,14 +107,14 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
     val id = e.ID(metadata.keys)
     for{
       _ <- Future.sequence(subAction(e,Json.Null,_.updateAll))
-      dbData <- actions.getById(id).recover{ case t => logger.info("recovered future with none"); None }   //existing record in db
+      dbData <- jsonActions.getById(id).recover{ case t => logger.info("recovered future with none"); None } //existing record in db
       result <- {
         if(dbData.isDefined) {
           logger.info(s"update $id")
-          actions.update(id,e)
+          jsonActions.update(id,e)
         } else {
           logger.info(s"insert into ${metadata.entity} with id $id")
-          actions.insert(e)
+          jsonActions.insert(e)
         }
       }
     } yield result
@@ -120,14 +122,19 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
   }
 
   def insertAll(e:Json):Future[Json] = for{
+    inserted <- jsonActions.insert(e)
     _ <- Future.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
       for {
         metadata <- jsonCustomMetadataFactory.of(field.child.get.objId, metadata.lang)
         rows = attachArrayIndex(e.seq(field.name),metadata)
-        result <- FutureUtils.seqFutures(rows)(row => FormActions(metadata).insertAll(row))
+        //attach parent id
+        rowsWithId = rows.map{ row =>
+          val masterChild: Seq[(String, String)] = field.child.get.masterFields.split(",").zip(field.child.get.childFields.split(",")).toSeq
+          masterChild.foldLeft(row){ case (acc,(master,child)) => acc.deepMerge(Json.obj(child -> inserted.js(master)))}
+        }
+        result <- FutureUtils.seqFutures(rowsWithId)(row => FormActions(metadata).insertAll(row))
       } yield result
     })
-    inserted <- actions.insert(e)
     data <- getAllById(inserted.ID(metadata.keys))
   } yield data
 
@@ -172,7 +179,7 @@ case class FormActions(metadata:JSONMetadata)(implicit db:Database, mat:Material
 
   private def extractSeq(query:JSONQuery):Source[Json,NotUsed] = {
     Source
-      .fromPublisher(EntityActionsRegistry().tableActions(metadata.entity).getEntityStreamed(query))
+      .fromPublisher(EntityActionsRegistry().tableActions(metadata.entity).findStreamed(query))
       .flatMapConcat( json => Source.fromFuture(expandJson(json)))
   }
 

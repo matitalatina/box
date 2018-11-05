@@ -18,15 +18,17 @@ import ch.wsl.box.client.Context._
 import scalatags.generic
 
 case class Entities(list:Seq[String], currentEntity:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
+object Entities extends HasModelPropertyCreator[Entities] {
+  implicit val blank: Blank[Entities] =
+    Blank.Simple(Entities(Seq(),None,None,"",Seq()))
+}
 
-case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int) extends ViewPresenter[EntitiesState] {
+case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int) extends ViewFactory[EntitiesState] {
 
 
 
   override def create(): (View, Presenter[EntitiesState]) = {
-    val model = ModelProperty{
-      Entities(Seq(),None,None,"",Seq())
-    }
+    val model = ModelProperty.blank[Entities]
     val routes = Routes(kind,modelName)
     val presenter = new EntitiesPresenter(model)
     val view = new EntitiesView(model,presenter,sidebarWidth,routes)
@@ -59,21 +61,22 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
 
 }
 
-class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, sidebarWidth:Int, routes:Routes) extends View {
+class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, sidebarWidth:Int, routes:Routes) extends ContainerView {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
+  import io.udash.css.CssView._
 
 
   val sidebarGrid = BootstrapCol.md(sidebarWidth)
   def contentGrid = if(UI.showEntitiesSidebar) BootstrapCol.md(12-sidebarWidth) else BootstrapCol.md(12)
 
-  override def renderChild(view: View): Unit = {
+  override def renderChild(view: Option[View]): Unit = {
 
     import io.udash.wrappers.jquery._
     jQ(content).children().remove()
-    if(view != null) {
-      view.getTemplate.applyTo(content)
+    if(view.isDefined) {
+      view.get.getTemplate.applyTo(content)
     }
 
   }
@@ -84,11 +87,11 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
   private def sidebar: Element = if(UI.showEntitiesSidebar) {
     div(sidebarGrid)(
       UdashForm.textInput()(Labels.entities.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
-      produce(model.subProp(_.search)) { q =>
+      produceWithNested(model.subProp(_.search)) { (q,releaser) =>
         ul(GlobalStyles.noBullet,
-          repeat(model.subSeq(_.filteredList)){m =>
+          releaser(repeat(model.subSeq(_.filteredList)){m =>
             li(a(Navigate.click(routes.entity(m.get)),m.get)).render
-          }
+          })
         ).render
       }
     ).render

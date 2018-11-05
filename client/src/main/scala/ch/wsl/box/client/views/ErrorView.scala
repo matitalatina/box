@@ -10,6 +10,7 @@ object ErrorViewPresenter extends DefaultViewPresenterFactory[IndexState.type]((
 
 class ErrorView extends View {
   import scalatags.JsDom.all._
+  import io.udash.css.CssView._
 
   private val content = div(BootstrapStyles.row) (
     h3(
@@ -19,5 +20,4 @@ class ErrorView extends View {
 
   override def getTemplate: Modifier = content
 
-  override def renderChild(view: View): Unit = {}
 }

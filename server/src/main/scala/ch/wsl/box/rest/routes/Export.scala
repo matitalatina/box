@@ -11,7 +11,7 @@ import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.jdbc.JdbcConnect
 import ch.wsl.box.rest.logic.{JSONExportMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.JSONSupport
-import ch.wsl.box.shared.utils.CSV
+import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
@@ -32,7 +32,7 @@ object Export extends Logging {
     case Some(fr) =>
       respondWithHeaders(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$function.csv"))) {
         {
-          val csv = CSV.of(Seq(fr.headers) ++ fr.rows.map(_.map(_.string)))
+          val csv = CSV.writeAll(Seq(fr.headers) ++ fr.rows.map(_.map(_.string)))
           complete(HttpEntity(ContentTypes.`text/csv(UTF-8)`,ByteString(csv)))
         }
       }

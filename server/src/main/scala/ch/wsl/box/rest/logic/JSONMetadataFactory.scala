@@ -4,7 +4,7 @@ import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.model.BoxTablesRegistry
-import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 import scribe.Logging
@@ -26,7 +26,7 @@ object JSONMetadataFactory extends Logging {
 //  private val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes")
   private val excludeFields:Seq[String] = dbConf.as[Seq[String]]("generator.excludeFields")
 
-  private var cacheTable = Map[(String,String, Int), Future[JSONMetadata]]()
+  private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()
   private var cacheKeys = Map[String, Future[Seq[String]]]()
 
   def resetCache() = {
@@ -49,8 +49,13 @@ object JSONMetadataFactory extends Logging {
     config.as[Option[String]](referencingTable).getOrElse(myDefaultTableLookupField)
   }
 
-  def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit db:Database, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
-    cacheTable.lift((table,lang,lookupMaxRows)) match {
+  def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
+
+    implicit val db = up.db
+
+    logger.warn("searching cache table for " + Seq(up.name, table, lang, lookupMaxRows).mkString)
+
+    cacheTable.lift((up.name, table, lang,lookupMaxRows)) match {
       case Some(r) => r
       case None => {
         logger.info(s"Metadata table cache miss! cache key: ($table,$lang,$lookupMaxRows), cache: ${cacheTable}")
@@ -58,7 +63,6 @@ object JSONMetadataFactory extends Logging {
         val schema = new PgInformationSchema(table, db, excludeFields)
 
         //    println(schema.fk)
-
 
         var constraints = List[String]()
 
@@ -90,7 +94,7 @@ object JSONMetadataFactory extends Logging {
                     import ch.wsl.box.shared.utils.JsonUtils._
                     for {
                       keys <- keysOf(model)
-                      lookupData <- BoxTablesRegistry().tableActions(model).getEntity()
+                      lookupData <- BoxTablesRegistry().tableActions(model).find()
                     } yield {
                       val options = lookupData.map { lookupRow =>
                         JSONLookup(lookupRow.get(value), lookupRow.get(text))
@@ -133,10 +137,12 @@ object JSONMetadataFactory extends Logging {
           fields <- Future.sequence(c.map(field2form))
           keys <- JSONMetadataFactory.keysOf(table)
         } yield {
-          JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fields.map(_.name), keys, None, None, table)
+          val fieldList = fields.map(_.name)
+          JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fieldList, keys, None, fieldList, table)
         }
 
-        cacheTable = cacheTable ++ Map((table, lang, lookupMaxRows) -> result)
+        logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)
+        cacheTable = cacheTable ++ Map((up.name, table, lang, lookupMaxRows) -> result)
         result
       }
     }
@@ -149,7 +155,7 @@ object JSONMetadataFactory extends Logging {
         logger.info(s"Metadata keys cache miss! cache key: ($table), cache: ${cacheKeys}")
 
         val result = new PgInformationSchema(table, Auth.adminDB).pk.map { pk => //map to enter the future
-          logger.info(pk)
+          logger.info(pk.toString)
           pk.boxKeys
         }
 
@@ -195,7 +201,8 @@ object JSONMetadataFactory extends Logging {
     "numeric" -> JSONFieldTypes.NUMBER,
     "text" -> JSONFieldTypes.STRING,
     "USER-DEFINED" -> JSONFieldTypes.STRING,
-    "time without time zone" -> JSONFieldTypes.TIME
+    "time without time zone" -> JSONFieldTypes.TIME,
+    "ARRAY" -> JSONFieldTypes.STRING                              //todo: works only for visualisation
   )
 
   val defaultWidgetMapping = Map(
@@ -213,6 +220,7 @@ object JSONMetadataFactory extends Logging {
     "numeric" -> None,
     "text" -> Some(WidgetsNames.textinput),
     "USER-DEFINED" -> None,
-    "time without time zone" -> Some(WidgetsNames.timepicker)
+    "time without time zone" -> Some(WidgetsNames.timepicker),
+    "ARRAY" -> Some(WidgetsNames.textinput)                          //todo: orks only for visualisation -> provide widget
   )
 }

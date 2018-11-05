@@ -64,9 +64,9 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
 
   }
 
-  val filesCodes:Seq[String] = conf.as[Seq[Config]]("generator.files").map(file)
+  val filesCodes = conf.as[Seq[Config]]("generator.files")
   val filesCode:String = filesCodes.nonEmpty match {
-    case true => filesCodes.mkString(" ~ ")
+    case true => filesCodes.map(file).mkString(" ~ ")
     case false => """pathEnd{complete("No files handlers")}"""
   }
 
@@ -82,12 +82,17 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
        |import akka.stream.Materializer
        |import scala.concurrent.ExecutionContext
        |import slick.jdbc.PostgresProfile.api.Database
+       |import ch.wsl.box.rest.utils.UserProfile
        |
        |object $name {
        |
        |  import akka.http.scaladsl.server.Directives._
        |
-       |  def route(implicit db:Database,materializer:Materializer,ec:ExecutionContext):Route = $filesCode
+       |  def route(implicit up:UserProfile, materializer:Materializer, ec:ExecutionContext):Route = {
+       |    implicit val db = up.db
+       |
+       |    $filesCode
+       |  }
        |}
      """.stripMargin
 

@@ -31,7 +31,7 @@ object EnhancedTable extends Logging {
           }.get
         } catch {
           case e: Exception => {
-            logger.debug(rm.classSymbol(t.getClass).toType.members)
+            logger.debug(rm.classSymbol(t.getClass).toType.members.toString)
             throw new Exception(s"Field not found:$field available fields: ${rm.classSymbol(t.getClass).toType.members} of table:${t.tableName}")
           }
         }
@@ -48,8 +48,12 @@ object EnhancedTable extends Logging {
       accessor(field).info.toString.stripPrefix("=> slick.driver.PostgresDriver.api.Rep[").stripSuffix("]")
     }
 
+    def cols(fields: Seq[String]):Seq[Col] = fields.map(col(_))
+
+    def reps(fields: Seq[String]):Seq[Rep[_]] = fields.map(col(_).rep)
 
 
   }
 
 }
+

@@ -16,11 +16,22 @@ case class JSONField(
                       child: Option[Child] = None,
                       default: Option[String] = None,
                       file: Option[FileReference] = None,
-                      condition: Option[ConditionalField] = None
-                    )
+                      condition: Option[ConditionalField] = None,
+                      tooltip: Option[String] = None
+                    ) {
+  def title = label.getOrElse(name)
+}
+
+object JSONField{
+  val empty = JSONField("","",true)
+}
 
 
 case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSONLookup] = Seq())
+
+object JSONFieldLookup {
+  val empty: JSONFieldLookup = JSONFieldLookup("",JSONFieldMap("",""))
+}
 
 case class JSONLookup(id:String, value:String)
 
@@ -40,4 +51,6 @@ object JSONFieldTypes{
   val DATE = "date"
   val DATETIME = "datetime"
   val TIME = "time"
+
+  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME)
 }

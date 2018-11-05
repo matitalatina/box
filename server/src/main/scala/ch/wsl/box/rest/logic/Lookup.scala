@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{JSONMetadata, JSONQuery}
+import ch.wsl.box.model.shared.{JSONFieldLookup, JSONMetadata, JSONQuery}
 import io.circe.Json
 import slick.driver.PostgresDriver.api._
 
@@ -19,17 +19,20 @@ object Lookup {
 
       Future.sequence{
         metadata.fields.flatMap(_.lookup.map(_.lookupEntity)).map{ lookupEntity =>
-          actionsRegistry.tableActions(lookupEntity).getEntity(JSONQuery.empty).map{ jq => lookupEntity -> jq}
+          actionsRegistry.tableActions(lookupEntity).find(JSONQuery.empty).map{ jq => lookupEntity -> jq}
         }
       }.map(_.toMap)
   }
 
-  def valueExtractor(lookupElements:Option[Map[String,Seq[Json]]],metadata:JSONMetadata)(field:String,value:String) = {
-    lookupElements.flatMap { le =>
-      def lookup = metadata.fields.find(_.name == field).flatMap(_.lookup)
-      le(lookup.get.lookupEntity).find(_.get(lookup.get.map.valueProperty) == value).map { lookupRow =>
-        lookupRow.get(lookup.get.map.textProperty)
-      }
-    }.getOrElse(value)
-  }
+  def valueExtractor(lookupElements:Option[Map[String,Seq[Json]]],metadata:JSONMetadata)(field:String, value:String):String = {
+
+    for{
+      elements <- lookupElements
+      field <- metadata.fields.find(_.name == field)
+      lookup <- field.lookup
+      foreignEntity <- elements.get(lookup.lookupEntity)
+      foreignRow <- foreignEntity.find(_.get(lookup.map.valueProperty) == value)
+    } yield foreignRow.get(lookup.map.textProperty)
+
+  }.getOrElse(value)
 }

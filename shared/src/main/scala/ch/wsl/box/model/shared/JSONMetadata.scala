@@ -20,7 +20,7 @@ case class JSONMetadata(
                          tabularFields:Seq[String],
                          keys:Seq[String],
                          query:Option[JSONQuery],
-                         exportView:Option[String],
+                         exportFields:Seq[String],
                          baseTable:String
                        )
 

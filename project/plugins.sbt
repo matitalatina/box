@@ -1,8 +1,10 @@
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.22")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.25")
 
 addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "4.0.2")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.5")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.6")
+
+addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject"      % "0.6.0")
 
 
 //addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")

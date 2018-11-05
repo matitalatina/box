@@ -16,7 +16,6 @@ import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.LoginRequest
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.shared.utils.CSV
 import scribe.Logging
 
 import scala.util.{Failure, Success}
@@ -129,7 +128,8 @@ trait Root extends enablers.Sessions with Logging {
               }
             } ~
             touchRequiredSession(oneOff, usingCookiesOrHeaders) { session =>
-              implicit val db = session.userProfile.db
+              implicit val up = session.userProfile
+              implicit val db = up.db
 //              val accessLevel = session.userProfile.accessLevel.get
 
               pathPrefix("access") {
@@ -183,10 +183,10 @@ trait Root extends enablers.Sessions with Logging {
               Auth.onlyAdminstrator(session) { //need to be at the end or non administrator request are not resolved
                 //access to box tables for administrator
                 pathPrefix("boxfile") {
-                  BoxFileRoutes.route(session.userProfile.boxDb, materializer, executionContext)
+                  BoxFileRoutes.route(session.userProfile.boxUserProfile, materializer, executionContext)
                 } ~
                   pathPrefix("boxentity") {
-                    BoxRoutes()(session.userProfile.boxDb, materializer, executionContext)
+                    BoxRoutes()(session.userProfile.boxUserProfile, materializer, executionContext)
                   } ~
                   path("boxentities") {
                     get {
