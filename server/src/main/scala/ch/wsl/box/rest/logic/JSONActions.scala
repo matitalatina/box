@@ -41,9 +41,9 @@ trait EntityJSONTableActions extends EntityJSONViewActions {
 }
 
 
-case class JSONViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONViewActions {
+case class JSONViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](entity:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONViewActions {
 
-  val dbActions = new DbActions[T,M](table)
+  val dbActions = new DbActions[T,M](entity)
 
   override def findStreamed(query: JSONQuery=JSONQuery.empty)(implicit db:Database, mat:Materializer): DatabasePublisher[Json] = dbActions.findStreamed(query).mapResult(_.asJson)
 

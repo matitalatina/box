@@ -64,9 +64,9 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
 
   }
 
-  val filesCodes:Seq[String] = conf.as[Seq[Config]]("generator.files").map(file)
+  val filesCodes = conf.as[Seq[Config]]("generator.files")
   val filesCode:String = filesCodes.nonEmpty match {
-    case true => filesCodes.mkString(" ~ ")
+    case true => filesCodes.map(file).mkString(" ~ ")
     case false => """pathEnd{complete("No files handlers")}"""
   }
 
