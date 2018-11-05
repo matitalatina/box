@@ -143,6 +143,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override protected def edit(): JsDom.all.Modifier = render(true)
 
     private def render(write:Boolean): JsDom.all.Modifier = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
+      block.title.map( t => h4(minHeight := 20.px,t)),
       widget.render(write,Property(true))
     )
   })
