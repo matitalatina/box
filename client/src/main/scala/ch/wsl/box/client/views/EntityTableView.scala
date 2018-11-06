@@ -215,17 +215,23 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
             .map(_.id)
           JSONQueryFilter(field.column,Some(Filter.IN),ids.mkString(","))
         }
+        case Some(Filter.FK_DISLIKE) => {
+          val ids = getFieldLookup(field.column)
+            .filter(_.value.toLowerCase.contains(field.value.toLowerCase()))
+            .map(_.id)
+          JSONQueryFilter(field.column,Some(Filter.NOTIN),ids.mkString(","))
+        }
         case Some(Filter.FK_EQUALS) => {
           val id = getFieldLookup(field.column)
-            .find(_.value == field.value.toLowerCase())
-            .map(_.value)
-          JSONQueryFilter(field.column,Some(Filter.EQUALS),id.getOrElse(""))
+            .find(_.value == field.value)
+            .map(_.id)
+          JSONQueryFilter(field.column,Some(Filter.IN),id.getOrElse(""))  //fails with EQUALS when id = ""
         }
         case Some(Filter.FK_NOT) => {
           val id = getFieldLookup(field.column)
-            .find(_.value == field.value.toLowerCase())
-            .map(_.value)
-          JSONQueryFilter(field.column,Some(Filter.NOT),id.getOrElse(""))
+            .find(_.value == field.value)
+            .map(_.id)
+          JSONQueryFilter(field.column,Some(Filter.NOTIN),id.getOrElse("")) //fails with NOT when id = ""
         }
         case _ => field
       }
@@ -354,7 +360,9 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case Filter.FK_NOT => StringFrag("not")
       case Filter.FK_EQUALS => StringFrag("=")
       case Filter.FK_LIKE => StringFrag("contains")
+      case Filter.FK_DISLIKE => StringFrag("without")
       case Filter.LIKE => StringFrag("contains")
+      case Filter.DISLIKE => StringFrag("without")
       case _ => StringFrag(id)
     }
 
@@ -373,7 +381,8 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       }
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterOperator != Filter.BETWEEN => {
         if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
-        NumberInput.debounced(filterValue,cls := "form-control")
+        TextInput.debounced(filterValue,cls := "form-control")      //to allow comma separated values, ranges, ...
+//        NumberInput.debounced(filterValue,cls := "form-control")
       }
       case _ => TextInput.debounced(filterValue,cls := "form-control")
     }
@@ -445,7 +454,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                     ).render
 
                 }
-            ).render
+              ).render
           }),
 
           rowFactory = (el) => {

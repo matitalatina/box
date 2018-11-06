@@ -96,21 +96,24 @@ object Filter {
   final val >= = ">="
   final val <= = "<="
   final val LIKE = "like"
+  final val DISLIKE = "dislike"
   final val FK_LIKE = "FKlike"
+  final val FK_DISLIKE = "FKdislike"
   final val IN = "in"
+  final val NOTIN = "notin"
   final val BETWEEN = "between"
 
   private def basicOptions(`type`:String) = `type` match {
-    case JSONFieldTypes.NUMBER  => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT, Filter.IN, Filter.BETWEEN)
+    case JSONFieldTypes.NUMBER  => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT, Filter.IN, Filter.NOTIN, Filter.BETWEEN)
     case JSONFieldTypes.DATE | JSONFieldTypes.DATETIME | JSONFieldTypes.TIME => Seq(Filter.EQUALS, Filter.>, Filter.<, Filter.>=, Filter.<=, Filter.NOT)
-    case JSONFieldTypes.STRING => Seq(Filter.LIKE, Filter.EQUALS, Filter.NOT)
+    case JSONFieldTypes.STRING => Seq(Filter.LIKE, Filter.DISLIKE, Filter.EQUALS, Filter.NOT)
     case _ => Seq(Filter.EQUALS, Filter.NOT)
   }
 
   def options(field:JSONField):Seq[String] = {
     field.lookup match {
       case None => basicOptions(field.`type`)
-      case Some(lookup) => Seq(Filter.FK_LIKE, Filter.FK_EQUALS, Filter.FK_NOT)// ++ lookup.lookup.values.toSeq
+      case Some(lookup) => Seq(Filter.FK_LIKE, Filter.FK_DISLIKE, Filter.FK_EQUALS, Filter.FK_NOT)// ++ lookup.lookup.values.toSeq
     }
   }
 

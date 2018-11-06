@@ -23,7 +23,9 @@ trait DbFilters {
   def >=(c:Col, v:String):Rep[Option[Boolean]]
   def <=(c:Col, v:String):Rep[Option[Boolean]]
   def like(c:Col,v:String):Rep[Option[Boolean]]
+  def dislike(c:Col,v:String):Rep[Option[Boolean]]
   def in(c:Col,v:String):Rep[Option[Boolean]]
+  def notin(c:Col,v:String):Rep[Option[Boolean]]
   def between(c:Col,v:String):Rep[Option[Boolean]]
 
   def operator(op:String)(c:Col,q:JSONQueryFilter) ={
@@ -37,7 +39,9 @@ trait DbFilters {
       case Filter.>=      => >=(c, q.value)
       case Filter.<=      => <=(c, q.value)
       case Filter.LIKE    => like(c, q.value)
+      case Filter.DISLIKE => dislike(c, q.value)
       case Filter.IN      => in(c, q.value)
+      case Filter.NOTIN   => notin(c, q.value)
       case Filter.BETWEEN   => between(c, q.value)
     }
   }
@@ -289,6 +293,20 @@ trait UglyDBFilters extends DbFilters with Logging {
       }
    }
 
+  def dislike(col:Col,v:String):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
+
+    val c:Rep[_] = col.rep
+
+    logger.info("Executing like on" + col.toString)
+
+    typ(col.`type`) match {
+      case `typSTRING` =>( !(c.asInstanceOf[Rep[String]].toLowerCase like "%"+v.toLowerCase+"%") || (c.asInstanceOf[Rep[String]]).length == 0)
+      case `typOptSTRING` => (!(c.asInstanceOf[Rep[Option[String]]].toLowerCase like "%"+v.toLowerCase+"%") || c.asInstanceOf[Rep[Option[String]]].isEmpty)
+      case `typError` => None
+      case _ => None
+    }
+  }
+
   def between(col:Col, v:String):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
 
     val extremes = v.replace("to", "-").replace("and", "-").split('-')
@@ -302,27 +320,55 @@ trait UglyDBFilters extends DbFilters with Logging {
     }
   }
 
-//  def in(col:Col, v:Any):Rep[Option[Boolean]] = ???
-    def in(col:Col, v:String):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
 
-      val elements = v.split(',').toSeq
+  def in(col:Col, v:String):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
 
-      if (elements.size >0 && elements.head.nonEmpty) {
+    val elements = v.replace("  ", ",").
+                      replace(" ", ",").
+                      replace("+", ",").
+                      replace("-", ",").
+                      replace(" and ", ",").split(',').toSeq
 
-        //      val reps: Seq[Rep[Boolean]] = elements.map(x => ==(col, x).getOrElse(false))
-        val reps: Seq[Rep[Option[Boolean]]] = elements.map(x => this.==(col, x))
+    if (elements.size > 0 && elements.head.nonEmpty) {
 
-//        def mergeReps = (x:Rep[Option[Boolean]],y:Rep[Option[Boolean]]) => x || y  //need to be either true
+      //      val reps: Seq[Rep[Boolean]] = elements.map(x => ==(col, x).getOrElse(false))
+      val reps: Seq[Rep[Option[Boolean]]] = elements.map(x => this.==(col, x))
 
-        //      reps.fold[Rep[Option[Boolean]]](Some(true))((x,y) => x && y)
+      //        def mergeReps = (x:Rep[Option[Boolean]],y:Rep[Option[Boolean]]) => x || y  //need to be either true
 
-        reps.reduceLeft[Rep[Option[Boolean]]]((x,y) => x || y)
+      //      reps.fold[Rep[Option[Boolean]]](Some(true))((x,y) => x && y)
 
-      } else{
-        None
-      }
+      reps.reduceLeft[Rep[Option[Boolean]]]((x, y) => x || y)
 
+    } else {
+      None
     }
 
+  }
+
+  def notin(col:Col, v:String):Rep[Option[Boolean]] = { //Returns Column[Boolean] or Column[Option[Boolean]]
+
+    val elements = v.replace("  ", ",").
+                      replace(" ", ",").
+                      replace("+", ",").
+                      replace("-", ",").
+                      replace(" and ", ",").split(',').toSeq
+
+    if (elements.size >0 && elements.head.nonEmpty) {
+
+      //      val reps: Seq[Rep[Boolean]] = elements.map(x => ==(col, x).getOrElse(false))
+      val reps: Seq[Rep[Option[Boolean]]] = elements.map(x => this.not(col, x))
+
+      //        def mergeReps = (x:Rep[Option[Boolean]],y:Rep[Option[Boolean]]) => x || y  //need to be either true
+
+      //      reps.fold[Rep[Option[Boolean]]](Some(true))((x,y) => x && y)
+
+      reps.reduceLeft[Rep[Option[Boolean]]]((x,y) => x && y)
+
+    } else{
+      None
+    }
+
+  }
 
 }
