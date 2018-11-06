@@ -14,6 +14,7 @@ object WidgetsNames {
   val datetimePickerFullWidth = "datetimePickerFullWidth"
   val select = "selectWidget"
   val checkbox = "checkbox"
+  val checkboxNumber = "checkboxNumber"
   val hidden = "hidden"
   val nolabel = "nolabel"
   val twoLines = "twoLines"

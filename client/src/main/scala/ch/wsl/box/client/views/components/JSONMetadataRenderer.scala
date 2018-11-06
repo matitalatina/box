@@ -99,7 +99,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidget
           case (_, _, Some(lookup), _, _)                             => SelectWidget
           case (_, _, _, true, _)                                     => InputWidgetFactory.TextDisabled
-          case (NUMBER, Some(WidgetsNames.checkbox), _, _, _)         => CheckboxWidget
+          case (BOOLEAN, _, _, _, _)                                  => CheckboxWidget
+          case (NUMBER, Some(WidgetsNames.checkboxNumber), _, _, _)   => CheckboxNumberWidget
           case (NUMBER, Some(WidgetsNames.nolabel), _, _, _)          => InputWidgetFactory.NumberNoLabel
           case (NUMBER, _, _, _, _)                                   => InputWidgetFactory.Number
           case (TIME, Some(WidgetsNames.timepicker), _, _, _)         => DateTimeWidget.Time
@@ -143,7 +144,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     override protected def edit(): JsDom.all.Modifier = render(true)
 
     private def render(write:Boolean): JsDom.all.Modifier = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
-      block.title.map( t => h4(minHeight := 20.px,t)),
+      block.title.map( t => h3(minHeight := 20.px, Labels(t))),
       widget.render(write,Property(true))
     )
   })
