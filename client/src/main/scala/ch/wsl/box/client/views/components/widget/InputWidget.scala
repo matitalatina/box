@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.Conf
+import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import io.circe.Json
 import io.udash._
@@ -120,13 +120,13 @@ object InputWidget {
 
   class TextDisabled(field:JSONField, prop: Property[Json]) extends Text(field,prop) {
 
-    override def edit() = Conf.manualEditKeyFields match{
+    override def edit() = ClientConf.manualEditKeyFields match{
 //      case false =>{    //todo : mimic an input with a label (otherwise it is not safe: can change dom and save new key!)
 //        show()
 //      }
 //      case true => {
         case _ => {
-        input(field,true, !Conf.manualEditKeyFields, modifiers){ case y =>
+        input(field,true, !ClientConf.manualEditKeyFields, modifiers){ case y =>
           val stringModel = prop.transform[String](jsonToString _,strToJson _)
           TextInput(stringModel)(y:_*).render
         }
@@ -134,7 +134,7 @@ object InputWidget {
 
     }
 
-    override val modifiers = Seq({if (!Conf.manualEditKeyFields) {disabled := true} else {}} , textAlign.right)
+    override val modifiers = Seq({if (!ClientConf.manualEditKeyFields) {disabled := true} else {}} , textAlign.right)
   }
 
   case class TextNoLabel(field:JSONField, prop: Property[Json]) extends Widget {

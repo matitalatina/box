@@ -28,7 +28,7 @@ object View {
 
 }
 
-case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T])
+case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en")
                                                     (implicit
                                                      enc: Encoder[M],
                                                      dec:Decoder[M],
@@ -66,7 +66,7 @@ case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:
         } ~
         path("metadata") {
           get {
-            complete{ JSONMetadataFactory.of(name, "en") }
+            complete{ JSONMetadataFactory.of(name, lang) }
           }
         } ~
         path("keys") {   //returns key fields names

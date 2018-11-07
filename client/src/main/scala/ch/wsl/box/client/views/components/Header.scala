@@ -8,7 +8,7 @@ import scalacss.ScalatagsCss._
 import io.udash.css.CssView._
 import ch.wsl.box.client.Context._
 import ch.wsl.box.client.services.Navigate
-import ch.wsl.box.client.utils.{Labels, Session, UI}
+import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.dropdown.UdashDropdown
 import io.udash.bootstrap.navs.{UdashNav, UdashNavbar}
@@ -44,8 +44,9 @@ object Header {
     if(Session.isLogged()) {
       frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); Session.logout() } ),"Logout")," ")
     } else frag(),
+    "   ",
     Labels.header.lang + ": ",
-    Labels.langs.map{ l =>
+    ClientConf.langs.map{ l =>
       span(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); Session.setLang(l)  } ),l)," ")
     }
   )

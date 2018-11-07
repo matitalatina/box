@@ -99,7 +99,7 @@ object Session extends Logging {
   def resetIDs() = set(IDS, None)
 
   def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).toOption match {
-    case Some(lang) if Labels.langs.contains(lang)  => lang
+    case Some(lang) if ClientConf.langs.contains(lang)  => lang
     case _ => "en"
   }
   def setLang(lang:String) = {

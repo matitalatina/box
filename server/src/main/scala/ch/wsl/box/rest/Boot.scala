@@ -18,25 +18,25 @@ import scala.io.StdIn
 
 object Box {
   def start() = new Root {
+
     implicit val system: ActorSystem = ActorSystem()
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val executionContext: ExecutionContext = system.dispatcher
 
+    BoxConf.load()
 
 
-    val conf: Config = ConfigFactory.load().as[Config]("serve")
-    val host = conf.as[String]("host")
-    val port = conf.as[Int]("port")
+    override val akkaConf: Config = BoxConf.akkaHttpSession
 
-    Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Info)).replace()
-//    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Info))
+    val host = BoxConf.host
+    val port = BoxConf.port
+
+    Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConf.loggerLevel)).replace()
 
     //TODO need to be reworked now it's based on an hack, it call generated root to populate models
-    GeneratedRoutes()(Auth.adminUserProfile, materializer, executionContext)
+    GeneratedRoutes("en")(Auth.adminUserProfile, materializer, executionContext)
     BoxRoutes()(Auth.boxUserProfile, materializer, executionContext)
 
-//    Logger.update(Logger.rootName)(_.clearHandlers().withHandler(minimumLevel = Level.Warn))
-    Logger.root.clearHandlers().withHandler(minimumLevel = Some(Level.Warn)).replace()
 
     // `route` will be implicitly converted to `Flow` using `RouteResult.route2HandlerFlow`
 
@@ -45,13 +45,13 @@ object Box {
     val binding: Future[Http.ServerBinding] = Http().bindAndHandle(route, host, port) //attach the root route
     println(s"Server online at http://localhost:$port")
 
-    val tableConf = BoxConf.load()
+
 
   }
 }
 
 object Boot extends App  {
-  val root = Box.start()
+  var root = Box.start()
 
   println("Press q to stop, r to reset cache...")
 
@@ -60,6 +60,8 @@ object Boot extends App  {
     read = StdIn.readLine()
     read match {
       case "r" => {
+        root.stop()
+        root=Box.start
         JSONFormMetadataFactory.resetCache()
         JSONMetadataFactory.resetCache()
         println("reset cache")

@@ -52,7 +52,7 @@ object Navigation extends HasModelPropertyCreator[Navigation] {
     label
   )
 
-  def pageCount(recordCount:Int) = math.ceil(recordCount.toDouble / Conf.pageLength.toDouble).toInt
+  def pageCount(recordCount:Int) = math.ceil(recordCount.toDouble / ClientConf.pageLength.toDouble).toInt
 }
 
 

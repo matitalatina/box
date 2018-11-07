@@ -11,17 +11,15 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory, JSONTableActions}
-import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
+import ch.wsl.box.rest.utils.{JSONSupport, BoxConf, UserProfile}
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
-import com.typesafe.config._
 import io.circe.parser.decode
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}
-import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -38,7 +36,7 @@ object Table {
 
 }
 
-case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], isBoxTable:Boolean = false)
+case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", isBoxTable:Boolean = false)
                                                             (implicit
                                                              enc: Encoder[M],
                                                              dec:Decoder[M],
@@ -66,7 +64,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
 //    val jsonActions= new JsonTableActions(table)
     val dbActions = new DbActions[T,M](table)
     val jsonActions = JSONTableActions[T,M](table)
-    val limitLookupFromFk: Int = ConfigFactory.load().as[Int]("limitLookupFromFk")
+    val limitLookupFromFk: Int = BoxConf.limitLookupFromFk
 
     import JSONSupport._
     import akka.http.scaladsl.model._
@@ -119,7 +117,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
       } ~
       path("metadata") {
         get {
-          complete{ JSONMetadataFactory.of(name, "en", limitLookupFromFk) }   //can set "en" hardcoded, since base table JSONForm do not change with language
+          complete{ JSONMetadataFactory.of(name, lang, limitLookupFromFk) }   //can set "en" hardcoded, since base table JSONForm do not change with language
         }
       } ~
       path("keys") {   //returns key fields names
@@ -167,7 +165,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
             get {
               parameters('q) { q =>
                 val query = parse(q).right.get.as[JSONQuery].right.get
-                val csv = Source.fromFuture(JSONMetadataFactory.of(name,"en", limitLookupFromFk).map{ metadata =>
+                val csv = Source.fromFuture(JSONMetadataFactory.of(name,lang, limitLookupFromFk).map{ metadata =>
                   CSV.writeRow(metadata.fields.map(_.name))
                 }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.writeRow(x.values())))
                 complete(csv)

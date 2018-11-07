@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{Conf, Labels, Navigation, Session}
+import ch.wsl.box.client.utils.{ClientConf, Labels, Navigation, Session}
 import ch.wsl.box.client.views.components.widget.DateTimeWidget
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
 import ch.wsl.box.model.shared.EntityKind.VIEW
@@ -111,7 +111,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     model.subProp(_.name).set(state.entity)
     model.subProp(_.kind).set(state.kind)
 
-    val emptyJsonQuery = JSONQuery.empty.limit(Conf.pageLength)
+    val emptyJsonQuery = JSONQuery.empty.limit(ClientConf.pageLength)
 
 
     {for{
@@ -257,7 +257,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     logger.info("reloading rows")
     logger.info("filterUpdateHandler "+filterUpdateHandler)
 
-    val q = query().copy(paging = Some(JSONQueryPaging(Conf.pageLength, page)))
+    val q = query().copy(paging = Some(JSONQueryPaging(ClientConf.pageLength, page)))
     val qEncoded = encodeFk(model.get.metadata.toSeq.flatMap(_.fields),q)
 
     for {
@@ -375,7 +375,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     fieldQuery.field.`type` match {
       case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
       case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATETIME => Conf.filterEqualityPrecisionDatetime match{
+      case JSONFieldTypes.DATETIME => ClientConf.filterEqualityPrecisionDatetime match{
         case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
         case _ => DateTimeWidget.DateTimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
       }

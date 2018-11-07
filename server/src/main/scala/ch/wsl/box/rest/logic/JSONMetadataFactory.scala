@@ -4,7 +4,7 @@ import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.model.BoxTablesRegistry
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 import scribe.Logging
@@ -36,9 +36,9 @@ object JSONMetadataFactory extends Logging {
 
   def lookupField(referencingTable:String,lang:String, firstNoPK:Option[String]):String = {
 
-    val config = ConfigFactory.load().as[Config]("rest.lookup.labels")
+    val restLookupConf = BoxConf.restLookupLabels
 
-    val default = config.as[Option[String]]("default").getOrElse("name")
+    val default = restLookupConf.as[Option[String]]("default").getOrElse("name")
 
     val myDefaultTableLookupField: String = default match {
       case "firstNoPKField" => firstNoPK.getOrElse("name")
@@ -46,7 +46,7 @@ object JSONMetadataFactory extends Logging {
       case _ => default
     }
 
-    config.as[Option[String]](referencingTable).getOrElse(myDefaultTableLookupField)
+    restLookupConf.as[Option[String]](referencingTable).getOrElse(myDefaultTableLookupField)
   }
 
   def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.Conf
+import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.client.views.components.Debug
 import ch.wsl.box.model.shared._
 import io.circe.Json

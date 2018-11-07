@@ -11,7 +11,7 @@ import scala.util.Try
 /**
   * Created by andre on 6/8/2017.
   */
-object Conf {
+object ClientConf {
 
   import ch.wsl.box.client.Context._
 
@@ -38,6 +38,8 @@ object Conf {
     case _ => ((x:Timestamp) => x)
   }
 
+  def langs = Try(conf("langs")).getOrElse("en").split(",")
+
 //  def filterEqualityPrecisionDouble:Option[Int] = Try(conf("filterEqualityPrecision.double").toInt).toOption
 //
 //  def prepareDouble = filterEqualityPrecisionDouble match{
@@ -50,4 +52,6 @@ object Conf {
 //
 //  def roundAt(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.round(n) * s) / s }
 //  def truncateAt(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.floor(n) * s) / s }
+
+
 }

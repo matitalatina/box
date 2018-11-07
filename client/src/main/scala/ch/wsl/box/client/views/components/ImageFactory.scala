@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components
 import ch.wsl.box.client.styles.GlobalStyles
-import ch.wsl.box.client.utils.Conf
+import ch.wsl.box.client.utils.ClientConf
 import org.scalajs.dom
 import scalatags.JsDom
 

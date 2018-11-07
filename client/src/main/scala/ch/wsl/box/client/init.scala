@@ -37,7 +37,7 @@ object Init extends JSApp with Logging {
     logger.debug("Box started")
 
     for {
-      _ <- Conf.load()
+      _ <- ClientConf.load()
       _ <- Labels.load(Session.lang())
       _ <- UI.load()
     } yield {

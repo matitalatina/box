@@ -7,7 +7,7 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
   with slick.codegen.OutputHelpers {
 
   def singleRoute(method:String,model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
-    s"""$method[${table.TableClass.name},${table.EntityType.name}]("${table.model.name.table}",${table.TableClass.name}).route"""
+    s"""$method[${table.TableClass.name},${table.EntityType.name}]("${table.model.name.table}",${table.TableClass.name}, lang).route"""
   }
 
   def composeRoutes():String = {
@@ -31,7 +31,7 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
        |  import Directives._
        |  import io.circe.generic.auto._
        |
-             |  def apply()(implicit up:UserProfile, mat:Materializer, ec: ExecutionContext):Route = {
+             |  def apply(lang: String)(implicit up: UserProfile, mat: Materializer, ec: ExecutionContext):Route = {
              |  implicit val db = up.db
              |
        |    ${composeRoutes()}

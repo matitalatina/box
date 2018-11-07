@@ -11,7 +11,7 @@ object Labels {
 
   import ch.wsl.box.client.Context._
 
-  def langs = Seq("it","de","fr","en")
+//  def langs = Seq("it","de","fr","en")
 
   private var labels:Map[String,String] = Map()
 

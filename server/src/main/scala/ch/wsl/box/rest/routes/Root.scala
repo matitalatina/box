@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper, TableAccess, UIProvider}
 import ch.wsl.box.rest.boxentities.{Conf, UITable}
-import ch.wsl.box.rest.utils.BoxSession
+import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -16,6 +16,8 @@ import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.LoginRequest
 import ch.wsl.box.rest.jdbc.JdbcConnect
+import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
+import com.typesafe.config.Config
 import scribe.Logging
 
 import scala.util.{Failure, Success}
@@ -23,13 +25,24 @@ import scala.util.{Failure, Success}
 /**
   * Created by andreaminetti on 15/03/16.
   */
-trait Root extends enablers.Sessions with Logging {
+trait Root extends Logging {
 
   implicit val materializer:Materializer
   implicit val executionContext:ExecutionContext
 
   val binding: Future[Http.ServerBinding]
   val system: ActorSystem
+
+  val akkaConf:Config
+
+  lazy val sessionConfig = SessionConfig.fromConfig(akkaConf)
+  implicit lazy val sessionManager = new SessionManager[BoxSession](sessionConfig)
+  implicit lazy val refreshTokenStorage = new InMemoryRefreshTokenStorage[BoxSession] {
+    override def log(msg: String): Unit = {}
+  }
+
+  def boxSetSession(v: BoxSession) = setSession(oneOff, usingCookies, v)
+
 
   def stop() = {
     binding
@@ -69,12 +82,7 @@ trait Root extends enablers.Sessions with Logging {
           } ~
             path("conf") {
               get {
-                complete(Auth.boxDB.run {
-                  Conf.table.result
-                }.map { result =>
-                  result.map(x => x.key -> x.value).toMap
-                }
-                )
+                complete(BoxConf.clientConf)
               }
             } ~
             path("logout") {
@@ -149,7 +157,7 @@ trait Root extends enablers.Sessions with Logging {
               } ~
               pathPrefix("entity") {
                 pathPrefix(Segment) { lang =>
-                  GeneratedRoutes()
+                  GeneratedRoutes(lang)
                 }
               } ~
               path("entities") {

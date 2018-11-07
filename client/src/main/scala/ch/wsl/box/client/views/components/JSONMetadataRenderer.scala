@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components
 
 
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{Conf, Labels}
+import ch.wsl.box.client.utils.{ClientConf, Labels}
 import ch.wsl.box.client.views.components
 import ch.wsl.box.client.views.components.widget._
 import ch.wsl.box.model.shared._
