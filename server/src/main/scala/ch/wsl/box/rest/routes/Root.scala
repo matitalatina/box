@@ -6,7 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
-import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, LangHelper, TableAccess, UIProvider}
+import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.boxentities.{Conf, UITable}
 import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
 import slick.jdbc.PostgresProfile.api._
@@ -186,6 +186,13 @@ trait Root extends Logging {
                   pathPrefix(Segment) { name =>
                     Form(name, lang).route
                   }
+                }
+              } ~
+              pathPrefix("news") {
+                pathPrefix(Segment) { lang =>
+                    get{
+                      complete(NewsLoader.get(lang))
+                    }
                 }
               } ~
               Auth.onlyAdminstrator(session) { //need to be at the end or non administrator request are not resolved

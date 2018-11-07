@@ -60,18 +60,16 @@ object JSONSupport {
 
   implicit val TimestampFormat : Encoder[Timestamp] with Decoder[Timestamp] = new Encoder[Timestamp] with Decoder[Timestamp] {
 
-    val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
-    val timestampFormatterMin = new SimpleDateFormat("yyyy-MM-dd HH:mm")  //attention the format is different to that in the client for datetimepicker
+
 
     override def apply(a: Timestamp): Json = {
       Try {
-        Encoder.encodeString.apply(timestampFormatterMin.format(a))     //todo:  customization of timestamp format
+        Encoder.encodeString.apply(DateTimeFormatters.timestamp.format(a))     //todo:  customization of timestamp format
       }.getOrElse(Json.Null)
     }
 
     override def apply(c: HCursor): Result[Timestamp] = Decoder.decodeString.map{s =>
-      val timestamp = Try{timestampFormatterMin.parse(s).getTime}.getOrElse(timestampFormatter.parse(s).getTime)
-      new Timestamp(timestamp)
+      DateTimeFormatters.timestamp.parse(s).get
     }.apply(c)
   }
 

@@ -22,10 +22,10 @@ object UI {
 
   def logo = ui.lift("logo")
   def title = ui.lift("title")
-  def info = Labels(ui.lift("info").getOrElse("ui.info"))
+  def indexTitle = Labels(ui.lift("index.title").getOrElse("ui.index.title"))
+  def indexHtml = Labels(ui.lift("index.html").getOrElse(""))
   def newsTable = ui.lift("newsTable")
   def footerCopyright = ui.lift("footerCopyright")
-  def enableNews = ui.lift("enableNews").contains("true")
   def debug = ui.lift("debug").contains("true")
   def enableAllTables = ui.lift("enableAllTables").contains("true")
   def showEntitiesSidebar = ui.lift("showEntitiesSidebar").contains("true")

@@ -26,6 +26,12 @@ object ClientConf {
 
   def manualEditKeyFields = Try(conf("manual_edit.key_fields").toBoolean).getOrElse(false)
 
+  def displayIndexNews = Try(conf("display.index.news").toBoolean).getOrElse(false)
+  def displayIndexHtml = Try(conf("display.index.html").toBoolean).getOrElse(false)
+
+
+
+
   def filterEqualityPrecisionDatetime = Try(conf("filterEqualityPrecision.datetime").toUpperCase).toOption match {
       case Some("DATE") => JSONFieldTypes.DATE
       case Some("DATETIME") => JSONFieldTypes.DATETIME

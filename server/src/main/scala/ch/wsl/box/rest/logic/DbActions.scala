@@ -86,14 +86,6 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     }
   }
 
-  def findJSON(query:JSONQuery)(implicit db:Database, mat: Materializer): Future[JSONData[M]] = {
-    for{
-      data <- find(query)
-      n <- count(query)
-    }yield{
-      JSONData(data, n)
-    }
-  }
 
   def keys() = for{
     k <- JSONMetadataFactory.keysOf(entity.baseTableRow.tableName)

@@ -55,6 +55,7 @@ object REST {
   def labels(lang:String):Future[Map[String,String]] = client.get[Map[String,String]](s"/labels/$lang")
   def conf():Future[Map[String,String]] = client.get[Map[String,String]](s"/conf")
   def ui():Future[Map[String,String]] = client.get[Map[String,String]](s"/ui")
+  def news(lang:String):Future[Seq[NewsEntry]] = client.get[Seq[NewsEntry]](s"/news/$lang")
 
 
   //export

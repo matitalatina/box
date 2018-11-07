@@ -44,7 +44,9 @@ object BoxConf extends Logging {
               "lookupMaxRows",
               "image_height",
               "filterEqualityPrecision.double",
-              "filterEqualityPrecision.datetime"
+              "filterEqualityPrecision.datetime",
+              "display.index.html",
+              "display.index.news"
             ))
 
   def restLookupLabels = ConfigFactory.parseString( Try(conf("rest.lookup.labels")).getOrElse("default=firstNoPKField"))
@@ -75,13 +77,16 @@ object BoxConf extends Logging {
   def host = Try(conf("host")).getOrElse("0.0.0.0")
   def port = Try(conf("port").toInt).getOrElse(8080)
 
-  def loggerLevel = Try(conf("logger.level")).getOrElse("warn").toLowerCase match{
+  def loggerLevel = Try(conf("logger.level")).getOrElse("warn").toLowerCase match {
     case "trace" => Level.Trace
     case "debug" => Level.Debug
     case "info" => Level.Info
     case "warn" => Level.Warn
     case "error" => Level.Error
   }
+
+
+
 
   def filterEqualityPrecisionDatetime = Try(conf("filterEqualityPrecision.datetime").toUpperCase).toOption match {
     case Some("DATE") => JSONFieldTypes.DATE

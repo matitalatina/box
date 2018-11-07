@@ -51,7 +51,7 @@ object Auth {
   def adminUserProfile = UserProfile(
     name=dbConf.as[String]("user"),
     db=adminDB,
-    boxDb=adminDB
+    boxDb=boxDB
   )
 
   def boxUserProfile = UserProfile(

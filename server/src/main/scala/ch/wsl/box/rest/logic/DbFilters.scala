@@ -8,7 +8,7 @@ import java.time.temporal.{ChronoField, ChronoUnit, TemporalAccessor}
 
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{Filter, JSONFieldTypes, JSONQuery, JSONQueryFilter}
-import ch.wsl.box.rest.utils.BoxConf
+import ch.wsl.box.rest.utils.{BoxConf, DateTimeFormatters}
 import scribe.Logging
 import slick.driver.PostgresDriver
 import slick.driver.PostgresDriver.api._
@@ -50,46 +50,8 @@ trait DbFilters {
 
 trait UglyDBFilters extends DbFilters with Logging {
 
-  val timestampFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S")  //attention the format is different to that in the client for datetimepicker
-  val timestampFormatterMinute = new SimpleDateFormat("yyyy-MM-dd HH:mm")  //attention the format is different to that in the client for datetimepicker
 
-//this is to format a timestamp with data only and add time to 00:00
-  val dateOnlyFormatter = new DateTimeFormatterBuilder().append(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-    .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-    .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
-    .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
-    .toFormatter();
-
-  val dateTimeFormats = List(
-    "yyyy-MM-dd HH:mm:ss.S",
-    "yyyy-MM-dd HH:mm:ss",
-    "yyyy-MM-dd HH:mm"
-    //    "yyyy-MM-dd",   //"yyyy-MM-dd[ HH:mm]",  //this is not parsed successfully (missing time info)
-  ).map(p => DateTimeFormatter.ofPattern(p)).+:(dateOnlyFormatter)
-
-
-  def toTimestamp(dateStr: String): Option[Timestamp] = {
-    logger.info(s"parsing $dateStr" )
-    val trimmedDate = dateStr.trim
-
-    def normalize(patterns: Seq[DateTimeFormatter]): Try[LocalDateTime] = patterns match {
-      case head::tail => {
-        val resultTry = Try(LocalDateTime.parse(trimmedDate, head))
-        logger.info(s"trying format $head ... ${resultTry.isSuccess}" )
-
-        if(resultTry.isSuccess) resultTry else normalize(tail)
-      }
-      case _ => Failure(new RuntimeException(s"no formatter match found for $dateStr"))
-    }
-
-    if(trimmedDate.isEmpty)
-      None
-    else {
-      normalize(dateTimeFormats).toOption.map{ ldt =>
-        Timestamp.from(ldt.toInstant(ZoneOffset.ofHours(0)))
-      }
-    }
-  }
+  val toTimestamp = DateTimeFormatters.timestamp.parse _
 
   final val typINT = 0
   final val typLONG = 1
@@ -134,6 +96,8 @@ trait UglyDBFilters extends DbFilters with Logging {
 
       val v = value.toString
       val c:Rep[_] = col.rep
+
+
 
       typ(col.`type`) match {
           case `typSHORT` => c.asInstanceOf[Rep[Short]] === v.toShort
