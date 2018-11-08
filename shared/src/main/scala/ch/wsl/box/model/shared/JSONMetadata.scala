@@ -31,6 +31,7 @@ object JSONMetadata extends Logging {
         case (Some("arrayIndex"),_) => None
         case (Some("auto"),_) => None
         case (Some(d),JSONFieldTypes.NUMBER) => Some(d.toDouble.asJson)
+        case (Some(d),JSONFieldTypes.BOOLEAN) => Some(d.toBoolean.asJson)
         case (Some(d),_) => Some(d.asJson)
         case (None,JSONFieldTypes.NUMBER) => None
         case (None,JSONFieldTypes.CHILD) => {

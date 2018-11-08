@@ -5,7 +5,7 @@ import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{ClientConf, Labels, Navigation, Session}
-import ch.wsl.box.client.views.components.widget.DateTimeWidget
+import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget, SelectWidgetFullWidth}
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
 import ch.wsl.box.model.shared.EntityKind.VIEW
 import ch.wsl.box.model.shared._
@@ -284,10 +284,10 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
 
-  def filter(metadata: FieldQuery, filterValue:String) = {
+  def filter(fieldQuery: FieldQuery, filterValue:String) = {
     logger.info("filtering")
     val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
-      m.field.name == metadata.field.name match {
+      m.field.name == fieldQuery.field.name match {
         case true => m.copy(filterValue = filterValue)
         case false => m
       }
@@ -379,11 +379,14 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
         case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
         case _ => DateTimeWidget.DateTimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
       }
-      case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && filterOperator != Filter.BETWEEN => {
+      case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && !Seq(Filter.BETWEEN, Filter.IN, Filter.NOTIN).contains(filterOperator) => {
         if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
-        TextInput.debounced(filterValue,cls := "form-control")      //to allow comma separated values, ranges, ...
-//        NumberInput.debounced(filterValue,cls := "form-control")
+//        TextInput.debounced(filterValue,cls := "form-control")      //to allow comma separated values, ranges, ...
+        NumberInput.debounced(filterValue,cls := "form-control")
       }
+//      case JSONFieldTypes.BOOLEAN => {
+//        Select(filterValue, cls := "form-control")
+//      }
       case _ => TextInput.debounced(filterValue,cls := "form-control")
     }
 
@@ -438,7 +441,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                 th(GlobalStyles.smallCells)(Labels.entity.actions),
                   repeat(model.subSeq(_.fieldQueries)) { fieldQuery =>
                       val title: String = fieldQuery.get.field.label.getOrElse(fieldQuery.get.field.name)
-                      val filter = fieldQuery.asModel.subProp(_.filterValue)
+                      val filterValue = fieldQuery.asModel.subProp(_.filterValue)
                       val sort = fieldQuery.asModel.subProp(_.sort)
 
                     th(GlobalStyles.smallCells)(
@@ -449,7 +452,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                       ),br,
                       filterOptions(fieldQuery.asModel),
                       produce(fieldQuery.asModel.subProp(_.filterOperator)) { ft =>
-                        span(filterField(filter, fieldQuery.get, ft)).render
+                        span(filterField(filterValue, fieldQuery.get, ft)).render
                       }
                     ).render
 

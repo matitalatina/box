@@ -42,7 +42,7 @@ trait DbFilters {
       case Filter.DISLIKE => dislike(c, q.value)
       case Filter.IN      => in(c, q.value)
       case Filter.NOTIN   => notin(c, q.value)
-      case Filter.BETWEEN   => between(c, q.value)
+      case Filter.BETWEEN => between(c, q.value)
     }
   }
 
@@ -76,7 +76,7 @@ trait UglyDBFilters extends DbFilters with Logging {
     case "scala.Int" | "java.lang.Integer" | "Int" => typINT
     case "scala.Long" | "Long" => typLONG
     case "String" => typSTRING
-    case "scala.Boolean" => typBOOLEAN
+    case "Boolean" | "scala.Boolean" => typBOOLEAN
     case "java.sql.Timestamp" => typTIMESTAMP
     case "scala.Option[scala.Short]" | "Option[Short]" =>  typOptSHORT
     case "scala.Option[scala.Double]" | "Option[Double]" => typOptDOUBLE
