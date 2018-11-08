@@ -40,7 +40,7 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     Form.table.result
   }.map{_.map(_.name)}
 
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
 
   def of(id:Int, lang:String):Future[JSONMetadata] = {
     JSONFormMetadataFactory.cacheId.lift((up.name, id,lang)) match {

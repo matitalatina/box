@@ -4,7 +4,7 @@ import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash._
-import ch.wsl.box.shared.utils.JsonUtils._
+import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.client.Context._

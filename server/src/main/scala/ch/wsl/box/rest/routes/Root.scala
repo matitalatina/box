@@ -57,7 +57,7 @@ trait Root extends Logging {
     import ch.wsl.box.rest.utils.Auth
     import io.circe.generic.auto._
     import io.circe.syntax._
-    import ch.wsl.box.shared.utils.JsonUtils._
+    import ch.wsl.box.shared.utils.JSONUtils._
 
 
     //Serving UI

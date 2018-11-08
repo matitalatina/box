@@ -2,7 +2,7 @@ package ch.wsl.box.model.shared
 
 import io.circe._
 import io.circe.syntax._
-import ch.wsl.box.shared.utils.JsonUtils._
+import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json.{Folder, JArray}
 import scribe.Logging
 

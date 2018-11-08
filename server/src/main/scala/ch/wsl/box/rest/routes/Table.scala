@@ -50,7 +50,7 @@ case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name
   import akka.http.scaladsl.server.Directives._
   import ch.wsl.box.shared.utils.Formatters._
   import io.circe.generic.auto._
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
   import ch.wsl.box.model.shared.EntityKind
 
     implicit val db = up.db

@@ -6,7 +6,7 @@ import io.circe.syntax._
 import io.udash._
 import io.udash.properties.single.Property
 import org.scalajs.dom.Event
-import ch.wsl.box.shared.utils.JsonUtils._
+import ch.wsl.box.shared.utils.JSONUtils._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.button.{ButtonStyle, UdashButton, UdashButtonGroup}
 import io.udash.bootstrap.modal.UdashModal.ModalHiddenEvent

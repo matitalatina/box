@@ -44,8 +44,8 @@ object Header {
     if(Session.isLogged()) {
       frag(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); Session.logout() } ),"Logout")," ")
     } else frag(),
-    "   ",
-    Labels.header.lang + ": ",
+    "  ",
+    Labels.header.lang + " ",
     ClientConf.langs.map{ l =>
       span(a(GlobalStyles.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); Session.setLang(l)  } ),l)," ")
     }

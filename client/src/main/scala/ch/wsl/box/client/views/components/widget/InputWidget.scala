@@ -11,7 +11,7 @@ import scalatags.JsDom
 
 import scala.concurrent.Future
 import scalatags.JsDom.all._
-import ch.wsl.box.shared.utils.JsonUtils._
+import ch.wsl.box.shared.utils.JSONUtils._
 import io.udash.bindings.modifiers.Binding
 import org.scalajs.dom.Node
 

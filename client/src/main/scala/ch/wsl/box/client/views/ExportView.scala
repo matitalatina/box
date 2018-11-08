@@ -54,7 +54,7 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
 
   import ch.wsl.box.client.Context._
   import io.circe.syntax._
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
 
 
   override def handleState(state: ExportState): Unit = {
@@ -72,7 +72,8 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
   }
 
   def csv() = {
-    val url = s"api/v1/export/${model.get.metadata.get.entity}/${Session.lang()}?q=${args.asJson.toString()}".replaceAll("\n","")
+    logger.info()
+    val url = s"api/v1/export/${model.get.metadata.get.entity}/${Session.lang()}?q=${args.map(_.injectLang(Session.lang)).asJson.toString()}".replaceAll("\n","")
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }

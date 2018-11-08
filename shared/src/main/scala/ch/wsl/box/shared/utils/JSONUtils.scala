@@ -7,8 +7,18 @@ import scribe.Logging
 /**
   * Created by andre on 5/22/2017.
   */
-object JsonUtils extends Logging {
+object JSONUtils extends Logging {
+
+  val LANG = "::lang"
+
   implicit class EnhancedJson(el:Json) {
+
+
+    def injectLang(lang:String):Json = el.isString match{
+      case true =>  el.mapString(s => if (s.equals("::lang")) lang else s)
+      case _ => el
+    }
+
 
     def string:String = {
       val result = el.fold(

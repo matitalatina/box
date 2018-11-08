@@ -34,7 +34,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     import io.udash.css.CssView._
     import io.circe._
     import io.circe.syntax._
-    import ch.wsl.box.shared.utils.JsonUtils._
+    import ch.wsl.box.shared.utils.JSONUtils._
 
 
 

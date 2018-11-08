@@ -62,7 +62,7 @@ case class JSONViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
         case None => true
         case Some(paging) =>  (paging.currentPage * paging.pageLength) >= n
       }
-      import ch.wsl.box.shared.utils.JsonUtils._
+      import ch.wsl.box.shared.utils.JSONUtils._
       IDs(
         last,
         query.paging.map(_.currentPage).getOrElse(1),

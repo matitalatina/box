@@ -1,6 +1,6 @@
 package ch.wsl.box.model.shared
 
-import ch.wsl.box.shared.utils.JsonUtils._
+import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
 
 import scala.util.Try

@@ -14,7 +14,7 @@ object BoxExceptionHandler {
   import ch.wsl.box.shared.utils.Formatters._
   import io.circe.syntax._
   import io.circe.generic.auto._
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
 
   def psql2sqlReport(sql: PSQLException):SQLExceptionReport = {
     val result  = SQLExceptionReport(

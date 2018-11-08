@@ -25,7 +25,7 @@ case class HttpClient(endpoint:String) extends Logging {
   import io.circe.syntax._
   import io.circe.parser._
   import io.circe.generic.auto._
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
   import HttpClient._
 
   import ch.wsl.box.client.Context._

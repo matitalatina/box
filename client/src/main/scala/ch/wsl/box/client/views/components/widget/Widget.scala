@@ -6,7 +6,7 @@ import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup, JSONMetadata}
 import io.circe._
 import io.circe.syntax._
-import ch.wsl.box.shared.utils.JsonUtils._
+import ch.wsl.box.shared.utils.JSONUtils._
 import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}

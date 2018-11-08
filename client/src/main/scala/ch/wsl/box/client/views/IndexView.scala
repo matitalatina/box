@@ -40,7 +40,7 @@ class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.circe.generic.auto._
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
   import io.udash.css.CssView._
 
 

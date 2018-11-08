@@ -49,7 +49,7 @@ object EntityFormViewPresenter extends ViewFactory[EntityFormState] {
 case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] with Logging {
 
   import ch.wsl.box.client.Context._
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
 
   override def handleState(state: EntityFormState): Unit = {
 

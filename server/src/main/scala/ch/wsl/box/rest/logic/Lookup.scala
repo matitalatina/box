@@ -12,7 +12,7 @@ object Lookup {
 
 
 
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
 
   def valuesForEntity(metadata:JSONMetadata)(implicit ec: ExecutionContext, db:Database,  mat:Materializer) :Future[Map[String,Seq[Json]]] = {
       val actionsRegistry = EntityActionsRegistry()

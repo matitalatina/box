@@ -29,7 +29,7 @@ case class Reference(association:Seq[ReferenceKey])
 
 case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters with Logging {
 
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
 
   implicit val db = up.db
 

@@ -7,6 +7,7 @@ import io.circe.Json
 import org.scalajs.dom.File
 
 import scala.concurrent.Future
+import ch.wsl.box.shared.utils.JSONUtils._
 
 /**
   * Created by andre on 4/24/2017.
@@ -60,7 +61,8 @@ object REST {
 
   //export
   def exportMetadata(name:String,lang:String) = client.get[JSONMetadata](s"/export/$name/metadata/$lang")
-  def export(name:String,params:Seq[Json],lang:String):Future[Seq[Seq[String]]] = client.post[Seq[Json],String](s"/export/$name/$lang",params).map(CSV.read)
+  def export(name:String,params:Seq[Json],lang:String):Future[Seq[Seq[String]]] = client.post[Seq[Json],String](s"/export/$name/$lang",
+          params.map(_.injectLang(lang))).map(CSV.read)
   def exports(lang:String) = client.get[Seq[ExportDef]](s"/export/list/$lang")
 
   def writeAccess(table:String) = client.get[Boolean](s"/access/table/$table/write")

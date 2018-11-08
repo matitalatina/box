@@ -21,7 +21,7 @@ import scala.concurrent.ExecutionContext
 
 object Export extends Logging {
 
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
   import JSONSupport._
   import ch.wsl.box.shared.utils.Formatters._
   import io.circe.generic.auto._

@@ -7,7 +7,7 @@ import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import scalatags.JsDom
 import scalatags.JsDom.all._
 import io.udash.css.CssView._
-import ch.wsl.box.shared.utils.JsonUtils._
+import ch.wsl.box.shared.utils.JSONUtils._
 import io.udash.bootstrap.tooltip.UdashTooltip
 
 case class CheckboxWidget(field:JSONField, prop: Property[Json]) extends Widget {

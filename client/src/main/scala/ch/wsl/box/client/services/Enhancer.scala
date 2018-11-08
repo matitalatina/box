@@ -14,7 +14,7 @@ import scala.util.Try
   */
 object Enhancer extends Logging {
 
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
 
   import ch.wsl.box.client.Context._
 

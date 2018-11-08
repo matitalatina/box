@@ -6,7 +6,7 @@ import ch.wsl.box.client.utils.{ClientConf, Labels}
 import ch.wsl.box.client.views.components
 import ch.wsl.box.client.views.components.widget._
 import ch.wsl.box.model.shared._
-import ch.wsl.box.shared.utils.JsonUtils._
+import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm

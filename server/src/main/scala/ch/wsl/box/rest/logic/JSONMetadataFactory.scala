@@ -14,6 +14,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.Try
 import ch.wsl.box.rest.boxentities.Conf
+import ch.wsl.box.shared.utils.JSONUtils
 
 
 object JSONMetadataFactory extends Logging {
@@ -42,7 +43,7 @@ object JSONMetadataFactory extends Logging {
 
     val myDefaultTableLookupField: String = default match {
       case "firstNoPKField" => firstNoPK.getOrElse("name")
-      case "::lang" => lang
+      case JSONUtils.LANG => lang
       case _ => default
     }
 
@@ -91,7 +92,7 @@ object JSONMetadataFactory extends Logging {
                     val value = fk.referencingKeys.head //todo verify for multiple keys
 
 
-                    import ch.wsl.box.shared.utils.JsonUtils._
+                    import ch.wsl.box.shared.utils.JSONUtils._
                     for {
                       keys <- keysOf(model)
                       lookupData <- BoxTablesRegistry().tableActions(model).find()

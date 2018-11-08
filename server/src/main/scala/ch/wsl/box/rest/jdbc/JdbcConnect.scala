@@ -19,7 +19,7 @@ import slick.driver.PostgresDriver.api._
   */
 object JdbcConnect extends Logging {
 
-  import ch.wsl.box.shared.utils.JsonUtils._
+  import ch.wsl.box.shared.utils.JSONUtils._
   import io.circe.syntax._
 
   case class SQLFunctionResult(headers:Seq[String],rows:Seq[Seq[Json]])
