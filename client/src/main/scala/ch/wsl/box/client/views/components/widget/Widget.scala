@@ -3,6 +3,7 @@ package ch.wsl.box.client.views.components.widget
 import java.util.UUID
 
 import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.client.utils.Labels
 import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup, JSONMetadata}
 import io.circe._
 import io.circe.syntax._
@@ -75,9 +76,9 @@ trait WidgetBinded extends Widget with Logging {
 
   protected def data:Property[Json]
   private val widgetId = UUID.randomUUID().toString
-  private def attachId(js:Json):Json = js.deepMerge(Json.obj((childInjectedId, widgetId.asJson)))
+  private def attachChild(js:Json):Json = js.deepMerge(Json.obj((childInjectedId, widgetId.asJson)))
 
-  protected val dataWithChildId:Property[Json] = data.transform(attachId, x => x)
+  protected val dataWithChildId:Property[Json] = data.transform(attachChild, x => x)
 
   def isOf(js:Json) = {
     val saved = js.get(childInjectedId)
@@ -92,6 +93,6 @@ trait LookupWidget extends Widget {
   def field:JSONField
   def lookup:JSONFieldLookup = field.lookup.get
 
-  def value2Label(org:Json):String = lookup.lookup.find(_.id == org.string).map(_.value).getOrElse("Value not found")  //todo:   set a Label with translations
+  def value2Label(org:Json):String = lookup.lookup.find(_.id == org.string).map(_.value).getOrElse(Labels.lookup.not_found)
   def label2Value(v:String):Json = lookup.lookup.find(_.value == v).map(_.id.asJson).getOrElse(Json.Null)
 }

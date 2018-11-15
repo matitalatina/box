@@ -109,8 +109,8 @@ case class ExportView(model:ModelProperty[ExportModel], presenter:ExportPresente
       metadata.label
     ),
     JSONMetadataRenderer(metadata,model.subProp(_.queryData),Seq()).edit(),
-    button("load data",onclick :+= ((e:Event) => presenter.query()),GlobalStyles.boxButton),
-    button("download CSV",onclick :+= ((e:Event) => presenter.csv()),GlobalStyles.boxButton),
+    button(Labels.exports.load,onclick :+= ((e:Event) => presenter.query()),GlobalStyles.boxButton),
+    button(Labels.exports.csv,onclick :+= ((e:Event) => presenter.csv()),GlobalStyles.boxButton),
       UdashTable()(model.subSeq(_.data))(
         headerFactory = Some(() => {
           tr(

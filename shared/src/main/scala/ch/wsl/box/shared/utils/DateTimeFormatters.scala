@@ -1,10 +1,10 @@
-package ch.wsl.box.rest.utils
+package ch.wsl.box.shared.utils
 
-import java.sql.Timestamp
+import java.sql.{Date, Time, Timestamp}
 import java.text.SimpleDateFormat
-import java.time.{LocalDateTime, ZoneOffset}
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.time.temporal.ChronoField
+import java.time.{LocalDateTime, ZoneOffset}
 
 import scala.util.{Failure, Try}
 
@@ -12,9 +12,9 @@ trait DateTimeFormatters[T <: java.util.Date]{
 
   protected val formats:Seq[String]
 
-  def fromLong(l:Long):T
 
   def format(dt:T,format:String = formats.last):String = new SimpleDateFormat(format).format(dt)
+
   def parse(str:String):Option[T] = toLong(str).map(fromLong)
 
   //this is to format a timestamp with data only and add time to 00:00
@@ -26,6 +26,8 @@ trait DateTimeFormatters[T <: java.util.Date]{
 
   lazy val dateTimeFormats = formats.map(p => DateTimeFormatter.ofPattern(p)).+:(dateOnlyFormatter)
 
+
+  def fromLong(l:Long):T
 
   def toLong(dateStr: String): Option[Long] = {
 
@@ -59,10 +61,27 @@ object DateTimeFormatters {
       "yyyy-MM-dd HH:mm:ss.S",
       "yyyy-MM-dd HH:mm:ss",
       "yyyy-MM-dd HH:mm"
-
     )
 
     override def fromLong(l: Long): Timestamp = new Timestamp(l)
+  }
+
+  val date = new DateTimeFormatters[Date] {
+    override protected val formats: Seq[String] = Seq(
+      "yyyy-MM-dd"
+    )
+
+    override def fromLong(l: Long): Date = new Date(l)
+  }
+
+  val time = new DateTimeFormatters[Time] {
+    override protected val formats: Seq[String] = Seq(
+      "HH:mm:ss.S",
+      "HH:mm:ss",
+      "HH:mm"
+    )
+
+    override def fromLong(l: Long): Time = new Time(l)
   }
 
 

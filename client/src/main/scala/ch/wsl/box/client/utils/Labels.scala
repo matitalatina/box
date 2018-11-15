@@ -77,6 +77,10 @@ object Labels {
     def changed = get("form.changed")
   }
 
+  object lookup{
+    def not_found = get("lookup.not_found")
+  }
+
   object entities{
     def search = get("entity.search")
     def title = get("entity.title")
@@ -89,6 +93,8 @@ object Labels {
     def search = get("exports.search")
     def title = get("exports.title")
     def select = get("exports.select")
+    def load = get("exports.load")
+    def csv = get ("exports.csv")
   }
 
   object entity{
@@ -98,6 +104,7 @@ object Labels {
     def no_action = get("table.no_action")
     def delete = get("table.delete")
     def confirmDelete = get("table.confirmDelete")
+    def csv = get ("table.csv")
   }
 
   object header{

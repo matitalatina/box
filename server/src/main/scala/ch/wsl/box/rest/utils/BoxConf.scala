@@ -86,7 +86,9 @@ object BoxConf extends Logging {
   }
 
 
-
+  def dtFormatDatetime = Try(conf("dtformat.datetime")).getOrElse("yyyy-MM-dd HH:mm")
+  def dtFormatDate = Try(conf("dtformat.date")).getOrElse("yyyy-MM-dd")
+  def dtFormatTime = Try(conf("dtformat.time")).getOrElse("HH:mm:ss.S")
 
   def filterEqualityPrecisionDatetime = Try(conf("filterEqualityPrecision.datetime").toUpperCase).toOption match {
     case Some("DATE") => JSONFieldTypes.DATE

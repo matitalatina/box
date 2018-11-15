@@ -10,6 +10,7 @@ import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
 import akka.http.scaladsl.model.{ContentTypeRange, HttpEntity}
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
+import ch.wsl.box.shared.utils.DateTimeFormatters
 import io.circe.Decoder.Result
 
 import scala.concurrent.Future
@@ -43,45 +44,40 @@ object JSONSupport {
 
   implicit def printer: Json => String = Printer.noSpaces.copy(dropNullValues = true).pretty
 
-
-  implicit val DateFormat : Encoder[java.sql.Date] with Decoder[java.sql.Date] = new Encoder[java.sql.Date] with Decoder[java.sql.Date] {
-
-    val dateFormatter = new SimpleDateFormat("yyyy-MM-dd") //todo:  customization of timestamp format
-
-    override def apply(a: java.sql.Date): Json = {
-      Encoder.encodeString.apply(dateFormatter.format(a))
-    }
-
-    override def apply(c: HCursor): Result[java.sql.Date] = {
-      Decoder.decodeString.map(s => new java.sql.Date(dateFormatter.parse(s).getTime)).apply(c)
-    }
-
-  }
-
   implicit val TimestampFormat : Encoder[Timestamp] with Decoder[Timestamp] = new Encoder[Timestamp] with Decoder[Timestamp] {
 
-
-
-    override def apply(a: Timestamp): Json = {
-      Try {
-        Encoder.encodeString.apply(DateTimeFormatters.timestamp.format(a))     //todo:  customization of timestamp format
+    override def apply(a: Timestamp): Json = Try {
+        Encoder.encodeString.apply(DateTimeFormatters.timestamp.format(a, BoxConf.dtFormatDatetime))
       }.getOrElse(Json.Null)
-    }
+
 
     override def apply(c: HCursor): Result[Timestamp] = Decoder.decodeString.map{s =>
       DateTimeFormatters.timestamp.parse(s).get
     }.apply(c)
   }
 
+  implicit val DateFormat : Encoder[java.sql.Date] with Decoder[java.sql.Date] = new Encoder[java.sql.Date] with Decoder[java.sql.Date] {
+
+    override def apply(a: java.sql.Date): Json = Try {
+      Encoder.encodeString.apply(DateTimeFormatters.date.format(a, BoxConf.dtFormatDate))
+    }.getOrElse(Json.Null)
+
+    override def apply(c: HCursor): Result[java.sql.Date] = Decoder.decodeString.map{s =>
+      DateTimeFormatters.date.parse(s).get
+    }.apply(c)
+
+  }
 
   implicit val TimeFormat : Encoder[Time] with Decoder[Time] = new Encoder[Time] with Decoder[Time] {
 
-    val timeFormatter = new SimpleDateFormat("HH:mm:ss.S")
-    val timeFormatterMin = new SimpleDateFormat("HH:mm")
+    override def apply(a: Time): Json = Try {
+      Encoder.encodeString.apply(DateTimeFormatters.time.format(a, BoxConf.dtFormatTime))
+    }.getOrElse(Json.Null)
 
-    override def apply(a: Time): Json = Encoder.encodeString.apply(timeFormatter.format(a))      //todo:  customization of timestamp format
 
-    override def apply(c: HCursor): Result[Time] = Decoder.decodeString.map(s => new Time(timeFormatter.parse(s).getTime)).apply(c)
+    override def apply(c: HCursor): Result[Time] = Decoder.decodeString.map{s =>
+      DateTimeFormatters.time.parse(s).get
+    }.apply(c)
   }
 
 }

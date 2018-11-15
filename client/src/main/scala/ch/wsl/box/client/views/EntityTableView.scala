@@ -498,7 +498,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           }
         ).render,
 
-        button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),GlobalStyles.boxButton,"Download CSV"),
+        button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),GlobalStyles.boxButton, Labels.entity.csv),
         showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render },
         br,br
       ),

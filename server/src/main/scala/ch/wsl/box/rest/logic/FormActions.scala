@@ -40,7 +40,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
 
   def getAllById(id:JSONID):Future[Json] = extractOne(id.query)
 
-  def extractArray(query:JSONQuery):Source[Json,NotUsed] = extractSeq(query)     // todo adapt JSONQuery to select only fields in form
+  def extractArray(query:JSONQuery):Source[Json,NotUsed] = extractSeq(query)
   def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
 
   def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {

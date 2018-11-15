@@ -30,7 +30,7 @@ case class PgColumn(
   column_name:String,
   is_nullable:String,
   is_updatable:String,
-  data_type:String,                         //todo: for ARRAYS it do not specify inner type. How to get it?
+  data_type:String,                         //todo: for ARRAYS it does not specify inner type. How to get it?
   character_maximum_length:Option[Int],
   numeric_precision:Option[Int],
   numeric_scale:Option[Int],

@@ -70,7 +70,8 @@ object GlobalStyles extends StyleSheet.Inline {
       borderWidth(1 px),
       borderRadius.`0`,
       backgroundColor.white,
-      borderColor(rgb(169, 169, 169))
+      borderColor(rgb(169, 169, 169)),
+      resize.vertical
     ),
 
     unsafeRoot("select")(

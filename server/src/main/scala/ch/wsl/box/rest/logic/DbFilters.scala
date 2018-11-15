@@ -8,7 +8,8 @@ import java.time.temporal.{ChronoField, ChronoUnit, TemporalAccessor}
 
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{Filter, JSONFieldTypes, JSONQuery, JSONQueryFilter}
-import ch.wsl.box.rest.utils.{BoxConf, DateTimeFormatters}
+import ch.wsl.box.rest.utils.BoxConf
+import ch.wsl.box.shared.utils.DateTimeFormatters
 import scribe.Logging
 import slick.driver.PostgresDriver
 import slick.driver.PostgresDriver.api._
@@ -52,6 +53,8 @@ trait UglyDBFilters extends DbFilters with Logging {
 
 
   val toTimestamp = DateTimeFormatters.timestamp.parse _
+  val toDate = DateTimeFormatters.date.parse _
+  val toTime = DateTimeFormatters.time.parse _
 
   final val typINT = 0
   final val typLONG = 1
@@ -60,6 +63,8 @@ trait UglyDBFilters extends DbFilters with Logging {
   final val typBOOLEAN = 4
   final val typSTRING = 5
   final val typTIMESTAMP = 6
+  final val typDATE = 7
+  final val typTIME = 8
   final val typOptINT = 10
   final val typOptLONG = 11
   final val typOptSHORT =  12
@@ -67,6 +72,8 @@ trait UglyDBFilters extends DbFilters with Logging {
   final val typOptBOOLEAN = 14
   final val typOptSTRING = 15
   final val typOptTIMESTAMP = 16
+  final val typOptDATE = 17
+  final val typOptTIME = 18
   final val typError = 100
 
 
@@ -78,6 +85,8 @@ trait UglyDBFilters extends DbFilters with Logging {
     case "String" => typSTRING
     case "Boolean" | "scala.Boolean" => typBOOLEAN
     case "java.sql.Timestamp" => typTIMESTAMP
+    case "java.sql.Date" => typDATE
+    case "java.sql.Time" => typTIME
     case "scala.Option[scala.Short]" | "Option[Short]" =>  typOptSHORT
     case "scala.Option[scala.Double]" | "Option[Double]" => typOptDOUBLE
     case "scala.Option[scala.Int]" | "scala.Option[java.lang.Integer]" | "Option[Int]" | "Option[java.lang.Integer]" => typOptINT
@@ -85,6 +94,8 @@ trait UglyDBFilters extends DbFilters with Logging {
     case "scala.Option[String]" | "Option[String]" => typOptSTRING
     case "scala.Option[scala.Boolean]" | "Option[Boolean]" => typOptBOOLEAN
     case "scala.Option[java.sql.Timestamp]" | "Option[java.sql.Timestamp]" => typOptTIMESTAMP
+    case "scala.Option[java.sql.Date]" | "Option[java.sql.Date]" => typOptDATE
+    case "scala.Option[java.sql.Time]" | "Option[java.sql.Time]" => typOptTIME
     case _ => {
       logger.error("Type mapping for: " + myType + " not found")
       typError
@@ -111,13 +122,22 @@ trait UglyDBFilters extends DbFilters with Logging {
             case JSONFieldTypes.DATE => {c.asInstanceOf[Rep[Timestamp]] >= BoxConf.prepareDatetime(toTimestamp(v).get) &&
                                          c.asInstanceOf[Rep[Timestamp]] < BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS))) }
           }
+          case `typDATE` => c.asInstanceOf[Rep[java.sql.Date]] === toDate(v).get
+          case `typTIME` => c.asInstanceOf[Rep[java.sql.Time]] === toTime(v).get
+
           case `typOptSHORT` =>  c.asInstanceOf[Rep[Option[Short]]] === v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] === v.toDouble
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] === v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] === v.toLong
           case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]] === v
           case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]] === v.toBoolean
-          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] === toTimestamp(v).get
+          case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Option[Timestamp]]] === toTimestamp(v).get
+            case JSONFieldTypes.DATE => {c.asInstanceOf[Rep[Option[Timestamp]]] >= BoxConf.prepareDatetime(toTimestamp(v).get) &&
+              c.asInstanceOf[Rep[Option[Timestamp]]] < BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS))) }
+          }
+          case `typOptDATE` => c.asInstanceOf[Rep[Option[java.sql.Date]]] === toDate(v).get
+          case `typOptTIME` => c.asInstanceOf[Rep[Option[java.sql.Time]]] === toTime(v).get
           case `typError`  => None
           case _ => None
       }
@@ -140,13 +160,22 @@ trait UglyDBFilters extends DbFilters with Logging {
             case JSONFieldTypes.DATE => {c.asInstanceOf[Rep[Timestamp]] < BoxConf.prepareDatetime(toTimestamp(v).get) ||
               c.asInstanceOf[Rep[Timestamp]] >= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS))) }
           }
+          case `typDATE` => c.asInstanceOf[Rep[java.sql.Date]] =!= toDate(v).get
+          case `typTIME` => c.asInstanceOf[Rep[java.sql.Time]] =!= toTime(v).get
+
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] =!= v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] =!= v.toDouble
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] =!= v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] =!= v.toLong
           case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]] =!= v
           case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.toBoolean
-          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] =!= toTimestamp(v).get
+          case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Option[Timestamp]]] =!= toTimestamp(v).get
+            case JSONFieldTypes.DATE => {c.asInstanceOf[Rep[Option[Timestamp]]] < BoxConf.prepareDatetime(toTimestamp(v).get) ||
+              c.asInstanceOf[Rep[Option[Timestamp]]] >= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS))) }
+          }
+          case `typOptDATE` => c.asInstanceOf[Rep[Option[java.sql.Date]]] =!= toDate(v).get
+          case `typOptTIME` => c.asInstanceOf[Rep[Option[java.sql.Time]]] =!= toTime(v).get
           case `typError` => None
           case _ => None
       }
@@ -165,11 +194,19 @@ trait UglyDBFilters extends DbFilters with Logging {
             case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] > toTimestamp(v).get
             case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Timestamp]] >= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS)))
           }
+          case `typDATE` => c.asInstanceOf[Rep[java.sql.Date]] > toDate(v).get
+          case `typTIME` => c.asInstanceOf[Rep[java.sql.Time]] > toTime(v).get
+
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] > v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] > v.toDouble
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] > v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] > v.toLong
-          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] > toTimestamp(v).get
+          case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Option[Timestamp]]] > toTimestamp(v).get
+            case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Option[Timestamp]]] >= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS)))
+          }
+          case `typOptDATE` => c.asInstanceOf[Rep[Option[java.sql.Date]]] > toDate(v).get
+          case `typOptTIME` => c.asInstanceOf[Rep[Option[java.sql.Time]]] > toTime(v).get
           case `typError` => None
           case _ => None
       }
@@ -187,11 +224,19 @@ trait UglyDBFilters extends DbFilters with Logging {
             case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] >= toTimestamp(v).get
             case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Timestamp]] >= BoxConf.prepareDatetime(toTimestamp(v).get)
           }
+          case `typDATE` => c.asInstanceOf[Rep[java.sql.Date]] >= toDate(v).get
+          case `typTIME` => c.asInstanceOf[Rep[java.sql.Time]] >= toTime(v).get
+
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] >= v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] >= v.toDouble
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] >= v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] >= v.toLong
-          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] >= toTimestamp(v).get
+          case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Option[Timestamp]]] >= toTimestamp(v).get
+            case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Option[Timestamp]]] >= BoxConf.prepareDatetime(toTimestamp(v).get)
+          }
+          case `typOptDATE` => c.asInstanceOf[Rep[Option[java.sql.Date]]] >= toDate(v).get
+          case `typOptTIME` => c.asInstanceOf[Rep[Option[java.sql.Time]]] >= toTime(v).get
           case `typError` => None
           case _ => None
       }
@@ -210,11 +255,19 @@ trait UglyDBFilters extends DbFilters with Logging {
             case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] < toTimestamp(v).get
             case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Timestamp]] < BoxConf.prepareDatetime(toTimestamp(v).get)
           }
+          case `typDATE` => c.asInstanceOf[Rep[java.sql.Date]] < toDate(v).get
+          case `typTIME` => c.asInstanceOf[Rep[java.sql.Time]] < toTime(v).get
+
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] < v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] < v.toDouble
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] < v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] < v.toLong
-          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] < toTimestamp(v).get
+          case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Option[Timestamp]]] < toTimestamp(v).get
+            case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Option[Timestamp]]] < BoxConf.prepareDatetime(toTimestamp(v).get)
+          }
+          case `typOptDATE` => c.asInstanceOf[Rep[Option[java.sql.Date]]] < toDate(v).get
+          case `typOptTIME` => c.asInstanceOf[Rep[Option[java.sql.Time]]] < toTime(v).get
           case `typError` => None
           case _ => None
       }
@@ -233,11 +286,19 @@ trait UglyDBFilters extends DbFilters with Logging {
             case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Timestamp]] <= toTimestamp(v).get
             case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Timestamp]] <= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS)))
           }
+          case `typDATE` => c.asInstanceOf[Rep[java.sql.Date]] <= toDate(v).get
+          case `typTIME` => c.asInstanceOf[Rep[java.sql.Time]] <= toTime(v).get
+
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] <= v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] <= v.toDouble
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] <= v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] <= v.toLong
-          case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[Timestamp]]] <= toTimestamp(v).get
+          case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
+            case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Option[Timestamp]]] <= toTimestamp(v).get
+            case JSONFieldTypes.DATE => c.asInstanceOf[Rep[Option[Timestamp]]] <= BoxConf.prepareDatetime(Timestamp.from(toTimestamp(v).get.toInstant.plus(1, ChronoUnit.DAYS)))
+          }
+          case `typOptDATE` => c.asInstanceOf[Rep[Option[java.sql.Date]]] <= toDate(v).get
+          case `typOptTIME` => c.asInstanceOf[Rep[Option[java.sql.Time]]] <= toTime(v).get
           case `typError` => None
           case _ => None
       }
