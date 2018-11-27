@@ -260,7 +260,7 @@ object GlobalStyles extends StyleSheet.Inline {
 
   val subform = style(
     marginTop(-1 px),
-    padding(15 px),
+    padding(10 px),
     border(1 px,solid,StyleConstants.Colors.GreySemi),
     backgroundColor(StyleConstants.Colors.GreyExtra)
   )

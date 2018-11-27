@@ -1,5 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.client.utils.Labels
 import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
@@ -63,7 +64,7 @@ import ch.wsl.box.client.Context._
     val selectedItem: Property[String] = data.transform(value2Label,label2Value)
 
     val optionList:Modifier = div(
-      lab("Search"),br,
+      lab(Labels.popup.search),br,
       TextInput(searchProp,Some(500 milliseconds)),br,br,
       autoRelease(showIf(modalStatus.transform(_ == Status.Open)) {
         div(autoRelease(produce(searchProp) { searchTerm =>
@@ -94,7 +95,7 @@ import ch.wsl.box.client.Context._
     ).render
 
     val footer = () => div(
-      button(onclick :+= ((e:Event) => modalStatus.set(Status.Closed),true),"Close")
+      button(onclick :+= ((e:Event) => modalStatus.set(Status.Closed),true), Labels.popup.close)
     ).render
 
     val modal:UdashModal = UdashModal(modalSize = ModalSize.Small)(

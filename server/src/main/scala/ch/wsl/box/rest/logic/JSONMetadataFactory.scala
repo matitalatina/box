@@ -222,6 +222,6 @@ object JSONMetadataFactory extends Logging {
     "text" -> Some(WidgetsNames.textinput),
     "USER-DEFINED" -> None,
     "time without time zone" -> Some(WidgetsNames.timepicker),
-    "ARRAY" -> Some(WidgetsNames.textinput)                          //todo: orks only for visualisation -> provide widget
+    "ARRAY" -> Some(WidgetsNames.textinput)                          //todo: works only for visualisation -> provide widget
   )
 }

@@ -42,6 +42,7 @@ object Init extends JSApp with Logging {
       _ <- UI.load()
     } yield {
       jQ(document).ready((_: Element) => {
+        jQ("title").html(UI.title.getOrElse(s"Box").toString)
         val appRoot = jQ("#application").get(0)
         if (appRoot.isEmpty) {
           logger.error("Application root element not found! Check your index.html file!")

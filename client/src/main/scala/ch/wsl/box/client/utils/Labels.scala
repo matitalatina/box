@@ -113,4 +113,9 @@ object Labels {
     def forms = get("header.forms")
     def lang = get("header.lang")
   }
+
+  object popup{
+    def search = get("popup.search")
+    def close = get("popup.close")
+  }
 }
