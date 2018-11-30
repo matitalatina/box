@@ -31,6 +31,15 @@ case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSO
 
 object JSONFieldLookup {
   val empty: JSONFieldLookup = JSONFieldLookup("",JSONFieldMap("",""))
+
+  def fromData(lookupEntity:String, mapping:JSONFieldMap, lookupData:Seq[Json]):JSONFieldLookup = {
+    import ch.wsl.box.shared.utils.JSONUtils._
+
+    val options = lookupData.map{ lookupRow =>
+      JSONLookup(lookupRow.get(mapping.valueProperty),lookupRow.get(mapping.textProperty))
+    }
+    JSONFieldLookup(lookupEntity, mapping, options)
+  }
 }
 
 case class JSONLookup(id:String, value:String)

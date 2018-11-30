@@ -26,7 +26,10 @@ trait Widget{
 
   def jsonToString(json:Json):String = json.string
   def strToJson(str:String):Json = str.asJson
-  def strToNumericJson(str:String):Json = str.toDouble.asJson
+  def strToNumericJson(str:String):Json = str match {
+    case "" => Json.Null
+    case _ => str.toDouble.asJson
+  }
 
   protected def show():Modifier
   protected def edit():Modifier
@@ -70,20 +73,22 @@ trait ComponentWidgetFactory{
 }
 
 
-trait WidgetBinded extends Widget with Logging {
+trait ChildWidget extends Widget with Logging {
 
-  private final val childInjectedId = "$child-element"
+  private final val childTag = "$child-element"
 
   protected def data:Property[Json]
-  private val widgetId = UUID.randomUUID().toString
-  private def attachChild(js:Json):Json = js.deepMerge(Json.obj((childInjectedId, widgetId.asJson)))
+
+  private val childId = UUID.randomUUID().toString
+
+  private def attachChild(js:Json):Json = js.deepMerge(Json.obj((childTag, childId.asJson)))
 
   protected val dataWithChildId:Property[Json] = data.transform(attachChild, x => x)
 
   def isOf(js:Json) = {
-    val saved = js.get(childInjectedId)
-    logger.debug(s"cheking if result childId: $saved is equals to widgetId: $widgetId")
-    js.get(childInjectedId) == widgetId
+    val saved = js.get(childTag)
+    logger.debug(s"cheking if result childId: $saved is equals to widgetId: $childId")
+    saved == childId
   }
 }
 

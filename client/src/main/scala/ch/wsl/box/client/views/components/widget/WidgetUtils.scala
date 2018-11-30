@@ -21,7 +21,7 @@ object WidgetUtils extends Logging{
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
 
-  def showNotNull(prop:Property[Json])(f: Json => Seq[Element]):Binding = produce(prop) {
+  def showNotNull(prop:Property[Json])(f: Json => Seq[Element]):Binding = produce(prop, checkNull=false) {   //todo verify what changes with checkNull=false
     case Json.Null => Seq()
     case p:Json =>  f(p)
   }

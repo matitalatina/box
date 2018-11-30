@@ -3,7 +3,7 @@ package ch.wsl.box.client.views.components
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{Labels, Session}
-import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget, WidgetBinded}
+import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget, ChildWidget}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
@@ -106,7 +106,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
     override def killWidget(): Unit = childWidgets.foreach(_.killWidget())
 
-    var childWidgets: Seq[WidgetBinded] = Seq()
+    var childWidgets: Seq[ChildWidget] = Seq()
 
     def cleanSubwidget() = {
       val widgetToKill = childWidgets.filterNot(w => entity.get.exists(js => w.isOf(js)))

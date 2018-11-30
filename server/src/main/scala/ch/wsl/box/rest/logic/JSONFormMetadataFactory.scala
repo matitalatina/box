@@ -183,12 +183,15 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
             queryJson <- parse(queryString).right.toOption
             query <- queryJson.as[JSONQuery].right.toOption
           } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
+
           lookupData <- EntityActionsRegistry().tableActions(refEntity).find(filter)
+
         } yield {
-          val options = lookupData.map{ lookupRow =>
-            JSONLookup(lookupRow.get(value),lookupRow.get(text))
-          }
-          Some(JSONFieldLookup(refEntity, JSONFieldMap(value,text),options))
+//          val options = lookupData.map{ lookupRow =>
+//            JSONLookup(lookupRow.get(value),lookupRow.get(text))
+//          }
+//          Some(JSONFieldLookup(refEntity, JSONFieldMap(value,text),options))
+          Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text), lookupData))
         }
 
       }} match {

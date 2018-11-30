@@ -16,16 +16,16 @@ object ExportField {
 
 
   case class ExportField_row(field_id: Option[Int] = None, export_id: Int, `type`: String, name: String, widget: Option[String] = None,
-                       lookupEntity: Option[String] = None, lookupValueField: Option[String] = None,
-                       default:Option[String] = None,conditionFieldId:Option[String] = None,conditionValues:Option[String] = None)
+                       lookupEntity: Option[String] = None, lookupValueField: Option[String] = None, lookupQuery:Option[String] = None,
+                       default:Option[String] = None, conditionFieldId:Option[String] = None, conditionValues:Option[String] = None)
   /** GetResult implicit for fetching Field_row objects using plain SQL queries */
 
   /** Table description of table field. Objects of this class serve as prototypes for rows in queries.
     *  NOTE: The following names collided with Scala keywords and were escaped: type */
   class ExportField(_tableTag: Tag) extends profile.api.Table[ExportField_row](_tableTag, "export_field") {
-    def * = (Rep.Some(field_id), export_id, `type`, name, widget, lookupEntity, lookupValueField,default,conditionFieldId,conditionValues) <> (ExportField_row.tupled, ExportField_row.unapply)
+    def * = (Rep.Some(field_id), export_id, `type`, name, widget, lookupEntity, lookupValueField, lookupQuery, default,conditionFieldId,conditionValues) <> (ExportField_row.tupled, ExportField_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(field_id), Rep.Some(export_id), Rep.Some(`type`),  name, widget, lookupEntity, lookupValueField, default,conditionFieldId,conditionValues).shaped.<>({ r=>import r._; _1.map(_=> ExportField_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(field_id), Rep.Some(export_id), Rep.Some(`type`),  name, widget, lookupEntity, lookupValueField, lookupQuery, default,conditionFieldId,conditionValues).shaped.<>({ r=>import r._; _1.map(_=> ExportField_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val field_id: Rep[Int] = column[Int]("field_id", O.AutoInc, O.PrimaryKey)
@@ -42,6 +42,7 @@ object ExportField {
     val lookupEntity: Rep[Option[String]] = column[Option[String]]("lookupEntity", O.Default(None))
     /** Database column refValueProperty SqlType(text), Default(None) */
     val lookupValueField: Rep[Option[String]] = column[Option[String]]("lookupValueField", O.Default(None))
+    val lookupQuery: Rep[Option[String]] = column[Option[String]]("lookupQuery", O.Default(None))
     /** Database column subform SqlType(int4), Default(None) */
     val default: Rep[Option[String]] = column[Option[String]]("default", O.Default(None))
     val conditionFieldId: Rep[Option[String]] = column[Option[String]]("conditionFieldId", O.Default(None))

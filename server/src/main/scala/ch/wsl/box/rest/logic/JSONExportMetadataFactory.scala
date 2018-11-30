@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.logic
 
 import akka.stream.Materializer
+import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
 import ch.wsl.box.rest.boxentities.{Export, ExportField, Form}
@@ -50,14 +51,17 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
       }.map(_.head)
 
       fields <- Auth.boxDB.run {
-        queryField(export.export_id.get).result
+        queryField(export.export_id.get).sortBy(_._1.field_id).result
       }
+
+      jsonFields <- Future.sequence(fields.map(fieldsMetadata(lang)))
+
     } yield {
 
       if(exportI18n.isEmpty) logger.warn(s"Export ${export.name} (export_id: ${export.export_id}) has no translation to $lang")
 
 
-      val jsonFields = fields.map(fieldsMetadata(lang))
+//      val jsonFields = fields.map(fieldsMetadata(lang))
 
       val layout = Layout.fromString(export.layout).getOrElse(Layout.fromFields(jsonFields))
 
@@ -67,17 +71,40 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
     }
   }
 
-  private def fieldsMetadata(lang:String)(el:(ExportField_row, Option[ExportField_i18n_row])):JSONField = {
+  private def fieldsMetadata(lang:String)(el:(ExportField_row, Option[ExportField_i18n_row])):Future[JSONField] = {
+    import ch.wsl.box.shared.utils.JSONUtils._
+    import io.circe.generic.auto._
+
     val (field,fieldI18n) = el
 
     if(fieldI18n.isEmpty) logger.warn(s"Export field ${field.name} (export_id: ${field.field_id}) has no translation to $lang")
 
 
-    val lookup = for{
+    val lookup: Future[Option[JSONFieldLookup]] = {for{
       entity <- field.lookupEntity
       value <- field.lookupValueField
       text <- fieldI18n.flatMap(_.lookupTextField)
-    } yield JSONFieldLookup(entity,JSONFieldMap(value,text))
+
+    } yield {
+      import io.circe.generic.auto._
+      for {
+
+        keys <- JSONMetadataFactory.keysOf(entity)
+        filter = { for{
+          queryString <- field.lookupQuery
+          queryJson <- parse(queryString).right.toOption
+          query <- queryJson.as[JSONQuery].right.toOption
+        } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
+
+        lookupData <- EntityActionsRegistry().tableActions(entity).find(filter)
+
+      } yield {
+        Some(JSONFieldLookup.fromData(entity, JSONFieldMap(value, text), lookupData))
+      }
+    }} match {
+        case Some(a) => a
+        case None => Future.successful(None)
+    }
 
     val condition = for{
       fieldId <- field.conditionFieldId
@@ -85,20 +112,28 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
       json <- Try(parse(values).right.get.as[Seq[Json]].right.get).toOption
     } yield ConditionalField(fieldId,json)
 
-    JSONField(
-      field.`type`,
-      field.name,
-      true,
-      fieldI18n.flatMap(_.label),
-      lookup,
-      fieldI18n.flatMap(_.placeholder),
-      field.widget,
-      None,
-      field.default,
-      None,
-      condition
-//      fieldI18n.flatMap(_.tooltip)
-    )
+
+    for{
+      look <- lookup
+//      lab <- label
+//      placeHolder <- placeholder
+//      tip <- tooltip
+    } yield {
+      JSONField(
+        field.`type`,
+        field.name,
+        false,
+        fieldI18n.flatMap(_.label),
+        look,
+        fieldI18n.flatMap(_.placeholder),
+        field.widget,
+        None,
+        field.default,
+        None,
+        condition
+        //      fieldI18n.flatMap(_.tooltip)
+      )
+    }
 
   }
 

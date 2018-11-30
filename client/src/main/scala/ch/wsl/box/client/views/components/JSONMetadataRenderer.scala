@@ -24,7 +24,7 @@ import io.udash.css.CssView._
   */
 
 
-case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], children: Seq[JSONMetadata]) extends WidgetBinded {
+case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], children: Seq[JSONMetadata]) extends ChildWidget {
 
 
   import ch.wsl.box.client.Context._
@@ -126,9 +126,12 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
 
   case class WidgetVisibility(widget:Widget,visibility: ReadableProperty[Boolean])
+
   object WidgetVisibility{
     def apply(widget: Widget): WidgetVisibility = WidgetVisibility(widget, Property(true))
   }
+
+
 
   private def subBlock(block: SubLayoutBlock):WidgetVisibility = WidgetVisibility(new Widget {
 
@@ -151,12 +154,11 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
   private def simpleField(fieldName:String):WidgetVisibility = {for{
     field <- metadata.fields.find(_.name == fieldName)
+
   } yield {
 
 
-
     val fieldData = Property(dataWithChildId.get.js(field.name))
-
 
     dataWithChildId.listen{ d =>
       val newJs = d.js(field.name)
@@ -228,7 +230,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   private def render(write:Boolean): JsDom.all.Modifier = {
     def renderer(block: LayoutBlock, widget:Widget) = {
       div(
-//        h3(block.title.map { title => Labels(title) }),
+        h3(block.title.map { title => Labels(title) }),
         widget.render(write, Property {
           true
         })
