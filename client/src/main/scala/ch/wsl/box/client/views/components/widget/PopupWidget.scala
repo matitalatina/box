@@ -41,9 +41,10 @@ import ch.wsl.box.client.Context._
 
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
     val selectedItem: Property[String] = data.transform(value2Label,label2Value)
-    div(BootstrapCol.md(12),GlobalStyles.noPadding)(
-      lab(field.title),
-      div(BootstrapStyles.pullRight,
+
+    div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin)(
+      label(field.title),
+      div(BootstrapStyles.pullRight, GlobalStyles.largeButton,
         bind(selectedItem)
       ),
       div(BootstrapStyles.Visibility.clearfix)
@@ -115,12 +116,11 @@ import ch.wsl.box.client.Context._
     }
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
-    div(BootstrapCol.md(12),GlobalStyles.noPadding)(
-      modal.render,
+    div(BootstrapCol.md(12),GlobalStyles.noPadding, GlobalStyles.smallBottomMargin)(
       WidgetUtils.toLabel(field),
-      div(style := "text-align: right",
-        tooltip(button(GlobalStyles.largeButton,onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render)
-      )
+      tooltip(button(BootstrapStyles.pullRight, GlobalStyles.largeButton, onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render),
+      modal.render,
+      div(BootstrapStyles.Visibility.clearfix)
     )
   }
 }

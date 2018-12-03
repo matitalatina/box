@@ -112,7 +112,7 @@ object InputWidget {
 
     override def edit() = editMe(field,true, false, modifiers){ case y =>
 
-      val stringModel = prop.transform[String](jsonToString _,strToJson _)
+      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
       TextInput(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true, modifiers))
@@ -127,7 +127,7 @@ object InputWidget {
 //      case true => {
         case _ => {
         editMe(field,true, !ClientConf.manualEditKeyFields, modifiers){ case y =>
-          val stringModel = prop.transform[String](jsonToString _,strToJson _)
+          val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
           TextInput(stringModel)(y:_*).render
         }
       }
@@ -141,7 +141,7 @@ object InputWidget {
 
 
     override def edit() = editMe(field,false, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _,strToJson _)
+      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
       TextInput(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field, false))
@@ -152,7 +152,7 @@ object InputWidget {
     val modifiers:Seq[Modifier] = Seq()
 
     override def edit() = editMe(field,true, false, modifiers){ case y =>
-      val stringModel = prop.transform[String](jsonToString _,strToJson _)
+      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
       TextArea(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true,modifiers))

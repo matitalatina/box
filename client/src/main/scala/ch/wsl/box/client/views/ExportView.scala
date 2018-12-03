@@ -25,6 +25,7 @@ import scala.concurrent.Future
 import scalatags.JsDom
 import scalacss.ScalatagsCss._
 import scalatags.generic.Modifier
+import scalatags.generic
 
 import scala.util.Try
 
@@ -33,11 +34,11 @@ import scala.util.Try
   * Created by andre on 4/24/2017.
   */
 
-case class ExportModel(metadata:Option[JSONMetadata], queryData:Json, headers:Seq[String],data:Seq[Seq[String]])
+case class ExportModel(metadata:Option[JSONMetadata], queryData:Json, headers:Seq[String],data:Seq[Seq[String]], exportDef:Option[ExportDef])
 
 object ExportModel extends HasModelPropertyCreator[ExportModel]{
   implicit val blank: Blank[ExportModel] =
-    Blank.Simple(ExportModel(None,Json.Null,Seq(),Seq()))
+    Blank.Simple(ExportModel(None, Json.Null, Seq(), Seq(), None))
 }
 
 object ExportViewPresenter extends ViewPresenter[ExportState] {
@@ -60,9 +61,11 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
   override def handleState(state: ExportState): Unit = {
     for{
       metadata <- REST.exportMetadata(state.export,Session.lang())
+      exportDef <- REST.exportDef(state.export, Session.lang())
     } yield {
       model.subProp(_.metadata).set(Some(metadata))
       model.subProp(_.queryData).set(Json.obj(JSONMetadata.jsonPlaceholder(metadata,Seq()).toSeq :_*))
+      model.subProp(_.exportDef).set(Some(exportDef))
     }
   }
 
@@ -108,7 +111,11 @@ case class ExportView(model:ModelProperty[ExportModel], presenter:ExportPresente
     h3(GlobalStyles.noMargin,
       metadata.label
     ),
-    JSONMetadataRenderer(metadata,model.subProp(_.queryData),Seq()).edit(),
+    produce(model.subProp(_.exportDef)){ ed =>
+      div(GlobalStyles.global)(ed.map(_.description.getOrElse[String]("")).getOrElse[String]("")).render
+    },
+    br,
+    JSONMetadataRenderer(metadata, model.subProp(_.queryData),Seq()).edit(),
     button(Labels.exports.load,onclick :+= ((e:Event) => presenter.query()),GlobalStyles.boxButton),
     button(Labels.exports.csv,onclick :+= ((e:Event) => presenter.csv()),GlobalStyles.boxButton),
       UdashTable()(model.subSeq(_.data))(

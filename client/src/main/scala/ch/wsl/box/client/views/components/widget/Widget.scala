@@ -25,7 +25,12 @@ import scala.concurrent.duration._
 trait Widget{
 
   def jsonToString(json:Json):String = json.string
-  def strToJson(str:String):Json = str.asJson
+
+  def strToJson(nullable:Boolean = false)(str:String):Json = (str, nullable) match {
+    case ("", true) => Json.Null
+    case _ => str.asJson
+  }
+
   def strToNumericJson(str:String):Json = str match {
     case "" => Json.Null
     case _ => str.toDouble.asJson

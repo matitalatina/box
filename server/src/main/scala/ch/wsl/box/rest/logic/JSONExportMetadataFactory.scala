@@ -27,16 +27,33 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
     val query = for {
         (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
 
-  } yield (ei18.flatMap(_.label), e.function, e.name, e.order)
+  } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
 
     Auth.boxDB.run{
       query.result
-    }.map(_.sortBy(_._4.getOrElse(Double.MaxValue))).map(_.map{ case (label, function, name, _) =>  ExportDef(function, label.getOrElse(name))})
+    }.map(_.sortBy(_._4.getOrElse(Double.MaxValue))).map(_.map{ case (label, function, name, _, hint, tooltip) =>
+            ExportDef(function, label.getOrElse(name), hint, tooltip)
+    })
+  }
+
+  def defOf(function:String, lang:String): Future[ExportDef] = {
+    val query = for {
+      (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
+      if e.function === function
+
+    } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
+
+    Auth.boxDB.run{
+      query.result
+    }.map(_.map{ case (label, function, name, _, hint, tooltip) =>
+      ExportDef(function, label.getOrElse(name), hint, tooltip)
+    }.head)
   }
 
   def of(function:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
-      (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id) if export.function === function
+      (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id)
+      if export.function === function
 
     } yield (export,exportI18n)
 
@@ -63,11 +80,16 @@ case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:
 
 //      val jsonFields = fields.map(fieldsMetadata(lang))
 
+//      def defaultLayout:Layout = { // for subform default with 12
+//        val default = Layout.fromFields(jsonFields)
+//        default.copy(blocks = default.blocks.map(_.copy(width = 12)))
+//      }
+
       val layout = Layout.fromString(export.layout).getOrElse(Layout.fromFields(jsonFields))
 
       val parameters = export.parameters.toSeq.flatMap(_.split(","))
 
-      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq(),"")
+      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq())//,"")
     }
   }
 

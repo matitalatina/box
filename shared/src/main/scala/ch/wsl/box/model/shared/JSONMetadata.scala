@@ -4,7 +4,12 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json.{Folder, JArray}
+import java.io
+
+import ch.wsl.box.shared.utils.JSONUtils
 import scribe.Logging
+
+import scala.util.Try
 
 /**
   * Created by andre on 5/16/2017.
@@ -20,20 +25,32 @@ case class JSONMetadata(
                          tabularFields:Seq[String],
                          keys:Seq[String],
                          query:Option[JSONQuery],
-                         exportFields:Seq[String],
-                         baseTable:String
+                         exportFields:Seq[String]
                        )
 
 object JSONMetadata extends Logging {
+
   def jsonPlaceholder(form:JSONMetadata, subforms:Seq[JSONMetadata] = Seq()):Map[String,Json] = {
     form.fields.flatMap{ field =>
-      val value:Option[Json] = (field.default,field.`type`) match {
+
+      val defaultFirstForLookup: Option[String] = field.nullable match {
+        case false => field.lookup.flatMap(_.lookup.headOption).map(_.id) //get first element
+        case true => field.lookup.flatMap(_.lookup.lift(1)).map(_.id)     //get second element (first should be null)
+      }
+
+      val default = (field.default) match{
+        case Some(JSONUtils.FIRST) => defaultFirstForLookup
+        case _ => field.default
+      }
+
+      val value:Option[Json] = Try((default, field.`type`) match {
         case (Some("arrayIndex"),_) => None
         case (Some("auto"),_) => None
         case (Some(d),JSONFieldTypes.NUMBER) => Some(d.toDouble.asJson)
         case (Some(d),JSONFieldTypes.BOOLEAN) => Some(d.toBoolean.asJson)
         case (Some(d),_) => Some(d.asJson)
         case (None,JSONFieldTypes.NUMBER) => None
+        case (None,JSONFieldTypes.BOOLEAN) => None
         case (None,JSONFieldTypes.CHILD) => {
           for{
             child <- field.child
@@ -41,7 +58,8 @@ object JSONMetadata extends Logging {
           } yield jsonPlaceholder(sub,subforms).asJson
         }
         case (None,_) => None
-      }
+      }).toOption.flatten
+
       value.map{ v => field.name -> v }
     }.toMap
   }

@@ -16,14 +16,17 @@ import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.Context._
+import ch.wsl.box.client.views.components.widget.WidgetUtils
 import ch.wsl.box.model.shared.ExportDef
 import scalatags.generic
 
 case class Exports(list:Seq[ExportDef], currentEntity:Option[ExportDef], search:String, filteredList:Seq[ExportDef])
+
 object Exports extends HasModelPropertyCreator[Exports] {
   implicit val blank: Blank[Exports] =
     Blank.Simple(Exports(Seq(),None,"",Seq()))
 }
+
 
 case class ExportsViewPresenter(modelName:String) extends ViewFactory[ExportsState] {
 
@@ -89,7 +92,7 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
         ul(GlobalStyles.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>
             li(produce(m) { export =>
-              a(Navigate.click(ExportState(export.function)), m.get.label).render
+              WidgetUtils.addTooltip(m.get.tooltip) (a(Navigate.click(ExportState(export.function)), m.get.label).render)
             }).render
           }
         ).render

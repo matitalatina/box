@@ -10,6 +10,7 @@ import scribe.Logging
 object JSONUtils extends Logging {
 
   val LANG = "::lang"
+  val FIRST = "::first"
 
   implicit class EnhancedJson(el:Json) {
 

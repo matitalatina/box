@@ -47,6 +47,16 @@ object Export extends Logging {
         }
       }
     } ~
+      pathPrefix(Segment) { function =>
+        pathPrefix("def") {
+          //      complete(JSONExportMetadataFactory().list)
+          path(Segment) { lang =>
+            get {
+              complete(JSONExportMetadataFactory().defOf(function, lang))
+            }
+          }
+        }
+      }~
 //      pathPrefix("") {
         pathPrefix(Segment) { function =>
           pathPrefix("metadata") {
