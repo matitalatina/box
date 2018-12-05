@@ -1,8 +1,9 @@
 package ch.wsl.box.codegen
 
 import com.typesafe.config.Config
-import slick.ast.ColumnOption
 import slick.model.Model
+import slick.ast.ColumnOption
+
 
 
 trait MyOutputHelper extends slick.codegen.OutputHelpers {
@@ -12,7 +13,7 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
        |// AUTO-GENERATED Slick data model
        |/** Stand-alone Slick data model for immediate use */
        |
-       |  import slick.driver.PostgresDriver.api._
+       |  import ch.wsl.box.rest.jdbc.PostgresProfile.api._
        |  import slick.model.ForeignKeyAction
        |  import slick.collection.heterogeneous._
        |  import slick.collection.heterogeneous.syntax._
@@ -20,7 +21,7 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
        |object $container {
        |
        |
-       |      val profile = slick.jdbc.PostgresProfile
+       |      val profile = ch.wsl.box.rest.jdbc.PostgresProfile
        |
        |      import profile._
        |
@@ -115,6 +116,31 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
     override def Column = new Column(_){
       // customize Scala column names
       override def rawName = model.name
+
+      override def rawType: String = {
+        model.options.find(_.isInstanceOf[slick.sql.SqlProfile.ColumnOption.SqlType]).flatMap {
+          tpe =>
+            tpe.asInstanceOf[slick.sql.SqlProfile.ColumnOption.SqlType].typeName match {
+              case "hstore" => Option("Map[String, String]")
+              case "_text" | "text[]" | "_varchar" | "varchar[]" => Option("List[String]")
+              case "_varchar" => Option("List[String]") // type 2003
+              case "geometry" => Option("com.vividsolutions.jts.geom.Geometry")
+              case "_int8" | "int8[]" => Option("List[Long]")
+              case "_int4" | "int4[]" => Option("List[Int]")
+              case "_int2" | "int2[]" => Option("List[Short]")
+              case _ => None
+            }
+        }.getOrElse {
+          model.tpe match {
+            case "java.sql.Date" => "java.time.LocalDate"
+            case "java.sql.Time" => "java.time.LocalTime"
+            case "java.sql.Timestamp" => "java.time.LocalDateTime"
+            case _ =>
+              super.rawType
+
+          }
+        }
+      }
 
 
       private def primaryKey = {

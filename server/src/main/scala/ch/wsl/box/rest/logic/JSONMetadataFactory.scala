@@ -8,7 +8,7 @@ import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config._
 import net.ceedubs.ficus.Ficus._
 import scribe.Logging
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._

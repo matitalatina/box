@@ -16,7 +16,7 @@ import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
-import slick.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import io.circe.parser.decode
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}
@@ -36,7 +36,7 @@ object Table {
 
 }
 
-case class Table[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", isBoxTable:Boolean = false)
+case class Table[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", isBoxTable:Boolean = false)
                                                             (implicit
                                                              enc: Encoder[M],
                                                              dec:Decoder[M],

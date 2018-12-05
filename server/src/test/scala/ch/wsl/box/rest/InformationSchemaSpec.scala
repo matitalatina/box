@@ -4,7 +4,7 @@ import ch.wsl.box.rest.logic.{PgColumn, PgColumns, PgInformationSchema}
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.ScalaFutures
 import slick.lifted.TableQuery
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.Future
 import scala.reflect.macros.whitebox

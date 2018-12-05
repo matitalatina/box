@@ -106,7 +106,7 @@ trait DateTimeWidget extends Widget  with Logging{
 
 //    logger.info(s"refreshing date picker with ${model.get.toString()}")
 
-    autoRelease(produce(id) { ii =>
+    produce(model) { ii =>
       val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
 
       div(
@@ -116,7 +116,7 @@ trait DateTimeWidget extends Widget  with Logging{
         ).render),
         div(BootstrapStyles.Visibility.clearfix)
       ).render
-    })
+    }
   }
 }
 

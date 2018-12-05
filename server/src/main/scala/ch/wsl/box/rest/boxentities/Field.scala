@@ -8,7 +8,7 @@ package ch.wsl.box.rest.boxentities
 object Field {
 
 
-  val profile = slick.jdbc.PostgresProfile
+  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
 
   import profile._
   import api._

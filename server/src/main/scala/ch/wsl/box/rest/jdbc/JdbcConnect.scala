@@ -10,7 +10,7 @@ import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 
 /**
@@ -120,7 +120,7 @@ object JdbcConnect extends Logging {
       clob.getSubString(1, clob.length.toInt).asJson
     }
     case "java.lang.String" => obj.asInstanceOf[String].asJson
-    case "java.sql.Timestamp" => obj.toString.asJson               //do not issue warnings for timestamp
+    case "java.sql.Timestamp" | "java.time.LocalDateTime" => obj.toString.asJson               //do not issue warnings for timestamp
     case _ => {
       logger.warn(s"datatype: $datatype not found")
       obj.toString.asJson

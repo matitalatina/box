@@ -18,7 +18,7 @@ import io.circe.Decoder
 import nz.co.rossphillips.thumbnailer.Thumbnailer
 import nz.co.rossphillips.thumbnailer.thumbnailers.{DOCXThumbnailer, ImageThumbnailer, PDFThumbnailer, TextThumbnailer}
 import scribe.Logging
-import slick.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -51,7 +51,7 @@ object File{
 
 }
 
-case class File[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database) extends Logging {
+case class File[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database) extends Logging {
   import Directives._
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._

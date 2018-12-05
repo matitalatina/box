@@ -9,7 +9,7 @@ import akka.stream.Materializer
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.boxentities.{Conf, UITable}
 import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
-import slick.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import com.softwaremill.session.SessionDirectives._

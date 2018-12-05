@@ -81,7 +81,7 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
        |
        |import akka.stream.Materializer
        |import scala.concurrent.ExecutionContext
-       |import slick.jdbc.PostgresProfile.api.Database
+       |import ch.wsl.box.rest.jdbc.PostgresProfile.api.Database
        |import ch.wsl.box.rest.utils.UserProfile
        |
        |object $name {

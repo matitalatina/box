@@ -4,7 +4,7 @@ import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{JSONFieldLookup, JSONMetadata, JSONQuery}
 import io.circe.Json
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 

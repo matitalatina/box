@@ -4,7 +4,7 @@ import ch.wsl.box.model.shared.NewsEntry
 import ch.wsl.box.rest.boxentities.News
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import ch.wsl.box.shared.utils.DateTimeFormatters
-import slick.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 

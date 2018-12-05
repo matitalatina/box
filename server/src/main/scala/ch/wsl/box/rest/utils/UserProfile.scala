@@ -1,7 +1,7 @@
 package ch.wsl.box.rest.utils
 
 import ch.wsl.box.rest.boxentities.User
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 

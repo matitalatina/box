@@ -15,7 +15,7 @@ import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
-import slick.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext
 

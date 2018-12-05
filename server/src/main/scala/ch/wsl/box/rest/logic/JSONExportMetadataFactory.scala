@@ -9,7 +9,7 @@ import ch.wsl.box.rest.utils.Auth
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try

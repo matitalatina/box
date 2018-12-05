@@ -120,7 +120,8 @@ object Settings {
     "com.outr" %% "scribe-slf4j" % versions.scribe,
     "nz.co.rossphillips" %% "scala-thumbnailer" % "0.5.SNAPSHOT",
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-    "org.mitre.dsmiley.httpproxy"  % "smiley-http-proxy-servlet" % "1.10"
+    "org.mitre.dsmiley.httpproxy"  % "smiley-http-proxy-servlet" % "1.10",
+    "com.github.tminglei" %% "slick-pg" % "0.16.3"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

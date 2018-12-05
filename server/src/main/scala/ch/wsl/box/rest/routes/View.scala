@@ -15,7 +15,7 @@ import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
 import scribe.Logging
 import slick.lifted.TableQuery
-import slick.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,7 +28,7 @@ object View {
 
 }
 
-case class View[T <: slick.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en")
+case class View[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en")
                                                     (implicit
                                                      enc: Encoder[M],
                                                      dec:Decoder[M],

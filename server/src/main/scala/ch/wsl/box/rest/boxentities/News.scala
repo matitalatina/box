@@ -2,7 +2,7 @@ package ch.wsl.box.rest.boxentities
 
 import java.sql.Timestamp
 
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import slick.model.ForeignKeyAction
 
 
@@ -11,7 +11,7 @@ object News {
 
 
 
-  case class News_row(news_id: Option[Int] = None, datetime: Timestamp, author:Option[String]=None)
+  case class News_row(news_id: Option[Int] = None, datetime: java.time.LocalDateTime, author:Option[String]=None)
   /** GetResult implicit for fetching Form_row objects using plain SQL queries */
 
   /** Table description of table form. Objects of this class serve as prototypes for rows in queries. */
@@ -22,7 +22,7 @@ object News {
 
 
     val news_id: Rep[Int] = column[Int]("news_id", O.AutoInc, O.PrimaryKey)
-    val datetime: Rep[Timestamp] = column[Timestamp]("datetime")
+    val datetime: Rep[java.time.LocalDateTime] = column[java.time.LocalDateTime]("datetime")
 
     val author: Rep[Option[String]] = column[Option[String]]("author")
 

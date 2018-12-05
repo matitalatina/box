@@ -2,7 +2,7 @@ package ch.wsl.model
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
 
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import slick.model.ForeignKeyAction
 import slick.collection.heterogeneous._
 import slick.collection.heterogeneous.syntax._
@@ -13,7 +13,7 @@ import slick.collection.heterogeneous.syntax._
 package object tablesTestDB {
 
 
-  val profile = slick.driver.PostgresDriver
+  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
 
   import profile._
 

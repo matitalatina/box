@@ -14,7 +14,7 @@ import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher
 import slick.lifted.Query
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 

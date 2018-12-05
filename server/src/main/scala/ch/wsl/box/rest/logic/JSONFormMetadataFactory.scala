@@ -7,7 +7,7 @@ import ch.wsl.box.rest.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_r
 import ch.wsl.box.rest.boxentities.Form.{Form, Form_i18n, Form_i18n_row, Form_row}
 import ch.wsl.box.rest.boxentities.{Field, Form}
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import io.circe._

@@ -17,7 +17,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     })
 
     EntitiesGenerator(modelWithoutFiles,dbConf).writeToFile(
-      "slick.driver.PostgresDriver",
+      "ch.wsl.box.rest.jdbc.PostgresProfile",
       args(0),
       "ch.wsl.box.model",
       "Entities",
@@ -30,7 +30,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     })
 
     EntitiesGenerator(modelWithOnlyFilesTables,dbConf).writeToFile(
-      "slick.driver.PostgresDriver",
+      "ch.wsl.box.rest.jdbc.PostgresProfile",
       args(0),
       "ch.wsl.box.model",
       "FileTables",

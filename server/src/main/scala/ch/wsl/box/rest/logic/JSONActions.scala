@@ -7,9 +7,9 @@ import io.circe._
 import io.circe.syntax._
 import scribe.Logging
 import slick.basic.DatabasePublisher
-import slick.driver.PostgresDriver
+import ch.wsl.box.rest.jdbc.PostgresProfile
 import slick.lifted.TableQuery
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,7 +41,7 @@ trait EntityJSONTableActions extends EntityJSONViewActions {
 }
 
 
-case class JSONViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](entity:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONViewActions {
+case class JSONViewActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONViewActions {
 
   val dbActions = new DbActions[T,M](entity)
 
@@ -74,7 +74,7 @@ case class JSONViewActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Pr
 
 }
 
-case class JSONTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONTableActions with Logging {
+case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONTableActions with Logging {
 
   lazy val jsonView = JSONViewActions[T,M](table)
 
@@ -87,7 +87,7 @@ case class JSONTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
   override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = jsonView.ids(query)
 
 
-  override def update(id:JSONID, json: Json)(implicit db: _root_.slick.driver.PostgresDriver.api.Database): Future[Json] = {
+  override def update(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
       current <- getById(id) //retrieve values in db
       merged = current.get.deepMerge(json) //merge old and new json
@@ -105,7 +105,7 @@ case class JSONTableActions[T <: slick.driver.PostgresDriver.api.Table[M],M <: P
     result.map(_.asJson)
   }
 
-  override def delete(id: JSONID)(implicit db: PostgresDriver.api.Database) = jsonView.dbActions.deleteById(id)
+  override def delete(id: JSONID)(implicit db: PostgresProfile.api.Database) = jsonView.dbActions.deleteById(id)
 }
 
 case class JSONDecoderException(failure: DecodingFailure, original:Json) extends Throwable

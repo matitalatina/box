@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.boxentities
 
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 /**
   * Created by andre on 5/15/2017.
@@ -8,7 +8,7 @@ import slick.driver.PostgresDriver.api._
 
 object User {
 
-  val profile = slick.driver.PostgresDriver
+  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
 
 
   case class User_row(username:String, access_level_id: Int)

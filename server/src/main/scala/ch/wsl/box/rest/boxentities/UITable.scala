@@ -1,13 +1,13 @@
 package ch.wsl.box.rest.boxentities
 
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 /**
   * Created by andre on 5/15/2017.
   */
 object UITable {
 
-  val profile = slick.driver.PostgresDriver
+  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
 
 
   case class UI_row(id: Option[Int] = None, key:String, value: String, accessLevel:Int)

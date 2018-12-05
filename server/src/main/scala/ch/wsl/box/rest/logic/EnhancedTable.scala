@@ -4,7 +4,7 @@ import scribe.Logging
 import slick.lifted.{AbstractTable, TableQuery}
 
 import scala.reflect.runtime.universe._
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 
 case class Col(rep:Rep[_],`type`:String)
@@ -39,13 +39,13 @@ object EnhancedTable extends Logging {
 
 
     def col(field: String):Col = Col(
-      rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[slick.driver.PostgresDriver.api.Rep[_]],
+      rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep[_]],
       typ(field)
     )
 
     def typ(field:String) = {
-      //=> slick.driver.PostgresDriver.api.Rep[scala.Option[String]]
-      accessor(field).info.toString.stripPrefix("=> slick.driver.PostgresDriver.api.Rep[").stripSuffix("]")
+      //=> ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep[scala.Option[String]]
+      accessor(field).info.toString.stripPrefix("=> ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep[").stripSuffix("]")
     }
 
     def cols(fields: Seq[String]):Seq[Col] = fields.map(col(_))

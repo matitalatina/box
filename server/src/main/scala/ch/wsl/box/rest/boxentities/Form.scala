@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.boxentities
 
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import slick.model.ForeignKeyAction
 import slick.collection.heterogeneous._
 import slick.collection.heterogeneous.syntax._
@@ -12,7 +12,7 @@ object Form {
 
 
 
-  val profile = slick.driver.PostgresDriver
+  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
 
   import profile._
 

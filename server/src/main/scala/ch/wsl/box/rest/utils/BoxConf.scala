@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.utils
 
 import java.sql.Timestamp
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 import ch.wsl.box.model.shared.JSONFieldTypes
@@ -10,7 +11,7 @@ import scribe.{Level, Logger, Logging}
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
-import slick.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 
 
@@ -97,9 +98,9 @@ object BoxConf extends Logging {
   }
 
   def prepareDatetime = filterEqualityPrecisionDatetime match {
-    case JSONFieldTypes.DATE => ((x: Timestamp) => Timestamp.valueOf(x.toLocalDateTime.truncatedTo(ChronoUnit.DAYS)))
-    case JSONFieldTypes.DATETIME => ((x: Timestamp) => x)
-    case _ => ((x: Timestamp) => x)
+    case JSONFieldTypes.DATE => ((x: LocalDateTime) => x.truncatedTo(ChronoUnit.DAYS))
+    case JSONFieldTypes.DATETIME => ((x: LocalDateTime) => x)
+    case _ => ((x: LocalDateTime) => x)
   }
 
   def filterEqualityPrecisionDouble: Option[Int] = Try(conf("filterEqualityPrecision.double").toInt).toOption

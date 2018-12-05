@@ -2,7 +2,7 @@ package ch.wsl.box.rest.boxentities
 
 import slick.model.ForeignKeyAction
 
-import slick.driver.PostgresDriver.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 
 object Export {

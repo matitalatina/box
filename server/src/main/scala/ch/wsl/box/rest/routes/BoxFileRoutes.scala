@@ -8,7 +8,7 @@ import ch.wsl.box.rest.boxentities.UIscrTable
 import ch.wsl.box.rest.boxentities.UIscrTable.UIsrc_row
 import ch.wsl.box.rest.routes.File.{BoxFile, FileHandler}
 import ch.wsl.box.rest.utils.UserProfile
-import slick.jdbc.PostgresProfile.api.Database
+import ch.wsl.box.rest.jdbc.PostgresProfile.api.Database
 
 import scala.concurrent.ExecutionContext
 
