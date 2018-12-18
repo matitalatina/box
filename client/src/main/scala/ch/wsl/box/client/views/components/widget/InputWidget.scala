@@ -50,6 +50,11 @@ object InputWidgetFactory {
 
   }
 
+  object NumberArray extends ComponentWidgetFactory {
+    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.NumberArray(field, prop)
+
+  }
+
 }
 
 object InputWidget {
@@ -183,6 +188,13 @@ object InputWidget {
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, false,Seq()))
   }
 
+  case class NumberArray(field:JSONField, prop: Property[Json]) extends Widget {
 
+    override def edit():JsDom.all.Modifier = (editMe(field, true, false){ case y =>
+      val stringModel = prop.transform[String](jsonToString _,strToNumericArrayJson _)
+      NumberInput(stringModel)(y:_*).render
+    })
+    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, true))
+  }
 }
 

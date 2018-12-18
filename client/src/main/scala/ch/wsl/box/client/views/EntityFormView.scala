@@ -22,7 +22,7 @@ import scalatags.JsDom
 import scalacss.ScalatagsCss._
 
 import scala.scalajs.js.URIUtils
-
+import scala.language.reflectiveCalls
 
 /**
   * Created by andre on 4/24/2017.

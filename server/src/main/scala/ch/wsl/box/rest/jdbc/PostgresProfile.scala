@@ -35,10 +35,29 @@ trait PostgresProfile extends ExPostgresProfile
     with SearchAssistants
   {
     implicit val strListTypeMapper = new SimpleArrayJdbcType[String]("text").to(_.toList)
+    implicit val shortListTypeMapper = new SimpleArrayJdbcType[Short]("int2").to(_.toList)
     implicit val intListTypeMapper = new SimpleArrayJdbcType[Int]("int4").to(_.toList)
-    //    implicit val dblListTypeMapper = new SimpleArrayJdbcType[Double]("double precision").to(_.toList)
-    implicit val dblListTypeMapper = new SimpleArrayJdbcType[Double]("float8").to(_.toList)
+    implicit val longListTypeMapper = new SimpleArrayJdbcType[Long]("int8").to(_.toList)
+    implicit val floatListTypeMapper = new SimpleArrayJdbcType[Float]("float4").to(_.toList)
+    implicit val doubleListTypeMapper = new SimpleArrayJdbcType[Double]("float8").to(_.toList)
+    implicit val bigdecimalListTypeMapper = new SimpleArrayJdbcType[java.math.BigDecimal]("numeric")
+      .mapTo[scala.math.BigDecimal](javaBigDecimal => scala.math.BigDecimal(javaBigDecimal),
+      scalaBigDecimal => scalaBigDecimal.bigDecimal).to(_.toList)
   }
+
+
+  val plainAPI = new API with ByteaPlainImplicits
+    with SimpleArrayPlainImplicits
+    with Date2DateTimePlainImplicits
+//    with SimpleJsonPlainImplicits
+//    with SimpleNetPlainImplicits
+//    with SimpleLTreePlainImplicits
+//    with SimpleRangePlainImplicits
+//    with SimpleHStorePlainImplicits
+    with SimpleSearchPlainImplicits {}
+
+
+
 }
 
 object PostgresProfile extends PostgresProfile

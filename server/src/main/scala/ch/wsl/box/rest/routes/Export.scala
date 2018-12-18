@@ -10,7 +10,7 @@ import akka.util.ByteString
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.jdbc.JdbcConnect
 import ch.wsl.box.rest.logic.{JSONExportMetadataFactory, JSONMetadataFactory}
-import ch.wsl.box.rest.utils.JSONSupport
+import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import io.circe.parser.parse
@@ -27,7 +27,10 @@ object Export extends Logging {
   import io.circe.generic.auto._
 
 
-  def csv(function:String,params:Seq[Json],lang:String)(implicit ec:ExecutionContext,db:Database) = onSuccess(JdbcConnect.function(function, params,lang)) {
+  def csv(function:String,params:Seq[Json],lang:String)(implicit up:UserProfile, ec:ExecutionContext) ={
+    implicit val db = up.db
+
+    onSuccess(JdbcConnect.function(function, params,lang)) {
     case None => complete(StatusCodes.BadRequest)
     case Some(fr) =>
       respondWithHeaders(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$function.csv"))) {
@@ -36,9 +39,11 @@ object Export extends Logging {
           complete(HttpEntity(ContentTypes.`text/csv(UTF-8)`,ByteString(csv)))
         }
       }
+    }
   }
 
-  def route(implicit ec:ExecutionContext,db:Database, mat:Materializer):Route = {
+
+  def route(implicit up:UserProfile, ec:ExecutionContext,mat:Materializer):Route = {
     pathPrefix("list") {
       //      complete(JSONExportMetadataFactory().list)
       path(Segment) { lang =>

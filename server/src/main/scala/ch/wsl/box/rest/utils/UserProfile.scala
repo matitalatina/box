@@ -1,7 +1,10 @@
 package ch.wsl.box.rest.utils
 
 import ch.wsl.box.rest.boxentities.User
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+//import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.plainAPI._
+import com.github.tminglei.slickpg.utils.PlainSQLUtils._
+import slick.jdbc.GetResult
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -18,4 +21,24 @@ case class UserProfile(name: String, db: Database, boxDb:Database) {
   }.map(_.headOption.map(_.access_level_id).getOrElse(-1))
 
   def boxUserProfile = UserProfile(name, boxDb, boxDb)   //todo : do it less ugly
+
+
+  def memberOf(implicit ec:ExecutionContext) = Auth.adminDB.run{
+    sql"""select memberOf from v_roles where lower(rolname)=lower(current_user)""".as[List[String]](GetResult{r=> r.<<[Seq[String]].toList})
+
+  }.map{ _.head
+  }
+
+  def hasRole(role:String)(implicit ec:ExecutionContext) = Auth.adminDB.run{
+    sql"""select hasrole($role)""".as[Boolean]
+  }.map{ _.head
+  }.recover{case _ => false}
+
+  def hasRoleIn(roles:List[String])(implicit ec:ExecutionContext) = Auth.adminDB.run{
+    sql"""select hasrolein(ARRAY[${roles.map("'"+_+"'").mkString(",")}])""".as[Boolean]
+  }.map{ _.head
+  }.recover{case _ => false}
+
+
+
 }

@@ -11,14 +11,14 @@ object Export {
 
 
   case class Export_row(export_id: Option[Int] = None, name: String, function:String, description: Option[String] = None, layout: Option[String] = None,
-                        parameters: Option[String] = None, order: Option[Double])
+                        parameters: Option[String] = None, order: Option[Double], access_role:Option[List[String]])
   /** GetResult implicit for fetching Form_row objects using plain SQL queries */
 
   /** Table description of table form. Objects of this class serve as prototypes for rows in queries. */
   class Export(_tableTag: Tag) extends Table[Export_row](_tableTag, "export") {
-    def * = (Rep.Some(export_id), name, function, description, layout, parameters, order) <> (Export_row.tupled, Export_row.unapply)
+    def * = (Rep.Some(export_id), name, function, description, layout, parameters, order ,access_role) <> (Export_row.tupled, Export_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(export_id), name, function, description, layout, parameters, order).shaped.<>({ r=>import r._; _1.map(_=> Export_row.tupled((_1, _2, _3, _4, _5, _6, _7)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(export_id), name, function, description, layout, parameters, order, access_role).shaped.<>({ r=>import r._; _1.map(_=> Export_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val export_id: Rep[Int] = column[Int]("export_id", O.AutoInc, O.PrimaryKey)
@@ -33,6 +33,8 @@ object Export {
 
     val parameters: Rep[Option[String]] = column[Option[String]]("parameters", O.Default(None))
     val order: Rep[Option[Double]] = column[Option[Double]]("order", O.Default(None))
+
+    val access_role: Rep[Option[List[String]]] = column[Option[List[String]]]("access_role", O.Default(None))
 
 
 

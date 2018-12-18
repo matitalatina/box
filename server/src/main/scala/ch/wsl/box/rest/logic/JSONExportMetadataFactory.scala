@@ -5,35 +5,62 @@ import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
 import ch.wsl.box.rest.boxentities.{Export, ExportField, Form}
-import ch.wsl.box.rest.utils.Auth
-import io.circe.Json
-import io.circe.parser.parse
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep
+
+//import ch.wsl.box.rest.jdbc.PostgresProfile.plainAPI._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import scala.util.Try
 
-case class JSONExportMetadataFactory(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends Logging {
+case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging {
 
   import io.circe.generic.auto._
+  import ch.wsl.box.shared.utils.Formatters._
+  import StringHelper._
 
+  implicit val db = up.db
 
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Export.Export.result
   }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
   def list(lang:String): Future[Seq[ExportDef]] = {
-    val query = for {
-        (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
 
-  } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
+//    def accessibleExport = for {
+//      roles <- up.memberOf
+//      ex <- Export.Export.filter(ex => ex.access_role.isEmpty || ex.access_role inSet roles || roles.contains(up.name))
+//    } yield ex
 
-    Auth.boxDB.run{
-      query.result
-    }.map(_.sortBy(_._4.getOrElse(Double.MaxValue))).map(_.map{ case (label, function, name, _, hint, tooltip) =>
-            ExportDef(function, label.getOrElse(name), hint, tooltip)
-    })
+    def checkRole(roles:List[String], access_roles:List[String], accessLevel:Int) =  roles.intersect(access_roles).size>0 || access_roles.isEmpty || access_roles.contains(up.name) || accessLevel == 1000
+
+    def query    = for {
+       (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
+
+    } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip), e.access_role)
+
+//    def queryResult = Auth.boxDB.run(query.result)
+
+
+    for{
+      roles <- up.memberOf
+      al <- up.accessLevel
+      qr <-  Auth.boxDB.run(query.result)
+    } yield {
+       qr.filter(_._7.map(ar => checkRole(roles,ar, al)).getOrElse(true))
+         .sortBy(_._4.getOrElse(Double.MaxValue)).map(
+         { case (label, function, name, _, hint, tooltip, _) =>
+           ExportDef(function, label.getOrElse(name), hint, tooltip)
+         })
+
+    }
+
   }
 
   def defOf(function:String, lang:String): Future[ExportDef] = {

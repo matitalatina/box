@@ -103,6 +103,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (NUMBER, Some(WidgetsNames.checkboxNumber), _, _, _)   => CheckboxNumberWidget
           case (NUMBER, Some(WidgetsNames.nolabel), _, _, _)          => InputWidgetFactory.NumberNoLabel
           case (NUMBER, _, _, _, _)                                   => InputWidgetFactory.Number
+          case (ARRAY_NUMBER, _, _, _, _)                             => InputWidgetFactory.NumberArray
           case (TIME, Some(WidgetsNames.timepicker), _, _, _)         => DateTimeWidget.Time
           case (DATE, Some(WidgetsNames.datepicker), _, _, _)         => DateTimeWidget.Date
           case (DATETIME, Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime

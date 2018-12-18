@@ -61,6 +61,8 @@ object JSONFieldTypes{
   val DATETIME = "datetime"
   val TIME = "time"
   val BOOLEAN = "boolean"
+  val ARRAY_NUMBER = "array_number"
+  val ARRAY_STRING = "array_string"
 
-  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN)
+  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING)
 }

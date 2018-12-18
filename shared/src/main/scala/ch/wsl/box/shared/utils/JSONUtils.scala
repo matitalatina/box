@@ -27,7 +27,7 @@ object JSONUtils extends Logging {
         bool => bool.toString,
         num => num.toString,
         str => str,
-        arr => arr.toString,
+        arr => arr.map(_.string).mkString("[", ",", "]"),
         obj => obj.toString
       )
       result

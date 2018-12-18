@@ -1,7 +1,6 @@
 package ch.wsl.box.client.utils
 
 import ch.wsl.box.client.services.REST
-import ch.wsl.box.client.utils.Labels
 import scala.util.Try
 
 object UI {

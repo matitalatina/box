@@ -36,6 +36,11 @@ trait Widget{
     case _ => str.toDouble.asJson
   }
 
+  def strToNumericArrayJson(str:String):Json = str match {
+    case "" => Json.Null
+    case _ => str.asJson.asArray.map(_.map(s => strToNumericJson(s.string))).map(_.asJson).getOrElse(Json.Null)
+  }
+
   protected def show():Modifier
   protected def edit():Modifier
 

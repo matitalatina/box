@@ -14,14 +14,16 @@ case class Layout(blocks: Seq[LayoutBlock])
 object Layout extends Logging {
 
   def fromString(layout:Option[String])(implicit d:Decoder[Layout]) = layout.flatMap { l =>
-    parse(l).fold({ f =>
-      logger.info(f.getMessage())
+    parse(l).fold({ jsonFailure =>                 //json parsing failure
+      logger.warn(jsonFailure.getMessage())
+      println(jsonFailure.getMessage())
       None
-    }, { json =>
-      json.as[Layout].fold({ f =>
-        logger.info(f.getMessage())
+    }, { json =>                                    //valid json
+      json.as[Layout].fold({ layoutFailure =>             //layout parsing failure
+        logger.warn(layoutFailure.getMessage())
+        println(layoutFailure.getMessage())
         None
-      }, { lay =>
+      }, { lay =>                                         //valid layout
         Some(lay)
       }
       )

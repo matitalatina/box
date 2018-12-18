@@ -114,6 +114,7 @@ object JdbcConnect extends Logging {
     case "java.lang.Long" => obj.asInstanceOf[Long].asJson
     case "java.lang.Double" => obj.asInstanceOf[Double].asJson
     case "java.lang.Float" => obj.asInstanceOf[Float].asJson
+    case "java.lang.BigDecimal" => obj.asInstanceOf[BigDecimal].asJson
     case "java.lang.Boolean" =>  obj.asInstanceOf[Boolean].asJson
     case "java.sql.Clob" => {
       val clob = obj.asInstanceOf[Clob]
