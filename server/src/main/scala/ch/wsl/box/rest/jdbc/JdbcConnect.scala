@@ -24,7 +24,7 @@ object JdbcConnect extends Logging {
 
   case class SQLFunctionResult(headers:Seq[String],rows:Seq[Seq[Json]])
 
-  def function(name:String,args: Seq[Json],lang:String)(implicit ec:ExecutionContext,db:Database):Future[Option[SQLFunctionResult]] = {
+  def function(name:String, args: Seq[Json], lang:String)(implicit ec:ExecutionContext,db:Database):Future[Option[SQLFunctionResult]] = {
 
     val result = Future{
       // make the connection
@@ -32,7 +32,9 @@ object JdbcConnect extends Logging {
       val result = Try {
         // create the statement, and run the select query
         val statement = connection.createStatement()
-        val query = s"SELECT * FROM $name(${args.map(_.toString()).mkString(",")})".replaceAll("'","\\'").replaceAll("\"","'")
+        val argsStr = if (args == null) ""
+                      else args.map(_.toString()).mkString(",")
+        val query = s"SELECT * FROM $name($argsStr)".replaceAll("'","\\'").replaceAll("\"","'")
         logger.info(query)
         val resultSet = statement.executeQuery(query)
         val metadata = getColumnMeta(resultSet.getMetaData)
@@ -122,6 +124,7 @@ object JdbcConnect extends Logging {
     }
     case "java.lang.String" => obj.asInstanceOf[String].asJson
     case "java.sql.Timestamp" | "java.time.LocalDateTime" => obj.toString.asJson               //do not issue warnings for timestamp
+    case "java.math.BigDecimal" => obj.toString.asJson                                         //do not issue warnings for BigDecimal
     case _ => {
       logger.warn(s"datatype: $datatype not found")
       obj.toString.asJson
