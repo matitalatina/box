@@ -59,7 +59,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
           case Some(id) =>
             get {
               complete(actions(metadata) { fs =>
-                fs.getAllById(id).map { record =>
+                fs.getById(id).map { record =>
                   logger.info(record.toString)
                   HttpEntity(ContentTypes.`application/json`, record)
                 }
@@ -70,8 +70,8 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
                   complete {
                     actions(metadata) { fs =>
                       for {
-                        _ <- fs.updateAll(e)
-                        data <- fs.getAllById(e.ID(fs.metadata.keys))
+                        _ <- fs.updateIfNeeded(e)
+                        data <- fs.getById(e.ID(fs.metadata.keys))
                       } yield data
                     }
                   }
@@ -81,7 +81,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
                 complete {
                   actions(metadata) { fs =>
                     for {
-                      count <- fs.deleteAll(id)
+                      count <- fs.delete(id)
                     } yield JSONCount(count)
                   }
                 }
@@ -142,7 +142,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
         entity(as[JSONQuery]) { query =>
           logger.info("list")
           complete(actions(tabularMetadata()){ fs =>
-            fs.extractArray(query).map{arr =>
+            fs.streamArray(query).map{ arr =>
               HttpEntity(ContentTypes.`text/plain(UTF-8)`,arr)
             }
           })
@@ -195,7 +195,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
           entity(as[Json]) { e =>
             complete {
               actions(metadata){ fs =>
-                fs.insertAll(e)
+                fs.insert(e)
               }
             }
           }

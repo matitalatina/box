@@ -82,14 +82,14 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
 
       //initialise an array of n strings, where n is the number of fields
-      val results:Seq[(String,Json)] = Enhancer.extract(currentData,metadata)
+      val results:Seq[(String,Json)] = Enhancer.extract(currentData, metadata)
 
       model.set(EntityFormModel(
         name = state.entity,
         kind = state.kind,
         id = state.id,
         metadata = Some(metadata),
-        currentData,
+        data = currentData,
         "",
         children,
         Navigation.empty1,

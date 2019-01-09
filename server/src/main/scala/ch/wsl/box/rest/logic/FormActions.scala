@@ -18,11 +18,6 @@ import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
-  * Created by andre on 5/18/2017.
-  *
-  * translate db data to JSONForm structure
-  */
 
 case class ReferenceKey(localField:String,remoteField:String,value:String)
 case class Reference(association:Seq[ReferenceKey])
@@ -38,16 +33,21 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
 
   val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
-  def getAllById(id:JSONID):Future[Json] = extractOne(id.query)
+  def getById(id:JSONID):Future[Json] = get(id.query)
 
-  def extractArray(query:JSONQuery):Source[Json,NotUsed] = extractSeq(query)
-  def extractOne(query:JSONQuery):Future[Json] = extractSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
+  private def streamSeq(query:JSONQuery):Source[Json,NotUsed] = {
+    Source
+      .fromPublisher(EntityActionsRegistry().tableActions(metadata.entity).findStreamed(query))
+      .flatMapConcat( json => Source.fromFuture(expandJson(json)))
+  }
+  def streamArray(query:JSONQuery):Source[Json,NotUsed] = streamSeq(query)
+  def get(query:JSONQuery):Future[Json] = streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
 
   def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {
 
       val lookup = Lookup.valueExtractor(lookupElements, metadata) _
 
-      extractSeq(query).map { json =>
+      streamSeq(query).map { json =>
         val row = fields(metadata).map { field =>
           lookup(field,json.get(field))
         }
@@ -65,30 +65,6 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     }
   }
 
-  def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]): Seq[Future[Int]] = {
-    val receivedID = receivedJson.map(_.ID(child.keys))
-    val dbID = dbJson.map(_.ID(child.keys))
-    logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
-    dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
-      logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")
-      EntityActionsRegistry().tableActions(child.entity).delete(idsToDelete)
-    }
-  }
-
-  def deleteAll(id:JSONID) = {
-    for{
-      json <- getAllById(id)
-      subs <- Future.sequence(subAction(json,0,_.delete))
-      current <- delete(json)
-    } yield current + subs.flatten.sum
-  }
-
-  def delete(e:Json):Future[Int] = {
-    val id = e.ID(metadata.keys)
-    jsonActions.delete(id)
-  }
-
-
   def subAction[T](e:Json, nullElement:T,action: FormActions => (Json => Future[T])): Seq[Future[List[T]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
       form <- jsonCustomMetadataFactory.of(field.child.get.objId, metadata.lang)
@@ -101,27 +77,31 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     } yield result
   }
 
-  def updateAll(e:Json):Future[Json] = {
-
-
+  def deleteSingle(e:Json):Future[Int] = {
     val id = e.ID(metadata.keys)
-    for{
-      _ <- Future.sequence(subAction(e,Json.Null,_.updateAll))
-      dbData <- jsonActions.getById(id).recover{ case t => logger.info("recovered future with none"); None } //existing record in db
-      result <- {
-        if(dbData.isDefined) {
-          logger.info(s"update $id")
-          jsonActions.update(id,e)
-        } else {
-          logger.info(s"insert into ${metadata.entity} with id $id")
-          jsonActions.insert(e)
-        }
-      }
-    } yield result
-
+    jsonActions.delete(id)
   }
 
-  def insertAll(e:Json):Future[Json] = for{
+
+  def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]): Seq[Future[Int]] = {
+    val receivedID = receivedJson.map(_.ID(child.keys))
+    val dbID = dbJson.map(_.ID(child.keys))
+    logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
+    dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
+      logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")
+      EntityActionsRegistry().tableActions(child.entity).delete(idsToDelete)
+    }
+  }
+
+  def delete(id:JSONID) = {
+    for{
+      json <- getById(id)
+      subs <- Future.sequence(subAction(json,0, _.deleteSingle))
+      current <- deleteSingle(json)
+    } yield current + subs.flatten.sum
+  }
+
+  def insert(e:Json):Future[Json] = for{
     inserted <- jsonActions.insert(e)
     _ <- Future.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
       for {
@@ -132,12 +112,48 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
           val masterChild: Seq[(String, String)] = field.child.get.masterFields.split(",").zip(field.child.get.childFields.split(",")).toSeq
           masterChild.foldLeft(row){ case (acc,(master,child)) => acc.deepMerge(Json.obj(child -> inserted.js(master)))}
         }
-        result <- FutureUtils.seqFutures(rowsWithId)(row => FormActions(metadata).insertAll(row))
+        result <- FutureUtils.seqFutures(rowsWithId)(row => FormActions(metadata).insert(row))
       } yield result
     })
-    data <- getAllById(inserted.ID(metadata.keys))
+    data <- getById(inserted.ID(metadata.keys))
   } yield data
 
+
+  def update(e:Json):Future[Json] = {
+
+    val id = e.ID(metadata.keys)
+    for{
+      _ <- Future.sequence(subAction(e,Json.Null,_.upsert))  //need upsert to add new child records
+      result <- jsonActions.update(id,e)
+    } yield result
+  }
+
+  def updateIfNeeded(e:Json):Future[Json] = {
+
+    val id = e.ID(metadata.keys)
+    for{
+      _ <- Future.sequence(subAction(e,Json.Null,_.upsertIfNeeded))  //need upsert to add new child records
+      result <- jsonActions.updateIfNeeded(id,e)
+    } yield result
+  }
+
+  def upsert(e:Json):Future[Json] = {
+
+    val id = e.ID(metadata.keys)
+    for{
+      _ <- Future.sequence(subAction(e,Json.Null,_.upsert))
+      result <- jsonActions.upsert(id,e)
+    } yield result
+  }
+
+  def upsertIfNeeded(e:Json):Future[Json] = {
+
+    val id = e.ID(metadata.keys)
+    for{
+      _ <- Future.sequence(subAction(e,Json.Null,_.upsertIfNeeded))
+      result <- jsonActions.upsertIfNeeded(id,e)
+    } yield result
+  }
 
   private def createQuery(entity:Json, child: Child):JSONQuery = {
     val parentFilter = for{
@@ -153,7 +169,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
 
   private def getChild(dataJson:Json, field:JSONField, metadata:JSONMetadata, child:Child):Future[Seq[Json]] = {
     val query = createQuery(dataJson,child)
-    FormActions(metadata).extractSeq(query).runFold(Seq[Json]())(_ ++ Seq(_))
+    FormActions(metadata).streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_))
   }
 
   private def expandJson(dataJson:Json):Future[Json] = {
@@ -177,10 +193,6 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     Future.sequence(values).map(_.toMap.asJson)
   }
 
-  private def extractSeq(query:JSONQuery):Source[Json,NotUsed] = {
-    Source
-      .fromPublisher(EntityActionsRegistry().tableActions(metadata.entity).findStreamed(query))
-      .flatMapConcat( json => Source.fromFuture(expandJson(json)))
-  }
+
 
 }

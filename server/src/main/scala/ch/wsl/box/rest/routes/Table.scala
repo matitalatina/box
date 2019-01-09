@@ -94,7 +94,7 @@ case class Table[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Pro
                 } ~
                   put {
                     entity(as[M]) { e =>
-                      onComplete(dbActions.updateById(id, e)) {
+                      onComplete(dbActions.updateIfNeededById(id, e)) {
                         case Success(entity) => complete(e)
                         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                       }

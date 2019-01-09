@@ -46,6 +46,8 @@ object ClientConf {
 
   def langs = Try(conf("langs")).getOrElse("en").split(",")
 
+  def notificationTimeOut = Try(conf("notification.timeout").toInt).getOrElse(6)
+
 //  def filterEqualityPrecisionDouble:Option[Int] = Try(conf("filterEqualityPrecision.double").toInt).toOption
 //
 //  def prepareDouble = filterEqualityPrecisionDouble match{

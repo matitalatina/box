@@ -1,9 +1,11 @@
 package ch.wsl.box.client.services
 
 import io.udash._
+
 import scalajs.js.timers._
 import scala.concurrent.duration._
 import ch.wsl.box.client.Context._
+import ch.wsl.box.client.utils.ClientConf
 
 object Notification {
   private val _list:SeqProperty[String] = SeqProperty(Seq[String]())
@@ -11,7 +13,7 @@ object Notification {
 
   def add(notice:String) = {
     _list.append(notice)
-    setTimeout(5 seconds){
+    setTimeout(ClientConf.notificationTimeOut seconds){
       _list.remove(notice)
     }
   }

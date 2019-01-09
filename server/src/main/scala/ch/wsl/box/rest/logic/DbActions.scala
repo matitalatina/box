@@ -180,8 +180,17 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     }
   }
 
-  def deleteById(id:JSONID)(implicit db:Database):Future[Int] = {
+  def insert(e: M)(implicit db:Database): Future[T#TableElementType] = {
+    logger.info(s"INSERT $e")
+    for{
+      result <- db.run {
+        entity.returning(entity) += e
+      }
+    } yield result
+  }
 
+  def deleteById(id:JSONID)(implicit db:Database):Future[Int] = {
+    logger.info(s"DELETE BY ID $id")
     for{
       result <- db.run{
         val action = filter(id).delete
@@ -192,7 +201,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
   }
 
   def updateById(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
-    //println (e)
+    logger.info(s"UPDATE BY ID $id")
     for{
       result <- db.run {
         val action = filter(id).update(e)
@@ -202,4 +211,57 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     } yield result
   }
 
+  def updateIfNeededById(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
+    logger.info(s"UPDATE IF NEEDED BY ID $id")
+    for {
+      current <- getById(id)
+    } yield {
+      if (current.get != e) {
+
+        val result = db.run {
+          val action = filter(id).update(e)
+          logger.debug(action.statements.toString)
+          action
+        }
+        result
+      } else {
+        Future.successful(0)
+      }
+    }
+  }.flatMap(identity)
+
+  def upsertById(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
+    logger.info(s"UPSERT BY ID $id")
+    for{
+      result <- db.run {
+        val action = filter(id).insertOrUpdate(e) //todo: this does not work
+        logger.debug (action.statements.toString)
+        action
+      }
+    } yield result
+  }
+
+  def upsertIfNeededById(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
+    logger.info(s"UPSERT IF NEEDED BY ID $id")
+    for {
+      current <- getById(id)
+    } yield {
+      if (current.isDefined) {
+        if (current.get != e) {
+
+          val result = db.run {
+            val action = filter(id).update(e)
+            logger.debug(action.statements.toString)
+            action
+          }
+          result
+        } else {
+          Future.successful(0)
+        }
+      }else{
+        insert(e)
+        Future.successful(1)
+      }
+    }
+  }.flatMap(identity)
 }

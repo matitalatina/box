@@ -11,5 +11,9 @@ case class SQLExceptionReport(
                                message:Option[String],
                                source:String = "sql"
                              ) extends ExceptionReport {
-  override def humanReadable(labels: Map[String, String]) = s"Error in $table.$column $message"
+  override def humanReadable(labels: Map[String, String]) = s"Error in table ${table.getOrElse("Not defined")} ${
+    column match{
+      case Some(x) => s"(column $column)"
+      case None =>""}
+  }: ${message.getOrElse("no error message")}</br>[query: ${internalQuery.getOrElse("")}]</br>[hint:${hint.getOrElse("")}]</br>[detail:${detail.getOrElse("")}]"
 }
