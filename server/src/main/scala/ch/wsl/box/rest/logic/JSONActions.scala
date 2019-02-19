@@ -97,9 +97,9 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
+      _ <- jsonView.dbActions.updateById(id, toM(merged))
     } yield {
-      jsonView.dbActions.updateById(id, toM(merged))
-      json
+      merged //json
     }
   }
 
@@ -107,11 +107,11 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
-    } yield {
-      if (toM(current.get) != toM(merged)) {  //check if same
+      _ <- if (toM(current.get) != toM(merged)) {  //check if same
         jsonView.dbActions.updateById(id, toM(merged))            //could also use updateIfNeeded and no check
-      }
-      json
+      } else Future.successful()
+    } yield {
+      merged //json
     }
   }
 
@@ -123,32 +123,32 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
   override def upsert(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
       current <- getById(id) //retrieve values in db
-    } yield {
-      if (current.isDefined){   //if exists, check if we have to update
+      result <- if (current.isDefined){   //if exists, check if we have to update
         val merged  = current.get.deepMerge(json) //merge old and new json
-        jsonView.dbActions.updateById(id, toM(merged))
+        jsonView.dbActions.updateById(id, toM(merged)).map(_ => merged)
       } else{
-//        jsonView.dbActions.upsertById(id, toM(json))
-        insert(json)
+      //        jsonView.dbActions.upsertById(id, toM(json))
+        insert(json).map(_ => json)
       }
-      json
+    } yield {
+      result
     }
   }
 
   override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
       current <- getById(id) //retrieve values in db
-    } yield {
-      if (current.isDefined){   //if exists, check if we have to skip the update (if row is the same)
+      result <- if (current.isDefined){   //if exists, check if we have to skip the update (if row is the same)
         val merged  = current.get.deepMerge(json) //merge old and new json
         if (toM(current.get) != toM(merged)) {
-          jsonView.dbActions.updateById(id, toM(merged))           //could also use updateIfNeeded and no check
-        }
+          jsonView.dbActions.updateById(id, toM(merged)).map(_ => merged)          //could also use updateIfNeeded and no check
+        } else Future.successful(merged)
       } else{
-//        jsonView.dbActions.upsertById(id, toM(json))
-        insert(json)
+      //        jsonView.dbActions.upsertById(id, toM(json))
+        insert(json).map(_ => json)
       }
-      json
+    } yield {
+      result
     }
   }
 

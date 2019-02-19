@@ -23,7 +23,7 @@ case class UserProfile(name: String, db: Database, boxDb:Database) {
   def boxUserProfile = UserProfile(name, boxDb, boxDb)   //todo : do it less ugly
 
 
-  def memberOf(implicit ec:ExecutionContext) = Auth.adminDB.run{
+  def memberOf(implicit ec:ExecutionContext) = Auth.adminDB.run{              //todo: depends on v_roles, hasrole and hasrolein >> make cleaner
     sql"""select memberOf from v_roles where lower(rolname)=lower(current_user)""".as[List[String]](GetResult{r=> r.<<[Seq[String]].toList})
 
   }.map{ _.head

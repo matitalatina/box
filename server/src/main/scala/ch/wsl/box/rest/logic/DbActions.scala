@@ -172,7 +172,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
       case Some(f) => for {
         result <- db.run {
           val action = f.take(1).result
-          logger.debug(action.statements.toString)
+          logger.info(action.statements.toString)
           action
         }
       } yield result.headOption
@@ -184,7 +184,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     logger.info(s"INSERT $e")
     for{
       result <- db.run {
-        entity.returning(entity) += e
+        (entity.returning(entity) += e).transactionally
       }
     } yield result
   }
@@ -195,7 +195,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
       result <- db.run{
         val action = filter(id).delete
         //println(action.statements)
-        action
+        action.transactionally
       }
     } yield result
   }
@@ -205,8 +205,8 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     for{
       result <- db.run {
         val action = filter(id).update(e)
-        logger.debug (action.statements.toString)
-        action
+        logger.info (action.statements.toString)
+        action.transactionally
       }
     } yield result
   }
@@ -220,9 +220,10 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
 
         val result = db.run {
           val action = filter(id).update(e)
-          logger.debug(action.statements.toString)
-          action
+          logger.info(action.statements.toString)
+          action.transactionally
         }
+        logger.info(s"UPDATED IF NEEDED BY ID $id")
         result
       } else {
         Future.successful(0)
@@ -230,13 +231,13 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     }
   }.flatMap(identity)
 
-  def upsertById(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
+  def debug(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
     logger.info(s"UPSERT BY ID $id")
     for{
       result <- db.run {
         val action = filter(id).insertOrUpdate(e) //todo: this does not work
-        logger.debug (action.statements.toString)
-        action
+        logger.info (action.statements.toString)
+        action.transactionally
       }
     } yield result
   }
@@ -251,15 +252,17 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
 
           val result = db.run {
             val action = filter(id).update(e)
-            logger.debug(action.statements.toString)
-            action
+            logger.info(action.statements.toString)
+            action.transactionally
           }
+          logger.info(s"UPSERTED (UPDATED) IF NEEDED BY ID $id")
           result
         } else {
           Future.successful(0)
         }
       }else{
         insert(e)
+        logger.info(s"UPSERTED (INSERTED) IF NEEDED BY ID $id")
         Future.successful(1)
       }
     }

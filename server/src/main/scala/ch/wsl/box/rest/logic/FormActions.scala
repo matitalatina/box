@@ -33,7 +33,10 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
 
   val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
-  def getById(id:JSONID):Future[Json] = get(id.query)
+  def getById(id:JSONID):Future[Json] = {
+    logger.info("Getting Form data")
+    get(id.query)
+  }
 
   private def streamSeq(query:JSONQuery):Source[Json,NotUsed] = {
     Source
@@ -41,7 +44,12 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
       .flatMapConcat( json => Source.fromFuture(expandJson(json)))
   }
   def streamArray(query:JSONQuery):Source[Json,NotUsed] = streamSeq(query)
-  def get(query:JSONQuery):Future[Json] = streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x => if(x.length >1) throw new Exception("Multiple rows retrieved with single id") else x.headOption.asJson)
+  def get(query:JSONQuery):Future[Json] = streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x =>
+      if(x.length >1){
+        throw new Exception("Multiple rows retrieved with single id")
+      } else {
+        x.headOption.asJson
+      })
 
   def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {
 

@@ -59,6 +59,7 @@ trait UglyDBFilters extends DbFilters with Logging {
   final val typLONG = 1
   final val typSHORT =  2
   final val typDOUBLE = 3
+  final val typBIGDECIMAL = 31
   final val typBOOLEAN = 4
   final val typSTRING = 5
   final val typTIMESTAMP = 6
@@ -68,6 +69,7 @@ trait UglyDBFilters extends DbFilters with Logging {
   final val typOptLONG = 11
   final val typOptSHORT =  12
   final val typOptDOUBLE = 13
+  final val typOptBIGDECIMAL = 131
   final val typOptBOOLEAN = 14
   final val typOptSTRING = 15
   final val typOptTIMESTAMP = 16
@@ -79,6 +81,7 @@ trait UglyDBFilters extends DbFilters with Logging {
   def typ(myType:String):Int = myType match{
     case "scala.Short" | "Short" => typSHORT
     case "Double" | "scala.Double" => typDOUBLE
+    case "BigDecimal" | "scala.math.BigDecimal" => typBIGDECIMAL
     case "scala.Int" | "java.lang.Integer" | "Int" => typINT
     case "scala.Long" | "Long" => typLONG
     case "String" => typSTRING
@@ -88,6 +91,7 @@ trait UglyDBFilters extends DbFilters with Logging {
     case "java.time.LocalTime" => typTIME
     case "scala.Option[scala.Short]" | "Option[Short]" =>  typOptSHORT
     case "scala.Option[scala.Double]" | "Option[Double]" => typOptDOUBLE
+    case "scala.Option[scala.BigDecimal]" | "Option[scala.math.BigDecimal]" => typOptBIGDECIMAL
     case "scala.Option[scala.Int]" | "scala.Option[java.lang.Integer]" | "Option[Int]" | "Option[java.lang.Integer]" => typOptINT
     case "scala.Option[scala.Long]"  | "Option[Long]" => typOptLONG
     case "scala.Option[String]" | "Option[String]" => typOptSTRING
@@ -112,6 +116,7 @@ trait UglyDBFilters extends DbFilters with Logging {
       typ(col.`type`) match {
           case `typSHORT` => c.asInstanceOf[Rep[Short]] === v.toShort
           case `typDOUBLE` => c.asInstanceOf[Rep[Double]] === v.toDouble
+          case `typBIGDECIMAL` => c.asInstanceOf[Rep[BigDecimal]] === BigDecimal(v)
           case `typINT` => c.asInstanceOf[Rep[Int]] === v.toInt
           case `typLONG` => c.asInstanceOf[Rep[Long]] === v.toLong
           case `typSTRING` => c.asInstanceOf[Rep[String]] === v
@@ -126,6 +131,7 @@ trait UglyDBFilters extends DbFilters with Logging {
 
           case `typOptSHORT` =>  c.asInstanceOf[Rep[Option[Short]]] === v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] === v.toDouble
+          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] === BigDecimal(v)
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] === v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] === v.toLong
           case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]] === v
@@ -152,6 +158,7 @@ trait UglyDBFilters extends DbFilters with Logging {
           case `typINT` => c.asInstanceOf[Rep[Int]] =!= v.toInt
           case `typLONG` => c.asInstanceOf[Rep[Long]] =!= v.toLong
           case `typDOUBLE` => c.asInstanceOf[Rep[Double]] =!= v.toDouble
+          case `typBIGDECIMAL` => c.asInstanceOf[Rep[BigDecimal]] =!= BigDecimal(v)
           case `typSTRING` => c.asInstanceOf[Rep[String]] =!= v
           case `typBOOLEAN` => c.asInstanceOf[Rep[Boolean]] =!= v.toBoolean
           case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -164,6 +171,7 @@ trait UglyDBFilters extends DbFilters with Logging {
 
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] =!= v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] =!= v.toDouble
+          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] =!= BigDecimal(v)
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] =!= v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] =!= v.toLong
           case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]] =!= v
@@ -187,6 +195,7 @@ trait UglyDBFilters extends DbFilters with Logging {
     typ(col.`type`) match {
           case `typSHORT` => c.asInstanceOf[Rep[Short]] > v.toShort
           case `typDOUBLE` => c.asInstanceOf[Rep[Double]] > v.toDouble
+          case `typBIGDECIMAL` => c.asInstanceOf[Rep[BigDecimal]] > BigDecimal(v)
           case `typINT` => c.asInstanceOf[Rep[Int]] > v.toInt
           case `typLONG` => c.asInstanceOf[Rep[Long]] > v.toLong
           case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -198,6 +207,7 @@ trait UglyDBFilters extends DbFilters with Logging {
 
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] > v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] > v.toDouble
+          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] > BigDecimal(v)
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] > v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] > v.toLong
           case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -217,6 +227,7 @@ trait UglyDBFilters extends DbFilters with Logging {
      typ(col.`type`) match {
           case `typSHORT` => c.asInstanceOf[Rep[Short]] >= v.toShort
           case `typDOUBLE` => c.asInstanceOf[Rep[Double]] >= v.toDouble
+          case `typBIGDECIMAL` => c.asInstanceOf[Rep[BigDecimal]] >= BigDecimal(v)
           case `typINT` => c.asInstanceOf[Rep[Int]] >= v.toInt
           case `typLONG` => c.asInstanceOf[Rep[Long]] >= v.toLong
           case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -228,6 +239,7 @@ trait UglyDBFilters extends DbFilters with Logging {
 
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] >= v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] >= v.toDouble
+          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] >= BigDecimal(v)
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] >= v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] >= v.toLong
           case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -248,6 +260,7 @@ trait UglyDBFilters extends DbFilters with Logging {
     typ(col.`type`) match {
           case `typSHORT` => c.asInstanceOf[Rep[Short]] < v.toShort
           case `typDOUBLE` => c.asInstanceOf[Rep[Double]] < v.toDouble
+          case `typBIGDECIMAL` => c.asInstanceOf[Rep[BigDecimal]] < BigDecimal(v)
           case `typINT` => c.asInstanceOf[Rep[Int]] < v.toInt
           case `typLONG` => c.asInstanceOf[Rep[Long]] < v.toLong
           case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -259,6 +272,7 @@ trait UglyDBFilters extends DbFilters with Logging {
 
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] < v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] < v.toDouble
+          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] < BigDecimal(v)
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] < v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] < v.toLong
           case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -279,6 +293,7 @@ trait UglyDBFilters extends DbFilters with Logging {
     typ(col.`type`) match {
           case `typSHORT` => c.asInstanceOf[Rep[Short]] <= v.toShort
           case `typDOUBLE` => c.asInstanceOf[Rep[Double]] <= v.toDouble
+          case `typBIGDECIMAL` => c.asInstanceOf[Rep[BigDecimal]] <= BigDecimal(v)
           case `typINT` => c.asInstanceOf[Rep[Int]] <= v.toInt
           case `typLONG` => c.asInstanceOf[Rep[Long]] <= v.toLong
           case `typTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -290,6 +305,7 @@ trait UglyDBFilters extends DbFilters with Logging {
 
           case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] <= v.toShort
           case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] <= v.toDouble
+          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] <= BigDecimal(v)
           case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] <= v.toInt
           case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] <= v.toLong
           case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
@@ -324,7 +340,7 @@ trait UglyDBFilters extends DbFilters with Logging {
     logger.info("Executing like on" + col.toString)
 
     typ(col.`type`) match {
-      case `typSTRING` =>( !(c.asInstanceOf[Rep[String]].toLowerCase like "%"+v.toLowerCase+"%") || (c.asInstanceOf[Rep[String]]).length == 0)
+      case `typSTRING` =>( !(c.asInstanceOf[Rep[String]].toLowerCase like "%"+v.toLowerCase+"%") || (c.asInstanceOf[Rep[String]].length == 0))
       case `typOptSTRING` => (!(c.asInstanceOf[Rep[Option[String]]].toLowerCase like "%"+v.toLowerCase+"%") || c.asInstanceOf[Rep[Option[String]]].isEmpty)
       case `typError` => None
       case _ => None

@@ -97,25 +97,25 @@ case class File[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Prod
             path("thumb") {
               get {
                 onSuccess(dbActions.getById(id)) { result =>
-                  val f = handler.extractThumbnail(result.head)
-                  if(f.file.isEmpty) {
+                  val thumb = handler.extractThumbnail(result.head)
+                  if(thumb.file.isEmpty) {
                     val originalFile = handler.extract(result.head)
                     val thumbnailFile = for{
                       file <- originalFile.file
                       mime <- originalFile.mime
-                      thumb <- createThumbnail(file,mime)
+                      thumbnail <- createThumbnail(file,mime)
                     } yield {
-                      val row = handler.injectThumbnail(result.head,thumb)
+                      val row = handler.injectThumbnail(result.head,thumbnail)
                       dbActions.updateById(id,row)
                       handler.extractThumbnail(row)
                     }
                     thumbnailFile match {
-                      case Some(f) => File.completeFile(f)
+                      case Some(thu) => File.completeFile(thu)
                       case None => complete(StatusCodes.NotFound)
                     }
 
                   } else {
-                    File.completeFile(f)
+                    File.completeFile(thumb)
                   }
                 }
               }
