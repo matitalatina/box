@@ -231,7 +231,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
     }
   }.flatMap(identity)
 
-  def debug(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
+  def upsert(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
     logger.info(s"UPSERT BY ID $id")
     for{
       result <- db.run {
