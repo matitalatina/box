@@ -46,9 +46,9 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       longJs.asJson
     }
 
-    def splitJsonFields(metadata: JSONMetadata, i: Int)(js: Seq[Json]): Json = js.lift(i).getOrElse(Json.Null)
+    def splitJsonRows(metadata: JSONMetadata, i: Int)(js: Seq[Json]): Json = js.lift(i).getOrElse(Json.Null)
 
-    def mergeJsonFields(entity: Property[Seq[Json]], metadata: JSONMetadata, i: Int)(longJs: Json): Seq[Json] = for {
+    def mergeJsonRows(entity: Property[Seq[Json]], metadata: JSONMetadata, i: Int)(longJs: Json): Seq[Json] = for {
       (m, j) <- entity.get.zipWithIndex
     } yield {
       if (i == j) longJs else m
@@ -87,10 +87,36 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
     val metadata = children.find(_.objId == child.objId)
 
+
     private def propagate(data: Json, metadata: JSONMetadata, f: (Widget => ((Json, JSONMetadata) => Future[Unit]))): Future[Unit] = {
-      val out = data.seq(child.key).zip(childWidgets).map { case (childJson, widget) =>
+
+      val childMetadata = children.find(_.objId == child.objId).get
+
+      val unorderedFormData = data.seq(child.key)
+      val (existingFormData,newFormData) = unorderedFormData.zip(unorderedFormData.map(x => JSONID.fromData(x,childMetadata))).partition(_._2.isDefined)
+      val orderedFormData = {existingFormData.sortBy(_._2.get)(childMetadata.order) ++ newFormData}.map(_._1)
+
+
+      val (alreadyExistentData,newClientData) = childWidgets.zip(childWidgets.map(w => JSONID.fromData(w.data.get,childMetadata))).partition(_._2.isDefined)
+
+      val orderedWidgetData: Seq[ChildWidget] = {alreadyExistentData.sortBy( x => x._2.get)(childMetadata.order) ++ newClientData}.map(_._1)
+
+
+      logger.info(
+        s"""Propagate:
+           |from server ordered:
+           |${orderedFormData}
+           |with Ids:
+           |${orderedFormData.map(x => JSONID.fromData(x,childMetadata).map(_.asString))}
+           |client data ordered
+           |${orderedWidgetData.map(_.data.get)}
+           |with Ids:
+           |${orderedWidgetData.map(w => JSONID.fromData(w.data.get,childMetadata).map(_.asString))}
+         """.stripMargin)
+
+      val out = orderedFormData.zip(orderedWidgetData).map { case (childJson, widget) =>
         //println(s"Propagate subform element: ${subform.key} with data: $subformJson")
-        f(widget)(childJson, children.find(_.objId == child.objId).get)
+        f(widget)(childJson, childMetadata)
       }
 
       //correct futures
@@ -145,7 +171,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
               div(
                 if (write || size > 0) label(f.label) else frag(),
                 for {i <- 0 until size} yield {
-                  val subResults = entity.transform(splitJsonFields(f, i), mergeJsonFields(entity, f, i))
+                  val subResults = entity.transform(splitJsonRows(f, i), mergeJsonRows(entity, f, i))
                   val widget = findOrAdd(f, subResults, children)
                   div(GlobalStyles.subform,
                     widget.render(write, Property(true)),

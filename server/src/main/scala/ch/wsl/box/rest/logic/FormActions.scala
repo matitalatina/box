@@ -170,9 +170,11 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
       JSONQueryFilter(remote,Some(Filter.EQUALS),entity.get(local))
     }
 
-    val filters = parentFilter.toSeq ++ child.childFilter
+    val filters = parentFilter.toSeq ++ child.childQuery.toSeq.flatMap(_.filter)
 
-    JSONQuery.empty.copy(filter=filters.toList.distinct)
+
+
+    child.childQuery.getOrElse(JSONQuery.empty).copy(filter=filters.toList.distinct)
   }
 
   private def getChild(dataJson:Json, field:JSONField, metadata:JSONMetadata, child:Child):Future[Seq[Json]] = {

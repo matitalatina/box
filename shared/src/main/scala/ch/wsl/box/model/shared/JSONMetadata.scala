@@ -26,7 +26,18 @@ case class JSONMetadata(
                          keys:Seq[String],
                          query:Option[JSONQuery],
                          exportFields:Seq[String]
-                       )
+                       ) {
+  def order:Ordering[JSONID] = new Ordering[JSONID] {
+    override def compare(x: JSONID, y: JSONID): Int = x.id.map{ keyX =>
+      val keyY = y.id.find(_.key == keyX.key)
+      val field = fields.find(_.name == keyX.key)
+      field.map(_.`type`) match {
+        case Some(JSONFieldTypes.NUMBER) => Try(keyX.value.toDouble.compare(keyY.get.value.toDouble)).getOrElse(-1)
+        case _ => keyX.value.compare(keyY.map(_.value).getOrElse(""))
+      }
+    }.dropWhile(_ == 0).headOption.getOrElse(0)
+  }
+}
 
 object JSONMetadata extends Logging {
 
@@ -68,6 +79,8 @@ object JSONMetadata extends Logging {
     case Left(s) => Seq(s)
     case Right(sub) => extractFields(sub.fields)
   }
+
+
 
   def hasData(json:Json,keys:Seq[String]):Boolean = {
 

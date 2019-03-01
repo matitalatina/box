@@ -42,6 +42,17 @@ object JSONID {
     JSONID(seq.map{ case (k,v) => JSONKeyValue(k,v.string)}.toVector)
   }
 
+  def fromData(js:Json,form:JSONMetadata):Option[JSONID] = {
+
+    val ids = form.keys.map{ k => js.getOpt(k).map(JSONKeyValue(k,_)) }.toVector
+
+    ids.forall(_.isDefined) match {
+      case true => Some(JSONID(ids.map(_.get)))
+      case false => None
+    }
+
+  }
+
 }
 
 case class JSONKeyValue(key:String, value:String) {

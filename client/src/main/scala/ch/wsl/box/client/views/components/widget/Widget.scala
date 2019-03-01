@@ -87,7 +87,7 @@ trait ChildWidget extends Widget with Logging {
 
   private final val childTag = "$child-element"
 
-  protected def data:Property[Json]
+  def data:Property[Json]
 
   private val childId = UUID.randomUUID().toString
 

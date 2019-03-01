@@ -48,7 +48,7 @@ case class FileReference(name_field:String, file_field:String, thumbnail_field:O
 
 case class JSONFieldMap(valueProperty:String, textProperty:String)
 
-case class Child(objId:Int, key:String, masterFields:String, childFields:String, childFilter:Seq[JSONQueryFilter])
+case class Child(objId:Int, key:String, masterFields:String, childFields:String, childQuery:Option[JSONQuery])
 
 case class ConditionalField(conditionFieldId:String,conditionValues:Seq[Json])
 

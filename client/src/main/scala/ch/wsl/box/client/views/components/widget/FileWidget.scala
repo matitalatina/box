@@ -40,6 +40,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
     logger.info(s"File after save with result: $result with selected file: ${selectedFile.get.headOption.map(_.name)}")
 
     val jsonid = result.ID(metadata.keys)
+    logger.info(s"jsonid = $jsonid")
     for{
       idfile <- Future.sequence{
         val r: Seq[Future[Int]] = selectedFile.get.map(REST.sendFile(_,jsonid,s"${metadata.entity}.${field.file.get.file_field}"))
@@ -47,6 +48,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       }
     } yield {
       logger.info("image saved")
+      //idfile.headOption.map(x => id.set(x.toString()))
       id.set(jsonid.asString)
     }
   }

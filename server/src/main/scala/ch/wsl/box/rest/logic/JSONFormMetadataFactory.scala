@@ -201,19 +201,26 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
 
       import io.circe.generic.auto._
 
-      val queryFilter:Seq[JSONQueryFilter] = {for{
-        filter <- field.childFilter
+      val childQuery:Option[JSONQuery] = {for{
+        filter <- field.childQuery
         json <- parse(filter).right.toOption
-        result <- json.as[Seq[JSONQueryFilter]].right.toOption
+        result <- json.as[JSONQuery].right.toOption
       } yield
-        result }.toSeq.flatten
+        result }
+
+      (field.childQuery,childQuery) match {
+        case (Some(f),None) => logger.warn(s"$f not parsed correctly")
+        case _ => {}
+      }
 
 
       val subform = for{
         id <- field.child_form_id
         local <- field.masterFields
         remote <- field.childFields
-      } yield Child(id,field.name,local,remote,queryFilter)
+      } yield {
+        Child(id,field.name,local,remote,childQuery)
+      }
 
 
       val label:Future[String] = {
