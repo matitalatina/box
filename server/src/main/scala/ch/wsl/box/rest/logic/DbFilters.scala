@@ -371,14 +371,38 @@ trait UglyDBFilters extends DbFilters with Logging {
 
     if (elements.size > 0 && elements.head.nonEmpty) {
 
-      //      val reps: Seq[Rep[Boolean]] = elements.map(x => ==(col, x).getOrElse(false))
-      val reps: Seq[Rep[Option[Boolean]]] = elements.map(x => this.==(col, x))
 
-      //        def mergeReps = (x:Rep[Option[Boolean]],y:Rep[Option[Boolean]]) => x || y  //need to be either true
+      val c:Rep[_] = col.rep
 
-      //      reps.fold[Rep[Option[Boolean]]](Some(true))((x,y) => x && y)
 
-      reps.reduceLeft[Rep[Option[Boolean]]]((x, y) => x || y)
+
+      typ(col.`type`) match {
+        case `typSHORT` => c.asInstanceOf[Rep[Short]].inSet(elements.map(_.toShort))
+        case `typDOUBLE` => c.asInstanceOf[Rep[Double]].inSet(elements.map(_.toDouble))
+        case `typBIGDECIMAL` => c.asInstanceOf[Rep[BigDecimal]].inSet(elements.map(BigDecimal(_)))
+        case `typINT` => c.asInstanceOf[Rep[Int]].inSet(elements.map(_.toInt))
+        case `typLONG` => c.asInstanceOf[Rep[Long]].inSet(elements.map(_.toLong))
+        case `typSTRING` => c.asInstanceOf[Rep[String]].inSet(elements)
+        case `typBOOLEAN` => c.asInstanceOf[Rep[Boolean]].inSet(elements.map(_.toBoolean))
+        case `typTIMESTAMP` => c.asInstanceOf[Rep[java.time.LocalDateTime]].inSet(elements.map(toTimestamp(_).get)) //timestamp inset should be exact
+        case `typDATE` => c.asInstanceOf[Rep[java.time.LocalDate]].inSet(elements.map(toDate(_).get))
+        case `typTIME` => c.asInstanceOf[Rep[java.time.LocalTime]].inSet(elements.map(toTime(_).get))
+
+        case `typOptSHORT` =>  c.asInstanceOf[Rep[Option[Short]]].inSet(elements.map(_.toShort))
+        case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]].inSet(elements.map(_.toDouble))
+        case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]].inSet(elements.map(BigDecimal(_)))
+        case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]].inSet(elements.map(_.toInt))
+        case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]].inSet(elements.map(_.toLong))
+        case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]].inSet(elements)
+        case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]].inSet(elements.map(_.toBoolean))
+        case `typOptTIMESTAMP` => c.asInstanceOf[Rep[Option[java.time.LocalDateTime]]].inSet(elements.map(toTimestamp(_).get))
+        case `typOptDATE` => c.asInstanceOf[Rep[Option[java.time.LocalDate]]].inSet(elements.map(toDate(_).get))
+        case `typOptTIME` => c.asInstanceOf[Rep[Option[java.time.LocalTime]]].inSet(elements.map(toTime(_).get))
+        case `typError`  => None
+        case _ => None
+      }
+
+
 
     } else {
       None
