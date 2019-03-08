@@ -2,8 +2,8 @@ package ch.wsl.box.rest.jdbc
 
 import java.sql._
 
-import ch.wsl.box.rest.boxentities.ExportField
-import ch.wsl.box.rest.boxentities.ExportField.ExportHeader_i18n_row
+import ch.wsl.box.model.boxentities.ExportField
+import ch.wsl.box.model.boxentities.ExportField.ExportHeader_i18n_row
 import ch.wsl.box.rest.utils.Auth
 import io.circe.Json
 import scribe.Logging

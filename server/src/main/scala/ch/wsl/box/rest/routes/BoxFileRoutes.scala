@@ -4,8 +4,8 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.Materializer
 import ch.wsl.box.model.FileTables._
-import ch.wsl.box.rest.boxentities.UIscrTable
-import ch.wsl.box.rest.boxentities.UIscrTable.UIsrc_row
+import ch.wsl.box.model.boxentities.UIscrTable
+import ch.wsl.box.model.boxentities.UIscrTable.UIsrc_row
 import ch.wsl.box.rest.routes.File.{BoxFile, FileHandler}
 import ch.wsl.box.rest.utils.UserProfile
 import ch.wsl.box.rest.jdbc.PostgresProfile.api.Database

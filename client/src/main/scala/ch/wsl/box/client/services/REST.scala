@@ -39,7 +39,7 @@ object REST {
   def metadata(kind:String, lang:String, entity:String): Future[JSONMetadata] = client.get[JSONMetadata](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/metadata")
 
   //only for forms
-  def children(entity:String, lang:String): Future[Seq[JSONMetadata]] = client.get[Seq[JSONMetadata]](s"/form/$lang/$entity/children")
+  def children(kind:String, entity:String, lang:String): Future[Seq[JSONMetadata]] = client.get[Seq[JSONMetadata]](s"/$kind/$lang/$entity/children")
 
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json] = client.get[Json](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}")
@@ -67,6 +67,6 @@ object REST {
   def export(name:String,params:Seq[Json],lang:String):Future[Seq[Seq[String]]] = client.post[Seq[Json],String](s"/export/$name/$lang",
     params.map(_.injectLang(lang))).map(CSV.read)
 
-  def writeAccess(table:String) = client.get[Boolean](s"/access/table/$table/write")
+  def writeAccess(table:String,kind:String) = client.get[Boolean](s"/access/$kind/$table/write")
 
 }

@@ -3,7 +3,6 @@ package ch.wsl.box.rest.routes
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.utils.{JSONSupport, Timer, UserProfile}
@@ -19,7 +18,14 @@ import scala.util.{Failure, Success}
 /**
   * Created by andre on 5/15/2017.
   */
-case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload with Logging {
+case class Form(
+                 name:String,
+                 lang:String,
+                 jsonActions: String => EntityJSONTableActions, //EntityActionsRegistry().tableActions
+                 metadataFactory: MetadataFactory, //JSONFormMetadataFactory(),
+                 db:Database,
+                 kind:String
+               )(implicit up:UserProfile, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload with Logging {
 
     import JSONSupport._
     import akka.http.scaladsl.model._
@@ -30,20 +36,18 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
     import ch.wsl.box.model.shared.EntityKind
     import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
 
-    implicit val db = up.db
+    implicit val implicitDB = db
 
     private def actions[T](futureForm:Future[JSONMetadata])(f:FormActions => T):Future[T] = for{
       form <- futureForm
-      formActions = FormActions(form)
+      formActions = FormActions(form,jsonActions,metadataFactory)
     } yield {
       f(formActions)
     }
 
-    val jsonActions = EntityActionsRegistry().tableActions
 
-    val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
-    val metadata: Future[JSONMetadata] = jsonCustomMetadataFactory.of(name,lang)
+    val metadata: Future[JSONMetadata] = metadataFactory.of(name,lang)
 
     def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.map{ f =>
       val filteredFields = fields match {
@@ -92,7 +96,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
     } ~
     path("kind") {
       get {
-        complete{EntityKind.FORM.kind}
+        complete{kind}
       }
     } ~
     path("metadata") {
@@ -105,7 +109,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
     path("children") {
       get {
         complete {
-          metadata.flatMap{ f => jsonCustomMetadataFactory.children(f)}
+          metadata.flatMap{ f => metadataFactory.children(f)}
         }
       }
     } ~
@@ -157,7 +161,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
             for{
               metadata <- tabularMetadata()
             } yield {
-              val formActions = FormActions(metadata)
+              val formActions = FormActions(metadata,jsonActions,metadataFactory)
               formActions.csv(query,None)
             }
           }
@@ -178,7 +182,7 @@ case class Form(name:String,lang:String)(implicit up:UserProfile, ec: ExecutionC
               } yield {
 
                 logger.info(s"fk: ${fkValues.toString.take(50)}...")
-                val formActions = FormActions(metadata)
+                val formActions = FormActions(metadata,jsonActions,metadataFactory)
 
                 val headers = metadata.exportFields.map(ef => metadata.fields.find(_.name == ef).map(_.title).getOrElse(ef))
 

@@ -19,7 +19,7 @@ object TableAccess {
 
 
 
-  def write(table:String,schema:String,user:String)(implicit ec:ExecutionContext) = Auth.adminDB.run {
+  def write(table:String,schema:String,user:String,db:Database)(implicit ec:ExecutionContext) = db.run {
     sql"""select HAS_TABLE_PRIVILEGE(usename, concat($schema, '.', $table), 'update')
           from pg_user where usename=$user
        """.as[Boolean].headOption

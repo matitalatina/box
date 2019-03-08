@@ -1,4 +1,4 @@
-package ch.wsl.box.rest.boxentities
+package ch.wsl.box.model.boxentities
 
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 

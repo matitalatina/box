@@ -6,7 +6,6 @@ import akka.stream.scaladsl.Source
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.rest.routes.enablers.CSVDownload
 import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
@@ -22,16 +21,17 @@ import scala.concurrent.{ExecutionContext, Future}
 case class ReferenceKey(localField:String,remoteField:String,value:String)
 case class Reference(association:Seq[ReferenceKey])
 
-case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters with Logging {
+case class FormActions(metadata:JSONMetadata,
+                       jsonActions: String => EntityJSONTableActions,
+                       metadataFactory: MetadataFactory
+                      )(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends UglyDBFilters with Logging {
 
   import ch.wsl.box.shared.utils.JSONUtils._
 
-  implicit val db = up.db
 
 
-  val jsonActions = EntityActionsRegistry().tableActions(metadata.entity)
+  val jsonAction = jsonActions(metadata.entity)
 
-  val jsonCustomMetadataFactory = JSONFormMetadataFactory()
 
   def getById(id:JSONID):Future[Json] = {
     logger.info("Getting Form data")
@@ -40,7 +40,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
 
   private def streamSeq(query:JSONQuery):Source[Json,NotUsed] = {
     Source
-      .fromPublisher(EntityActionsRegistry().tableActions(metadata.entity).findStreamed(query))
+      .fromPublisher(jsonAction.findStreamed(query))
       .flatMapConcat( json => Source.fromFuture(expandJson(json)))
   }
   def streamArray(query:JSONQuery):Source[Json,NotUsed] = streamSeq(query)
@@ -75,19 +75,19 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
 
   def subAction[T](e:Json, nullElement:T,action: FormActions => (Json => Future[T])): Seq[Future[List[T]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
-      form <- jsonCustomMetadataFactory.of(field.child.get.objId, metadata.lang)
+      form <- metadataFactory.of(field.child.get.objId, metadata.lang)
       dbSubforms <- getChild(e,field,form,field.child.get)
       subJson = attachArrayIndex(e.seq(field.name),form)
       deleted = deleteChild(form,subJson,dbSubforms)
       result <- FutureUtils.seqFutures(subJson){ json => //order matters so we do it synchro
-        action(FormActions(form))(json).recover{case t => t.printStackTrace(); nullElement}
+        action(FormActions(form,jsonActions,metadataFactory))(json).recover{case t => t.printStackTrace(); nullElement}
       }
     } yield result
   }
 
   def deleteSingle(e:Json):Future[Int] = {
     val id = e.ID(metadata.keys)
-    jsonActions.delete(id)
+    jsonAction.delete(id)
   }
 
 
@@ -97,7 +97,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
     dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
       logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")
-      EntityActionsRegistry().tableActions(child.entity).delete(idsToDelete)
+      jsonActions(child.entity).delete(idsToDelete)
     }
   }
 
@@ -110,17 +110,17 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
   }
 
   def insert(e:Json):Future[Json] = for{
-    inserted <- jsonActions.insert(e)
+    inserted <- jsonAction.insert(e)
     _ <- Future.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
       for {
-        metadata <- jsonCustomMetadataFactory.of(field.child.get.objId, metadata.lang)
+        metadata <- metadataFactory.of(field.child.get.objId, metadata.lang)
         rows = attachArrayIndex(e.seq(field.name),metadata)
         //attach parent id
         rowsWithId = rows.map{ row =>
           val masterChild: Seq[(String, String)] = field.child.get.masterFields.split(",").zip(field.child.get.childFields.split(",")).toSeq
           masterChild.foldLeft(row){ case (acc,(master,child)) => acc.deepMerge(Json.obj(child -> inserted.js(master)))}
         }
-        result <- FutureUtils.seqFutures(rowsWithId)(row => FormActions(metadata).insert(row))
+        result <- FutureUtils.seqFutures(rowsWithId)(row => FormActions(metadata,jsonActions,metadataFactory).insert(row))
       } yield result
     })
     data <- getById(inserted.ID(metadata.keys))
@@ -132,7 +132,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     val id = e.ID(metadata.keys)
     for{
       _ <- Future.sequence(subAction(e,Json.Null,_.upsert))  //need upsert to add new child records
-      result <- jsonActions.update(id,e)
+      result <- jsonAction.update(id,e)
     } yield result
   }
 
@@ -141,7 +141,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     val id = e.ID(metadata.keys)
     for{
       _ <- Future.sequence(subAction(e,Json.Null,_.upsertIfNeeded))  //need upsert to add new child records
-      result <- jsonActions.updateIfNeeded(id,e)
+      result <- jsonAction.updateIfNeeded(id,e)
     } yield result
   }
 
@@ -150,7 +150,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     val id = e.ID(metadata.keys)
     for{
       _ <- Future.sequence(subAction(e,Json.Null,_.upsert))
-      result <- jsonActions.upsert(id,e)
+      result <- jsonAction.upsert(id,e)
     } yield result
   }
 
@@ -159,7 +159,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
     val id = e.ID(metadata.keys)
     for{
       _ <- Future.sequence(subAction(e,Json.Null,_.upsertIfNeeded))
-      result <- jsonActions.upsertIfNeeded(id,e)
+      result <- jsonAction.upsertIfNeeded(id,e)
     } yield result
   }
 
@@ -179,7 +179,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
 
   private def getChild(dataJson:Json, field:JSONField, metadata:JSONMetadata, child:Child):Future[Seq[Json]] = {
     val query = createQuery(dataJson,child)
-    FormActions(metadata).streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_))
+    FormActions(metadata,jsonActions,metadataFactory).streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_))
   }
 
   private def expandJson(dataJson:Json):Future[Json] = {
@@ -189,7 +189,7 @@ case class FormActions(metadata:JSONMetadata)(implicit up:UserProfile, mat:Mater
         case ("static",_) => Future.successful(field.name -> field.default.asJson)  //set default value
         case (_,None) => Future.successful(field.name -> dataJson.js(field.name))        //use given value
         case (_,Some(child)) => for{
-          form <- jsonCustomMetadataFactory.of(child.objId,metadata.lang)
+          form <- metadataFactory.of(child.objId,metadata.lang)
           data <- getChild(dataJson,field,form,child)
         } yield {
           logger.info(s"expanding child ${field.name} : ${data.asJson}")

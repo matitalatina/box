@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.rest.boxentities.Labels
+import ch.wsl.box.model.boxentities.Labels
 import ch.wsl.box.rest.utils.Auth
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 

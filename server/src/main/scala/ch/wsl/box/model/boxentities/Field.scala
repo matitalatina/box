@@ -1,5 +1,5 @@
 
-package ch.wsl.box.rest.boxentities
+package ch.wsl.box.model.boxentities
 
 
 /**

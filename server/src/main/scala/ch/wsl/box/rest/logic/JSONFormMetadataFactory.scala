@@ -3,9 +3,9 @@ package ch.wsl.box.rest.logic
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
-import ch.wsl.box.rest.boxentities.Form.{Form, Form_i18n, Form_i18n_row, Form_row}
-import ch.wsl.box.rest.boxentities.{Field, Form}
+import ch.wsl.box.model.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
+import ch.wsl.box.model.boxentities.Form.{Form, Form_i18n, Form_i18n_row, Form_row}
+import ch.wsl.box.model.boxentities.{Field, Form}
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
@@ -32,7 +32,14 @@ object JSONFormMetadataFactory{
   }
 }
 
-case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging {
+trait MetadataFactory{
+  def of(name:String, lang:String):Future[JSONMetadata]
+  def of(id:Int, lang:String):Future[JSONMetadata]
+  def children(form:JSONMetadata):Future[Seq[JSONMetadata]]
+  def list: Future[Seq[String]]
+}
+
+case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
   implicit val db = up.db
 

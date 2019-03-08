@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.rest.boxentities.{UITable, UIscrTable}
+import ch.wsl.box.model.boxentities.{UITable, UIscrTable}
 import ch.wsl.box.rest.routes.File.BoxFile
 import ch.wsl.box.rest.utils.Auth
 

@@ -131,7 +131,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
       qEncoded = encodeFk(fields,query)
 
-      access <- REST.writeAccess(form.entity)
+      access <- REST.writeAccess(form.entity,state.kind)
       csv <- REST.csv(state.kind, Session.lang(), state.entity, qEncoded)
       ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
