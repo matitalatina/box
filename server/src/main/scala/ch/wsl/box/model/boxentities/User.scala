@@ -17,7 +17,7 @@ object User {
     def * = (username,access_level_id) <> (User_row.tupled, User_row.unapply)
 
 
-    val username: Rep[String] = column[String]("username")
+    val username: Rep[String] = column[String]("username", O.PrimaryKey)
     val access_level_id: Rep[Int] = column[Int]("access_level_id")
 
   }

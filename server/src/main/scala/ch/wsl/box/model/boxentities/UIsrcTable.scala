@@ -6,7 +6,7 @@ import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 /**
   * Created by andre on 5/15/2017.
   */
-object UIscrTable {
+object UIsrcTable {
 
   val profile = ch.wsl.box.rest.jdbc.PostgresProfile
   import slick.model.ForeignKeyAction
