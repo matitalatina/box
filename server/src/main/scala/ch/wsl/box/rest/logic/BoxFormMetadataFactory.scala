@@ -140,12 +140,13 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
       JSONField(JSONFieldTypes.STRING,"label",true),
       JSONField(JSONFieldTypes.STRING,"tooltip",true),
       JSONField(JSONFieldTypes.STRING,"hint",true),
+      JSONField(JSONFieldTypes.STRING,"placeholder",true),
       JSONField(JSONFieldTypes.STRING,"lookupTextField",true),
     ),
     layout = Layout(
       blocks = Seq(
         LayoutBlock(None,3,Seq("field_id","id","lang").map(Left(_))),
-        LayoutBlock(None,9,Seq("label","tooltip","hint","lookupTextField").map(Left(_))),
+        LayoutBlock(None,9,Seq("label","placeholder","tooltip","hint","lookupTextField").map(Left(_))),
       )
     ),
     entity = "field_i18n",
