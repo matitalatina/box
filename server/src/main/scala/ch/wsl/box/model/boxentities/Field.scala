@@ -2,16 +2,14 @@
 package ch.wsl.box.model.boxentities
 
 
+import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+
+
 /**
   * Created by andre on 5/15/2017.
   */
 object Field {
 
-
-  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
-
-  import profile._
-  import api._
 
   /** Entity class storing rows of table Field
     *  @param field_id Database column id SqlType(serial), AutoInc, PrimaryKey
@@ -30,7 +28,7 @@ object Field {
 
   /** Table description of table field. Objects of this class serve as prototypes for rows in queries.
     *  NOTE: The following names collided with Scala keywords and were escaped: type */
-  class Field(_tableTag: Tag) extends profile.api.Table[Field_row](_tableTag, "field") {
+  class Field(_tableTag: Tag) extends Table[Field_row](_tableTag, "field") {
     def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues) <> (Field_row.tupled, Field_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(field_id), Rep.Some(form_id), Rep.Some(`type`),  name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues).shaped.<>({ r=>import r._; _1.map(_=> Field_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11,_12,_13,_14, _15)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -81,7 +79,7 @@ object Field {
   /** GetResult implicit for fetching Field_i18n_row objects using plain SQL queries */
 
   /** Table description of table field_i18n. Objects of this class serve as prototypes for rows in queries. */
-  class Field_i18n(_tableTag: Tag) extends profile.api.Table[Field_i18n_row](_tableTag, "field_i18n") {
+  class Field_i18n(_tableTag: Tag) extends Table[Field_i18n_row](_tableTag, "field_i18n") {
     def * = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField) <> (Field_i18n_row.tupled, Field_i18n_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField).shaped.<>({ r=>import r._; _1.map(_=> Field_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -114,7 +112,7 @@ object Field {
   case class FieldFile_row(field_id: Int, file_field: String, thumbnail_field: Option[String] = None, name_field: String)
 
 
-  class FieldFile(_tableTag: Tag) extends profile.api.Table[FieldFile_row](_tableTag, "field_file") {
+  class FieldFile(_tableTag: Tag) extends Table[FieldFile_row](_tableTag, "field_file") {
     def * = (field_id,file_field,thumbnail_field,name_field) <> (FieldFile_row.tupled, FieldFile_row.unapply)
 
     val field_id: Rep[Int] = column[Int]("field_id", O.PrimaryKey)

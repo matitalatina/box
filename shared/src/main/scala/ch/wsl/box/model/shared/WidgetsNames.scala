@@ -20,4 +20,22 @@ object WidgetsNames {
   val twoLines = "twoLines"
   val popup = "popup"
   val fullWidth = "fullWidth"
+
+  val all = Seq(
+    textinput,
+    textarea,
+    datepicker,
+    datetimePicker,
+    datepickerFullWidth,
+    timepickerFullWidth,
+    datetimePickerFullWidth,
+    select,
+    checkbox,
+    checkboxNumber,
+    hidden,
+    nolabel,
+    twoLines,
+    popup,
+    fullWidth
+  ).sorted
 }

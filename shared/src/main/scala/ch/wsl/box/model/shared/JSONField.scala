@@ -40,6 +40,8 @@ object JSONFieldLookup {
     }
     JSONFieldLookup(lookupEntity, mapping, options)
   }
+
+  def prefilled(data:Seq[JSONLookup]) = JSONFieldLookup("",JSONFieldMap("",""),data)
 }
 
 case class JSONLookup(id:String, value:String)
@@ -64,5 +66,5 @@ object JSONFieldTypes{
   val ARRAY_NUMBER = "array_number"
   val ARRAY_STRING = "array_string"
 
-  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING)
+  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD)
 }
