@@ -53,6 +53,7 @@ object Init extends JSApp with Logging {
           import ch.wsl.box.client.styles.GlobalStyles
 
 
+
           jQ(s"<style>${GlobalStyles.render}</style>").insertBefore(appRoot.get)
           jQ(UdashDatePicker.loadBootstrapDatePickerStyles()).insertBefore(appRoot.get)
         }

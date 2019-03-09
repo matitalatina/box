@@ -47,7 +47,7 @@ object BuildBox extends App {
         AccessLevel.AccessLevel_row(100,"Power User"),
         AccessLevel.AccessLevel_row(1000,"Administrator")
       )))
-      _ <- Auth.boxDB.run(Conf.table.insertOrUpdateAll(Seq(
+      _ <- Auth.boxDB.run(Conf.table ++= Seq(
         Conf.Conf_row(key = "page_length",value = Some("30")),
         Conf.Conf_row(key = "fk_rows",value = Some("30")),
         Conf.Conf_row(key = "manual_edit.key_fields",value = Some("false")),
@@ -56,9 +56,9 @@ object BuildBox extends App {
         Conf.Conf_row(key = "filterEqualityPrecision.datetime",value = Some("DATETIME")),
         Conf.Conf_row(key = "langs",value = Some("en")),
         Conf.Conf_row(key = "notification.timeout",value = Some("6")),
-      )))
-      _ <- Auth.boxDB.run(UIsrcTable.table.insertOrUpdate(UIsrcTable.UIsrc_row(file = Some(Base64.getDecoder.decode(logo)),mime = Some("image/png"),name = Some("logo"),accessLevel = -1)))
-      _ <- Auth.boxDB.run(UITable.table.insertOrUpdateAll(Seq(
+      ))
+      _ <- Auth.boxDB.run(UIsrcTable.table += UIsrcTable.UIsrc_row(file = Some(Base64.getDecoder.decode(logo)),mime = Some("image/png"),name = Some("logo"),accessLevel = -1))
+      _ <- Auth.boxDB.run(UITable.table ++= Seq(
         UITable.UI_row(key = "footerCopyright", value = "Box framework", accessLevel = -1),
         UITable.UI_row(key = "title", value = "Box Framework", accessLevel = -1),
         UITable.UI_row(key = "enableAllTables", value = "false", accessLevel = 1),
@@ -71,9 +71,9 @@ object BuildBox extends App {
         UITable.UI_row(key = "info", value = "ui.info", accessLevel = 1),
         UITable.UI_row(key = "", value = "", accessLevel = -1),
         UITable.UI_row(key = "", value = "", accessLevel = -1),
-      )))
-      _ <- Auth.boxDB.run(User.table.insertOrUpdate(User.User_row(Auth.dbConf.as[String]("user"),1000)))
-      _ <- Auth.boxDB.run(Labels.table.insertOrUpdateAll(DefaultLabels.labels))
+      ))
+      _ <- Auth.boxDB.run(User.table += User.User_row(Auth.dbConf.as[String]("user"),1000))
+      _ <- Auth.boxDB.run(Labels.table ++= DefaultLabels.labels)
     } yield "ok"
 
 
@@ -120,7 +120,7 @@ object DefaultLabels {
       |en	entity.search	Search
       |en	sort.asc	▼
       |en	sort.desc	▲
-      |en	sort.ignore
+      |en	sort.ignore	-
       |en	navigation.next	►
       |en	navigation.previous	◄
       |en	navigation.first	◅
@@ -189,7 +189,7 @@ object DefaultLabels {
       |it	navigation.last	▻
       |fr	sort.asc	▼
       |fr	sort.desc	▲
-      |fr	sort.ignore
+      |fr	sort.ignore	-
       |fr	navigation.previous	◄
       |fr	navigation.next	►
       |fr	navigation.first	◅
@@ -221,19 +221,19 @@ object DefaultLabels {
       |de	navigation.record	Waldbrand
       |de	navigation.of	von
       |it	sort.asc	▼
-      |it	sort.ignore
+      |it	sort.ignore	-
       |fr	navigation.last	▻
       |de	sort.asc	▼
       |de	sort.desc	▲
-      |de	sort.ignore
+      |de	sort.ignore	-
       |de	navigation.next	►
       |de	navigation.previous	◄
       |de	navigation.first	◅
       |de	navigation.last	▻
-      |en	ui.info	"<h1>BOX database</h1> Welcome to BOX."
-      |it	ui.info	"<h1>BOX database</h1> Benvenuti a BOX"
-      |fr	ui.info	"<h1>BOX database</h1> Bienvenue a BOX."
-      |de	ui.info	"<h1>BOX database</h1> Wilkommen zur BOX"
+      |en	ui.index.title	<h1>BOX database</h1> Welcome to BOX.
+      |it	ui.index.title	<h1>BOX database</h1> Benvenuti a BOX
+      |fr	ui.index.title	<h1>BOX database</h1> Bienvenue a BOX.
+      |de	ui.index.title	<h1>BOX database</h1> Wilkommen zur BOX
       |it	navigation.recordFound	Records
       |it	table.delete	Elimina
       |fr	table.delete	Supprimer
@@ -284,7 +284,8 @@ object DefaultLabels {
       |
     """.stripMargin
 
-  val labels:Seq[Labels.Labels_row] = rawLabels.lines.map(_.split(" ")).filterNot(_.length < 3).map{ line =>
+  val labels:Seq[Labels.Labels_row] = rawLabels.lines.map(_.split("\\t")).filterNot(_.length < 3).map{ line =>
+    println(line.toSeq)
     Labels.Labels_row(lang = line(0), key = line(1), label = Some(line.drop(2).mkString(" ")))
   }.toSeq
 }

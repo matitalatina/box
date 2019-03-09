@@ -1,5 +1,6 @@
 package ch.wsl.box.client.styles.constants
 import scalacss.Defaults._
+import scalacss.internal.Macros.Color
 
 object StyleConstants extends StyleSheet.Inline{
   import dsl._
@@ -24,7 +25,7 @@ object StyleConstants extends StyleSheet.Inline{
   /**
     * COLORS
     */
-  object Colors {
+  case class Colors() {
     val Red = c"#e30613"
 
     val RedLight = c"#ff2727"
@@ -39,7 +40,7 @@ object StyleConstants extends StyleSheet.Inline{
 
     val Cyan = c"#eef4f7"
 
-    val bordeaux = c"#4c1c24"
+    val bordeaux: Color =  c"#4c1c24"
     val wsl = c"#006268"
     val wslLink = c"#fbf0b2"
 
