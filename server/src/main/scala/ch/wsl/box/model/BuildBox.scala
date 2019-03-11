@@ -56,6 +56,11 @@ object BuildBox extends App {
         Conf.Conf_row(key = "filterEqualityPrecision.datetime",value = Some("DATETIME")),
         Conf.Conf_row(key = "langs",value = Some("en")),
         Conf.Conf_row(key = "notification.timeout",value = Some("6")),
+        Conf.Conf_row(key = "color.main",value = Some("#343C4B")),
+        Conf.Conf_row(key = "color.link",value = Some("#7C8277")),
+        Conf.Conf_row(key = "color.danger",value = Some("#C54E13")),
+        Conf.Conf_row(key = "color.warning",value = Some("#EB883E")),
+
       ))
       _ <- Auth.boxDB.run(UIsrcTable.table += UIsrcTable.UIsrc_row(file = Some(Base64.getDecoder.decode(logo)),mime = Some("image/png"),name = Some("logo"),accessLevel = -1))
       _ <- Auth.boxDB.run(UITable.table ++= Seq(
@@ -69,8 +74,6 @@ object BuildBox extends App {
         UITable.UI_row(key = "debug", value = "false", accessLevel = 1),
         UITable.UI_row(key = "logo", value = "api/v1/uiFile/logo", accessLevel = -1),
         UITable.UI_row(key = "info", value = "ui.info", accessLevel = 1),
-        UITable.UI_row(key = "", value = "", accessLevel = -1),
-        UITable.UI_row(key = "", value = "", accessLevel = -1),
       ))
       _ <- Auth.boxDB.run(User.table += User.User_row(Auth.dbConf.as[String]("user"),1000))
       _ <- Auth.boxDB.run(Labels.table ++= DefaultLabels.labels)
