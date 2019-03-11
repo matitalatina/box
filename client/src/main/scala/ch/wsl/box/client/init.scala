@@ -1,5 +1,6 @@
 package ch.wsl.box.client
 
+import ch.wsl.box.client.styles.constants.StyleConstants.Colors
 import ch.wsl.box.client.utils._
 import io.udash._
 import io.udash.bootstrap.datepicker.UdashDatePicker
@@ -54,7 +55,7 @@ object Init extends JSApp with Logging {
 
 
 
-          jQ(s"<style>${GlobalStyles.render}</style>").insertBefore(appRoot.get)
+          jQ(s"<style>${ClientConf.style.render}</style>").insertBefore(appRoot.get)
           jQ(UdashDatePicker.loadBootstrapDatePickerStyles()).insertBefore(appRoot.get)
         }
       })

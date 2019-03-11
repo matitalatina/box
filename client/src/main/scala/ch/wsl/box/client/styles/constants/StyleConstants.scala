@@ -25,7 +25,17 @@ object StyleConstants extends StyleSheet.Inline{
   /**
     * COLORS
     */
-  case class Colors() {
+  case class Colors(mainColor:String,linkColor:String,dangerColor:String,warningColor:String) {
+
+    val danger:Color = Color(dangerColor) //default "#4c1c24"
+
+    val main = Color(mainColor) //default "#006268"
+    val link = Color(linkColor) //default "#fbf0b2"
+
+    val warning = Color(warningColor) //defualt "#ffa500"
+  }
+
+  object Colors{
     val Red = c"#e30613"
 
     val RedLight = c"#ff2727"
@@ -39,12 +49,6 @@ object StyleConstants extends StyleSheet.Inline{
     val Yellow = c"#ffd600"
 
     val Cyan = c"#eef4f7"
-
-    val bordeaux: Color =  c"#4c1c24"
-    val wsl = c"#006268"
-    val wslLink = c"#fbf0b2"
-
-    val orange = c"#ffa500"
   }
 
   /**

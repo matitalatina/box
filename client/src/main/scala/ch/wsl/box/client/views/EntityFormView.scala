@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{Labels, Navigation, Navigator, Session}
+import ch.wsl.box.client.utils._
 import ch.wsl.box.client.views.components.widget.Widget
 import ch.wsl.box.client.views.components.{Debug, JSONMetadataRenderer}
 import ch.wsl.box.model.shared._
@@ -182,7 +182,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   }
 
 
-  def navigate(n: Navigator => Future[Option[String]]) = {
+  def navigate(n: ch.wsl.box.client.utils.Navigator => Future[Option[String]]) = {
     widget.killWidget()
     n(nav).map(_.map(goTo))
   }
@@ -255,11 +255,11 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       def navigation = model.subModel(_.navigation)
 
       div(
-        div(GlobalStyles.boxNavigationLabel,
+        div(ClientConf.style.boxNavigationLabel,
           Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.firstPage,Labels.navigation.firstPage,_.pullLeft),
           Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.prevPage,Labels.navigation.previousPage,_.pullLeft),
           span(
-            GlobalStyles.boxNavigationLabel,
+            ClientConf.style.boxNavigationLabel,
             " " + Labels.navigation.page + " ",
             bind(model.subProp(_.navigation.currentPage)),
             " " + Labels.navigation.of + " ",
@@ -270,7 +270,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           Navigation.button(navigation.subProp(_.hasNextPage),presenter.nextPage,Labels.navigation.nextPage,_.pullRight)
         ),
         div(BootstrapStyles.Visibility.clearfix),
-        div(GlobalStyles.boxNavigationLabel,
+        div(ClientConf.style.boxNavigationLabel,
           Navigation.button(navigation.subProp(_.hasPrevious),presenter.first,Labels.navigation.first,_.pullLeft),
           Navigation.button(navigation.subProp(_.hasPrevious),presenter.prev,Labels.navigation.previous,_.pullLeft),
           span(
@@ -290,7 +290,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
     div(
       div(BootstrapStyles.pullLeft,
         h3(
-          GlobalStyles.noMargin,
+          ClientConf.style.noMargin,
           labelTitle,
           produce(model.subProp(_.id)){ id =>
             val subTitle = id.map(" - " + _).getOrElse("")
@@ -305,13 +305,13 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
         )
       ),
-      div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea) (
+      div(BootstrapStyles.pullRight,ClientConf.style.navigatorArea) (
         recordNavigation
       ),
-      div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea) (
+      div(BootstrapStyles.pullRight,ClientConf.style.navigatorArea) (
         produceWithNested(model.subProp(_.name)) { (m,release) =>
           div(
-            button(GlobalStyles.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", release(labelTitle))," "
+            button(ClientConf.style.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", release(labelTitle))," "
           ).render
         }
       ),
@@ -324,21 +324,21 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
               //save and stay on same record
               button(
-                GlobalStyles.boxButtonImportant,
+                ClientConf.style.boxButtonImportant,
                 onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).edit(model.get.id.getOrElse(""))), true)
               )(Labels.form.save), " ",
               //save and go to table view
               button(
-                GlobalStyles.boxButton,GlobalStyles.noMobile,
+                ClientConf.style.boxButton,ClientConf.style.noMobile,
                 onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).entity()), true)
               )(Labels.form.save_table), " ",
               //save and go insert new record
               button(
-                GlobalStyles.boxButton,GlobalStyles.noMobile,
+                ClientConf.style.boxButton,ClientConf.style.noMobile,
                 onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).add()), true)
               )(Labels.form.save_add), " ",
-              button(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
-              button(GlobalStyles.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete)
+              button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
+              button(ClientConf.style.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete)
             ).render
           })
         ).render
@@ -353,9 +353,9 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           }
         ).render
       },
-      hr(GlobalStyles.hrThin),
+      hr(ClientConf.style.hrThin),
       produce(model.subProp(_.metadata)){ form =>
-        div(BootstrapCol.md(12),GlobalStyles.fullHeightMax,
+        div(BootstrapCol.md(12),ClientConf.style.fullHeightMax,
           form match {
             case None => p("Loading form")
             case Some(f) => {

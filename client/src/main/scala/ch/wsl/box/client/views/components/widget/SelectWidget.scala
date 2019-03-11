@@ -6,6 +6,7 @@ import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
 import ch.wsl.box.client.Context._
+import ch.wsl.box.client.utils.ClientConf
 import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}
 import scalacss.ScalatagsCss._
@@ -29,7 +30,7 @@ class SelectWidget(val field:JSONField, prop: Property[Json]) extends  LookupWid
 
 
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(prop){ _ =>
-    div(BootstrapCol.md(12),GlobalStyles.noPadding)(
+    div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       lab(field.title),
       div(BootstrapStyles.pullRight, bind(selectModel)),
       div(BootstrapStyles.Visibility.clearfix)
@@ -49,7 +50,7 @@ class SelectWidget(val field:JSONField, prop: Property[Json]) extends  LookupWid
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
-    div(BootstrapCol.md(12),GlobalStyles.noPadding)(
+    div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       WidgetUtils.toLabel(field),
       tooltip(Select(selectModel,opts,Select.defaultLabel)(m).render),
       div(BootstrapStyles.Visibility.clearfix)

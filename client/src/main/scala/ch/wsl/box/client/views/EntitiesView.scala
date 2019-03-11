@@ -7,7 +7,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{Labels, Session, UI}
+import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
 import ch.wsl.box.client.{EntitiesState, EntityFormState, EntityTableState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
@@ -88,7 +88,7 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
     div(sidebarGrid)(
       UdashForm.textInput()(Labels.entities.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
       produceWithNested(model.subProp(_.search)) { (q,releaser) =>
-        ul(GlobalStyles.noBullet,
+        ul(ClientConf.style.noBullet,
           releaser(repeat(model.subSeq(_.filteredList)){m =>
             li(a(Navigate.click(routes.entity(m.get)),m.get)).render
           })

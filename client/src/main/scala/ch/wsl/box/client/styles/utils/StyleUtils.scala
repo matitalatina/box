@@ -1,6 +1,7 @@
 package ch.wsl.box.client.styles.utils
 import java.util.concurrent.TimeUnit
 
+import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.styles.constants.StyleConstants
 
 import scala.concurrent.duration.FiniteDuration

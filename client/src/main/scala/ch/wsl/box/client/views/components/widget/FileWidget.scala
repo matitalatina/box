@@ -61,7 +61,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   }
 
 
-  override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),GlobalStyles.noPadding,
+  override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),ClientConf.style.noPadding,
     label(field.title),
     produceWithNested(prop.transform(_.string)) { (name,nested) =>
       div(
@@ -70,7 +70,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
           val randomString = UUID.randomUUID().toString
           JSONID.fromString(idfile) match {
             case Some(_) => div(
-              img(src := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
+              img(src := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",ClientConf.style.imageThumb) ,br,
               a(href := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name)
             ).render
             case None => div().render
@@ -84,7 +84,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
   override def edit() = {
 
-    div(BootstrapCol.md(12),GlobalStyles.noPadding,
+    div(BootstrapCol.md(12),ClientConf.style.noPadding,
       WidgetUtils.toLabel(field),
       produceWithNested(prop) { (name,nested) =>
         div(
@@ -93,7 +93,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
             val randomString = UUID.randomUUID().toString
             JSONID.fromString(idfile) match {
               case Some(_) => div(
-                img(src := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",GlobalStyles.imageThumb) ,br,
+                img(src := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}/thumb?$randomString",ClientConf.style.imageThumb) ,br,
                 a(href := s"api/v1/file/${entity}.${field.file.get.file_field}/${idfile}", name.string)
               ).render
               case None => div().render

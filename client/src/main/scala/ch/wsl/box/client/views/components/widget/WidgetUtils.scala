@@ -42,8 +42,8 @@ object WidgetUtils extends Logging{
   def toLabel(field:JSONField, skipRequiredInfo:Boolean=false) = {
 
     val labelStyle = field.nullable match {
-      case true => GlobalStyles.labelNonRequred
-      case false => GlobalStyles.labelRequired
+      case true => ClientConf.style.labelNonRequred
+      case false => ClientConf.style.labelRequired
     }
 
 
@@ -51,7 +51,7 @@ object WidgetUtils extends Logging{
       labelStyle,
       field.title,
       (skipRequiredInfo, field.nullable, field.title.length > 0, field.default) match{
-        case (false, false, true, None) => small(GlobalStyles.smallLabelRequired ," - " + Labels.form.required)
+        case (false, false, true, None) => small(ClientConf.style.smallLabelRequired ," - " + Labels.form.required)
         case _ => {}//logger.warn(field.title +": "+ Seq(field.nullable, field.label.getOrElse("").length>0, field.default, Conf.manualEditKeyFields).mkString("\n"))}
       }
     ).render
@@ -64,7 +64,7 @@ object WidgetUtils extends Logging{
   def toNullable(nullable: Boolean):Seq[Modifier]={
     nullable match{
       case true => Seq.empty
-      case false => Seq(required := true,GlobalStyles.notNullable)
+      case false => Seq(required := true,ClientConf.style.notNullable)
     }
   }
 

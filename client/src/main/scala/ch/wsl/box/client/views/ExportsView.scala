@@ -8,7 +8,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{Labels, Session, UI}
+import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
 import ch.wsl.box.client.{ExportState, ExportsState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
@@ -89,7 +89,7 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
   private def sidebar: Element = div(sidebarGrid)(
       UdashForm.textInput()(Labels.exports.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateExportsList(), true)),
       produce(model.subProp(_.search)) { q =>
-        ul(GlobalStyles.noBullet)(
+        ul(ClientConf.style.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>
             li(produce(m) { export =>
               WidgetUtils.addTooltip(m.get.tooltip) (a(Navigate.click(ExportState(export.function)), m.get.label).render)

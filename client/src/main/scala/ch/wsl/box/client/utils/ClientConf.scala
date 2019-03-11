@@ -4,6 +4,8 @@ import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
 
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.styles.{GlobalStyles, StyleConf}
+import ch.wsl.box.client.styles.constants.StyleConstants.Colors
 import ch.wsl.box.model.shared.JSONFieldTypes
 
 import scala.util.Try
@@ -11,6 +13,8 @@ import scala.util.Try
 /**
   * Created by andre on 6/8/2017.
   */
+
+
 object ClientConf {
 
   import ch.wsl.box.client.Context._
@@ -30,6 +34,12 @@ object ClientConf {
   def displayIndexHtml = Try(conf("display.index.html").toBoolean).getOrElse(false)
 
 
+  def colorMain = Try(conf("color.main")).getOrElse("#006268")
+  def colorLink = Try(conf("color.link")).getOrElse("#fbf0b2")
+  def colorDanger = Try(conf("color.danger")).getOrElse("#4c1c24")
+  def colorWarning = Try(conf("color.warning")).getOrElse("#ffa500")
+
+  lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorLink,colorDanger,colorWarning)))
 
 
   def filterEqualityPrecisionDatetime = Try(conf("filterEqualityPrecision.datetime").toUpperCase).toOption match {

@@ -9,6 +9,7 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.client.Context._
 import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import io.udash.properties.single.Property
 import scalacss.internal.StyleA
@@ -111,7 +112,7 @@ trait DateTimeWidget extends Widget  with Logging{
 
       div(
         if (field.title.length > 0) WidgetUtils.toLabel(field, false) else {},
-        tooltip(div(style,if(field.nullable) {} else GlobalStyles.notNullable,
+        tooltip(div(style,if(field.nullable) {} else ClientConf.style.notNullable,
           picker.render
         ).render),
         div(BootstrapStyles.Visibility.clearfix)
@@ -126,7 +127,7 @@ object DateTimeWidget {
 
 
   case class Date(id: Property[String], field: JSONField, prop: Property[Json]) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,datePickerFormat,GlobalStyles.dateTimePicker)
+    override def edit() = editMe(id,field,prop,datePickerFormat,ClientConf.style.dateTimePicker)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -135,7 +136,7 @@ object DateTimeWidget {
   }
 
   case class DateTime(id: Property[String], field: JSONField, prop: Property[Json]) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,dateTimePickerFormat,GlobalStyles.dateTimePicker)
+    override def edit() = editMe(id,field,prop,dateTimePickerFormat,ClientConf.style.dateTimePicker)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -144,7 +145,7 @@ object DateTimeWidget {
   }
 
   case class Time(id: Property[String], field: JSONField, prop: Property[Json]) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,timePickerFormat,GlobalStyles.dateTimePicker)
+    override def edit() = editMe(id,field,prop,timePickerFormat,ClientConf.style.dateTimePicker)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -153,7 +154,7 @@ object DateTimeWidget {
   }
 
   case class DateFullWidth(id: Property[String], field: JSONField, prop: Property[Json]) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,datePickerFormat,GlobalStyles.dateTimePickerFullWidth)
+    override def edit() = editMe(id,field,prop,datePickerFormat,ClientConf.style.dateTimePickerFullWidth)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -162,7 +163,7 @@ object DateTimeWidget {
   }
 
   case class DateTimeFullWidth(id: Property[String], field: JSONField, prop: Property[Json]) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,dateTimePickerFormat,GlobalStyles.dateTimePickerFullWidth)
+    override def edit() = editMe(id,field,prop,dateTimePickerFormat,ClientConf.style.dateTimePickerFullWidth)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -171,7 +172,7 @@ object DateTimeWidget {
   }
 
   case class TimeFullWidth(id: Property[String], field: JSONField, prop: Property[Json]) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,timePickerFormat,GlobalStyles.dateTimePickerFullWidth)
+    override def edit() = editMe(id,field,prop,timePickerFormat,ClientConf.style.dateTimePickerFullWidth)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
