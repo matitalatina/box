@@ -131,7 +131,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
       qEncoded = encodeFk(fields,query)
 
-      access <- REST.writeAccess(form.entity)
+      access <- REST.writeAccess(form.entity,state.kind)
       csv <- REST.csv(state.kind, Session.lang(), state.entity, qEncoded)
       ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
@@ -366,7 +366,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case _ => StringFrag(id)
     }
 
-    Select(fieldQuery.subProp(_.filterOperator), Filter.options(fieldQuery.get.field),label)(GlobalStyles.fullWidth)
+    Select(fieldQuery.subProp(_.filterOperator), Filter.options(fieldQuery.get.field),label)(ClientConf.style.fullWidth)
 
   }
 
@@ -396,7 +396,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
     val pagination = {
 
-      div(GlobalStyles.boxNavigationLabel,
+      div(ClientConf.style.boxNavigationLabel,
         Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(1),Labels.navigation.first,_.pullLeft),
         Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1),Labels.navigation.previous,_.pullLeft),
         span(
@@ -415,9 +415,9 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
     div(
       div(BootstrapStyles.pullLeft,
-        h3(GlobalStyles.noMargin,labelTitle)
+        h3(ClientConf.style.noMargin,labelTitle)
       ),
-      div(BootstrapStyles.pullRight,GlobalStyles.navigatorArea,
+      div(BootstrapStyles.pullRight,ClientConf.style.navigatorArea,
         pagination.render
       ),
       div(BootstrapStyles.Visibility.clearfix),
@@ -426,25 +426,25 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           div(BootstrapStyles.pullLeft)(
             realeser(produce(model.subProp(_.name)) { m =>
               div(
-                button(GlobalStyles.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`)
+                button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`)
               ).render
             })
           ).render
       },
       div(BootstrapStyles.Visibility.clearfix),
-      hr(GlobalStyles.hrThin),
-      div(id := "box-table", GlobalStyles.fullHeightMax,
+      hr(ClientConf.style.hrThin),
+      div(id := "box-table", ClientConf.style.fullHeightMax,
         UdashTable()(model.subSeq(_.rows))(
 
           headerFactory = Some(() => {
               tr(
-                th(GlobalStyles.smallCells)(Labels.entity.actions),
+                th(ClientConf.style.smallCells)(Labels.entity.actions),
                   repeat(model.subSeq(_.fieldQueries)) { fieldQuery =>
                       val title: String = fieldQuery.get.field.label.getOrElse(fieldQuery.get.field.name)
                       val filterValue = fieldQuery.asModel.subProp(_.filterValue)
                       val sort = fieldQuery.asModel.subProp(_.sort)
 
-                    th(GlobalStyles.smallCells)(
+                    th(ClientConf.style.smallCells)(
                       a(
                         onclick :+= ((ev: Event) => presenter.sort(fieldQuery.get), true),
                         title," ",
@@ -466,7 +466,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
 
             tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
-              td(GlobalStyles.smallCells)(
+              td(ClientConf.style.smallCells)(
                 (hasKey,model.get.write) match{
                   case (false,_) => p(color := "grey")(Labels.entity.no_action)
                   case (true,false) => a(
@@ -486,7 +486,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                 for {(fieldQuery, i) <- fieldQueries.zipWithIndex} yield {
 
                   val value = el.get.data.lift(i).getOrElse("")
-                  td(GlobalStyles.smallCells)(TableFieldsRenderer(
+                  td(ClientConf.style.smallCells)(TableFieldsRenderer(
                     value,
                     fieldQuery.field,
                     key,
@@ -498,7 +498,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           }
         ).render,
 
-        button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),GlobalStyles.boxButton, Labels.entity.csv),
+        button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),ClientConf.style.boxButton, Labels.entity.csv),
         showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render },
         br,br
       ),

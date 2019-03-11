@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.services.{Notification, REST}
 import ch.wsl.box.client.styles.GlobalStyles
-import ch.wsl.box.client.utils.{Labels, Session, UI}
+import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
 import io.udash._
 import ch.wsl.box.client.{EntitiesState, ExportsState, IndexState, RootState}
 import org.scalajs.dom.Element
@@ -54,12 +54,12 @@ class RootView() extends ContainerView {
 
   private def content = div(BootstrapStyles.containerFluid)(
     Header.navbar(UI.title,menu),
-    div(GlobalStyles.notificationArea,
+    div(ClientConf.style.notificationArea,
       repeat(Notification.list){ notice =>
-        div(GlobalStyles.notification,bind(notice)).render
+        div(ClientConf.style.notification,bind(notice)).render
       }
     ),
-    main(GlobalStyles.fullHeight)(
+    main(ClientConf.style.fullHeight)(
       div()(
         child
       )

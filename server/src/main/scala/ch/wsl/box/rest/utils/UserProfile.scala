@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.utils
 
-import ch.wsl.box.rest.boxentities.User
+import ch.wsl.box.model.boxentities.User
 //import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.jdbc.PostgresProfile.plainAPI._
 import com.github.tminglei.slickpg.utils.PlainSQLUtils._

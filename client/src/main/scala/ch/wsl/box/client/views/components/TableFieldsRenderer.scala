@@ -2,6 +2,7 @@ package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, JSONID}
 import io.circe.Json
@@ -52,9 +53,9 @@ object TableFieldsRenderer extends Logging{
 //    )
 
     def align = field.`type` match{
-      case JSONFieldTypes.NUMBER => if (field.lookup.isEmpty) GlobalStyles.numberCells else GlobalStyles.lookupCells
-      case JSONFieldTypes.DATE | JSONFieldTypes.DATETIME | JSONFieldTypes.TIME => GlobalStyles.dateCells
-      case _ => GlobalStyles.textCells
+      case JSONFieldTypes.NUMBER => if (field.lookup.isEmpty) ClientConf.style.numberCells else ClientConf.style.lookupCells
+      case JSONFieldTypes.DATE | JSONFieldTypes.DATETIME | JSONFieldTypes.TIME => ClientConf.style.dateCells
+      case _ => ClientConf.style.textCells
     }
 
     div(align)(contentFixed)

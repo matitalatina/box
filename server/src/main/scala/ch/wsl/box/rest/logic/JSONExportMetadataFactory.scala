@@ -3,8 +3,8 @@ package ch.wsl.box.rest.logic
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
-import ch.wsl.box.rest.boxentities.{Export, ExportField, Form}
+import ch.wsl.box.model.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
+import ch.wsl.box.model.boxentities.{Export, ExportField, Form}
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import io.circe._
 import io.circe.parser._

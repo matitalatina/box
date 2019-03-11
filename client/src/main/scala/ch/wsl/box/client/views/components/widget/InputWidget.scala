@@ -72,7 +72,7 @@ object InputWidget {
     def reallyWithLabel = withLabel & (field.title.length > 0)
 
 
-    div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
+    div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin,
       if(reallyWithLabel) label(field.title) else {},
       if(reallyWithLabel)
         div(inputRendererDefaultModifiers++modifiers, (bind(prop.transform(_.string))))
@@ -99,7 +99,7 @@ object InputWidget {
 
     val allModifiers = inputRendererDefaultModifiers++ph++ WidgetUtils.toNullable(field.nullable) ++modifiers
 
-    div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin,
+    div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin,
       if(reallyWithLabel) WidgetUtils.toLabel(field, skipRequiredInfo) else {},
       if(reallyWithLabel)
         tooltip(inputRenderer(allModifiers))

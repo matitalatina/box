@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.rest.boxentities.{UITable, UIscrTable}
+import ch.wsl.box.model.boxentities.{UITable, UIsrcTable}
 import ch.wsl.box.rest.routes.File.BoxFile
 import ch.wsl.box.rest.utils.Auth
 
@@ -19,7 +19,7 @@ object UIProvider {
   }
 
   def fileForAccessLevel(name:String,accessLevel:Int)(implicit ec:ExecutionContext):Future[Option[BoxFile]] = Auth.boxDB.run {
-    val q = UIscrTable.table.filter(t => t.accessLevel <= accessLevel && t.name === name)
+    val q = UIsrcTable.table.filter(t => t.accessLevel <= accessLevel && t.name === name)
     val r = q.result
     r
   }.map { _.headOption.map{ uiFile =>

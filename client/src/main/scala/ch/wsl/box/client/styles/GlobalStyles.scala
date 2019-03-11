@@ -3,6 +3,7 @@ package ch.wsl.box.client.styles
 
 
 import ch.wsl.box.client.styles.constants.StyleConstants
+import ch.wsl.box.client.styles.constants.StyleConstants.Colors
 import ch.wsl.box.client.styles.utils.MediaQueries
 
 import scala.language.postfixOps
@@ -13,7 +14,11 @@ import scalacss.internal.LengthUnit.px
 import scalatags.JsDom
 import scalatags.generic.Attr
 
-object GlobalStyles extends StyleSheet.Inline {
+
+case class StyleConf(colors:Colors)
+
+
+case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   private def unsafeProp(key:String,value:String) = AV(scalacss.internal.Attr.real(key),value)
 
@@ -89,11 +94,11 @@ object GlobalStyles extends StyleSheet.Inline {
       lineHeight(29 px),
       borderBottom(1 px,solid,black),
       color.white,
-      backgroundColor(StyleConstants.Colors.wsl)
+      backgroundColor(conf.colors.main)
     ),
 
     unsafeRoot("footer")(
-      borderTop(StyleConstants.Colors.wsl,5 px,solid),
+      borderTop(conf.colors.main,5 px,solid),
       backgroundColor.white,
       overflow.hidden,
       fontSize(1.2 rem),
@@ -128,9 +133,9 @@ object GlobalStyles extends StyleSheet.Inline {
 
     unsafeRoot("a")(
       &.hover(
-        color(StyleConstants.Colors.wsl)
+        color(conf.colors.main)
       ),
-      color(StyleConstants.Colors.wsl)
+      color(conf.colors.main)
     ),
 
     unsafeRoot("#box-table table")(
@@ -232,9 +237,9 @@ object GlobalStyles extends StyleSheet.Inline {
 
   val linkHeaderFooter = style(
     &.hover(
-      color(StyleConstants.Colors.wslLink)
+      color(conf.colors.link)
     ),
-    color(StyleConstants.Colors.wslLink),
+    color(conf.colors.link),
     textTransform.uppercase,
     fontWeight.bold
   )
@@ -272,12 +277,12 @@ object GlobalStyles extends StyleSheet.Inline {
     fontSize(12 px),
     lineHeight(12 px),
     margin(3 px, 1 px),
-    border(1 px,solid,StyleConstants.Colors.wsl),
-    color(StyleConstants.Colors.wsl),
+    border(1 px,solid,conf.colors.main),
+    color(conf.colors.main),
     backgroundColor(white),
     &.hover(
       color(white),
-      backgroundColor(StyleConstants.Colors.wsl)
+      backgroundColor(conf.colors.main)
     ),
     &.attrExists("disabled") (
       backgroundColor(lightgray),
@@ -299,12 +304,12 @@ object GlobalStyles extends StyleSheet.Inline {
     fontSize(12 px),
     lineHeight(12 px),
     margin(3 px, 1 px),
-    border(1 px,solid,StyleConstants.Colors.wsl),
-    backgroundColor(StyleConstants.Colors.wsl),
+    border(1 px,solid,conf.colors.main),
+    backgroundColor(conf.colors.main),
     color.white,
     &.hover(
       backgroundColor.white,
-      color(StyleConstants.Colors.wsl)
+      color(conf.colors.main)
     )
   )
 
@@ -315,12 +320,12 @@ object GlobalStyles extends StyleSheet.Inline {
     fontSize(12 px),
     lineHeight(12 px),
     margin(3 px, 1 px),
-    border(1 px,solid,StyleConstants.Colors.bordeaux),
-    backgroundColor(StyleConstants.Colors.bordeaux),
+    border(1 px,solid,conf.colors.danger),
+    backgroundColor(conf.colors.danger),
     color.white,
     &.hover(
       backgroundColor.white,
-      color(StyleConstants.Colors.bordeaux)
+      color(conf.colors.danger)
     )
   )
 
@@ -378,11 +383,11 @@ object GlobalStyles extends StyleSheet.Inline {
     top(50 px),
     left.`0`,
     width(100 %%),
-    backgroundColor(StyleConstants.Colors.wsl),
+    backgroundColor(conf.colors.main),
     zIndex(10),
     textAlign.right,
     unsafeChild("a") {
-      color(StyleConstants.Colors.wslLink)
+      color(conf.colors.link)
     }
   )
 
@@ -403,7 +408,7 @@ object GlobalStyles extends StyleSheet.Inline {
 
   val smallLabelRequired = style(
     fontSize(8.px),
-    color(StyleConstants.Colors.orange)
+    color(conf.colors.danger)
   )
 
   val labelNonRequred = style(

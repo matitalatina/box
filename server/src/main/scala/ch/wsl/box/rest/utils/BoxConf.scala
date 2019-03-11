@@ -22,7 +22,7 @@ object BoxConf extends Logging {
   def load()(implicit ec: ExecutionContext) = {
 
     val query = for {
-      row <- ch.wsl.box.rest.boxentities.Conf.table
+      row <- ch.wsl.box.model.boxentities.Conf.table
     } yield row
 
     conf = Await.result(Auth.boxDB.run(query.result).map {
@@ -33,22 +33,22 @@ object BoxConf extends Logging {
 
   }
 
-  def clientConf:Map[String, String] = conf.filterKeys(Set(
-              "host",
-              "port",
-              "cookie.name",
-              "max-age",
-              "logger.level",
-              "langs",
-              "manual_edit.key_fields",
-              "rest.lookup.labels",
-              "lookupMaxRows",
-              "image_height",
-              "filterEqualityPrecision.double",
-              "filterEqualityPrecision.datetime",
-              "display.index.html",
-              "display.index.news"
-            ))
+  def clientConf:Map[String, String] = conf//.filterKeys(Set(
+//              "host",
+//              "port",
+//              "cookie.name",
+//              "max-age",
+//              "logger.level",
+//              "langs",
+//              "manual_edit.key_fields",
+//              "rest.lookup.labels",
+//              "lookupMaxRows",
+//              "image_height",
+//              "filterEqualityPrecision.double",
+//              "filterEqualityPrecision.datetime",
+//              "display.index.html",
+//              "display.index.news"
+//            ))
 
   def restLookupLabels = ConfigFactory.parseString( Try(conf("rest.lookup.labels")).getOrElse("default=firstNoPKField"))
 

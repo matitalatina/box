@@ -6,7 +6,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState, ExportState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{Labels, Navigation, Navigator, Session}
+import ch.wsl.box.client.utils._
 import ch.wsl.box.client.views.components.widget.Widget
 import ch.wsl.box.client.views.components.{Debug, JSONMetadataRenderer, TableFieldsRenderer}
 import ch.wsl.box.model.shared._
@@ -108,21 +108,21 @@ case class ExportView(model:ModelProperty[ExportModel], presenter:ExportPresente
 
   def loaded(metadata: JSONMetadata) = div(
     br,br,
-    h3(GlobalStyles.noMargin,
+    h3(ClientConf.style.noMargin,
       metadata.label
     ),
     produce(model.subProp(_.exportDef)){ ed =>
-      div(GlobalStyles.global)(ed.map(_.description.getOrElse[String]("")).getOrElse[String]("")).render
+      div(ClientConf.style.global)(ed.map(_.description.getOrElse[String]("")).getOrElse[String]("")).render
     },
     br,
     JSONMetadataRenderer(metadata, model.subProp(_.queryData),Seq()).edit(),
-    button(Labels.exports.load,onclick :+= ((e:Event) => presenter.query()),GlobalStyles.boxButton),
-    button(Labels.exports.csv,onclick :+= ((e:Event) => presenter.csv()),GlobalStyles.boxButton),
+    button(Labels.exports.load,onclick :+= ((e:Event) => presenter.query()),ClientConf.style.boxButton),
+    button(Labels.exports.csv,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton),
       UdashTable()(model.subSeq(_.data))(
         headerFactory = Some(() => {
           tr(
             repeat(model.subSeq(_.headers)) { header =>
-              th(GlobalStyles.smallCells)(bind(header)).render
+              th(ClientConf.style.smallCells)(bind(header)).render
             }
           ).render
         }),
@@ -130,7 +130,7 @@ case class ExportView(model:ModelProperty[ExportModel], presenter:ExportPresente
           tr(
             produce(el) { cell =>
               cell.map { c =>
-                td(GlobalStyles.smallCells)(c).render
+                td(ClientConf.style.smallCells)(c).render
               }
             }
           ).render

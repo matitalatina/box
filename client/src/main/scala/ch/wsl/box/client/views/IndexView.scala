@@ -13,6 +13,8 @@ import Context._
 import ch.wsl.box.client.views.components.Debug
 import io.udash.bootstrap.BootstrapStyles
 
+import scala.concurrent.Future
+
 case class IndexViewModel(news:Seq[NewsEntry])
 object IndexViewModel extends HasModelPropertyCreator[IndexViewModel] {
   implicit val blank: Blank[IndexViewModel] =
@@ -29,7 +31,10 @@ object IndexViewPresenter extends ViewPresenter[IndexState.type]{
 class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[IndexState.type] {
   override def handleState(state: IndexState.type): Unit = {
     for{
-      news <- REST.news(Session.lang())
+      news <- if(ClientConf.displayIndexNews)
+          REST.news(Session.lang())
+        else
+          Future.successful(Seq())
     } yield {
       viewModel.set(IndexViewModel(news))
     }

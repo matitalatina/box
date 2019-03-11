@@ -6,15 +6,16 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
+import ch.wsl.box.model.{BoxActionsRegistry, EntityActionsRegistry}
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.boxentities.{Conf, UITable}
+import ch.wsl.box.model.boxentities.{Conf, UITable}
 import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
-import ch.wsl.box.model.shared.LoginRequest
+import ch.wsl.box.model.shared.{EntityKind, LoginRequest}
 import ch.wsl.box.rest.jdbc.JdbcConnect
 import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
@@ -141,10 +142,17 @@ trait Root extends Logging {
 //              val accessLevel = session.userProfile.accessLevel.get
 
               pathPrefix("access") {
-                pathPrefix("table") {
+                pathPrefix("box-admin") {
                   pathPrefix(Segment) { table =>
                     path("write") {
-                      complete(TableAccess.write(table,Auth.dbSchema,session.username))
+                      complete(TableAccess.write(table,Auth.boxDbSchema,session.username,Auth.boxDB))
+                    }
+                  }
+                } ~
+                pathPrefix("table" | "view" | "entity" | "form") {
+                  pathPrefix(Segment) { table =>
+                    path("write") {
+                      complete(TableAccess.write(table,Auth.dbSchema,session.username,Auth.adminDB))
                     }
                   }
                 }
@@ -184,7 +192,7 @@ trait Root extends Logging {
               pathPrefix("form") {
                 pathPrefix(Segment) { lang =>
                   pathPrefix(Segment) { name =>
-                    Form(name, lang).route
+                    Form(name, lang,EntityActionsRegistry().tableActions,JSONFormMetadataFactory(),up.db,EntityKind.FORM.kind).route
                   }
                 }
               } ~
@@ -197,9 +205,20 @@ trait Root extends Logging {
               } ~
               Auth.onlyAdminstrator(session) { //need to be at the end or non administrator request are not resolved
                 //access to box tables for administrator
-                pathPrefix("boxfile") {
-                  BoxFileRoutes.route(session.userProfile.boxUserProfile, materializer, executionContext)
-                } ~
+
+                  pathPrefix("box-admin") {
+                    pathPrefix(Segment) { lang =>
+                      pathPrefix(Segment) { name =>
+                        Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),up.boxDb,EntityKind.BOX.kind).route
+                      }
+                    }
+                  } ~
+                  pathPrefix("box-admin") {
+                    complete(BoxFormMetadataFactory().list)
+                  } ~
+                  pathPrefix("boxfile") {
+                    BoxFileRoutes.route(session.userProfile.boxUserProfile, materializer, executionContext)
+                  } ~
                   pathPrefix("boxentity") {
                     BoxRoutes()(session.userProfile.boxUserProfile, materializer, executionContext)
                   } ~

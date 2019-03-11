@@ -147,7 +147,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     override protected def edit(): JsDom.all.Modifier = render(true)
 
-    private def render(write:Boolean): JsDom.all.Modifier = div(BootstrapCol.md(12), GlobalStyles.subBlock)(
+    private def render(write:Boolean): JsDom.all.Modifier = div(BootstrapCol.md(12), ClientConf.style.subBlock)(
       block.title.map( t => h3(minHeight := 20.px, Labels(t))),  //renders title in subblocks
       widget.render(write,Property(true))
     )
@@ -197,7 +197,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     private def render(write:Boolean): JsDom.all.Modifier = div(
       widgets.zip(widths).map { case (widget, width) =>
-        div(BootstrapCol.md(width), GlobalStyles.field,
+        div(BootstrapCol.md(width), ClientConf.style.field,
           widget.widget.render(write,widget.visibility)
         )
       }
@@ -242,7 +242,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
       Debug(data,autoRelease, "data"),
       div(BootstrapStyles.row)(
         blocks.map{ case (block,widget) =>
-          div(BootstrapCol.md(block.width), GlobalStyles.block)(
+          div(BootstrapCol.md(block.width), ClientConf.style.block)(
             renderer(block,widget)
           )
         }

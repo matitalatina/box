@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.Labels
+import ch.wsl.box.client.utils.{ClientConf, Labels}
 import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
@@ -42,9 +42,9 @@ import ch.wsl.box.client.Context._
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
     val selectedItem: Property[String] = data.transform(value2Label,label2Value)
 
-    div(BootstrapCol.md(12),GlobalStyles.noPadding,GlobalStyles.smallBottomMargin)(
+    div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin)(
       label(field.title),
-      div(BootstrapStyles.pullRight, GlobalStyles.largeButton,
+      div(BootstrapStyles.pullRight, ClientConf.style.largeButton,
         bind(selectedItem)
       ),
       div(BootstrapStyles.Visibility.clearfix)
@@ -116,9 +116,9 @@ import ch.wsl.box.client.Context._
     }
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
-    div(BootstrapCol.md(12),GlobalStyles.noPadding, GlobalStyles.smallBottomMargin)(
+    div(BootstrapCol.md(12),ClientConf.style.noPadding, ClientConf.style.smallBottomMargin)(
       WidgetUtils.toLabel(field),
-      tooltip(button(BootstrapStyles.pullRight, GlobalStyles.largeButton, onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render),
+      tooltip(button(BootstrapStyles.pullRight, ClientConf.style.largeButton, onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render),
       modal.render,
       div(BootstrapStyles.Visibility.clearfix)
     )

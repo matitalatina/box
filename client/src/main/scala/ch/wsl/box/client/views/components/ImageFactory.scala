@@ -8,7 +8,7 @@ class ImageFactory(prefix: String) {
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
   def apply(name: String, altText: String, xs: Modifier*): JsDom.TypedTag[dom.html.Image] = {
-    img(src := s"$prefix/$name", alt := altText, GlobalStyles.imageThumb, xs)
+    img(src := s"$prefix/$name", alt := altText, ClientConf.style.imageThumb, xs)
   }
 }
 

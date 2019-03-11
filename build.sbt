@@ -37,7 +37,9 @@ lazy val server: Project  = (project in file("server"))
     hello := println("hello"),
     sourceGenerators in Compile +=  slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
     resourceDirectory in Compile := baseDirectory.value / "../resources",
-    testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html")
+    testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html"),
+    mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
+    mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot")
   )
   .enablePlugins(TomcatPlugin)
   .enablePlugins(JavaAppPackaging)
@@ -132,7 +134,14 @@ lazy val root: Project = (project in file("."))
         (fullOptJS in Compile in client),
         copyUiFiles,
         (packageBin in Universal in server)
-      ).value
+      ).value,
+    installBox := Def.sequential(
+      //cleanAll,
+      (compile in Compile in server).toTask,
+      Def.task{
+        (runMain in Compile in server).toTask(" ch.wsl.box.model.BuildBox").value
+      }
+    ).value
   )
 
 // Client projects (just one in this case)
@@ -154,6 +163,7 @@ lazy val sharedJS: Project = shared.js.settings(name := "sharedJS")
 
 
 lazy val box = taskKey[Unit]("Package box")
+lazy val installBox = taskKey[Unit]("Install box")
 
 lazy val serve = taskKey[Unit]("start server")
 lazy val cleanAll = taskKey[Unit]("clean all projects")

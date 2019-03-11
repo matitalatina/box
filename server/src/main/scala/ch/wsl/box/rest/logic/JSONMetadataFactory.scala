@@ -13,7 +13,7 @@ import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.Try
-import ch.wsl.box.rest.boxentities.Conf
+import ch.wsl.box.model.boxentities.Conf
 import ch.wsl.box.shared.utils.JSONUtils
 
 

@@ -2,8 +2,8 @@ package ch.wsl.box.client.views.components
 
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{Labels, Session}
-import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget, ChildWidget}
+import ch.wsl.box.client.utils.{ClientConf, Labels, Session}
+import ch.wsl.box.client.views.components.widget.{ChildWidget, ComponentWidgetFactory, Widget}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
@@ -173,11 +173,11 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
                 for {i <- 0 until size} yield {
                   val subResults = entity.transform(splitJsonRows(f, i), mergeJsonRows(entity, f, i))
                   val widget = findOrAdd(f, subResults, children)
-                  div(GlobalStyles.subform,
+                  div(ClientConf.style.subform,
                     widget.render(write, Property(true)),
                     if (write) div(
                       BootstrapStyles.row,
-                      div(BootstrapCol.md(12), GlobalStyles.block,
+                      div(BootstrapCol.md(12), ClientConf.style.block,
                         div(BootstrapStyles.pullRight,
                           a(onclick :+= ((e: Event) => removeItem(entity, entity.get(i), child)), Labels.subform.remove)
                         )
