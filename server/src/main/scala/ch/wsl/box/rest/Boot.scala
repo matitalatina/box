@@ -5,7 +5,8 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
-import ch.wsl.box.rest.metadata.{FormMetadataFactory, EntityMetadataFactory}
+import ch.wsl.box.rest.logic.RuntimeFunction
+import ch.wsl.box.rest.metadata.{EntityMetadataFactory, FormMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -64,6 +65,7 @@ object Boot extends App  {
         root=Box.start
         FormMetadataFactory.resetCache()
         EntityMetadataFactory.resetCache()
+        RuntimeFunction.resetCache()
         println("reset cache")
       }
       case _ => {}

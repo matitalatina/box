@@ -4,7 +4,7 @@ import ch.wsl.box.client.services.{Notification, REST}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
 import io.udash._
-import ch.wsl.box.client.{EntitiesState, ExportsState, IndexState, RootState}
+import ch.wsl.box.client._
 import org.scalajs.dom.Element
 import scalatags.JsDom.tags2.main
 import ch.wsl.box.client.views.components._
@@ -45,7 +45,8 @@ class RootView() extends ContainerView {
           MenuLink("Tables",EntitiesState("table","")),
           MenuLink("Views",EntitiesState("view","")),
           MenuLink(Labels.header.forms,EntitiesState("form","")),
-          MenuLink("Exports",ExportsState(""))
+          MenuLink("Exports",DataListState(DataKind.EXPORT,"")),
+          MenuLink("Functions",DataListState(DataKind.FUNCTION,""))
         )
       } else Seq()}
 //      Seq(MenuLink("BoxTables", EntitiesState("table","")))

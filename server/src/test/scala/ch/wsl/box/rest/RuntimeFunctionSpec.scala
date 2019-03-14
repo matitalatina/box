@@ -48,7 +48,7 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
       """
         |Future.successful(DataResult(Seq(),Seq(Seq("test"))))
       """.stripMargin
-    val f = RuntimeFunction(code)
+    val f = RuntimeFunction("test1",code)
     whenReady(f(context)) { result =>
       assert(result.rows.head.head == "test")
     }
@@ -60,7 +60,7 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
       """
         |context.psql.function("",Seq(),"").map(_.get)
       """.stripMargin
-    val f = RuntimeFunction(code)
+    val f = RuntimeFunction("test2",code)
     whenReady(f(context)) { result =>
       assert(result == dr)
     }

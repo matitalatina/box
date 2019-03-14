@@ -53,5 +53,10 @@ case class MasterChildState(kind:String,
                            ) extends FinalRoutingState(Some(EntitiesState(kind,masterEntity)))
 
 
-case class ExportsState(currentExport:String) extends ContainerRoutingState(Some(RootState))
-case class ExportState(export:String) extends FinalRoutingState(Some(ExportsState(export)))
+object DataKind{
+  final val EXPORT = "export"
+  final val FUNCTION = "function"
+}
+
+case class DataListState(kind:String,currentExport:String) extends ContainerRoutingState(Some(RootState))
+case class DataState(kind:String,export:String) extends FinalRoutingState(Some(DataListState(kind,export)))

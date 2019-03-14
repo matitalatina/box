@@ -32,11 +32,17 @@ object Functions extends Data {
         val actions = EntityActionsRegistry().tableActions(name)
 
         for {
-          headers <- EntityMetadataFactory.of(name, lang).map { metadata =>
-            metadata.fields.map(_.name)
+          rows <- actions.find()
+        } yield {
+          rows.headOption.map { firstRow =>
+            DataResult(
+              headers = firstRow.asObject.get.keys.toSeq,
+              rows = rows.map{ row =>
+                row.asObject.get.values.toSeq.map(_.string)
+              }
+            )
           }
-          rows <- actions.find().map(x => x.map(_.as[Seq[Json]].right.get.map(_.string)))
-        } yield Some(DataResult(headers,rows))
+        }
 
       }
     }
@@ -57,7 +63,7 @@ object Functions extends Data {
       result <- functionDef match {
         case None => Future.successful(None)
         case Some(func) => {
-          val f = RuntimeFunction(func.function)
+          val f = RuntimeFunction(func.name,func.function)
           f(context(params)).map(Some(_))
         }
       }

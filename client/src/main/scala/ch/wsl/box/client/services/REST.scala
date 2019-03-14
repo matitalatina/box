@@ -60,11 +60,11 @@ object REST {
 
 
   //export
-  def exportMetadata(name:String,lang:String) = client.get[JSONMetadata](s"/export/$name/metadata/$lang")
-  def exportDef(name:String,lang:String) = client.get[ExportDef](s"/export/$name/def/$lang")
-  def exports(lang:String) = client.get[Seq[ExportDef]](s"/export/list/$lang")
+  def dataMetadata(kind:String,name:String,lang:String) = client.get[JSONMetadata](s"/$kind/$name/metadata/$lang")
+  def dataDef(kind:String,name:String,lang:String) = client.get[ExportDef](s"/$kind/$name/def/$lang")
+  def dataList(kind:String,lang:String) = client.get[Seq[ExportDef]](s"/$kind/list/$lang")
 
-  def export(name:String,params:Json,lang:String):Future[Seq[Seq[String]]] = client.post[Json,String](s"/export/$name/$lang", params).map(CSV.read)
+  def data(kind:String,name:String,params:Json,lang:String):Future[Seq[Seq[String]]] = client.post[Json,String](s"/$kind/$name/$lang", params).map(CSV.read)
 
   def writeAccess(table:String,kind:String) = client.get[Boolean](s"/access/$kind/$table/write")
 

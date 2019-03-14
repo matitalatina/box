@@ -39,7 +39,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     def query    = for {
       (e, ei18) <- functions.Function joinLeft(functions.Function_i18n.filter(_.lang === lang)) on(_.function_id === _.function_id)
 
-    } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip), e.access_role)
+    } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip), e.access_role)
 
     //    def queryResult = Auth.boxDB.run(query.result)
 
@@ -48,34 +48,34 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       al <- up.accessLevel
       qr <-  Auth.boxDB.run(query.result)
     } yield {
-      qr.filter(_._7.map(ar => checkRole(List(),ar, al)).getOrElse(true)) // TODO how to manage roles?
-        .sortBy(_._4.getOrElse(Double.MaxValue)).map(
-        { case (label, function, name, _, hint, tooltip, _) =>
-          ExportDef(function, label.getOrElse(name), hint, tooltip)
+      qr.filter(_._6.map(ar => checkRole(List(),ar, al)).getOrElse(true)) // TODO how to manage roles?
+        .sortBy(_._3.getOrElse(Double.MaxValue)).map(
+        { case (label, name, _, hint, tooltip, _) =>
+          ExportDef(name, label.getOrElse(name), hint, tooltip)
         })
 
     }
 
   }
 
-  def defOf(function:String, lang:String): Future[ExportDef] = {
+  def defOf(name:String, lang:String): Future[ExportDef] = {
     val query = for {
-      (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
-      if e.function === function
+      (e, ei18) <- functions.Function joinLeft(functions.Function_i18n.filter(_.lang === lang)) on(_.function_id === _.function_id)
+      if e.name === name
 
-    } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
+    } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
 
     Auth.boxDB.run{
       query.result
-    }.map(_.map{ case (label, function, name, _, hint, tooltip) =>
-      ExportDef(function, label.getOrElse(name), hint, tooltip)
+    }.map(_.map{ case (label, name, _, hint, tooltip) =>
+      ExportDef(name, label.getOrElse(name), hint, tooltip)
     }.head)
   }
 
-  def of(function:String, lang:String):Future[JSONMetadata]  = {
+  def of(name:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
       (func, functionI18n) <- functions.Function joinLeft functions.Function_i18n.filter(_.lang === lang) on (_.function_id === _.function_id)
-      if func.function === function
+      if func.name === name
 
     } yield (func,functionI18n)
 
@@ -103,7 +103,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       val layout = Layout.fromString(func.layout).getOrElse(Layout.fromFields(jsonFields))
 
 
-      JSONMetadata(func.function_id.get,func.name,functionI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,"function",lang,Seq(),Seq(),None,Seq())//,"")
+      JSONMetadata(func.function_id.get,func.name,functionI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,"function",lang,Seq(),Seq(),None,Seq())//,"")
     }
   }
 

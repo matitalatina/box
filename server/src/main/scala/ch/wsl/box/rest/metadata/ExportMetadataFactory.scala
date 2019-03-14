@@ -57,10 +57,10 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
   }
 
-  def defOf(function:String, lang:String): Future[ExportDef] = {
+  def defOf(name:String, lang:String): Future[ExportDef] = {
     val query = for {
       (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
-      if e.function === function
+      if e.name === name
 
     } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
 
@@ -71,10 +71,10 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     }.head)
   }
 
-  def of(function:String, lang:String):Future[JSONMetadata]  = {
+  def of(name:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
       (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id)
-      if export.function === function
+      if export.name === name
 
     } yield (export,exportI18n)
 
@@ -110,7 +110,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
       val parameters = export.parameters.toSeq.flatMap(_.split(","))
 
-      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq())//,"")
+      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq())//,"")
     }
   }
 

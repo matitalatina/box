@@ -9,45 +9,46 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
-import ch.wsl.box.client.{ExportState, ExportsState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.Context._
+import ch.wsl.box.client.{DataListState, DataState}
 import ch.wsl.box.client.views.components.widget.WidgetUtils
 import ch.wsl.box.model.shared.ExportDef
 import scalatags.generic
 
-case class Exports(list:Seq[ExportDef], currentEntity:Option[ExportDef], search:String, filteredList:Seq[ExportDef])
+case class DataList(list:Seq[ExportDef], currentEntity:Option[ExportDef], search:String, filteredList:Seq[ExportDef], kind:String)
 
-object Exports extends HasModelPropertyCreator[Exports] {
-  implicit val blank: Blank[Exports] =
-    Blank.Simple(Exports(Seq(),None,"",Seq()))
+object DataList extends HasModelPropertyCreator[DataList] {
+  implicit val blank: Blank[DataList] =
+    Blank.Simple(DataList(Seq(),None,"",Seq(),""))
 }
 
 
-case class ExportsViewPresenter(modelName:String) extends ViewFactory[ExportsState] {
+case class DataListViewPresenter(modelName:String) extends ViewFactory[DataListState] {
 
 
 
-  override def create(): (View, Presenter[ExportsState]) = {
-    val model = ModelProperty.blank[Exports]
+  override def create(): (View, Presenter[DataListState]) = {
+    val model = ModelProperty.blank[DataList]
 
-    val presenter = new ExportsPresenter(model)
-    val view = new ExportsView(model,presenter)
+    val presenter = new DataListPresenter(model)
+    val view = new DataListView(model,presenter)
     (view,presenter)
   }
 }
 
-class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsState] {
+class DataListPresenter(model:ModelProperty[DataList]) extends Presenter[DataListState] {
 
 
 
-  override def handleState(state: ExportsState ): Unit = {
+  override def handleState(state: DataListState ): Unit = {
+    model.subProp(_.kind).set(state.kind)
 //    println(state.currentExport)
-    REST.exports(Session.lang()).map{ exports =>
+    REST.dataList(state.kind,Session.lang()).map{ exports =>
       model.subSeq(_.list).set(exports)
       model.subSeq(_.filteredList).set(exports)
       val current = exports.find(_.function == state.currentExport)
@@ -63,7 +64,7 @@ class ExportsPresenter(model:ModelProperty[Exports]) extends Presenter[ExportsSt
 
 }
 
-class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) extends ContainerView {
+class DataListView(model:ModelProperty[DataList], presenter: DataListPresenter) extends ContainerView {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
@@ -92,7 +93,7 @@ class ExportsView(model:ModelProperty[Exports], presenter: ExportsPresenter) ext
         ul(ClientConf.style.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>
             li(produce(m) { export =>
-              WidgetUtils.addTooltip(m.get.tooltip) (a(Navigate.click(ExportState(export.function)), m.get.label).render)
+              WidgetUtils.addTooltip(m.get.tooltip) (a(Navigate.click(DataState(model.get.kind,export.function)), m.get.label).render)
             }).render
           }
         ).render

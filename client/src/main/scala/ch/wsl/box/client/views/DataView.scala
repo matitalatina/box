@@ -3,7 +3,7 @@ package ch.wsl.box.client.views
 
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{EntityFormState, EntityTableState, ExportState}
+import ch.wsl.box.client.{EntityFormState, EntityTableState, DataState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils._
@@ -34,34 +34,36 @@ import scala.util.Try
   * Created by andre on 4/24/2017.
   */
 
-case class ExportModel(metadata:Option[JSONMetadata], queryData:Json, headers:Seq[String],data:Seq[Seq[String]], exportDef:Option[ExportDef])
+case class DataModel(metadata:Option[JSONMetadata], queryData:Json, headers:Seq[String], data:Seq[Seq[String]], exportDef:Option[ExportDef], kind:String)
 
-object ExportModel extends HasModelPropertyCreator[ExportModel]{
-  implicit val blank: Blank[ExportModel] =
-    Blank.Simple(ExportModel(None, Json.Null, Seq(), Seq(), None))
+object DataModel extends HasModelPropertyCreator[DataModel]{
+  implicit val blank: Blank[DataModel] =
+    Blank.Simple(DataModel(None, Json.Null, Seq(), Seq(), None,""))
 }
 
-object ExportViewPresenter extends ViewPresenter[ExportState] {
+object DataViewPresenter extends ViewPresenter[DataState] {
 
   import ch.wsl.box.client.Context._
-  override def create(): (View, Presenter[ExportState]) = {
-    val model = ModelProperty.blank[ExportModel]
-    val presenter = ExportPresenter(model)
-    (ExportView(model,presenter),presenter)
+  override def create(): (View, Presenter[DataState]) = {
+    val model = ModelProperty.blank[DataModel]
+    val presenter = DataPresenter(model)
+    (DataView(model,presenter),presenter)
   }
 }
 
-case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[ExportState] with Logging {
+case class DataPresenter(model:ModelProperty[DataModel]) extends Presenter[DataState] with Logging {
 
   import ch.wsl.box.client.Context._
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
 
 
-  override def handleState(state: ExportState): Unit = {
+  override def handleState(state: DataState): Unit = {
+    model.subProp(_.kind).set(state.kind)
+
     for{
-      metadata <- REST.exportMetadata(state.export,Session.lang())
-      exportDef <- REST.exportDef(state.export, Session.lang())
+      metadata <- REST.dataMetadata(state.kind,state.export,Session.lang())
+      exportDef <- REST.dataDef(state.kind,state.export, Session.lang())
     } yield {
       model.subProp(_.metadata).set(Some(metadata))
       model.subProp(_.queryData).set(Json.obj(JSONMetadata.jsonPlaceholder(metadata,Seq()).toSeq :_*))
@@ -76,7 +78,7 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
 
   def csv() = {
     logger.info()
-    val url = s"api/v1/export/${model.get.metadata.get.entity}/${Session.lang()}?q=${args.toString()}".replaceAll("\n","")
+    val url = s"api/v1/${model.get.kind}/${model.get.metadata.get.name}/${Session.lang()}?q=${args.toString()}".replaceAll("\n","")
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }
@@ -84,7 +86,7 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
   def query() = {
 
     for{
-      data <- REST.export(model.get.metadata.get.entity,args,Session.lang())
+      data <- REST.data(model.get.kind,model.get.metadata.get.name,args,Session.lang())
     } yield {
       model.subProp(_.headers).set(data.headOption.getOrElse(Seq()))
       model.subProp(_.data).set(Try(data.tail).getOrElse(Seq()))
@@ -92,7 +94,7 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
   }
 }
 
-case class ExportView(model:ModelProperty[ExportModel], presenter:ExportPresenter) extends View {
+case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) extends View {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
