@@ -33,7 +33,7 @@ trait Root extends Logging {
   implicit val executionContext:ExecutionContext
 
   val binding: Future[Http.ServerBinding]
-  val system: ActorSystem
+  implicit val system: ActorSystem
 
   val akkaConf:Config
 

@@ -1,5 +1,6 @@
 package ch.wsl.box.rest.routes
 
+import akka.actor.ActorSystem
 import akka.stream.Materializer
 import ch.wsl.box.rest.jdbc.JdbcConnect
 import ch.wsl.box.rest.logic.DataResult
@@ -21,7 +22,7 @@ object Export extends Data with Logging {
   override def metadataFactory(implicit up: UserProfile, mat: Materializer, ec: ExecutionContext): DataMetadataFactory = ExportMetadataFactory()
 
 
-  override def data(function: String, params: Json, lang: String)(implicit up: UserProfile, mat:Materializer, ec: ExecutionContext): Future[Option[DataResult]] = {
+  override def data(function: String, params: Json, lang: String)(implicit up: UserProfile, mat:Materializer, ec: ExecutionContext,system:ActorSystem): Future[Option[DataResult]] = {
     implicit val db = up.db
 
     JdbcConnect.function(function, params.as[Seq[Json]].right.get,lang)

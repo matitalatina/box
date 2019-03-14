@@ -1,10 +1,10 @@
-package ch.wsl.box.rest.utils
+package ch.wsl.box.rest.logic.functions
 
 import scala.reflect.runtime.currentMirror
-import scala.tools.reflect.ToolBox
-
 
 object Eval {
+
+  import scala.tools.reflect.ToolBox
 
   def apply[A](string: String): A = {
     val toolbox = currentMirror.mkToolBox()

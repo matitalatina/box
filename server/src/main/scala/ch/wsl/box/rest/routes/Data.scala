@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.routes
 
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`, `Content-Type`}
@@ -30,9 +31,9 @@ trait Data extends Logging {
 
   def metadataFactory(implicit up: UserProfile,mat:Materializer, ec: ExecutionContext):DataMetadataFactory
 
-  def data(function:String,params:Json,lang:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[Option[DataResult]]
+  def data(function:String,params:Json,lang:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext, system:ActorSystem):Future[Option[DataResult]]
 
-  def csv(function:String,params:Json,lang:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) = {
+  def csv(function:String,params:Json,lang:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext, system:ActorSystem) = {
     onSuccess(data(function,params,lang)) {
       case None => complete(StatusCodes.BadRequest)
       case Some(dr) =>
@@ -46,7 +47,7 @@ trait Data extends Logging {
   }
 
 
-  def route(implicit up:UserProfile, ec:ExecutionContext,mat:Materializer):Route = {
+  def route(implicit up:UserProfile, ec:ExecutionContext,mat:Materializer, system:ActorSystem):Route = {
     pathPrefix("list") {
       //      complete(JSONExportMetadataFactory().list)
       path(Segment) { lang =>
