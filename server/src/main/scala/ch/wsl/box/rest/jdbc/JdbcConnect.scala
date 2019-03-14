@@ -11,6 +11,7 @@ import scribe.Logging
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.logic.DataResult
 
 
 /**
@@ -22,9 +23,9 @@ object JdbcConnect extends Logging {
   import ch.wsl.box.shared.utils.JSONUtils._
   import io.circe.syntax._
 
-  case class SQLFunctionResult(headers:Seq[String],rows:Seq[Seq[Json]])
 
-  def function(name:String, args: Seq[Json], lang:String)(implicit ec:ExecutionContext,db:Database):Future[Option[SQLFunctionResult]] = {
+
+  def function(name:String, args: Seq[Json], lang:String)(implicit ec:ExecutionContext,db:Database):Future[Option[DataResult]] = {
 
     val result = Future{
       // make the connection
@@ -39,7 +40,7 @@ object JdbcConnect extends Logging {
         val resultSet = statement.executeQuery(query)
         val metadata = getColumnMeta(resultSet.getMetaData)
         val data = getResults(resultSet,metadata)
-        SQLFunctionResult(metadata.map(_.label),data)
+        DataResult(metadata.map(_.label),data.map(_.map(_.string)))
       }.toOption
       connection.close()
       result

@@ -19,15 +19,17 @@ object FunctionUIDef {
       JSONField(JSONFieldTypes.STRING,"function",false, widget = Some(WidgetsNames.textarea),label = Some(""), default = Some(
         """
           |/*
-          | * Must return a Future[Seq[Seq[String]]] that represent a CSV table
+          | * Must return a Future[DataResult] that represent a CSV table
           | * `context` is provided that has:
           | * - data:io.circe.Json that store the data of the parameters
           | * - ws:ch.wsl.box.rest.logic.RuntimeWS that exposes `get` and `post` methods to interact with external WS
-          | * - psql:ch.wsl.box.rest.logic.RuntimePSQL that exposes `function` to call the underlying DB
+          | * - psql:ch.wsl.box.rest.logic.RuntimePSQL that exposes `function` and `table` to call the underlying DB
           | */
           |
           |for{
-          |  result <- Future.successful(Seq(Seq("demo")))
+          |  result <- Future.successful{
+          |     DataResult(headers = Seq("demo"), rows = Seq(Seq("demo")))
+          |  }
           |} yield result
           |
         """.stripMargin)),

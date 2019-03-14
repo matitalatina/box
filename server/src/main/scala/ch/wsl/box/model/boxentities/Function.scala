@@ -45,7 +45,7 @@ object Function {
     val function: Rep[Option[String]] = column[Option[String]]("function", O.Default(None))
 
 
-    lazy val fieldFk = foreignKey("fkey_function", function_id, Function)(r => Rep.Some(r.function_id), onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val fieldFk = foreignKey("fkey_function", function_id, Function)(r => Rep.Some(r.function_id), onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
   }
   lazy val Function_i18n = new TableQuery(tag => new Function_i18n(tag))
 
@@ -73,7 +73,7 @@ object Function {
     val conditionFieldId: Rep[Option[String]] = column[Option[String]]("conditionFieldId", O.Default(None))
     val conditionValues: Rep[Option[String]] = column[Option[String]]("conditionValues", O.Default(None))
 
-    lazy val functionFk = foreignKey("fkey_function", function_id, Function)(r => r.function_id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val functionFk = foreignKey("fkey_function", function_id, Function)(r => r.function_id, onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
   }
   lazy val FunctionField = new TableQuery(tag => new FunctionField(tag))
 
@@ -95,7 +95,7 @@ object Function {
     val hint: Rep[Option[String]] = column[Option[String]]("hint", O.Default(None))
     val lookupTextField: Rep[Option[String]] = column[Option[String]]("lookupTextField", O.Default(None))
 
-    lazy val fieldFk = foreignKey("fkey_field", field_id, FunctionField)(r => Rep.Some(r.field_id), onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val fieldFk = foreignKey("fkey_field", field_id, FunctionField)(r => Rep.Some(r.field_id), onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
   }
   lazy val FunctionField_i18n = new TableQuery(tag => new FunctionField_i18n(tag))
 

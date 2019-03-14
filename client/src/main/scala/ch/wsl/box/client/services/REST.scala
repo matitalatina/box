@@ -64,8 +64,7 @@ object REST {
   def exportDef(name:String,lang:String) = client.get[ExportDef](s"/export/$name/def/$lang")
   def exports(lang:String) = client.get[Seq[ExportDef]](s"/export/list/$lang")
 
-  def export(name:String,params:Seq[Json],lang:String):Future[Seq[Seq[String]]] = client.post[Seq[Json],String](s"/export/$name/$lang",
-    params.map(_.injectLang(lang))).map(CSV.read)
+  def export(name:String,params:Json,lang:String):Future[Seq[Seq[String]]] = client.post[Json,String](s"/export/$name/$lang", params).map(CSV.read)
 
   def writeAccess(table:String,kind:String) = client.get[Boolean](s"/access/$kind/$table/write")
 

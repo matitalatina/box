@@ -189,8 +189,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     val k = ids(el)
     val confim = window.confirm(Labels.entity.confirmDelete)
     if(confim) {
-      model.get.metadata.map(_.entity).foreach { entity =>
-        REST.delete(model.get.kind, Session.lang(),entity,k).map{ count =>
+      model.get.metadata.map(_.name).foreach { name =>
+        REST.delete(model.get.kind, Session.lang(),name,k).map{ count =>
           Notification.add("Deleted " + count.count + " rows")
           reloadRows(model.get.ids.currentPage)
         }

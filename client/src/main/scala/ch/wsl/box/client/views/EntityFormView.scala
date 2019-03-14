@@ -152,12 +152,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     val confim = window.confirm(Labels.entity.confirmDelete)
     if(confim) {
       for{
-        entity <- model.get.metadata.map(_.entity)
+        name <- model.get.metadata.map(_.name)
         key <- model.get.id.flatMap(JSONID.fromString)
       } yield {
-        REST.delete(model.get.kind, Session.lang(),entity,key).map{ count =>
+        REST.delete(model.get.kind, Session.lang(),name,key).map{ count =>
           Notification.add("Deleted " + count.count + " rows")
-          Navigate.to(Routes(model.get.kind, entity).entity(entity))
+          Navigate.to(Routes(model.get.kind, name).entity(name))
         }
       }
     }

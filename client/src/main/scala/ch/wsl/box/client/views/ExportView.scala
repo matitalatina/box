@@ -71,12 +71,12 @@ case class ExportPresenter(model:ModelProperty[ExportModel]) extends Presenter[E
 
   private def args = {
     val qd = model.get.queryData
-    model.get.metadata.get.tabularFields.map(k => qd.js(k))
+    model.get.metadata.get.tabularFields.map(k => qd.js(k)).map(_.injectLang(Session.lang())).asJson
   }
 
   def csv() = {
     logger.info()
-    val url = s"api/v1/export/${model.get.metadata.get.entity}/${Session.lang()}?q=${args.map(_.injectLang(Session.lang)).asJson.toString()}".replaceAll("\n","")
+    val url = s"api/v1/export/${model.get.metadata.get.entity}/${Session.lang()}?q=${args.toString()}".replaceAll("\n","")
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }

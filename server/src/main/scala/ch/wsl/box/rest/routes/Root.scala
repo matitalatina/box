@@ -161,6 +161,9 @@ trait Root extends Logging {
               pathPrefix("export") {
                 Export.route
               } ~
+              pathPrefix("function") {
+                Functions.route
+              } ~
               pathPrefix("file") {
                 FileRoutes.route
               } ~
