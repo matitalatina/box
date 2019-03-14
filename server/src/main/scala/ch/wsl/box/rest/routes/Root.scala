@@ -17,7 +17,7 @@ import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.{EntityKind, LoginRequest}
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, JSONFormMetadataFactory}
+import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory}
 import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
 import scribe.Logging
@@ -187,13 +187,13 @@ trait Root extends Logging {
               } ~
               path("forms") {
                 get {
-                  complete(JSONFormMetadataFactory().list)
+                  complete(FormMetadataFactory().list)
                 }
               } ~
               pathPrefix("form") {
                 pathPrefix(Segment) { lang =>
                   pathPrefix(Segment) { name =>
-                    Form(name, lang,EntityActionsRegistry().tableActions,JSONFormMetadataFactory(),up.db,EntityKind.FORM.kind).route
+                    Form(name, lang,EntityActionsRegistry().tableActions,FormMetadataFactory(),up.db,EntityKind.FORM.kind).route
                   }
                 }
               } ~

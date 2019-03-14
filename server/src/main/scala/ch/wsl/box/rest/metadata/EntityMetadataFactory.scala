@@ -15,7 +15,7 @@ import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-object JSONMetadataFactory extends Logging {
+object EntityMetadataFactory extends Logging {
 
   val dbConf: Config = com.typesafe.config.ConfigFactory.load().as[com.typesafe.config.Config]("db")
 //  private val tables:Seq[String] = dbConf.as[Seq[String]]("generator.tables")
@@ -113,7 +113,7 @@ object JSONMetadataFactory extends Logging {
                     field.jsonType,
                     name = field.boxName,
                     nullable = field.nullable,
-                    widget = JSONMetadataFactory.defaultWidgetMapping(field.data_type)
+                    widget = EntityMetadataFactory.defaultWidgetMapping(field.data_type)
                   ))
                 }
               }
@@ -121,7 +121,7 @@ object JSONMetadataFactory extends Logging {
                 field.jsonType,
                 name = field.boxName,
                 nullable = field.nullable,
-                widget = JSONMetadataFactory.defaultWidgetMapping(field.data_type)
+                widget = EntityMetadataFactory.defaultWidgetMapping(field.data_type)
               ))
             }
           }
@@ -132,7 +132,7 @@ object JSONMetadataFactory extends Logging {
         val result = for {
           c <- schema.columns
           fields <- Future.sequence(c.map(field2form))
-          keys <- JSONMetadataFactory.keysOf(table)
+          keys <- EntityMetadataFactory.keysOf(table)
         } yield {
           val fieldList = fields.map(_.name)
           JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fieldList, keys, None, fieldList)//, table)

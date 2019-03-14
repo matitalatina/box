@@ -21,7 +21,7 @@ import scala.util.Try
   *
   * mapping from form specs in box schema into JSONForm
   */
-object JSONFormMetadataFactory{
+object FormMetadataFactory{
   private var cacheName = Map[(String, String, String),Future[JSONMetadata]]()
   private var cacheId = Map[(String, Int, String),Future[JSONMetadata]]()
 
@@ -33,7 +33,7 @@ object JSONFormMetadataFactory{
 
 
 
-case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
+case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
   implicit val db = up.db
 
@@ -42,30 +42,30 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
   }.map{_.map(_.name)}
 
   def of(id:Int, lang:String):Future[JSONMetadata] = {
-    JSONFormMetadataFactory.cacheId.lift((up.name, id,lang)) match {
+    FormMetadataFactory.cacheId.lift((up.name, id,lang)) match {
       case Some(r) => r
       case None => {
-        logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${JSONFormMetadataFactory.cacheName}")
+        logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${FormMetadataFactory.cacheName}")
         val formQuery: Query[Form, Form_row, Seq] = for {
           form <- Form.table if form.form_id === id
         } yield form
         val result = getForm(formQuery,lang)
-        JSONFormMetadataFactory.cacheId = JSONFormMetadataFactory.cacheId ++ Map((up.name, id,lang) -> result)
+        FormMetadataFactory.cacheId = FormMetadataFactory.cacheId ++ Map((up.name, id,lang) -> result)
         result
       }
     }
   }
 
   def of(name:String, lang:String):Future[JSONMetadata] = {
-    JSONFormMetadataFactory.cacheName.lift((up.name, name,lang)) match {
+    FormMetadataFactory.cacheName.lift((up.name, name,lang)) match {
       case Some(r) => r
       case None => {
-        logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${JSONFormMetadataFactory.cacheName}")
+        logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${FormMetadataFactory.cacheName}")
         val formQuery: Query[Form, Form_row, Seq] = for {
           form <- Form.table if form.name === name
         } yield form
         val result = getForm(formQuery,lang)
-        JSONFormMetadataFactory.cacheName = JSONFormMetadataFactory.cacheName ++ Map((up.name, name,lang) -> result)
+        FormMetadataFactory.cacheName = FormMetadataFactory.cacheName ++ Map((up.name, name,lang) -> result)
         result
       }
     }
@@ -109,7 +109,7 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
         }.map(_.headOption)
       })
       columns <- Future.sequence(fields.map(f => columns(form,f._1)))
-      keys <- JSONMetadataFactory.keysOf(form.entity)
+      keys <- EntityMetadataFactory.keysOf(form.entity)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
     } yield {
 
@@ -170,12 +170,12 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
         refEntity <- field.lookupEntity
         value <- field.lookupValueField
 
-        text = fieldI18n.flatMap(_.lookupTextField).getOrElse(JSONMetadataFactory.lookupField(refEntity,lang,None))
+        text = fieldI18n.flatMap(_.lookupTextField).getOrElse(EntityMetadataFactory.lookupField(refEntity,lang,None))
       } yield {
 
         import io.circe.generic.auto._
         for{
-          keys <- JSONMetadataFactory.keysOf(refEntity)
+          keys <- EntityMetadataFactory.keysOf(refEntity)
           filter = { for{
             queryString <- field.lookupQuery
             queryJson <- parse(queryString).right.toOption

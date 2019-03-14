@@ -15,7 +15,7 @@ import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.metadata.JSONExportMetadataFactory
+import ch.wsl.box.rest.metadata.ExportMetadataFactory
 
 import scala.concurrent.ExecutionContext
 
@@ -48,7 +48,7 @@ object Export extends Logging {
       //      complete(JSONExportMetadataFactory().list)
       path(Segment) { lang =>
         get {
-          complete(JSONExportMetadataFactory().list(lang))
+          complete(ExportMetadataFactory().list(lang))
         }
       }
     } ~
@@ -57,7 +57,7 @@ object Export extends Logging {
           //      complete(JSONExportMetadataFactory().list)
           path(Segment) { lang =>
             get {
-              complete(JSONExportMetadataFactory().defOf(function, lang))
+              complete(ExportMetadataFactory().defOf(function, lang))
             }
           }
         }
@@ -67,7 +67,7 @@ object Export extends Logging {
           pathPrefix("metadata") {
             path(Segment) { lang =>
               get {
-                complete(JSONExportMetadataFactory().of(function, lang))
+                complete(ExportMetadataFactory().of(function, lang))
               }
             }
           } ~

@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import StringHelper._
-import ch.wsl.box.rest.metadata.JSONMetadataFactory
+import ch.wsl.box.rest.metadata.EntityMetadataFactory
 
 case class PgTable(
    table_schema:String,
@@ -41,8 +41,8 @@ case class PgColumn(
 ) {
   def nullable = is_nullable == "YES"
   def updatable = is_updatable == "YES"
-  def jsonType = JSONMetadataFactory.typesMapping(data_type)
-  def defaultWidget = JSONMetadataFactory.defaultWidgetMapping(data_type)
+  def jsonType = EntityMetadataFactory.typesMapping(data_type)
+  def defaultWidget = EntityMetadataFactory.defaultWidgetMapping(data_type)
   def boxName = column_name.slickfy
 }
 

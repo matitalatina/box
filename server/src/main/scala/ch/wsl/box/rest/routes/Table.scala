@@ -17,7 +17,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.metadata.JSONMetadataFactory
+import ch.wsl.box.rest.metadata.EntityMetadataFactory
 import io.circe.parser.decode
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}
@@ -118,12 +118,12 @@ case class Table[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Pro
       } ~
       path("metadata") {
         get {
-          complete{ JSONMetadataFactory.of(name, lang, limitLookupFromFk) }   //can set "en" hardcoded, since base table JSONForm do not change with language
+          complete{ EntityMetadataFactory.of(name, lang, limitLookupFromFk) }   //can set "en" hardcoded, since base table JSONForm do not change with language
         }
       } ~
       path("keys") {   //returns key fields names
         get {
-          complete{ JSONMetadataFactory.keysOf(name) }
+          complete{ EntityMetadataFactory.keysOf(name) }
         }
       } ~
       path("ids") {   //returns all id values in JSONKeys format filtered according to specified JSONQuery (as body of the post)
@@ -166,7 +166,7 @@ case class Table[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Pro
             get {
               parameters('q) { q =>
                 val query = parse(q).right.get.as[JSONQuery].right.get
-                val csv = Source.fromFuture(JSONMetadataFactory.of(name,lang, limitLookupFromFk).map{ metadata =>
+                val csv = Source.fromFuture(EntityMetadataFactory.of(name,lang, limitLookupFromFk).map{ metadata =>
                   CSV.writeRow(metadata.fields.map(_.name))
                 }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.writeRow(x.values())))
                 complete(csv)

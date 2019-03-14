@@ -3,7 +3,7 @@ package ch.wsl.box.rest.logic
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.metadata.JSONMetadataFactory
+import ch.wsl.box.rest.metadata.EntityMetadataFactory
 import scribe.Logging
 import slick.ast.Node
 import slick.basic.DatabasePublisher
@@ -90,7 +90,7 @@ class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product
 
 
   def keys() = for{
-    k <- JSONMetadataFactory.keysOf(entity.baseTableRow.tableName)
+    k <- EntityMetadataFactory.keysOf(entity.baseTableRow.tableName)
   } yield{
     k
   }

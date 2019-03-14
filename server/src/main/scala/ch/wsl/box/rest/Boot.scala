@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
-import ch.wsl.box.rest.metadata.{JSONFormMetadataFactory, JSONMetadataFactory}
+import ch.wsl.box.rest.metadata.{FormMetadataFactory, EntityMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -62,8 +62,8 @@ object Boot extends App  {
       case "r" => {
         root.stop()
         root=Box.start
-        JSONFormMetadataFactory.resetCache()
-        JSONMetadataFactory.resetCache()
+        FormMetadataFactory.resetCache()
+        EntityMetadataFactory.resetCache()
         println("reset cache")
       }
       case _ => {}

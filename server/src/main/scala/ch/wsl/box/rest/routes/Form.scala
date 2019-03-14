@@ -11,7 +11,7 @@ import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.metadata.{JSONMetadataFactory, MetadataFactory}
+import ch.wsl.box.rest.metadata.{EntityMetadataFactory, MetadataFactory}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -117,7 +117,7 @@ case class Form(
     path("keys") {
       get {
         complete {
-          metadata.map(f => JSONMetadataFactory.keysOf(f.entity) )
+          metadata.map(f => EntityMetadataFactory.keysOf(f.entity) )
         }
       }
     } ~

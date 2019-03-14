@@ -3,6 +3,7 @@ package ch.wsl.box.rest.metadata
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
+import ch.wsl.box.model.boxentities.Function.{FunctionField_i18n_row, FunctionField_row}
 import ch.wsl.box.model.boxentities.{Export, ExportField}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
@@ -11,47 +12,47 @@ import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging {
+case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with DataMetadataFactory {
 
   import io.circe.generic.auto._
 
   implicit val db = up.db
 
+  def functions = ch.wsl.box.model.boxentities.Function
+
   def list: Future[Seq[String]] = Auth.boxDB.run{
-    Export.Export.result
+    functions.Function.result
   }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
   def list(lang:String): Future[Seq[ExportDef]] = {
 
-//    def accessibleExport = for {
-//      roles <- up.memberOf
-//      ex <- Export.Export.filter(ex => ex.access_role.isEmpty || ex.access_role inSet roles || roles.contains(up.name))
-//    } yield ex
+    //    def accessibleExport = for {
+    //      roles <- up.memberOf
+    //      ex <- Export.Export.filter(ex => ex.access_role.isEmpty || ex.access_role inSet roles || roles.contains(up.name))
+    //    } yield ex
 
     def checkRole(roles:List[String], access_roles:List[String], accessLevel:Int) =  roles.intersect(access_roles).size>0 || access_roles.isEmpty || access_roles.contains(up.name) || accessLevel == 1000
 
     def query    = for {
-       (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
+      (e, ei18) <- functions.Function joinLeft(functions.Function_i18n.filter(_.lang === lang)) on(_.function_id === _.function_id)
 
     } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip), e.access_role)
 
-//    def queryResult = Auth.boxDB.run(query.result)
+    //    def queryResult = Auth.boxDB.run(query.result)
 
 
     for{
-      roles <- up.memberOf
       al <- up.accessLevel
       qr <-  Auth.boxDB.run(query.result)
     } yield {
-       qr.filter(_._7.map(ar => checkRole(roles,ar, al)).getOrElse(true))
-         .sortBy(_._4.getOrElse(Double.MaxValue)).map(
-         { case (label, function, name, _, hint, tooltip, _) =>
-           ExportDef(function, label.getOrElse(name), hint, tooltip)
-         })
+      qr.filter(_._7.map(ar => checkRole(List(),ar, al)).getOrElse(true)) // TODO how to manage roles?
+        .sortBy(_._4.getOrElse(Double.MaxValue)).map(
+        { case (label, function, name, _, hint, tooltip, _) =>
+          ExportDef(function, label.getOrElse(name), hint, tooltip)
+        })
 
     }
 
@@ -73,48 +74,40 @@ case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, 
 
   def of(function:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
-      (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id)
-      if export.function === function
+      (func, functionI18n) <- functions.Function joinLeft functions.Function_i18n.filter(_.lang === lang) on (_.function_id === _.function_id)
+      if func.function === function
 
-    } yield (export,exportI18n)
+    } yield (func,functionI18n)
 
-    def queryField(exportId:Int) = for{
-      (f, fi18n) <- ExportField.ExportField joinLeft ExportField.ExportField_i18n.filter(_.lang === lang) on (_.field_id === _.field_id)
-                if f.export_id === exportId
+    def queryField(functionId:Int) = for{
+      (f, fi18n) <- functions.FunctionField joinLeft functions.FunctionField_i18n.filter(_.lang === lang) on (_.field_id === _.field_id)
+      if f.function_id === functionId
     } yield (f, fi18n)
 
     for {
-      (export,exportI18n) <- Auth.boxDB.run {
+      (func, functionI18n)  <- Auth.boxDB.run {
         queryExport.result
       }.map(_.head)
 
       fields <- Auth.boxDB.run {
-        queryField(export.export_id.get).sortBy(_._1.field_id).result
+        queryField(func.function_id.get).sortBy(_._1.field_id).result
       }
 
       jsonFields <- Future.sequence(fields.map(fieldsMetadata(lang)))
 
     } yield {
 
-      if(exportI18n.isEmpty) logger.warn(s"Export ${export.name} (export_id: ${export.export_id}) has no translation to $lang")
+      if(functionI18n.isEmpty) logger.warn(s"Export ${func.name} (function_id: ${func.function_id}) has no translation to $lang")
 
 
-//      val jsonFields = fields.map(fieldsMetadata(lang))
+      val layout = Layout.fromString(func.layout).getOrElse(Layout.fromFields(jsonFields))
 
-//      def defaultLayout:Layout = { // for subform default with 12
-//        val default = Layout.fromFields(jsonFields)
-//        default.copy(blocks = default.blocks.map(_.copy(width = 12)))
-//      }
 
-      val layout = Layout.fromString(export.layout).getOrElse(Layout.fromFields(jsonFields))
-
-      val parameters = export.parameters.toSeq.flatMap(_.split(","))
-
-      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq())//,"")
+      JSONMetadata(func.function_id.get,func.name,functionI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,"function",lang,Seq(),Seq(),None,Seq())//,"")
     }
   }
 
-  private def fieldsMetadata(lang:String)(el:(ExportField_row, Option[ExportField_i18n_row])):Future[JSONField] = {
+  private def fieldsMetadata(lang:String)(el:(FunctionField_row, Option[FunctionField_i18n_row])):Future[JSONField] = {
     import ch.wsl.box.shared.utils.JSONUtils._
 
     val (field,fieldI18n) = el
@@ -131,7 +124,7 @@ case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, 
       import io.circe.generic.auto._
       for {
 
-        keys <- JSONMetadataFactory.keysOf(entity)
+        keys <- EntityMetadataFactory.keysOf(entity)
         filter = { for{
           queryString <- field.lookupQuery
           queryJson <- parse(queryString).right.toOption
@@ -144,8 +137,8 @@ case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, 
         Some(JSONFieldLookup.fromData(entity, JSONFieldMap(value, text), lookupData))
       }
     }} match {
-        case Some(a) => a
-        case None => Future.successful(None)
+      case Some(a) => a
+      case None => Future.successful(None)
     }
 
     val condition = for{
@@ -157,9 +150,9 @@ case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, 
 
     for{
       look <- lookup
-//      lab <- label
-//      placeHolder <- placeholder
-//      tip <- tooltip
+      //      lab <- label
+      //      placeHolder <- placeholder
+      //      tip <- tooltip
     } yield {
       JSONField(
         field.`type`,

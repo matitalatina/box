@@ -16,7 +16,7 @@ import io.circe.parser.parse
 import scribe.Logging
 import slick.lifted.TableQuery
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.metadata.JSONMetadataFactory
+import ch.wsl.box.rest.metadata.EntityMetadataFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -67,7 +67,7 @@ case class View[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Prod
         } ~
         path("metadata") {
           get {
-            complete{ JSONMetadataFactory.of(name, lang) }
+            complete{ EntityMetadataFactory.of(name, lang) }
           }
         } ~
         path("keys") {   //returns key fields names
@@ -116,7 +116,7 @@ case class View[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Prod
                     val query = parse(q).right.get.as[JSONQuery].right.get
                     complete {
                       for {
-                        metadata <- JSONMetadataFactory.of(name, lang.getOrElse("en"))
+                        metadata <- EntityMetadataFactory.of(name, lang.getOrElse("en"))
                         fkValues <- lang match {
                           case None => Future.successful(None)
                           case Some(_) => Lookup.valuesForEntity(metadata).map(Some(_))
