@@ -3,7 +3,7 @@ package ch.wsl.box.client.views
 
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{EntityFormState, EntityTableState, DataState}
+import ch.wsl.box.client.{DataKind, DataState, EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils._
@@ -72,8 +72,12 @@ case class DataPresenter(model:ModelProperty[DataModel]) extends Presenter[DataS
   }
 
   private def args = {
-    val qd = model.get.queryData
-    model.get.metadata.get.tabularFields.map(k => qd.js(k)).map(_.injectLang(Session.lang())).asJson
+    if(model.get.kind == DataKind.EXPORT) {
+      val qd = model.get.queryData
+      model.get.metadata.get.tabularFields.map(k => qd.js(k)).map(_.injectLang(Session.lang())).asJson
+    } else {
+      model.get.queryData
+    }
   }
 
   def csv() = {

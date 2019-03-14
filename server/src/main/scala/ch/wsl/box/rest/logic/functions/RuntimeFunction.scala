@@ -8,7 +8,6 @@ import io.circe.Json
 import scala.concurrent.{ExecutionContext, Future}
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic.DataResult
-import ch.wsl.box.rest.logic.functions.Eval
 
 
 trait RuntimeWS{
