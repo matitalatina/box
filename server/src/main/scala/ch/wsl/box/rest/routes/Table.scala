@@ -10,13 +10,14 @@ import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromRequestUnma
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
-import ch.wsl.box.rest.logic.{DbActions, JSONMetadataFactory, JSONTableActions}
-import ch.wsl.box.rest.utils.{JSONSupport, BoxConf, UserProfile}
+import ch.wsl.box.rest.logic.{DbActions, JSONTableActions}
+import ch.wsl.box.rest.utils.{BoxConf, JSONSupport, UserProfile}
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.metadata.JSONMetadataFactory
 import io.circe.parser.decode
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}

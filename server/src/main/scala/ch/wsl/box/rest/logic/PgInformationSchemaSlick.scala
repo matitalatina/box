@@ -2,6 +2,7 @@ package ch.wsl.box.rest.logic
 
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import StringHelper._
+import ch.wsl.box.rest.metadata.JSONMetadataFactory
 
 case class PgTable(
    table_schema:String,

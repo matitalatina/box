@@ -141,6 +141,13 @@ lazy val root: Project = (project in file("."))
       Def.task{
         (runMain in Compile in server).toTask(" ch.wsl.box.model.BuildBox").value
       }
+    ).value,
+    dropBox := Def.sequential(
+      //cleanAll,
+      (compile in Compile in server).toTask,
+      Def.task{
+        (runMain in Compile in server).toTask(" ch.wsl.box.model.DropBox").value
+      }
     ).value
   )
 
@@ -164,6 +171,7 @@ lazy val sharedJS: Project = shared.js.settings(name := "sharedJS")
 
 lazy val box = taskKey[Unit]("Package box")
 lazy val installBox = taskKey[Unit]("Install box")
+lazy val dropBox = taskKey[Unit]("Remove box tables")
 
 lazy val serve = taskKey[Unit]("start server")
 lazy val cleanAll = taskKey[Unit]("clean all projects")

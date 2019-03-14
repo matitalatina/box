@@ -1,6 +1,6 @@
 package ch.wsl.box.rest
 
-import ch.wsl.box.rest.logic.{FormActions, JSONFormMetadataFactory}
+import ch.wsl.box.rest.logic.FormActions
 import io.circe.Json
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.ScalaFutures

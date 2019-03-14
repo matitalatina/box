@@ -54,6 +54,8 @@ object JdbcConnect extends Logging {
 
   }
 
+
+  // TODO @boris, could we user the default labels table instead creating a new one just for the export?
   private def useI18nHeader(lang:String,keys: Seq[String])(implicit ec:ExecutionContext):Future[Seq[String]] = Future.sequence{
     keys.map{ key =>
       Auth.boxDB.run(ExportField.ExportHeader_i18n.filter(e => e.key === key && e.lang === lang).result).map { label =>

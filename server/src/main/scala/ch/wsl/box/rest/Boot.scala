@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
-import ch.wsl.box.rest.logic.{JSONFormMetadataFactory, JSONMetadataFactory}
+import ch.wsl.box.rest.metadata.{JSONFormMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
 import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}

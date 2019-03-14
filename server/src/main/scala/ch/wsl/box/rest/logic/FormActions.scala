@@ -14,6 +14,7 @@ import scribe.Logging
 import slick.basic.DatabasePublisher
 import slick.lifted.Query
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.metadata.MetadataFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 

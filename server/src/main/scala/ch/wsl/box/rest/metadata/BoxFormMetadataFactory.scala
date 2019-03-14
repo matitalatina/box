@@ -1,18 +1,20 @@
-package ch.wsl.box.rest.logic
+package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
 import ch.wsl.box.model.boxentities.Form
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
-import scribe.Logging
-import io.circe._
-import io.circe.syntax._
-import ch.wsl.box.model.Entities.profile.api._
 import ch.wsl.box.rest.routes.Table
+import ch.wsl.box.rest.utils.UserProfile
+import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
+
+
+  import io.circe._
+  import io.circe.syntax._
+  import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 
   final val FORM = 1

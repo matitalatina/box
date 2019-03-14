@@ -3,6 +3,7 @@ package ch.wsl.box.rest.logic
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import ch.wsl.box.model.shared._
+import ch.wsl.box.rest.metadata.JSONMetadataFactory
 import scribe.Logging
 import slick.ast.Node
 import slick.basic.DatabasePublisher

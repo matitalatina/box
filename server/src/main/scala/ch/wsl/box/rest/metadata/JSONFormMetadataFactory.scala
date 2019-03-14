@@ -1,21 +1,20 @@
-package ch.wsl.box.rest.logic
+package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared._
 import ch.wsl.box.model.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
-import ch.wsl.box.model.boxentities.Form.{Form, Form_i18n, Form_i18n_row, Form_row}
+import ch.wsl.box.model.boxentities.Form.{Form, Form_i18n, Form_row}
 import ch.wsl.box.model.boxentities.{Field, Form}
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import ch.wsl.box.rest.logic._
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import io.circe._
 import io.circe.parser._
-import io.circe.syntax._
 import scribe.Logging
 
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 /**
   * Created by andreaminetti on 10/03/16.
@@ -32,12 +31,7 @@ object JSONFormMetadataFactory{
   }
 }
 
-trait MetadataFactory{
-  def of(name:String, lang:String):Future[JSONMetadata]
-  def of(id:Int, lang:String):Future[JSONMetadata]
-  def children(form:JSONMetadata):Future[Seq[JSONMetadata]]
-  def list: Future[Seq[String]]
-}
+
 
 case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
@@ -46,8 +40,6 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
   def list: Future[Seq[String]] = Auth.boxDB.run{
     Form.table.result
   }.map{_.map(_.name)}
-
-  import ch.wsl.box.shared.utils.JSONUtils._
 
   def of(id:Int, lang:String):Future[JSONMetadata] = {
     JSONFormMetadataFactory.cacheId.lift((up.name, id,lang)) match {
@@ -100,7 +92,6 @@ case class JSONFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
   private def getForm(formQuery: Query[Form,Form_row,Seq],lang:String) = {
 
     import io.circe.generic.auto._
-    import ch.wsl.box.shared.utils.Formatters._
 
     def fieldQuery(formId:Int) = for{
       (field,fieldI18n) <- Field.table joinLeft Field.Field_i18n.filter(_.lang === lang) on(_.field_id === _.field_id) if field.form_id === formId

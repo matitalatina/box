@@ -1,29 +1,23 @@
-package ch.wsl.box.rest.logic
+package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared._
 import ch.wsl.box.model.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
-import ch.wsl.box.model.boxentities.{Export, ExportField, Form}
+import ch.wsl.box.model.boxentities.{Export, ExportField}
+import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
+import io.circe.Json
+import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep
 
-//import ch.wsl.box.rest.jdbc.PostgresProfile.plainAPI._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
 import scala.util.Try
 
 case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging {
 
   import io.circe.generic.auto._
-  import ch.wsl.box.shared.utils.Formatters._
-  import StringHelper._
 
   implicit val db = up.db
 
@@ -122,7 +116,6 @@ case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, 
 
   private def fieldsMetadata(lang:String)(el:(ExportField_row, Option[ExportField_i18n_row])):Future[JSONField] = {
     import ch.wsl.box.shared.utils.JSONUtils._
-    import io.circe.generic.auto._
 
     val (field,fieldI18n) = el
 

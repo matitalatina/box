@@ -9,13 +9,13 @@ import akka.stream.Materializer
 import akka.util.ByteString
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.rest.logic.{JSONExportMetadataFactory, JSONMetadataFactory}
 import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.metadata.JSONExportMetadataFactory
 
 import scala.concurrent.ExecutionContext
 
