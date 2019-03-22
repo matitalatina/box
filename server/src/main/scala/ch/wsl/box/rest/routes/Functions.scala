@@ -5,7 +5,7 @@ import akka.stream.Materializer
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.logic.functions.RuntimeFunction
 import ch.wsl.box.rest.metadata.{DataMetadataFactory, FunctionMetadataFactory}
-import ch.wsl.box.rest.utils.UserProfile
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import io.circe.Json
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,7 +26,7 @@ object Functions extends Data {
     implicit def db:Database = up.db
 
     for{
-      functionDef <- up.boxDb.run{
+      functionDef <- Auth.boxDB.run{
         functions.Function.filter(_.name === function).result
       }.map(_.headOption)
       result <- functionDef match {
