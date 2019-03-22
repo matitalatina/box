@@ -12,7 +12,7 @@ import ch.wsl.box.rest.logic.DataResult
 
 trait RuntimeWS{
   def get(url: String)(implicit ec:ExecutionContext, mat:Materializer, system:ActorSystem):Future[String]
-  def post(url:String,data:String)(implicit ec:ExecutionContext, mat:Materializer, system:ActorSystem):Future[String]
+  def post(url:String,data:String, contentType:String = "text/plain; charset=UTF-8")(implicit ec:ExecutionContext, mat:Materializer, system:ActorSystem):Future[String]
 }
 
 trait RuntimePSQL{

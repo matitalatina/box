@@ -3,6 +3,7 @@ package ch.wsl.box.rest.logic.functions
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.HttpHeader.ParsingResult
 import akka.stream.Materializer
 import akka.util.ByteString
 
@@ -20,10 +21,13 @@ object WSImpl extends RuntimeWS {
 
   override def get(url: String)(implicit ec:ExecutionContext, mat:Materializer, system:ActorSystem): Future[String] = request(HttpRequest(uri = url))
 
-  override def post(url: String, data: String)(implicit ec: ExecutionContext, mat: Materializer, system: ActorSystem): Future[String] = {
+  override def post(url: String, data: String, contentType:String)(implicit ec: ExecutionContext, mat: Materializer, system: ActorSystem): Future[String] = {
+
+    val contentTypeHeader:ContentType =ContentType.parse(contentType).getOrElse(ContentTypes.`text/plain(UTF-8)`)
+
     for{
       entity <- Marshal(data).to[RequestEntity]
-      result <- request(HttpRequest(uri = url, entity = entity, method = HttpMethods.POST))
+      result <- request(HttpRequest(uri = url, entity = entity.withContentType(contentTypeHeader), method = HttpMethods.POST))
     } yield result
   }
 

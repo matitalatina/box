@@ -33,7 +33,7 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
     new RuntimeWS {
       override def get(url: String)(implicit ec: ExecutionContext, mat: Materializer, system: ActorSystem): Future[String] = ???
 
-      override def post(url: String, data: String)(implicit ec: ExecutionContext, mat: Materializer, system: ActorSystem): Future[String] = ???
+      override def post(url: String, data: String, contentType: String)(implicit ec: ExecutionContext, mat: Materializer, system: ActorSystem): Future[String] = ???
     },
     new RuntimePSQL {
       override def function(name: String, parameters: Seq[Json])(implicit lang:Lang, ec:ExecutionContext,db:Database): Future[Option[DataResult]] = {
@@ -68,6 +68,7 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
     }
   }
 
+
   "Function" should "with ws call should be parsed and evaluated" in {
 
     val code =
@@ -80,6 +81,23 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
     whenReady(f(RuntimeFunction.context(Json.Null),"en")) { result =>
       println(result.headers)
       assert(result.headers.nonEmpty)
+    }
+  }
+
+
+
+
+  "Function" should "do a POST call as well" in {
+    val code =
+      """
+        |for{
+        |  result <- context.ws.post("https://postman-echo.com/post","data","application/x-www-form-urlencoded; charset=UTF-8")
+        |} yield DataResult(Seq(result),Seq())
+      """.stripMargin
+    val f = RuntimeFunction("test4",code)
+    whenReady(f(RuntimeFunction.context(Json.Null),"en")) { result =>
+      println(result.headers)
+      assert(result.headers.head.contains("data"))
     }
   }
 
