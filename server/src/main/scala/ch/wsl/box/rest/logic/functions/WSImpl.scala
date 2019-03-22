@@ -23,7 +23,7 @@ object WSImpl extends RuntimeWS {
   override def post(url: String, data: String)(implicit ec: ExecutionContext, mat: Materializer, system: ActorSystem): Future[String] = {
     for{
       entity <- Marshal(data).to[RequestEntity]
-      result <- request(HttpRequest(uri = url, entity = entity))
+      result <- request(HttpRequest(uri = url, entity = entity, method = HttpMethods.POST))
     } yield result
   }
 
