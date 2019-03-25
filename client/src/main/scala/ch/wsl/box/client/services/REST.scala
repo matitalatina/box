@@ -68,4 +68,7 @@ object REST {
 
   def writeAccess(table:String,kind:String) = client.get[Boolean](s"/access/$kind/$table/write")
 
+  //admin
+  def generateStub(entity:String) = client.get[Boolean](s"/create-stub/$entity")
+
 }

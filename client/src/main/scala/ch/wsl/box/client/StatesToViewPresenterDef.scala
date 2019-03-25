@@ -15,6 +15,7 @@ class StatesToViewPresenterDef extends ViewFactoryRegistry[RoutingState] {
     case MasterChildState(_,master,child) => MasterChildViewPresenter(master,child)
     case DataState(_,_) => DataViewPresenter
     case DataListState(_,currentExport) => DataListViewPresenter(currentExport)
+    case AdminState => AdminViewPresenter
     case _ => ErrorViewPresenter
   }
 }

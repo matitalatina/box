@@ -17,7 +17,7 @@ import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.{EntityKind, LoginRequest}
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory}
+import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, StubMetadataFactory}
 import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
 import scribe.Logging
@@ -219,6 +219,11 @@ trait Root extends Logging {
                   } ~
                   pathPrefix("box-admin") {
                     complete(BoxFormMetadataFactory().list)
+                  } ~
+                  pathPrefix("create-stub"){
+                    pathPrefix(Segment) { entity =>
+                      complete(StubMetadataFactory.forEntity(entity))
+                    }
                   } ~
                   pathPrefix("boxfile") {
                     BoxFileRoutes.route(session.userProfile.boxUserProfile, materializer, executionContext)

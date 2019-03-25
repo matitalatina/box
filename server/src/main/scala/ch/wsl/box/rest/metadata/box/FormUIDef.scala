@@ -25,7 +25,7 @@ object FormUIDef {
       JSONField(JSONFieldTypes.STRING,"query",true),
       JSONField(JSONFieldTypes.STRING,"exportFields",true),
       JSONField(JSONFieldTypes.CHILD,"fields",true,child = Some(Child(FORM_FIELD,"fields","form_id","form_id",None))),
-      JSONField(JSONFieldTypes.CHILD,"form_i18n",true,child = Some(Child(FORM_FIELD_I18N,"form_i18n","form_id","form_id",None)))
+      JSONField(JSONFieldTypes.CHILD,"form_i18n",true,child = Some(Child(FORM_I18N,"form_i18n","form_id","form_id",None)))
     ),
     layout = Layout(
       blocks = Seq(

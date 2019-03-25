@@ -26,6 +26,8 @@ case object RootState extends ContainerRoutingState(None)
 
 case object ErrorState extends FinalRoutingState(Some(RootState))
 
+case object AdminState extends FinalRoutingState(Some(RootState))
+
 case object IndexState extends FinalRoutingState(Some(RootState))
 
 case class EntitiesState(kind:String, currentEntity:String) extends ContainerRoutingState(Some(RootState))

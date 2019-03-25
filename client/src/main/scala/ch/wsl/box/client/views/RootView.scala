@@ -41,6 +41,7 @@ class RootView() extends ContainerView {
     Seq(MenuLink(Labels.header.home,IndexState)) ++
       {if(UI.enableAllTables) {
         Seq(
+          MenuLink("Admin",AdminState),
           MenuLink(Labels.header.entities,EntitiesState("entity","")),
           MenuLink("Tables",EntitiesState("table","")),
           MenuLink("Views",EntitiesState("view","")),

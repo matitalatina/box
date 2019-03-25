@@ -59,7 +59,7 @@ object Field {
     val conditionValues: Rep[Option[String]] = column[Option[String]]("conditionValues", O.Default(None))
 
     /** Foreign key referencing Form (database name fkey_form) */
-    lazy val formFk = foreignKey("fkey_form", form_id, Form.table)(r => r.form_id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val formFk = foreignKey("fkey_form", form_id, Form.table)(r => r.form_id, onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
   }
   /** Collection-like TableQuery object for table Field */
   lazy val table = new TableQuery(tag => new Field(tag))
@@ -102,7 +102,7 @@ object Field {
     val lookupTextField: Rep[Option[String]] = column[Option[String]]("lookupTextField", O.Default(None))
 
     /** Foreign key referencing Field (database name fkey_field) */
-    lazy val fieldFk = foreignKey("fkey_field", field_id, table)(r => Rep.Some(r.field_id), onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val fieldFk = foreignKey("fkey_field", field_id, table)(r => Rep.Some(r.field_id), onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
   }
   /** Collection-like TableQuery object for table Field_i18n */
   lazy val Field_i18n = new TableQuery(tag => new Field_i18n(tag))

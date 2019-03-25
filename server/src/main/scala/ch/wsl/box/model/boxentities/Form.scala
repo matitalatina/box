@@ -61,7 +61,7 @@ object Form {
     *  @param label Database column title SqlType(text), Default(None)
     *  @param tooltip Database column tooltip SqlType(text), Default(None)
     *  @param hint Database column hint SqlType(text), Default(None)*/
-  case class Form_i18n_row(id: Option[Int] = None, field_id: Option[Int] = None,
+  case class Form_i18n_row(id: Option[Int] = None, form_id: Option[Int] = None,
                            lang: Option[String] = None, label: Option[String] = None,
                            tooltip: Option[String] = None, hint: Option[String] = None)
   /** GetResult implicit for fetching Form_i18n_row objects using plain SQL queries */
@@ -87,7 +87,7 @@ object Form {
 
 
     /** Foreign key referencing Field (database name fkey_field) */
-    lazy val fieldFk = foreignKey("fkey_form", form_id, table)(r => Rep.Some(r.form_id), onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val fieldFk = foreignKey("fkey_form", form_id, table)(r => Rep.Some(r.form_id), onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
   }
   /** Collection-like TableQuery object for table Form_i18n */
   lazy val Form_i18n = new TableQuery(tag => new Form_i18n(tag))

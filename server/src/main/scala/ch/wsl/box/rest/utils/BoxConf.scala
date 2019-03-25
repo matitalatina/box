@@ -52,6 +52,8 @@ object BoxConf extends Logging {
 
   def restLookupLabels = ConfigFactory.parseString( Try(conf("rest.lookup.labels")).getOrElse("default=firstNoPKField"))
 
+  def langs = Try(conf("langs")).getOrElse("en").split(",").toSeq
+
   def limitLookupFromFk = Try(conf("limitLookupFromFk").toInt).getOrElse(50)
 
   def akkaHttpSession = {
