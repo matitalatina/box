@@ -144,6 +144,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     override def killWidget(): Unit = widget.killWidget()
 
+
+    override def afterRender(): Unit = widget.afterRender()
+
     override protected def show(): JsDom.all.Modifier = render(false)
 
     override protected def edit(): JsDom.all.Modifier = render(true)
@@ -192,6 +195,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     override def killWidget(): Unit = widgets.foreach(_.widget.killWidget())
 
+
+    override def afterRender(): Unit = widgets.foreach(_.widget.afterRender())
+
     override protected def show(): JsDom.all.Modifier = render(false)
 
     override protected def edit(): JsDom.all.Modifier = render(true)
@@ -221,6 +227,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
   override def killWidget(): Unit = blocks.foreach(_._2.killWidget())
 
+
+  override def afterRender(): Unit = blocks.foreach(_._2.afterRender())
 
   override protected def show(): JsDom.all.Modifier = render(false)
 

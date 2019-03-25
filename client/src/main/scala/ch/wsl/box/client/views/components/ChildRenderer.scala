@@ -132,6 +132,9 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
     override def killWidget(): Unit = childWidgets.foreach(_.killWidget())
 
+
+    override def afterRender(): Unit = childWidgets.foreach(_.killWidget())
+
     var childWidgets: Seq[ChildWidget] = Seq()
 
     def cleanSubwidget() = {

@@ -54,6 +54,7 @@ trait Widget{
 
   def beforeSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
   def afterSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
+  def afterRender():Unit = {}
 
   def killWidget() = {
     bindings.foreach(_.kill())
