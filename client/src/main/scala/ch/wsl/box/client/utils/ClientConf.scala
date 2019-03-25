@@ -58,6 +58,8 @@ object ClientConf {
 
   def notificationTimeOut = Try(conf("notification.timeout").toInt).getOrElse(6)
 
+  def mapBoxAccessToken = Try(conf("mapbox.accesstoken")).getOrElse("no token provided")
+
 //  def filterEqualityPrecisionDouble:Option[Int] = Try(conf("filterEqualityPrecision.double").toInt).toOption
 //
 //  def prepareDouble = filterEqualityPrecisionDouble match{

@@ -116,6 +116,7 @@ object Settings {
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka % "test",
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp % "test",
     "org.webjars"              % "bootstrap"         % "3.3.7",
+    "org.webjars"              % "leaflet"           % "1.4.0",
     "com.outr" %% "scribe" % versions.scribe,
     "com.outr" %% "scribe-slf4j" % versions.scribe,
     "nz.co.rossphillips" %% "scala-thumbnailer" % "0.5.SNAPSHOT",
@@ -135,7 +136,8 @@ object Settings {
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
-    "org.scala-js" %%% "scalajs-dom" % "0.9.0"
+    "org.scala-js" %%% "scalajs-dom" % "0.9.0",
+    "ch.wavein" %%% "scala-js-leaflet" % "0.1.0-SNAPSHOT",
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */
