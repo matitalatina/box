@@ -72,7 +72,8 @@ trait DateTimeWidget extends Widget  with Logging{
         val date = new scala.scalajs.js.Date(dt.get.getTime)
         if (date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return Json.Null  //todo ?????
         val result = format match {
-          case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate()) + " " + "%02d".format(date.getHours()) + ":" + "%02d".format(date.getSeconds())
+          case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate()) + " " +
+                                                                    "%02d".format(date.getHours()) + ":" + "%02d".format(date.getMinutes()) + ":" + "%02d".format(date.getSeconds())
           case `datePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate())
           case `timePickerFormat` => "%02d".format(date.getHours()) + ":" + "%02d".format(date.getMinutes())
         }
