@@ -114,7 +114,7 @@ case class JSONExportMetadataFactory(implicit up:UserProfile, mat:Materializer, 
 
       val layout = Layout.fromString(export.layout).getOrElse(Layout.fromFields(jsonFields))
 
-      val parameters = export.parameters.toSeq.flatMap(_.split(","))
+      val parameters = export.parameters.toSeq.flatMap(_.split(",").map(_.trim))
 
       JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(function),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq())//,"")
     }
