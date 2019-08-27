@@ -182,7 +182,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
             query <- queryJson.as[JSONQuery].right.toOption
           } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
 
-          lookupData <- EntityActionsRegistry().tableActions(refEntity).find(filter)
+          lookupData <- EntityActionsRegistry().actions(refEntity).get.find(filter)
 
         } yield {
 //          val options = lookupData.map{ lookupRow =>

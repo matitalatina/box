@@ -36,7 +36,10 @@ object JSONFieldLookup {
     import ch.wsl.box.shared.utils.JSONUtils._
 
     val options = lookupData.map{ lookupRow =>
-      JSONLookup(lookupRow.get(mapping.valueProperty),lookupRow.get(mapping.textProperty))
+
+      val label = mapping.textProperty.split(",").map(k => lookupRow.get(k)).mkString(" - ")
+
+      JSONLookup(lookupRow.get(mapping.valueProperty),label)
     }
     JSONFieldLookup(lookupEntity, mapping, options)
   }

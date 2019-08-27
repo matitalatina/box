@@ -21,6 +21,7 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
       s"""package ${pkg}
          |
          |import scala.concurrent.ExecutionContext
+         |import scala.util.Try
          |import ch.wsl.box.rest.logic.{JSONTableActions, JSONViewActions, EntityJSONTableActions, EntityJSONViewActions}
          |import $modelPackages._
          |
@@ -38,6 +39,9 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |    ${viewList.flatMap(mapView).mkString("\n")}
          |    case _ => None
          |  }
+         |
+         |  def actions(name:String): Option[EntityJSONViewActions] = viewActions(name).orElse(Try(tableActions(name)).toOption)
+         |
          |}
          |
          |object EntityActionsRegistry{
