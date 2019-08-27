@@ -103,6 +103,7 @@ object DefaultLabels {
       |en	entity.title	Tables/Views
       |en	entity.select	Select
       |en	entity.search	Search
+      |en	entity.duplicate	Copy
       |en	sort.asc	▼
       |en	sort.desc	▲
       |en	sort.ignore	-
@@ -136,6 +137,7 @@ object DefaultLabels {
       |it	entity.title	Tabelle/Views
       |it	entity.select	Seleziona
       |it	entity.search	Cerca
+      |it	entity.duplicate	Duplica
       |it	navigation.page	Pagina
       |it	navigation.record	Evento
       |it	navigation.of	di
@@ -163,6 +165,7 @@ object DefaultLabels {
       |fr	entity.title	Tableaux/Views
       |fr	entity.select	Sélectionner
       |fr	entity.search	Cercher
+      |fr	entity.duplicate	Copie
       |fr	navigation.page	Page
       |fr	navigation.record	Feu
       |fr	navigation.of	de
@@ -202,6 +205,7 @@ object DefaultLabels {
       |de	entity.title	Tabellen/Views
       |de	entity.select	Auswählen
       |de	entity.search	Suchen
+      |de	entity.duplicate	Kopie
       |de	navigation.page	Seite
       |de	navigation.record	Waldbrand
       |de	navigation.of	von

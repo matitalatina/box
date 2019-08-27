@@ -47,8 +47,7 @@ object EntityFormViewPresenter extends ViewFactory[EntityFormState] {
 }
 
 case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] with Logging {
-
-  import ch.wsl.box.client.Context._
+    import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JSONUtils._
 
   override def handleState(state: EntityFormState): Unit = {
@@ -172,6 +171,17 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         }
       }
     }
+  }
+
+  def duplicate() = {
+    val oldModel = model.get
+    model.set(oldModel.copy(
+      id = None,
+      data = oldModel.metadata.map{ metadata =>
+        metadata.keys.foldLeft(oldModel.data)((data,key) => data.hcursor.downField(key).delete.top.get) //removes key from json
+      }.getOrElse(oldModel.data)
+    ))
+
   }
 
 
@@ -349,6 +359,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
                 onclick :+= ((ev: Event) => presenter.save(() => Navigate.to(Routes(model.subProp(_.kind).get, m).add())), true)
               )(Labels.form.save_add), " ",
               button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
+              button(ClientConf.style.boxButton, onclick :+= ((ev:Event) => presenter.duplicate()))(Labels.entities.duplicate), " ",
               button(ClientConf.style.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete)
             ).render
           })

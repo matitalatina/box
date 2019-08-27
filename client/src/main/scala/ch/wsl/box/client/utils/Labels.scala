@@ -87,6 +87,7 @@ object Labels {
     def select = get("entity.select")
     def `new` = get("entity.new")
     def table = get("entity.table")
+    def duplicate = get("entity.duplicate")
   }
 
   object exports{
