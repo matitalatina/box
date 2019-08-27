@@ -150,8 +150,8 @@ case class FormActions(metadata:JSONMetadata,
 
     val id = e.ID(metadata.keys)
     for{
-      _ <- Future.sequence(subAction(e,Json.Null,_.upsert))
       result <- jsonAction.upsert(id,e)
+      _ <- Future.sequence(subAction(result,Json.Null,_.upsert))
     } yield result
   }
 
@@ -159,8 +159,8 @@ case class FormActions(metadata:JSONMetadata,
 
     val id = e.ID(metadata.keys)
     for{
-      _ <- Future.sequence(subAction(e,Json.Null,_.upsertIfNeeded))
       result <- jsonAction.upsertIfNeeded(id,e)
+      _ <- Future.sequence(subAction(result,Json.Null,_.upsertIfNeeded))
     } yield result
   }
 

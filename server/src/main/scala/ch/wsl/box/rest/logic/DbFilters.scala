@@ -117,7 +117,7 @@ trait UglyDBFilters extends DbFilters with Logging {
           case `typSHORT` => c.asInstanceOf[Rep[Short]] === v.toShort
           case `typDOUBLE` => c.asInstanceOf[Rep[Double]] === v.toDouble
           case `typBIGDECIMAL` => c.asInstanceOf[Rep[BigDecimal]] === BigDecimal(v)
-          case `typINT` => c.asInstanceOf[Rep[Int]] === v.toInt
+          case `typINT` => c.asInstanceOf[Rep[Int]] === Try(v.toInt).toOption
           case `typLONG` => c.asInstanceOf[Rep[Long]] === v.toLong
           case `typSTRING` => c.asInstanceOf[Rep[String]] === v
           case `typBOOLEAN` => c.asInstanceOf[Rep[Boolean]] === v.toBoolean
@@ -129,13 +129,13 @@ trait UglyDBFilters extends DbFilters with Logging {
           case `typDATE` => c.asInstanceOf[Rep[java.time.LocalDate]] === toDate(v).get
           case `typTIME` => c.asInstanceOf[Rep[java.time.LocalTime]] === toTime(v).get
 
-          case `typOptSHORT` =>  c.asInstanceOf[Rep[Option[Short]]] === v.toShort
-          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] === v.toDouble
-          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] === BigDecimal(v)
-          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] === v.toInt
-          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] === v.toLong
+          case `typOptSHORT` =>  c.asInstanceOf[Rep[Option[Short]]] === Try(v.toShort).toOption
+          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] === Try(v.toDouble).toOption
+          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] === Try(BigDecimal(v)).toOption
+          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] === Try(v.toInt).toOption
+          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] === Try(v.toLong).toOption
           case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]] === v
-          case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]] === v.toBoolean
+          case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]] === Try(v.toBoolean).toOption
           case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
             case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Option[java.time.LocalDateTime]]] === toTimestamp(v).get
             case JSONFieldTypes.DATE => {c.asInstanceOf[Rep[Option[java.time.LocalDateTime]]] >= BoxConf.prepareDatetime(toTimestamp(v).get) &&
@@ -169,13 +169,13 @@ trait UglyDBFilters extends DbFilters with Logging {
           case `typDATE` => c.asInstanceOf[Rep[java.time.LocalDate]] =!= toDate(v).get
           case `typTIME` => c.asInstanceOf[Rep[java.time.LocalTime]] =!= toTime(v).get
 
-          case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] =!= v.toShort
-          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] =!= v.toDouble
-          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] =!= BigDecimal(v)
-          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] =!= v.toInt
-          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] =!= v.toLong
+          case `typOptSHORT` => c.asInstanceOf[Rep[Option[Short]]] =!= Try(v.toShort).toOption
+          case `typOptDOUBLE` => c.asInstanceOf[Rep[Option[Double]]] =!= Try(v.toDouble).toOption
+          case `typOptBIGDECIMAL` => c.asInstanceOf[Rep[Option[BigDecimal]]] =!= Try(BigDecimal(v)).toOption
+          case `typOptINT` => c.asInstanceOf[Rep[Option[Int]]] =!= Try(v.toInt).toOption
+          case `typOptLONG` => c.asInstanceOf[Rep[Option[Long]]] =!= Try(v.toLong).toOption
           case `typOptSTRING` => c.asInstanceOf[Rep[Option[String]]] =!= v
-          case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]] =!= v.toBoolean
+          case `typOptBOOLEAN` => c.asInstanceOf[Rep[Option[Boolean]]] =!= Try(v.toBoolean).toOption
           case `typOptTIMESTAMP` => BoxConf.filterEqualityPrecisionDatetime match{
             case JSONFieldTypes.DATETIME => c.asInstanceOf[Rep[Option[java.time.LocalDateTime]]] =!= toTimestamp(v).get
             case JSONFieldTypes.DATE => {c.asInstanceOf[Rep[Option[java.time.LocalDateTime]]] < BoxConf.prepareDatetime(toTimestamp(v).get) ||

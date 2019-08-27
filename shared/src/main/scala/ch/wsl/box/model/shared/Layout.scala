@@ -1,7 +1,10 @@
 package ch.wsl.box.model.shared
 
-import io.circe.Decoder
+import io.circe.Decoder.Result
+import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.parser.parse
+import io.circe.generic.auto._
+import io.circe.syntax._
 import scribe.Logging
 
 /**
@@ -13,7 +16,20 @@ case class Layout(blocks: Seq[LayoutBlock])
 
 object Layout extends Logging {
 
-  def fromString(layout:Option[String])(implicit d:Decoder[Layout]) = layout.flatMap { l =>
+  implicit val encodeEither: Encoder[Either[String,SubLayoutBlock]] = new Encoder[Either[String, SubLayoutBlock]] {
+    override def apply(a: Either[String, SubLayoutBlock]): Json = a match {
+      case Right(str) => str.asJson
+      case Left(obj) => obj.asJson
+    }
+  }
+  implicit val decodeEither: Decoder[Either[String,SubLayoutBlock]] = new Decoder[Either[String, SubLayoutBlock]] {
+    override def apply(c: HCursor): Result[Either[String, SubLayoutBlock]] = c.value.asString match {
+      case Some(str) => c.as[String].map(Left(_))
+      case None => c.as[SubLayoutBlock].map(Right(_))
+    }
+  }
+
+  def fromString(layout:Option[String]) = layout.flatMap { l =>
     parse(l).fold({ jsonFailure =>                 //json parsing failure
       logger.warn(jsonFailure.getMessage())
       println(jsonFailure.getMessage())

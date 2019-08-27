@@ -14,6 +14,7 @@ object StubMetadataFactory {
   import io.circe._
   import io.circe.syntax._
   import io.circe.generic.auto._
+  import Layout._
   import ch.wsl.box.model.Entities.profile.api._
 
   def forEntity(entity:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[Boolean] = {

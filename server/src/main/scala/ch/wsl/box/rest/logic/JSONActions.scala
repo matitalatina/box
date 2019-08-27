@@ -122,7 +122,7 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
 
   override def upsert(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
-      current <- getById(id) //retrieve values in db
+      current <- getById(id).recover{case _ => None} //retrieve values in db
       result <- if (current.isDefined){   //if exists, check if we have to update
         val merged  = current.get.deepMerge(json) //merge old and new json
         jsonView.dbActions.updateById(id, toM(merged)).map(_ => merged)
@@ -137,7 +137,7 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
 
   override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
-      current <- getById(id) //retrieve values in db
+      current <- getById(id).recover{case _ => None} //retrieve values in db
       result <- if (current.isDefined){   //if exists, check if we have to skip the update (if row is the same)
         val merged  = current.get.deepMerge(json) //merge old and new json
         if (toM(current.get) != toM(merged)) {

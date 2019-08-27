@@ -100,6 +100,7 @@ object Session extends Logging {
 
   def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).toOption match {
     case Some(lang) if ClientConf.langs.contains(lang)  => lang
+    case _ if ClientConf.langs.nonEmpty => ClientConf.langs.head
     case _ => "en"
   }
   def setLang(lang:String) = {

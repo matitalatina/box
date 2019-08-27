@@ -88,7 +88,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     val metadata = children.find(_.objId == child.objId)
 
 
-    private def propagate(data: Json, metadata: JSONMetadata, f: (Widget => ((Json, JSONMetadata) => Future[Unit]))): Future[Unit] = {
+    private def propagate[T](data: Json, metadata: JSONMetadata, f: (Widget => ((Json, JSONMetadata) => Future[T]))): Future[Seq[T]] = {
 
       val childMetadata = children.find(_.objId == child.objId).get
 
@@ -102,6 +102,14 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       val orderedWidgetData: Seq[ChildWidget] = {alreadyExistentData.sortBy( x => x._2.get)(childMetadata.order) ++ newClientData}.map(_._1)
 
 
+      val out = Future.sequence(orderedFormData.zip(orderedWidgetData).map { case (childJson, widget) =>
+        logger.info(s"Propagate subform element: ${childMetadata.name} with data: $childJson")
+        f(widget)(childJson, childMetadata).map{ r =>
+          logger.info(s"propagate result: $r")
+          r
+        }
+      }).map{ o =>
+
       logger.info(
         s"""Propagate:
            |from server ordered:
@@ -112,23 +120,23 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
            |${orderedWidgetData.map(_.data.get)}
            |with Ids:
            |${orderedWidgetData.map(w => JSONID.fromData(w.data.get,childMetadata).map(_.asString))}
+           |with propagation
+           |$o
          """.stripMargin)
-
-      val out = orderedFormData.zip(orderedWidgetData).map { case (childJson, widget) =>
-        //println(s"Propagate subform element: ${subform.key} with data: $subformJson")
-        f(widget)(childJson, childMetadata)
+        o
       }
-
       //correct futures
-      Future.sequence(out).map(_ => ())
+      out
     }
 
     override def afterSave(data: Json, metadata: JSONMetadata): Future[Unit] = {
       //println(s"Propagate subform: ${subform.key} with data: $result")
-      propagate(data, metadata, _.afterSave)
+      propagate(data, metadata, _.afterSave).map(_ => ())
     }
 
-    override def beforeSave(data: Json, metadata: JSONMetadata): Future[Unit] = propagate(data, metadata, _.beforeSave)
+    override def beforeSave(data: Json, metadata: JSONMetadata) = propagate(data, metadata, _.beforeSave).map{ jsChilds =>
+      Map(child.key -> jsChilds.asJson).asJson
+    }
 
     override def killWidget(): Unit = childWidgets.foreach(_.killWidget())
 

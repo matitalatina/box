@@ -137,9 +137,10 @@ object EntityMetadataFactory extends Logging {
           val fieldList = fields.map(_.name)
           JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fieldList, keys, None, fieldList)//, table)
         }
-
-        logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)
-        cacheTable = cacheTable ++ Map((up.name, table, lang, lookupMaxRows) -> result)
+        if(BoxConf.enableCache) {
+          logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)
+          cacheTable = cacheTable ++ Map((up.name, table, lang, lookupMaxRows) -> result)
+        }
         result
       }
     }
@@ -156,7 +157,7 @@ object EntityMetadataFactory extends Logging {
           pk.boxKeys
         }
 
-        cacheKeys = cacheKeys ++ Map((table) -> result)
+        if(BoxConf.enableCache) cacheKeys = cacheKeys ++ Map((table) -> result)
         result
       }
     }

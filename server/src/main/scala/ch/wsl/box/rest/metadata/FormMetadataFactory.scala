@@ -8,7 +8,7 @@ import ch.wsl.box.model.boxentities.{Field, Form}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import io.circe._
 import io.circe.parser._
 import scribe.Logging
@@ -50,7 +50,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
           form <- Form.table if form.form_id === id
         } yield form
         val result = getForm(formQuery,lang)
-        FormMetadataFactory.cacheId = FormMetadataFactory.cacheId ++ Map((up.name, id,lang) -> result)
+        if(BoxConf.enableCache) FormMetadataFactory.cacheId = FormMetadataFactory.cacheId ++ Map((up.name, id,lang) -> result)
         result
       }
     }
@@ -65,7 +65,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
           form <- Form.table if form.name === name
         } yield form
         val result = getForm(formQuery,lang)
-        FormMetadataFactory.cacheName = FormMetadataFactory.cacheName ++ Map((up.name, name,lang) -> result)
+        if(BoxConf.enableCache) FormMetadataFactory.cacheName = FormMetadataFactory.cacheName ++ Map((up.name, name,lang) -> result)
         result
       }
     }

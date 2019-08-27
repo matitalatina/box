@@ -31,11 +31,12 @@ case class Form(
     import JSONSupport._
     import akka.http.scaladsl.model._
     import akka.http.scaladsl.server.Directives._
-    import ch.wsl.box.shared.utils.Formatters._
     import io.circe.generic.auto._
+    import ch.wsl.box.shared.utils.Formatters._ //need to be after circe generic auto or it will be overridden
     import ch.wsl.box.shared.utils.JSONUtils._
     import ch.wsl.box.model.shared.EntityKind
     import de.heikoseeberger.akkahttpcirce.ErrorAccumulatingCirceSupport
+
 
     implicit val implicitDB = db
 

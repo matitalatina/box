@@ -22,7 +22,7 @@ import org.scalajs.dom
 
 import scala.concurrent.duration._
 
-trait Widget{
+trait Widget extends Logging {
 
   def jsonToString(json:Json):String = json.string
 
@@ -52,7 +52,7 @@ trait Widget{
     }
   }
 
-  def beforeSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
+  def beforeSave(data:Json, metadata:JSONMetadata):Future[Json] = Future.successful(data)
   def afterSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
   def afterRender():Unit = {}
 
@@ -72,7 +72,14 @@ trait Widget{
   import io.udash.css.CssView._
 
 
-  protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.beforeSave(data,metadata))).map(_ => Unit)
+  protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Json] = Future.sequence(widgets.map(_.beforeSave(data,metadata))).map{ fields =>
+    fields.foldRight(JsonObject.empty.asJson){ (a,result) =>
+      logger.info(s"merging $a into $result")
+      val r = a.deepMerge(result)
+      logger.info(s"result: $r")
+      r
+    }
+  }
   protected def afterSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(data,metadata))).map(_ => Unit)
 
 

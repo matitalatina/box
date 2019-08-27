@@ -118,7 +118,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   import io.circe.syntax._
   import ch.wsl.box.client._
 
-  def save(toState:(String, String) => RoutingState) = {
+  def save(action:() => Unit) = {
 
     val m = model.get
     m.metadata.foreach{ metadata =>
@@ -130,23 +130,26 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
       val data:Json = m.data
 
-      def saveAction() = JSONID.fromString(m.id.getOrElse("")) match {
+      def saveAction(data:Json) = JSONID.fromString(m.id.getOrElse("")) match {
         case Some(id) => REST.update(m.kind,Session.lang(),m.name,id,data)
         case None => REST.insert(m.kind,Session.lang(),m.name, data)
       }
 
+      println(s"data: $data")
+
+
       {for{
-        _ <- widget.beforeSave(data,metadata)
-        resultSaved <- saveAction()
+        updatedData <- widget.beforeSave(data,metadata)
+        resultSaved <- saveAction(updatedData)
         _ <- widget.afterSave(resultSaved,metadata)
       } yield {
 //        val newState =  Routes(m.kind,m.name).table()
         val newId = JSONID.fromMap(metadata.keys.map(k => (k,resultSaved.js(k))))
         model.subProp(_.id).set(Some(newId.asString))
-        val newState =  toState(m.kind,m.name)
         model.subProp(_.data).set(resultSaved)
         enableGoAway
-        Navigate.to(newState)
+        Navigate.to(Routes(model.get.kind, model.get.name).edit(model.get.id.getOrElse("")))
+        action()
 
       }}.recover{ case e =>
         e.getStackTrace.foreach(x => logger.error(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
@@ -333,17 +336,17 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
               //save and stay on same record
               button(
                 ClientConf.style.boxButtonImportant,
-                onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).edit(model.get.id.getOrElse(""))), true)
+                onclick :+= ((ev: Event) => presenter.save(() => Unit), true)
               )(Labels.form.save), " ",
               //save and go to table view
               button(
                 ClientConf.style.boxButton,ClientConf.style.noMobile,
-                onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).entity()), true)
+                onclick :+= ((ev: Event) => presenter.save(() => Navigate.to(Routes(model.get.kind, model.get.name).entity())), true)
               )(Labels.form.save_table), " ",
               //save and go insert new record
               button(
                 ClientConf.style.boxButton,ClientConf.style.noMobile,
-                onclick :+= ((ev: Event) => presenter.save((kind, name) => Routes(kind, name).add()), true)
+                onclick :+= ((ev: Event) => presenter.save(() => Navigate.to(Routes(model.subProp(_.kind).get, m).add())), true)
               )(Labels.form.save_add), " ",
               button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
               button(ClientConf.style.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete)

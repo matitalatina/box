@@ -88,6 +88,8 @@ object BoxConf extends Logging {
     case "error" => Level.Error
   }
 
+  def enableCache = Try(conf("enableCache")).getOrElse(false)
+
 
   def dtFormatDatetime = Try(conf("dtformat.datetime")).getOrElse("yyyy-MM-dd HH:mm")
   def dtFormatDate = Try(conf("dtformat.date")).getOrElse("yyyy-MM-dd")
