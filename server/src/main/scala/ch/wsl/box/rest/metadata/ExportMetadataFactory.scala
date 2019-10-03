@@ -11,7 +11,6 @@ import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -50,7 +49,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
        qr.filter(_._7.map(ar => checkRole(roles,ar, al)).getOrElse(true))
          .sortBy(_._4.getOrElse(Double.MaxValue)).map(
          { case (label, function, name, _, hint, tooltip, _) =>
-           ExportDef(function, label.getOrElse(name), hint, tooltip)
+           ExportDef(function, label.getOrElse(name), hint, tooltip,FunctionKind.Modes.TABLE)
          })
 
     }
@@ -67,7 +66,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     Auth.boxDB.run{
       query.result
     }.map(_.map{ case (label, function, name, _, hint, tooltip) =>
-      ExportDef(function, label.getOrElse(name), hint, tooltip)
+      ExportDef(function, label.getOrElse(name), hint, tooltip,FunctionKind.Modes.TABLE)
     }.head)
   }
 

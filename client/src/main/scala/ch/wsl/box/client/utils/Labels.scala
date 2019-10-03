@@ -96,6 +96,8 @@ object Labels {
     def select = get("exports.select")
     def load = get("exports.load")
     def csv = get ("exports.csv")
+    def pdf = get ("exports.pdf")
+    def html = get ("exports.html")
   }
 
   object entity{

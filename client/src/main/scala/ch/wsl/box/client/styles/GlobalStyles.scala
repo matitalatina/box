@@ -15,7 +15,7 @@ import scalatags.JsDom
 import scalatags.generic.Attr
 
 
-case class StyleConf(colors:Colors)
+case class StyleConf(colors:Colors, smallCellsSize:Int)
 
 
 case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
@@ -170,7 +170,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val smallCells = style(
     padding(3 px).important,
-    fontSize(10 px),
+    fontSize(conf.smallCellsSize px),
     unsafeRoot("p")(
       margin(0 px)
     )

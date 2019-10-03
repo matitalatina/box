@@ -18,6 +18,7 @@ import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.{EntityKind, LoginRequest}
 import ch.wsl.box.rest.jdbc.JdbcConnect
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, StubMetadataFactory}
+import ch.wsl.box.rest.pdf.Pdf
 import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
 import scribe.Logging
@@ -64,6 +65,11 @@ trait Root extends Logging {
 
     //Serving UI
     UI.clientFiles ~
+    path("pdf") {
+      complete(
+        HttpResponse(entity = HttpEntity(MediaTypes.`application/pdf`, Pdf.render("<h1>TEST</h1>")))
+      )
+    } ~
     pathPrefix("webjars") {
       WebJarsSupport.webJars
     } ~

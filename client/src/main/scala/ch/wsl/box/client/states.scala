@@ -58,6 +58,7 @@ case class MasterChildState(kind:String,
 object DataKind{
   final val EXPORT = "export"
   final val FUNCTION = "function"
+  final val PDF = "pdf"
 }
 
 case class DataListState(kind:String,currentExport:String) extends ContainerRoutingState(Some(RootState))

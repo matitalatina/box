@@ -28,12 +28,16 @@ object FunctionUIDef {
           |
           |for{
           |  result <- Future.successful{
-          |     DataResult(headers = Seq("demo"), rows = Seq(Seq("demo")))
+          |     DataResultTable(headers = Seq("demo"), rows = Seq(Seq("demo")))
           |  }
           |} yield result
           |
         """.stripMargin)),
+      JSONField(JSONFieldTypes.STRING,"presenter",true, widget = Some(WidgetsNames.textarea),label = Some("")),
       JSONField(JSONFieldTypes.STRING,"description",true),
+      JSONField(JSONFieldTypes.STRING,"mode",false,lookup = Some(JSONFieldLookup.prefilled(
+        FunctionKind.Modes.all.map(x => JSONLookup(x,x))
+      ))),
       JSONField(JSONFieldTypes.STRING,"layout",true, widget = Some(WidgetsNames.textarea),label = Some("")),
       JSONField(JSONFieldTypes.NUMBER,"order",true),
       JSONField(JSONFieldTypes.CHILD,"function_field",true,child = Some(Child(FUNCTION_FIELD,"function_field","function_id","function_id",None))),
@@ -44,7 +48,7 @@ object FunctionUIDef {
         LayoutBlock(None,8,Seq(
           SubLayoutBlock(None,Seq(5,1,6),Seq(
             Right(
-              SubLayoutBlock(Some("Base Info"),Seq(12),Seq("function_id","name","order","description").map(Left(_)))
+              SubLayoutBlock(Some("Base Info"),Seq(12),Seq("function_id","name","order","description","mode").map(Left(_)))
             ),
             Left(""),
             Right(
@@ -52,6 +56,7 @@ object FunctionUIDef {
             )
           )),
           SubLayoutBlock(Some("Function"),Seq(12),Seq("function").map(Left(_))),
+          SubLayoutBlock(Some("Presenter"),Seq(12),Seq("presenter").map(Left(_))),
         ).map(Right(_))),
         LayoutBlock(Some("I18n"),4,Seq("function_i18n").map(Left(_))),
         LayoutBlock(Some("Fields"),12,Seq("function_field").map(Left(_))),

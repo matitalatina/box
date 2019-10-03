@@ -26,7 +26,7 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-  val dr = DataResult(Seq("aa"),Seq(Seq("aa","bb")))
+  val dr = DataResultTable(Seq("aa"),Seq(Seq("aa","bb")))
 
   val context = Context(
     Json.Null,
@@ -48,11 +48,11 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
 
     val code =
       """
-        |Future.successful(DataResult(Seq(),Seq(Seq("test"))))
+        |Future.successful(DataResultTable(Seq(),Seq(Seq("test"))))
       """.stripMargin
     val f = RuntimeFunction("test1",code)
     whenReady(f(context,"en")) { result =>
-      assert(result.rows.head.head == "test")
+      assert(result.asInstanceOf[DataResultTable].rows.head.head == "test")
     }
   }
 
@@ -75,12 +75,11 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
       """
         |for{
         |  result <- context.ws.get("http://wavein.ch")
-        |} yield DataResult(Seq(result),Seq())
+        |} yield DataResultTable(Seq(result),Seq())
       """.stripMargin
     val f = RuntimeFunction("test3",code)
     whenReady(f(RuntimeFunction.context(Json.Null),"en")) { result =>
-      println(result.headers)
-      assert(result.headers.nonEmpty)
+      assert(result.asInstanceOf[DataResultTable].headers.nonEmpty)
     }
   }
 
@@ -92,12 +91,11 @@ class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
       """
         |for{
         |  result <- context.ws.post("https://postman-echo.com/post","data","application/x-www-form-urlencoded; charset=UTF-8")
-        |} yield DataResult(Seq(result),Seq())
+        |} yield DataResultTable(Seq(result),Seq())
       """.stripMargin
     val f = RuntimeFunction("test4",code)
     whenReady(f(RuntimeFunction.context(Json.Null),"en")) { result =>
-      println(result.headers)
-      assert(result.headers.head.contains("data"))
+      assert(result.asInstanceOf[DataResultTable].headers.head.contains("data"))
     }
   }
 

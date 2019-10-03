@@ -104,6 +104,9 @@ case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) ext
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
 
+  def table = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.TABLE))
+  def pdf = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.PDF))
+  def html = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.HTML))
 
   override def getTemplate = div(
     produce(model.subProp(_.metadata)) {
@@ -122,8 +125,10 @@ case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) ext
     },
     br,
     JSONMetadataRenderer(metadata, model.subProp(_.queryData),Seq()).edit(),
-    button(Labels.exports.load,onclick :+= ((e:Event) => presenter.query()),ClientConf.style.boxButton),
-    button(Labels.exports.csv,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton),
+    showIf(table) { button(Labels.exports.load,onclick :+= ((e:Event) => presenter.query()),ClientConf.style.boxButton).render },
+    showIf(table) { button(Labels.exports.csv,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton).render },
+    showIf(pdf) { button(Labels.exports.pdf,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton).render },
+    showIf(html) { button(Labels.exports.html,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton).render },
       UdashTable()(model.subSeq(_.data))(
         headerFactory = Some(() => {
           tr(

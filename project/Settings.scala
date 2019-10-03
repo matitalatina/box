@@ -123,7 +123,10 @@ object Settings {
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
     "org.mitre.dsmiley.httpproxy"  % "smiley-http-proxy-servlet" % "1.10",
     "com.github.tminglei" %% "slick-pg" % "0.16.3",
-    "org.scala-lang" % "scala-compiler" % versions.scala
+    "org.scala-lang" % "scala-compiler" % versions.scala,
+    "com.openhtmltopdf" % "openhtmltopdf-pdfbox" % "1.0.0",
+    "org.jsoup" % "jsoup" % "1.12.1",
+    "com.github.spullara.mustache.java" % "compiler" % "0.9.6"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

@@ -63,11 +63,19 @@ class SelectWidget(val field:JSONField, prop: Property[Json]) extends  LookupWid
   override def edit() = {
 
 
+
     val opts = if(field.nullable) {
-      Seq("") ++ lookup.lookup.map(_.value)
+      Seq("") ++ lookup.lookup.map(_.id)
     } else {
-      lookup.lookup.map(_.value)
+      lookup.lookup.map(_.id)
     }
+
+    val model = field.`type` match {
+      case "number" =>  prop.transform[String](jsonToString _, strToNumericJson _)
+      case _ => prop.transform[String](jsonToString _, strToJson(field.nullable) _)
+    }
+
+
 
     val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.pullRight)++modifiers++WidgetUtils.toNullable(field.nullable)
 
@@ -75,7 +83,7 @@ class SelectWidget(val field:JSONField, prop: Property[Json]) extends  LookupWid
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       WidgetUtils.toLabel(field),
-      tooltip(Select(selectModel,opts,Select.defaultLabel)(m).render),
+      tooltip(Select(model,opts,(s:String) => StringFrag(lookup.lookup.find(_.id == s).map(_.value).getOrElse("")))(m).render),
       div(BootstrapStyles.Visibility.clearfix)
     )
   }

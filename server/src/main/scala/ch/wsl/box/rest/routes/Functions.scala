@@ -22,7 +22,7 @@ object Functions extends Data {
 
   def functions = ch.wsl.box.model.boxentities.Function
 
-  override def data(function: String, params: Json, lang: String)(implicit up: UserProfile,  mat: Materializer, ec: ExecutionContext,system:ActorSystem): Future[Option[DataResult]] = {
+  override def data(function: String, params: Json, lang: String)(implicit up: UserProfile,  mat: Materializer, ec: ExecutionContext,system:ActorSystem): Future[Option[DataContainer]] = {
     implicit def db:Database = up.db
 
     for{
@@ -33,7 +33,7 @@ object Functions extends Data {
         case None => Future.successful(None)
         case Some(func) => {
           val f = RuntimeFunction(func.name,func.function)
-          f(RuntimeFunction.context(params),lang).map(Some(_))
+          f(RuntimeFunction.context(params),lang).map(dr => Some(DataContainer(dr,func.presenter,func.mode)))
         }
       }
     } yield result

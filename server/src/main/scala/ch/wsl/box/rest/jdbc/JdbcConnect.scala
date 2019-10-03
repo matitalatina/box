@@ -11,7 +11,7 @@ import scribe.Logging
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.logic.DataResult
+import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
 
 
 /**
@@ -40,7 +40,7 @@ object JdbcConnect extends Logging {
         val resultSet = statement.executeQuery(query)
         val metadata = getColumnMeta(resultSet.getMetaData)
         val data = getResults(resultSet,metadata)
-        DataResult(metadata.map(_.label),data.map(_.map(_.string)))
+        DataResultTable(metadata.map(_.label),data.map(_.map(_.string)))
       }.toOption
       connection.close()
       result

@@ -23,6 +23,20 @@ Libraries
 - [UDash](http://udash.io/)
 
 
+Deploy
+------
+- Cloud foundry: `cf push -p server/target/universal/server-1.0.0.zip <app-name>`
+
+Set Env variables:
+- `DB_URL`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_SCHEMA`
+- `BOX_DB_URL`
+- `BOX_DB_USER`
+- `BOX_DB_PASSWORD`
+- `BOX_DB_SCHEMA`
+
 Presentation
 ------
 [http://wavein.ch/talks/postgresrest/#/](http://wavein.ch/talks/postgresrest/#/)

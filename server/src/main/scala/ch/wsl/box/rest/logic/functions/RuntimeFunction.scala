@@ -44,7 +44,7 @@ object RuntimeFunction {
                   |import scala.concurrent.{ExecutionContext, Future}
                   |import ch.wsl.box.shared.utils.JSONUtils._
                   |import ch.wsl.box.rest.logic.functions.Context
-                  |import ch.wsl.box.rest.logic.DataResult
+                  |import ch.wsl.box.rest.logic._
                   |import ch.wsl.box.rest.jdbc.PostgresProfile.api._
                   |import akka.stream.Materializer
                   |import akka.actor.ActorSystem

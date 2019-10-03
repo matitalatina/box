@@ -3,7 +3,7 @@ package ch.wsl.box.rest.logic.functions
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.rest.logic.DataResult
+import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
 import ch.wsl.box.rest.utils.{Lang, UserProfile}
 import io.circe.Json
 
@@ -27,7 +27,7 @@ object PSQLImpl extends RuntimePSQL {
       rows <- actions.find()
     } yield {
       rows.headOption.map { firstRow =>
-        DataResult(
+        DataResultTable(
           headers = firstRow.asObject.get.keys.toSeq,
           rows = rows.map{ row =>
             row.asObject.get.values.toSeq.map(_.string)

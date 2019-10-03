@@ -39,7 +39,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     def query    = for {
       (e, ei18) <- functions.Function joinLeft(functions.Function_i18n.filter(_.lang === lang)) on(_.function_id === _.function_id)
 
-    } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip), e.access_role)
+    } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip), e.access_role, e.mode)
 
     //    def queryResult = Auth.boxDB.run(query.result)
 
@@ -50,8 +50,8 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     } yield {
       qr.filter(_._6.map(ar => checkRole(List(),ar, al)).getOrElse(true)) // TODO how to manage roles?
         .sortBy(_._3.getOrElse(Double.MaxValue)).map(
-        { case (label, name, _, hint, tooltip, _) =>
-          ExportDef(name, label.getOrElse(name), hint, tooltip)
+        { case (label, name, _, hint, tooltip, _, mode) =>
+          ExportDef(name, label.getOrElse(name), hint, tooltip, mode)
         })
 
     }
@@ -63,12 +63,12 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       (e, ei18) <- functions.Function joinLeft(functions.Function_i18n.filter(_.lang === lang)) on(_.function_id === _.function_id)
       if e.name === name
 
-    } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
+    } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip),e.mode)
 
     Auth.boxDB.run{
       query.result
-    }.map(_.map{ case (label, name, _, hint, tooltip) =>
-      ExportDef(name, label.getOrElse(name), hint, tooltip)
+    }.map(_.map{ case (label, name, _, hint, tooltip, mode) =>
+      ExportDef(name, label.getOrElse(name), hint, tooltip, mode)
     }.head)
   }
 

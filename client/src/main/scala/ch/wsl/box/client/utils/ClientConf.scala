@@ -39,7 +39,9 @@ object ClientConf {
   def colorDanger = Try(conf("color.danger")).getOrElse("#4c1c24")
   def colorWarning = Try(conf("color.warning")).getOrElse("#ffa500")
 
-  lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorLink,colorDanger,colorWarning)))
+  def tableFontSize = Try(conf("table.fontSize").toInt).getOrElse(10)
+
+  lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorLink,colorDanger,colorWarning), tableFontSize))
 
 
   def filterEqualityPrecisionDatetime = Try(conf("filterEqualityPrecision.datetime").toUpperCase).toOption match {

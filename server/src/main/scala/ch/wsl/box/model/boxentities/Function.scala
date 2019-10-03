@@ -1,21 +1,22 @@
 package ch.wsl.box.model.boxentities
 
+import ch.wsl.box.model.shared.FunctionKind
 import slick.model.ForeignKeyAction
-
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 object Function {
 
-
-  case class Function_row(function_id: Option[Int] = None, name: String, function:String, description: Option[String] = None, layout: Option[String] = None, order: Option[Double], access_role:Option[List[String]])
+  case class Function_row(function_id: Option[Int] = None, name: String, mode:String, function:String, presenter:Option[String], description: Option[String] = None, layout: Option[String] = None, order: Option[Double], access_role:Option[List[String]])
 
   class Function(_tableTag: Tag) extends Table[Function_row](_tableTag, "function") {
-    def * = (Rep.Some(function_id), name, function, description, layout, order ,access_role) <> (Function_row.tupled, Function_row.unapply)
-    def ? = (Rep.Some(function_id), name, function, description, layout, order, access_role).shaped.<>({ r=>import r._; _1.map(_=> Function_row.tupled((_1, _2, _3, _4, _5, _6, _7)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def * = (Rep.Some(function_id), name, mode, function, presenter, description, layout, order ,access_role) <> (Function_row.tupled, Function_row.unapply)
+    def ? = (Rep.Some(function_id), name, mode, function, presenter, description, layout, order, access_role).shaped.<>({ r=>import r._; _1.map(_=> Function_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8, _9)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     val function_id: Rep[Int] = column[Int]("function_id", O.AutoInc, O.PrimaryKey)
     val name: Rep[String] = column[String]("name")
+    val mode: Rep[String] = column[String]("mode", O.Default(FunctionKind.Modes.TABLE))
     val function: Rep[String] = column[String]("function")
+    val presenter: Rep[Option[String]] = column[Option[String]]("presenter", O.Default(None))
     val description: Rep[Option[String]] = column[Option[String]]("description", O.Default(None))
     val layout: Rep[Option[String]] = column[Option[String]]("layout", O.Default(None))
     val order: Rep[Option[Double]] = column[Option[Double]]("order", O.Default(None))
