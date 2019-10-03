@@ -6,7 +6,7 @@ import ch.wsl.box.client.utils.Labels
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom.Element
 
-object ErrorViewPresenter extends DefaultViewPresenterFactory[IndexState.type](() => new ErrorView)
+object ErrorViewPresenter extends StaticViewFactory[IndexState.type](() => new ErrorView)
 
 class ErrorView extends View {
   import scalatags.JsDom.all._

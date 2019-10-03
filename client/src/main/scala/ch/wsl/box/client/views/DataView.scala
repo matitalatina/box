@@ -41,7 +41,7 @@ object DataModel extends HasModelPropertyCreator[DataModel]{
     Blank.Simple(DataModel(None, Json.Null, Seq(), Seq(), None,""))
 }
 
-object DataViewPresenter extends ViewPresenter[DataState] {
+object DataViewPresenter extends ViewFactory[DataState] {
 
   import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[DataState]) = {

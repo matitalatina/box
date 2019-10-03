@@ -21,7 +21,7 @@ object IndexViewModel extends HasModelPropertyCreator[IndexViewModel] {
     Blank.Simple(IndexViewModel(Seq()))
 }
 
-object IndexViewPresenter extends ViewPresenter[IndexState.type]{
+object IndexViewPresenter extends ViewFactory[IndexState.type]{
 
   val prop = ModelProperty.blank[IndexViewModel]
 

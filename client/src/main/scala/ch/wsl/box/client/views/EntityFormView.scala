@@ -12,6 +12,7 @@ import io.circe.Json
 import io.udash.{showIf, _}
 import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
 import io.udash.bootstrap.label.UdashLabel
+import io.udash.component.ComponentId
 import io.udash.core.Presenter
 import io.udash.properties.single.Property
 import org.scalajs.dom._
@@ -369,7 +370,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       produce(model.subProp(_.error)){ error =>
         div(
           if(error.length > 0) {
-            UdashLabel.danger(UdashBootstrap.newId(), error).render
+            UdashLabel.danger(ComponentId.newId(), error).render
           } else {
 
           }

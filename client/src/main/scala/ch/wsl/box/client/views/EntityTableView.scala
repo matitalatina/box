@@ -366,7 +366,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case _ => StringFrag(id)
     }
 
-    Select(fieldQuery.subProp(_.filterOperator), Filter.options(fieldQuery.get.field),label)(ClientConf.style.fullWidth)
+    Select(fieldQuery.subProp(_.filterOperator), Filter.options(fieldQuery.get.field).toSeqProperty)(label,ClientConf.style.fullWidth)
 
   }
 
@@ -382,12 +382,12 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && !Seq(Filter.BETWEEN, Filter.IN, Filter.NOTIN).contains(filterOperator) => {
         if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
 //        TextInput.debounced(filterValue,cls := "form-control")      //to allow comma separated values, ranges, ...
-        NumberInput.debounced(filterValue,cls := "form-control")
+        NumberInput(filterValue)(cls := "form-control")
       }
 //      case JSONFieldTypes.BOOLEAN => {
 //        Select(filterValue, cls := "form-control")
 //      }
-      case _ => TextInput.debounced(filterValue,cls := "form-control")
+      case _ => TextInput(filterValue)(cls := "form-control")
     }
 
   }

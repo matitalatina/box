@@ -66,7 +66,7 @@ import ch.wsl.box.client.Context._
 
     val optionList:Modifier = div(
       lab(Labels.popup.search),br,
-      TextInput(searchProp,Some(500 milliseconds)),br,br,
+      TextInput(searchProp,500.milliseconds)(),br,br,
       autoRelease(showIf(modalStatus.transform(_ == Status.Open)) {
         div(autoRelease(produce(searchProp) { searchTerm =>
           div(

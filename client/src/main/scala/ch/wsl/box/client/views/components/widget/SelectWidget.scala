@@ -83,7 +83,7 @@ class SelectWidget(val field:JSONField, prop: Property[Json]) extends  LookupWid
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       WidgetUtils.toLabel(field),
-      tooltip(Select(model,opts,(s:String) => StringFrag(lookup.lookup.find(_.id == s).map(_.value).getOrElse("")))(m).render),
+      tooltip(Select(model,opts.toSeqProperty)((s:String) => StringFrag(lookup.lookup.find(_.id == s).map(_.value).getOrElse("")),m:_*).render),
       div(BootstrapStyles.Visibility.clearfix)
     )
   }

@@ -54,7 +54,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   }
 
   val selectedFile: SeqProperty[File] = SeqProperty(Seq.empty[File])
-  val input = FileInput("file", Property(false), selectedFile)()
+  val input = FileInput(selectedFile, Property(false))("file")
 
   selectedFile.listen{ files =>
     prop.set(files.headOption.map(_.name).asJson)

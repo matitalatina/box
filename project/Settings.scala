@@ -65,7 +65,7 @@ object Settings {
     //js
     val bootstrap =  "3.3.7-1"
 
-    val udash = "0.7.1"
+    val udash = "0.8.0"
     val udashJQuery = "1.2.0"
 
     val scribe = "2.6.0"
@@ -78,7 +78,7 @@ object Settings {
     * the special %%% function selects the correct version for each project
     */
   val sharedJVMJSDependencies = Def.setting(Seq(
-    "io.udash" %%% "udash-core-shared" % versions.udash,
+    "io.udash" %%% "udash-core" % versions.udash,
     "io.circe" %%% "circe-core" % versions.circe,
     "io.circe" %%% "circe-generic" % versions.circe,
     "io.circe" %%% "circe-parser" % versions.circe,
@@ -107,7 +107,7 @@ object Settings {
     "io.circe"                 %% "circe-core"       % versions.circe,
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,
-    "io.udash"                 %% "udash-rpc-backend" % versions.udash,
+    "io.udash"                 %% "udash-rpc" % versions.udash,
     "org.webjars"              % "webjars-locator"   % "0.32",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
     "org.scalatest"            %% "scalatest"        % versions.scalatest % "test",
@@ -131,8 +131,8 @@ object Settings {
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */
   val scalajsDependencies = Def.setting(Seq(
-    "io.udash" %%% "udash-core-frontend" % versions.udash,
-    "io.udash" %%% "udash-rpc-frontend" % versions.udash,
+    "io.udash" %%% "udash-core" % versions.udash,
+    "io.udash" %%% "udash-rpc" % versions.udash,
     "io.udash" %%% "udash-bootstrap" % versions.udash,
     "io.udash" %%% "udash-jquery" % versions.udashJQuery,
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,

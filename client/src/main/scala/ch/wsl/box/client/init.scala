@@ -21,9 +21,6 @@ object Context {
   private val viewPresenterRegistry = new StatesToViewPresenterDef
 
   implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry)   //udash application
-
-  implicit val pc: PropertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.JSONMetadata]]
-  implicit val pcfr: PropertyCreator[Option[ch.wsl.box.model.shared.FileReference]] = PropertyCreator.propertyCreator[Option[ch.wsl.box.model.shared.FileReference]]
 }
 
 object Init extends JSApp with Logging {
@@ -54,8 +51,7 @@ object Init extends JSApp with Logging {
           import ch.wsl.box.client.styles.GlobalStyles
 
 
-
-          jQ(s"<style>${ClientConf.style.render}</style>").insertBefore(appRoot.get)
+          jQ(s"<style>${ClientConf.style.render(cssStringRenderer,cssEnv)}</style>").insertBefore(appRoot.get)
           jQ(UdashDatePicker.loadBootstrapDatePickerStyles()).insertBefore(appRoot.get)
         }
       })

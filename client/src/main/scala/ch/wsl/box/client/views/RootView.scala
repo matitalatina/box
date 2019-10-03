@@ -13,7 +13,7 @@ import io.udash.core.Presenter
 import scalacss.ScalatagsCss._
 import ch.wsl.box.client.Context._
 
-case object RootViewPresenter extends ViewPresenter[RootState.type]{
+case object RootViewPresenter extends ViewFactory[RootState.type]{
 
 
   override def create(): (View, Presenter[RootState.type]) = {
