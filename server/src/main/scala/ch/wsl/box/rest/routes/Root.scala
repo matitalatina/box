@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.model.{BoxActionsRegistry, EntityActionsRegistry}
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.model.boxentities.{Conf, UITable}
+import ch.wsl.box.model.boxentities.{Conf, Schema, UITable}
 import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
@@ -17,7 +17,8 @@ import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import ch.wsl.box.model.shared.{EntityKind, LoginRequest}
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, StubMetadataFactory}
+import ch.wsl.box.rest.logic.functions.RuntimeFunction
+import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, EntityMetadataFactory, FormMetadataFactory, StubMetadataFactory}
 import ch.wsl.box.rest.pdf.Pdf
 import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
@@ -65,13 +66,29 @@ trait Root extends Logging {
 
     //Serving UI
     UI.clientFiles ~
-    path("pdf") {
-      complete(
-        HttpResponse(entity = HttpEntity(MediaTypes.`application/pdf`, Pdf.render("<h1>TEST</h1>")))
-      )
-    } ~
     pathPrefix("webjars") {
       WebJarsSupport.webJars
+    } ~
+    pathPrefix("ddl") {
+      path("box") {
+        complete(
+          HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,
+            Schema.box.createStatements.mkString("\n\n\n")
+              .replaceAll(",",",\n\t")
+              .replaceAll("\" \\(", "\" (\n\t")
+          ))
+        )
+      }
+    } ~
+    pathPrefix("cache") {
+      path("reset") {
+        FormMetadataFactory.resetCache()
+        EntityMetadataFactory.resetCache()
+        RuntimeFunction.resetCache()
+        complete(
+          HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"reset cache"))
+        )
+      }
     } ~
         //Serving REST-API
         pathPrefix("api" / "v1") {

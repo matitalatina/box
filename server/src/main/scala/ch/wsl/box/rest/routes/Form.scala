@@ -164,7 +164,7 @@ case class Form(
               metadata <- tabularMetadata()
             } yield {
               val formActions = FormActions(metadata,jsonActions,metadataFactory)
-              formActions.csv(query,None)
+              formActions.csv(query,None).log("csv")
             }
           }
         }

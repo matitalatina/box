@@ -107,7 +107,7 @@ case class View[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Prod
               entity(as[JSONQuery]) { query =>
                 logger.info("csv")
                 //Source
-                complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))))
+                complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))).log("csv"))
               }
             } ~
               respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {

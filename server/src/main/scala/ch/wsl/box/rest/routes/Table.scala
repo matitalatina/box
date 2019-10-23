@@ -159,7 +159,7 @@ case class Table[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Pro
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("csv")
-              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))))
+              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))).log("csv"))
             }
           } ~
           respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -168,7 +168,7 @@ case class Table[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Pro
                 val query = parse(q).right.get.as[JSONQuery].right.get
                 val csv = Source.fromFuture(EntityMetadataFactory.of(name,lang, limitLookupFromFk).map{ metadata =>
                   CSV.writeRow(metadata.fields.map(_.name))
-                }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.writeRow(x.values())))
+                }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.writeRow(x.values()))).log("csv")
                 complete(csv)
               }
             }
