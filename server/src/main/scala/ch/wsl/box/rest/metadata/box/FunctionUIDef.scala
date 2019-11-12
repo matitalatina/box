@@ -16,7 +16,7 @@ object FunctionUIDef {
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"function_id",false),
       JSONField(JSONFieldTypes.STRING,"name",false),
-      JSONField(JSONFieldTypes.STRING,"function",false, widget = Some(WidgetsNames.textarea),label = Some(""), default = Some(
+      JSONField(JSONFieldTypes.STRING,"function",false, widget = Some(WidgetsNames.code+".java"),label = Some(""), default = Some(
         """
           |/*
           | * Must return a Future[DataResult] that represent a CSV table
@@ -33,7 +33,7 @@ object FunctionUIDef {
           |} yield result
           |
         """.stripMargin)),
-      JSONField(JSONFieldTypes.STRING,"presenter",true, widget = Some(WidgetsNames.textarea),label = Some("")),
+      JSONField(JSONFieldTypes.STRING,"presenter",true, widget = Some(WidgetsNames.code+".handlebars"),label = Some("")),
       JSONField(JSONFieldTypes.STRING,"description",true),
       JSONField(JSONFieldTypes.STRING,"mode",false,lookup = Some(JSONFieldLookup.prefilled(
         FunctionKind.Modes.all.map(x => JSONLookup(x,x))

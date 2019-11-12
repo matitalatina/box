@@ -117,6 +117,7 @@ object Settings {
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp % "test",
     "org.webjars"              % "bootstrap"         % "3.3.7",
     "org.webjars"              % "leaflet"           % "1.4.0",
+    "org.webjars.npm"          % "monaco-editor"     % "0.18.1",
     "com.outr" %% "scribe" % versions.scribe,
     "com.outr" %% "scribe-slf4j" % versions.scribe,
     "nz.co.rossphillips" %% "scala-thumbnailer" % "0.5.SNAPSHOT",

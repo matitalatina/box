@@ -23,7 +23,6 @@ import scala.concurrent.Future
   * @param id
   * @param prop          holds the filename
   * @param field
-  * @param labelString
   * @param entity
   */
 case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {

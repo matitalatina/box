@@ -21,6 +21,7 @@ object WidgetsNames {
   val popup = "popup"
   val fullWidth = "fullWidth"
   val mapPoint = "mapPoint"
+  val code = "code"
 
   val all = Seq(
     textinput,

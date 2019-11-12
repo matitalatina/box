@@ -21,7 +21,7 @@ object PSQLImpl extends RuntimePSQL {
 
     implicit def db = up.db
 
-    val actions = EntityActionsRegistry().tableActions(name)
+    val actions = EntityActionsRegistry().actions(name).get
 
     for {
       rows <- actions.find()

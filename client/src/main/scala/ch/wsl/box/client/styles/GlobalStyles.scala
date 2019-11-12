@@ -415,6 +415,14 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     fontWeight.bold
   )
 
+  val editor = style(
+    height(800 px),
+    borderStyle.solid,
+    borderWidth(1 px),
+    borderRadius.`0`,
+    borderColor(rgb(169, 169, 169)),
+  )
+
 //  val fixedHeader = style(
 //    unsafeRoot("tbody")(
 ////    display.block,
