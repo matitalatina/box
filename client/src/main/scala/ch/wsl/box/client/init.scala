@@ -52,7 +52,6 @@ object Init extends JSApp with Logging {
 
 
           jQ(s"<style>${ClientConf.style.render(cssStringRenderer,cssEnv)}</style>").insertBefore(appRoot.get)
-          jQ(UdashDatePicker.loadBootstrapDatePickerStyles()).insertBefore(appRoot.get)
         }
       })
     }

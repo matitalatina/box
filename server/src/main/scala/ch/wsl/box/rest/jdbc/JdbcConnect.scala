@@ -25,7 +25,7 @@ object JdbcConnect extends Logging {
 
 
 
-  def function(name:String, args: Seq[Json], lang:String)(implicit ec:ExecutionContext,db:Database):Future[Option[DataResult]] = {
+  def function(name:String, args: Seq[Json], lang:String)(implicit ec:ExecutionContext,db:Database):Future[Option[DataResultTable]] = {
 
     val result = Future{
       // make the connection

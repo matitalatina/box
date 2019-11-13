@@ -6,8 +6,11 @@ import io.circe.syntax._
 sealed trait DataResult
 
 case class DataResultTable(headers:Seq[String],rows:Seq[Seq[String]]) extends DataResult {
+
+  lazy val toMap = rows.map(r => headers.zip(r).toMap)
+
   def json = {
-    rows.map(r => headers.zip(r).toMap).asJson
+    toMap.asJson
   }
 }
 case class DataResultObject(obj:Json) extends DataResult

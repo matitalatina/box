@@ -110,6 +110,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (TIME, Some(WidgetsNames.timepickerFullWidth), _, _, _) => DateTimeWidget.TimeFullWidth
           case (DATE, Some(WidgetsNames.datepickerFullWidth), _, _, _) => DateTimeWidget.DateFullWidth
           case (DATETIME, Some(WidgetsNames.datetimePickerFullWidth), _, _, _) => DateTimeWidget.DateTimeFullWidth
+          case (DATE, _, _, _, _) => DateTimeWidget.Date
+          case (DATETIME, _, _, _, _) => DateTimeWidget.DateTime
           case (CHILD, _, _, _, Some(child))                          => ChildRendererFactory(child,children,dataWithChildId)
           case (_, Some(WidgetsNames.nolabel), _, _, _)               => InputWidgetFactory.TextNoLabel
           case (_, Some(WidgetsNames.twoLines), _, _, _)              => InputWidgetFactory.TwoLines
