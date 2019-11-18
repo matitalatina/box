@@ -59,6 +59,7 @@ trait Data extends Logging {
           }
         }
       case Some(dc) if dc.mode == FunctionKind.Modes.HTML  => {
+            println(dc.asObj)
             complete(Html.render(dc.presenter.getOrElse(""),dc.asObj).map(html => HttpEntity(ContentTypes.`text/html(UTF-8)`,html)))
       }
       case Some(dc) if dc.mode == FunctionKind.Modes.PDF  => {

@@ -94,6 +94,7 @@ trait DateTimeWidget extends Widget  with Logging{
 
     val date = model.transform(toDate(format),fromDate(format))
 
+
     val pickerOptions:Property[UdashDatePicker.DatePickerOptions] = ModelProperty(new UdashDatePicker.DatePickerOptions(
       format = format,
       locale = Some("en_GB"),
@@ -106,19 +107,19 @@ trait DateTimeWidget extends Widget  with Logging{
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
+
 //    logger.info(s"refreshing date picker with ${model.get.toString()}")
 
-    produce(model) { ii =>
-      val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
 
-      div(
-        if (field.title.length > 0) WidgetUtils.toLabel(field, false) else {},
-        tooltip(div(style,if(field.nullable) {} else ClientConf.style.notNullable,
-          picker.render
-        ).render),
-        div(BootstrapStyles.Visibility.clearfix)
-      ).render
-    }
+    val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
+    div(
+      if (field.title.length > 0) WidgetUtils.toLabel(field, false) else {},
+      tooltip(div(style,if(field.nullable) {} else ClientConf.style.notNullable,
+        picker.render
+      ).render),
+      div(BootstrapStyles.Visibility.clearfix)
+    ).render
+
   }
 }
 

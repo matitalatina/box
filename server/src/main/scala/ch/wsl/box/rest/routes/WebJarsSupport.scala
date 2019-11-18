@@ -14,8 +14,9 @@ object WebJarsSupport extends Logging {
 
   def webJars = {
     extractUnmatchedPath { path =>
-      logger.info("Looking for webjar: " + path.toString().substring(1))
-      Try(webJarAssetLocator.getFullPath(path.toString.substring(1))) match {
+      val webjarName = path.toString().substring(1)
+      logger.info("Looking for webjar: " + webjarName )
+      Try(webJarAssetLocator.getFullPath(webjarName)) match {
         case Success(fullPath) => {
           logger.info("found")
           getFromResource(fullPath)

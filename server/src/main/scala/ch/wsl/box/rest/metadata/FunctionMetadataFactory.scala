@@ -125,11 +125,13 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       for {
 
         keys <- EntityMetadataFactory.keysOf(entity)
-        filter = { for{
-          queryString <- field.lookupQuery
-          queryJson <- parse(queryString).right.toOption
-          query <- queryJson.as[JSONQuery].right.toOption
-        } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
+        filter = {
+            for{
+              queryString <- field.lookupQuery
+              queryJson <- parse(queryString).right.toOption
+              query <- queryJson.as[JSONQuery].right.toOption
+            } yield query
+          }.getOrElse(JSONQuery.sortByKeys(keys))
 
         lookupData <- EntityActionsRegistry().tableActions(entity).find(filter)
 

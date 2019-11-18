@@ -15,13 +15,13 @@ object PSQLImpl extends RuntimePSQL {
   import ch.wsl.box.shared.utils.JSONUtils._
 
 
-  override def function(name: String, parameters: Seq[Json])(implicit lang: Lang,ec: ExecutionContext, db: Database): Future[Option[DataResult]] = JdbcConnect.function(name,parameters,lang.lang)
+  override def function(name: String, parameters: Seq[Json])(implicit lang: Lang,ec: ExecutionContext, db: Database): Future[Option[DataResultTable]] = JdbcConnect.function(name,parameters,lang.lang)
 
-  override def table(name: String)(implicit lang:Lang, ec: ExecutionContext, up: UserProfile,mat:Materializer): Future[Option[DataResult]] = {
+  override def table(name: String)(implicit lang:Lang, ec: ExecutionContext, up: UserProfile,mat:Materializer): Future[Option[DataResultTable]] = {
 
     implicit def db = up.db
 
-    val actions = EntityActionsRegistry().tableActions(name)
+    val actions = EntityActionsRegistry().actions(name).get
 
     for {
       rows <- actions.find()

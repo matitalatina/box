@@ -7,7 +7,7 @@ import io.circe.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.logic.DataResult
+import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
 
 
 trait RuntimeWS{
@@ -16,8 +16,8 @@ trait RuntimeWS{
 }
 
 trait RuntimePSQL{
-  def function(name:String,parameters:Seq[Json])(implicit lang:Lang, ec:ExecutionContext,db:Database):Future[Option[DataResult]]
-  def table(name:String)(implicit lang:Lang, ec:ExecutionContext, up:UserProfile, mat:Materializer):Future[Option[DataResult]]
+  def function(name:String,parameters:Seq[Json])(implicit lang:Lang, ec:ExecutionContext,db:Database):Future[Option[DataResultTable]]
+  def table(name:String)(implicit lang:Lang, ec:ExecutionContext, up:UserProfile, mat:Materializer):Future[Option[DataResultTable]]
 }
 
 case class Context(data:Json,ws:RuntimeWS,psql:RuntimePSQL)
