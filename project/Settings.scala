@@ -2,7 +2,7 @@ import sbt._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
-//scalaJs version is setinto the plugin.sbt file
+//scalaJs version is set into the plugin.sbt file
 
 
 /**
@@ -35,7 +35,7 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.12.6"
+    val scala = "2.12.10"
     val ficus = "1.4.0"
 
     //HTTP actors
@@ -53,11 +53,12 @@ object Settings {
     val logback = "1.2.3"
 
     //json parsers
-    val circe = "0.9.3"
+    val circe = "0.12.3"
 
     //database
-    val postgres = "9.4.1211"
+    val postgres = "42.2.8"
     val slick = "3.2.3"
+    val slickPg = "0.18.0"
 
     //frontend
     val scalaCss = "0.5.3-RC1"
@@ -103,29 +104,31 @@ object Settings {
     "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
     "com.typesafe.akka"        %% "akka-actor"       % versions.akka,
     "com.typesafe.akka"        %% "akka-stream"      % versions.akka,
-    "com.softwaremill.akka-http-session" %% "core" % "0.5.3",
+    "com.softwaremill.akka-http-session" %% "core"   % "0.5.3",
     "io.circe"                 %% "circe-core"       % versions.circe,
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,
-    "io.udash"                 %% "udash-rpc" % versions.udash,
+    "io.udash"                 %% "udash-rpc"        % versions.udash,
+    "com.github.tminglei"      %% "slick-pg"         % versions.slickPg,
+//    "com.github.tminglei"      %% "slick-pg_jts"     % versions.slickPg,
+  //    "com.vividsolutions"        % "jts-core"        % "1.14.0"
     "org.webjars"              % "webjars-locator"   % "0.32",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
     "org.scalatest"            %% "scalatest"        % versions.scalatest % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
-    "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium % "test",
-    "com.typesafe.akka"        %% "akka-testkit"     % versions.akka % "test",
-    "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp % "test",
+    "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium  % "test",
+    "com.typesafe.akka"        %% "akka-testkit"     % versions.akka      % "test",
+    "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp  % "test",
     "org.webjars"              % "bootstrap"         % "3.3.7",
     "org.webjars"              % "leaflet"           % "1.4.0",
-    "com.outr" %% "scribe" % versions.scribe,
-    "com.outr" %% "scribe-slf4j" % versions.scribe,
-    "nz.co.rossphillips" %% "scala-thumbnailer" % "0.5.SNAPSHOT",
-    "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-    "org.mitre.dsmiley.httpproxy"  % "smiley-http-proxy-servlet" % "1.10",
-    "com.github.tminglei" %% "slick-pg" % "0.16.3",
-    "org.scala-lang" % "scala-compiler" % versions.scala,
-    "com.openhtmltopdf" % "openhtmltopdf-pdfbox" % "1.0.0",
-    "org.jsoup" % "jsoup" % "1.12.1",
+    "com.outr"                 %% "scribe"           % versions.scribe,
+    "com.outr"                 %% "scribe-slf4j"     % versions.scribe,
+    "nz.co.rossphillips"       %% "scala-thumbnailer" % "0.5.SNAPSHOT",
+    "javax.servlet"            % "javax.servlet-api" % "3.1.0" % "provided",
+    "org.mitre.dsmiley.httpproxy" % "smiley-http-proxy-servlet" % "1.10",
+    "org.scala-lang"           % "scala-compiler"    % versions.scala,
+    "com.openhtmltopdf"        % "openhtmltopdf-pdfbox" % "1.0.0",
+    "org.jsoup"                % "jsoup"             % "1.12.1",
     "com.github.spullara.mustache.java" % "compiler" % "0.9.6"
   ))
 

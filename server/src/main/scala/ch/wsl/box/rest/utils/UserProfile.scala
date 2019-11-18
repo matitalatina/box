@@ -24,18 +24,18 @@ case class UserProfile(name: String, db: Database, boxDb:Database) {
 
 
   def memberOf(implicit ec:ExecutionContext) = Auth.adminDB.run{              //todo: depends on v_roles, hasrole and hasrolein >> make cleaner
-    sql"""select memberOf from v_roles where lower(rolname)=lower(current_user)""".as[List[String]](GetResult{r=> r.<<[Seq[String]].toList})
+    sql"""select memberOf from box.v_roles where lower(rolname)=lower(current_user)""".as[List[String]](GetResult{r=> r.<<[Seq[String]].toList})
 
   }.map{ _.head
   }
 
   def hasRole(role:String)(implicit ec:ExecutionContext) = Auth.adminDB.run{
-    sql"""select hasrole($role)""".as[Boolean]
+    sql"""select box.hasrole($role)""".as[Boolean]
   }.map{ _.head
   }.recover{case _ => false}
 
   def hasRoleIn(roles:List[String])(implicit ec:ExecutionContext) = Auth.adminDB.run{
-    sql"""select hasrolein(ARRAY[${roles.map("'"+_+"'").mkString(",")}])""".as[Boolean]
+    sql"""select box.hasrolein(ARRAY[${roles.map("'"+_+"'").mkString(",")}])""".as[Boolean]
   }.map{ _.head
   }.recover{case _ => false}
 

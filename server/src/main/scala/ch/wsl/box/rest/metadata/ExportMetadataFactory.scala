@@ -46,7 +46,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
       al <- up.accessLevel
       qr <-  Auth.boxDB.run(query.result)
     } yield {
-       qr.filter(_._7.map(ar => checkRole(roles,ar, al)).getOrElse(true))
+       qr.filter(_._7.map(ar => checkRole(roles, ar, al)).getOrElse(true))
          .sortBy(_._4.getOrElse(Double.MaxValue)).map(
          { case (label, function, name, _, hint, tooltip, _) =>
            ExportDef(function, label.getOrElse(name), hint, tooltip,FunctionKind.Modes.TABLE)
@@ -59,7 +59,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
   def defOf(name:String, lang:String): Future[ExportDef] = {
     val query = for {
       (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
-      if e.name === name
+      if e.function === name
 
     } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
 
@@ -73,7 +73,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
   def of(name:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
       (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id)
-      if export.name === name
+      if export.function === name
 
     } yield (export,exportI18n)
 
@@ -109,7 +109,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
       val parameters = export.parameters.toSeq.flatMap(_.split(","))
 
-      JSONMetadata(export.export_id.get,export.name,exportI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq())//,"")
+      JSONMetadata(export.export_id.get,export.function,exportI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq())//,"")
     }
   }
 
