@@ -90,10 +90,16 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     val label = field.label.getOrElse(field.name)
 
+    println(metadata.entity + "." + field.name)
 
     val widg:ComponentWidgetFactory =
 
-        (field.`type`, field.widget, field.lookup, metadata.keys.contains(field.name), field.child) match {
+        ( field.`type`,
+          field.widget,
+          field.lookup,
+          metadata.keys.contains(field.name) & !ClientConf.manualEditSingleKeyFields.contains(metadata.entity + "." + field.name),
+          field.child) match {
+
           case (_, Some(WidgetsNames.hidden), _, _, _)                => HiddenWidget
           case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidth
           case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidget

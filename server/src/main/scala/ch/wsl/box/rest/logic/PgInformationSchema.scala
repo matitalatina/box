@@ -113,7 +113,7 @@ class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=S
 
 
 
-  lazy val fk:Future[Seq[ForeignKey]] =  {
+  lazy val fks:Future[Seq[ForeignKey]] =  {
 
     Auth.adminDB.run(fkQ1.result).flatMap { references =>
       Future.sequence(references.map { case (c, ref) =>
@@ -125,6 +125,6 @@ class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=S
 
   }
 
-  def findFk(field:String):Future[Option[ForeignKey]] = fk.map(_.find(_.keys.exists(_ == field)))
+  def findFk(field:String):Future[Option[ForeignKey]] = fks.map(_.find(_.keys.exists(_ == field)))
 
 }

@@ -33,16 +33,19 @@ object BoxConf extends Logging {
 
   }
 
-  def clientConf:Map[String, String] = conf//.filterKeys(Set(
-//              "host",
-//              "port",
-//              "cookie.name",
-//              "max-age",
-//              "logger.level",
-//              "langs",
-//              "manual_edit.key_fields",
-//              "rest.lookup.labels",
-//              "lookupMaxRows",
+  def clientConf:Map[String, String] = conf.filterNot{ case (k,v) =>
+         Set(
+              "host",
+              "port",
+              "cookie.name",
+              "server-secret",
+              "max-age",
+              "logger.level",
+              "langs",
+              "manual_edit.key_fields",
+              "manual_edit.single.key_fields",
+              "rest.lookup.labels",
+              "limitLookupFromFk").contains(k)}
 //              "image_height",
 //              "filterEqualityPrecision.double",
 //              "filterEqualityPrecision.datetime",
