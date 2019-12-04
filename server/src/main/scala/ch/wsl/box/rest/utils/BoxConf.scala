@@ -41,12 +41,13 @@ object BoxConf extends Logging {
               "server-secret",
               "max-age",
               "logger.level",
-              "langs",
-              "manual_edit.key_fields",
-              "manual_edit.single.key_fields",
+//              "manual_edit.key_fields",
+//              "manual_edit.single.key_fields",
               "rest.lookup.labels",
-              "limitLookupFromFk").contains(k)}
+              "limitLookupFromFk"
+         ).contains(k)}
 //              "image_height",
+//              "langs",
 //              "filterEqualityPrecision.double",
 //              "filterEqualityPrecision.datetime",
 //              "display.index.html",
