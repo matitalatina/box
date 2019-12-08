@@ -2,6 +2,7 @@ package ch.wsl.box.rest.logic.functions
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+import ch.wsl.box.model.shared.JSONQuery
 import ch.wsl.box.rest.utils.{Lang, UserProfile}
 import io.circe.Json
 
@@ -17,7 +18,7 @@ trait RuntimeWS{
 
 trait RuntimePSQL{
   def function(name:String,parameters:Seq[Json])(implicit lang:Lang, ec:ExecutionContext,db:Database):Future[Option[DataResultTable]]
-  def table(name:String)(implicit lang:Lang, ec:ExecutionContext, up:UserProfile, mat:Materializer):Future[Option[DataResultTable]]
+  def table(name:String, query:JSONQuery = JSONQuery.empty)(implicit lang:Lang, ec:ExecutionContext, up:UserProfile, mat:Materializer):Future[Option[DataResultTable]]
 }
 
 case class Context(data:Json,ws:RuntimeWS,psql:RuntimePSQL)
@@ -50,6 +51,9 @@ object RuntimeFunction {
                   |import akka.actor.ActorSystem
                   |import ch.wsl.box.rest.utils.UserProfile
                   |import ch.wsl.box.rest.utils.Lang
+                  |import ch.wsl.box.model.shared.JSONQuery
+                  |import ch.wsl.box.model.shared.JSONQuery._
+                  |import ch.wsl.box.model.shared.JSONQueryFilter._
                   |
                   |(ec:ExecutionContext,up:UserProfile,mat:Materializer,system:ActorSystem) => { (context:Context,lang:String) => {
                   |implicit def ecImpl = ec

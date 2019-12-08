@@ -13,6 +13,10 @@ case class JSONQuery(
                       sort:List[JSONSort],
                       paging:Option[JSONQueryPaging]
                     ){
+
+  def filterWith(filter:JSONQueryFilter*) = this.copy(filter = filter.toList)
+  def sortWith(sort:JSONSort*) = this.copy(sort = sort.toList)
+
   def currentPage = paging.map(_.currentPage).getOrElse(1)
   def pageLength(n:Int) = paging.map(_.pageLength).getOrElse(n)
   def limit(limit:Int) = copy(paging= Some(paging.getOrElse(JSONQueryPaging(1,1)).copy(pageLength = limit)))
@@ -39,6 +43,20 @@ case class JSONQueryFilter(
                             value:String
                           )
 
+object JSONQueryFilter{
+  object WHERE {
+    def eq(column: String, value: String) = JSONQueryFilter(column, Some(Filter.EQUALS), value)
+
+    def like(column: String, value: String) = JSONQueryFilter(column, Some(Filter.LIKE), value)
+
+    def gt(column: String, value: String) = JSONQueryFilter(column, Some(Filter.>), value)
+
+    def lt(column: String, value: String) = JSONQueryFilter(column, Some(Filter.<), value)
+  }
+
+  val AND = WHERE
+}
+
 /**
   * Sort data by column
   *
@@ -60,8 +78,11 @@ object JSONQuery{
   val empty = JSONQuery(
     filter = List(),
     sort = List(),
-    paging = None
+    paging = Some(JSONQueryPaging(1000))
   )
+
+  def filterWith(filter:JSONQueryFilter*) = empty.copy(filter = filter.toList)
+  def sortWith(sort:JSONSort*) = empty.copy(sort = sort.toList)
 
   def sortByKeys(keys: Seq[String]) = empty.copy(sort = keys.map{k => JSONSort(k,Sort.ASC)}.toList)
 }
