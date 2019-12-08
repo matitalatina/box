@@ -26,9 +26,10 @@ object ClientConf {
   }
 
   def pageLength  = Try(conf("page_length").toInt).getOrElse(30)
-  def lookupMaxRows  = Try(conf("fk_rows").toInt).getOrElse(30)
+//  def lookupMaxRows  = Try(conf("fk_rows").toInt).getOrElse(30)
 
   def manualEditKeyFields = Try(conf("manual_edit.key_fields").toBoolean).getOrElse(false)
+  def manualEditSingleKeyFields = Try(conf("manual_edit.single.key_fields").trim().replace(' ',',').split(",").toSeq).getOrElse(Seq[String]())
 
   def displayIndexNews = Try(conf("display.index.news").toBoolean).getOrElse(false)
   def displayIndexHtml = Try(conf("display.index.html").toBoolean).getOrElse(false)

@@ -85,6 +85,7 @@ trait Root extends Logging {
         FormMetadataFactory.resetCache()
         EntityMetadataFactory.resetCache()
         RuntimeFunction.resetCache()
+        BoxConf.load()
         complete(
           HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"reset cache"))
         )
