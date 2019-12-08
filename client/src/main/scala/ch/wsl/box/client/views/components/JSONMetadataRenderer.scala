@@ -90,8 +90,6 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     val label = field.label.getOrElse(field.name)
 
-    println(metadata.entity + "." + field.name)
-
     val widg:ComponentWidgetFactory =
 
         ( field.`type`,
