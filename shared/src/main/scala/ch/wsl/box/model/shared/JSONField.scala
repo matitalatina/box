@@ -27,12 +27,12 @@ object JSONField{
 }
 
 
-case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSONLookup] = Seq())
+case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSONLookup] = Seq(), lookupQuery:Option[String] = None)
 
 object JSONFieldLookup {
   val empty: JSONFieldLookup = JSONFieldLookup("",JSONFieldMap("",""))
 
-  def fromData(lookupEntity:String, mapping:JSONFieldMap, lookupData:Seq[Json]):JSONFieldLookup = {
+  def fromData(lookupEntity:String, mapping:JSONFieldMap, lookupData:Seq[Json], lookupQuery:Option[String] = None):JSONFieldLookup = {
     import ch.wsl.box.shared.utils.JSONUtils._
 
     val options = lookupData.map{ lookupRow =>
@@ -41,7 +41,7 @@ object JSONFieldLookup {
 
       JSONLookup(lookupRow.get(mapping.valueProperty),label)
     }
-    JSONFieldLookup(lookupEntity, mapping, options)
+    JSONFieldLookup(lookupEntity, mapping, options,lookupQuery)
   }
 
   def prefilled(data:Seq[JSONLookup]) = JSONFieldLookup("",JSONFieldMap("",""),data)

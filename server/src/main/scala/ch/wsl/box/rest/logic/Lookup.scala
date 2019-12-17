@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import akka.stream.Materializer
 import ch.wsl.box.model.EntityActionsRegistry
-import ch.wsl.box.model.shared.{JSONFieldLookup, JSONMetadata, JSONQuery}
+import ch.wsl.box.model.shared.{JSONFieldLookup, JSONLookup, JSONMetadata, JSONQuery}
 import io.circe.Json
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
@@ -35,4 +35,12 @@ object Lookup {
     } yield foreignRow.get(lookup.map.textProperty)
 
   }.getOrElse(value)
+
+  def values(entity:String,value:String,text:String,query:JSONQuery)(implicit ec: ExecutionContext, db:Database,  mat:Materializer) :Future[Seq[JSONLookup]] = {
+    val actionsRegistry = EntityActionsRegistry()
+    actionsRegistry.actions(entity).get.find(query).map{ _.map{ row =>
+      val label = text.split(",").map(x => row.get(x.trim)).mkString(" - ")
+      JSONLookup(row.get(value),label)
+    }}
+  }
 }

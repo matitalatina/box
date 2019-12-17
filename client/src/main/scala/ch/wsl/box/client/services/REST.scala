@@ -1,6 +1,7 @@
 package ch.wsl.box.client.services
 
 import ch.wsl.box.client.services.REST.get
+import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
@@ -13,6 +14,7 @@ import ch.wsl.box.shared.utils.JSONUtils._
   * Created by andre on 4/24/2017.
   */
 object REST {
+
 
 
   import io.circe.generic.auto._
@@ -40,6 +42,10 @@ object REST {
 
   //only for forms
   def children(kind:String, entity:String, lang:String): Future[Seq[JSONMetadata]] = client.get[Seq[JSONMetadata]](s"/$kind/$lang/$entity/children")
+  def lookup(lookupEntity: String, map: JSONFieldMap, queryWithSobstitutions: Json): Future[Seq[JSONLookup]] = {
+    val lang = Session.lang()
+    client.post[JSONQuery,Seq[JSONLookup]](s"/entity/$lang/$lookupEntity/lookup/${map.textProperty}/${map.valueProperty}",queryWithSobstitutions.as[JSONQuery].right.get)
+  }
 
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json] = client.get[Json](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}")

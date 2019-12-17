@@ -99,9 +99,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           field.child) match {
 
           case (_, Some(WidgetsNames.hidden), _, _, _)                => HiddenWidget
-          case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidth
-          case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidget
-          case (_, _, Some(lookup), _, _)                             => SelectWidget
+          case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidthFactory(dataWithChildId)
+          case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidgetFactory(dataWithChildId)
+          case (_, _, Some(lookup), _, _)                             => SelectWidgetFactory(dataWithChildId)
           case (_, _, _, true, _)                                     => InputWidgetFactory.TextDisabled
           case (BOOLEAN, _, _, _, _)                                  => CheckboxWidget
           case (NUMBER, Some(WidgetsNames.checkboxNumber), _, _, _)   => CheckboxNumberWidget

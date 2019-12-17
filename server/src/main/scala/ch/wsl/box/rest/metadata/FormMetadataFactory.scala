@@ -189,7 +189,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 //            JSONLookup(lookupRow.get(value),lookupRow.get(text))
 //          }
 //          Some(JSONFieldLookup(refEntity, JSONFieldMap(value,text),options))
-          Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text), lookupData))
+          Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text), lookupData,field.lookupQuery))
         }
 
       }} match {

@@ -20,11 +20,11 @@ import scala.concurrent.duration._
 
 
 
-object PopupWidget extends ComponentWidgetFactory  {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = PopupWidget(field,prop)
+case class PopupWidgetFactory(allData:Property[Json]) extends ComponentWidgetFactory  {
+  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = PopupWidget(field,prop,allData)
 }
 
-case class PopupWidget(field:JSONField, data: Property[Json]) extends LookupWidget with Logging {
+case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Json]) extends LookupWidget with Logging {
 
 import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._
@@ -33,10 +33,6 @@ import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
 
-
-
-
-  val sortedOptions = lookup.lookup //.sortBy(_.value)
 
 
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
@@ -70,12 +66,16 @@ import ch.wsl.box.client.Context._
       autoRelease(showIf(modalStatus.transform(_ == Status.Open)) {
         div(autoRelease(produce(searchProp) { searchTerm =>
           div(
-              sortedOptions.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
-                div(a(value, onclick :+= ((e: Event) => {
-                  modalStatus.set(Status.Closed)
-                  selectedItem.set(value)
-                })))
-              }
+            autoRelease(produce(lookup) { lu =>
+              div(
+                lu.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
+                  div(a(value, onclick :+= ((e: Event) => {
+                    modalStatus.set(Status.Closed)
+                    selectedItem.set(value)
+                  })))
+                }
+              ).render
+            })
           ).render
         })).render
       }
@@ -99,7 +99,7 @@ import ch.wsl.box.client.Context._
       button(onclick :+= ((e:Event) => modalStatus.set(Status.Closed),true), Labels.popup.close)
     ).render
 
-    val modal:UdashModal = UdashModal(modalSize = ModalSize.Small)(
+    val modal:UdashModal = UdashModal(modalSize = ModalSize.Large)(
       headerFactory = Some(header),
       bodyFactory = Some(body),
       footerFactory = Some(footer)

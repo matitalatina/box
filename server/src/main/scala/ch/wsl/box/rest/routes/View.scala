@@ -60,6 +60,19 @@ case class View[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Prod
     def route = pathPrefix(name) {
         logger.info(s"view with name: $name")
 
+        pathPrefix("lookup") {
+          pathPrefix(Segment) { textProperty =>
+            path(Segment) { valueProperty =>
+              post{
+                entity(as[JSONQuery]){ query =>
+                  complete {
+                    Lookup.values(name, valueProperty, textProperty, query)
+                  }
+                }
+              }
+            }
+          }
+        } ~
         path("kind") {
           get {
             complete{EntityKind.VIEW.kind}

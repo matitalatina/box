@@ -10,7 +10,7 @@ import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromRequestUnma
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
-import ch.wsl.box.rest.logic.{DbActions, JSONTableActions}
+import ch.wsl.box.rest.logic.{DbActions, JSONTableActions, Lookup}
 import ch.wsl.box.rest.utils.{BoxConf, JSONSupport, UserProfile}
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -109,6 +109,19 @@ case class Table[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Pro
                   }
               case None => complete(StatusCodes.BadRequest, s"JSONID $strId not valid")
             }
+        }
+      } ~
+      pathPrefix("lookup") {
+        pathPrefix(Segment) { textProperty =>
+          path(Segment) { valueProperty =>
+            post{
+              entity(as[JSONQuery]){ query =>
+                complete {
+                  Lookup.values(name, valueProperty, textProperty, query)
+                }
+              }
+            }
+          }
         }
       } ~
       path("kind") {

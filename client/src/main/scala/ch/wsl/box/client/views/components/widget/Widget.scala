@@ -2,9 +2,10 @@ package ch.wsl.box.client.views.components.widget
 
 import java.util.UUID
 
+import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.Labels
-import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup, JSONMetadata}
+import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup, JSONLookup, JSONMetadata}
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.shared.utils.JSONUtils._
@@ -113,9 +114,48 @@ trait ChildWidget extends Widget with Logging {
 
 trait LookupWidget extends Widget {
 
-  def field:JSONField
-  def lookup:JSONFieldLookup = field.lookup.get
+  import ch.wsl.box.client.Context._
 
-  def value2Label(org:Json):String = lookup.lookup.find(_.id == org.string).map(_.value).getOrElse(Labels.lookup.not_found)
-  def label2Value(v:String):Json = lookup.lookup.find(_.value == v).map(_.id.asJson).getOrElse(Json.Null)
+  def allData:Property[Json]
+
+
+  def field:JSONField
+  val lookup:SeqProperty[JSONLookup] = {
+    SeqProperty(toSeq(field.lookup.get.lookup))
+  }
+
+  private def toSeq(s:Seq[JSONLookup]):Seq[JSONLookup] = if(field.nullable) {
+    Seq(JSONLookup("","")) ++ s
+  } else {
+    s
+  }
+
+  for{
+    look <- field.lookup
+    query <- look.lookupQuery
+    withDynamicParameters <- query.find(_ == '#')
+  } yield {
+    allData.listen({json =>
+      val variables = extractVariables(query)
+      val queryWithSubstitutions = variables.foldRight(query)((variable,finalQuery) => finalQuery.replaceAll("#"+variable,json.js(variable).toString()))
+      REST.lookup(look.lookupEntity,look.map,parser.parse(queryWithSubstitutions).right.get).map{ lookups =>
+        val newLookup = toSeq(lookups)
+        if(newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
+          lookup.set(newLookup, true)
+        }
+      }
+    }, true)
+  }
+
+  private def extractVariables(query:String):Seq[String] = {
+    query.zipWithIndex.filter(_._1 == '#').map{ case (_,i) =>
+      val nextIndex = Seq(query.length,query.indexOf(' ',i),query.indexOf('}',i),query.indexOf(',',i)).min
+      query.substring(i+1,nextIndex)
+    }.distinct
+  }
+
+
+
+  def value2Label(org:Json):String = lookup.get.find(_.id == org.string).map(_.value).orElse(field.lookup.get.lookup.find(_.id == org.string).map(_.value)).getOrElse(Labels.lookup.not_found)
+  def label2Value(v:String):Json = lookup.get.find(_.value == v).map(_.id.asJson).orElse(field.lookup.get.lookup.find(_.value == v).map(_.id.asJson)).getOrElse(Json.Null)
 }
