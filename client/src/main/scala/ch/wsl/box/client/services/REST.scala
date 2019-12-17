@@ -4,7 +4,7 @@ import ch.wsl.box.client.services.REST.get
 import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
-import io.circe.Json
+import io.circe.{Decoder, Json}
 import org.scalajs.dom.File
 
 import scala.concurrent.Future
@@ -42,9 +42,17 @@ object REST {
 
   //only for forms
   def children(kind:String, entity:String, lang:String): Future[Seq[JSONMetadata]] = client.get[Seq[JSONMetadata]](s"/$kind/$lang/$entity/children")
-  def lookup(lookupEntity: String, map: JSONFieldMap, queryWithSobstitutions: Json): Future[Seq[JSONLookup]] = {
+  def lookup(lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]] = {
     val lang = Session.lang()
-    client.post[JSONQuery,Seq[JSONLookup]](s"/entity/$lang/$lookupEntity/lookup/${map.textProperty}/${map.valueProperty}",queryWithSobstitutions.as[JSONQuery].right.get)
+    queryWithSubstitutions.as[JSONQuery] match {
+      case Right(query) => client.post[JSONQuery,Seq[JSONLookup]](s"/entity/$lang/$lookupEntity/lookup/${map.textProperty}/${map.valueProperty}", query)
+      case Left(fail) => {
+        println(queryWithSubstitutions)
+        println(fail.message)
+        Future.successful(Seq())
+      }
+    }
+
   }
 
   //for entities and forms

@@ -133,18 +133,19 @@ trait LookupWidget extends Widget {
   for{
     look <- field.lookup
     query <- look.lookupQuery
-    withDynamicParameters <- query.find(_ == '#')
   } yield {
-    allData.listen({json =>
-      val variables = extractVariables(query)
-      val queryWithSubstitutions = variables.foldRight(query)((variable,finalQuery) => finalQuery.replaceAll("#"+variable,json.js(variable).toString()))
-      REST.lookup(look.lookupEntity,look.map,parser.parse(queryWithSubstitutions).right.get).map{ lookups =>
-        val newLookup = toSeq(lookups)
-        if(newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
-          lookup.set(newLookup, true)
+    if(query.find(_ == '#').nonEmpty) {
+      allData.listen({ json =>
+        val variables = extractVariables(query)
+        val queryWithSubstitutions = variables.foldRight(query)((variable, finalQuery) => finalQuery.replaceAll("#" + variable, json.js(variable).toString()))
+        REST.lookup(look.lookupEntity, look.map, parser.parse(queryWithSubstitutions).right.get).map { lookups =>
+          val newLookup = toSeq(lookups)
+          if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
+            lookup.set(newLookup, true)
+          }
         }
-      }
-    }, true)
+      }, true)
+    }
   }
 
   private def extractVariables(query:String):Seq[String] = {
