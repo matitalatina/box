@@ -250,7 +250,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val fullHeightMax = style(
-    maxHeight :=! "calc(100vh - 206px)",
+    height :=! "calc(100vh - 206px)",
     overflow.auto
   )
 
