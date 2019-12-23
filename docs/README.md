@@ -1,10 +1,3 @@
----
-layout: page
-title: What is BOX
-permalink: /
-nav_order: 0
----
-
 # BOX
 
 ## Concept
