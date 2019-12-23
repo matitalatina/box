@@ -1,0 +1,37 @@
+---
+layout: page
+title: What is BOX
+permalink: /
+nav_order: 0
+---
+
+# BOX
+
+## Concept
+
+## What is BOX 
+The goal of BOX is to provide a framework that enables non developers to quickly create and modify complete and complex
+web applications
+
+BOX is a software divided in two pieces, UI (user interface) and server, that lays on top of PostgreSQL. The UI can run
+in any modern browser (Chrome, Firefox, Edge, Safari, IE11) and in mobile too.
+The server run on the JVM (Java Virtual Machine) so it can be run should run in any platform (Linux, Windows, macOS)
+but test are done only in Linux 
+
+## Features
+
+
+* Web based UI
+* Exploit the features and the knowledge of PostgreSQL
+    * Robust and complete SQL DBMS
+    * Open source
+    * Row level access, every user can access only to the row of the tables that he is allowed 
+* Automatic mask generation for tables and views
+* Custom database masks generation with support of child tables
+* Data exports in CSV
+* Reports in HTML and PDF
+* Multi language support
+* Role management, customize user interface for each role
+* Import data from external systems
+* API for integration with others system
+* Mobile support
