@@ -87,6 +87,7 @@ trait UglyDBFilters extends DbFilters with Logging {
     case "String" => typSTRING
     case "Boolean" | "scala.Boolean" => typBOOLEAN
     case "java.time.LocalTimestamp" => typTIMESTAMP
+    case "java.time.LocalDateTime" => typTIMESTAMP
     case "java.time.LocalDate" => typDATE
     case "java.time.LocalTime" => typTIME
     case "scala.Option[scala.Short]" | "Option[Short]" =>  typOptSHORT
@@ -97,6 +98,7 @@ trait UglyDBFilters extends DbFilters with Logging {
     case "scala.Option[String]" | "Option[String]" => typOptSTRING
     case "scala.Option[scala.Boolean]" | "Option[Boolean]" => typOptBOOLEAN
     case "scala.Option[java.time.LocalTimestamp]" | "Option[java.time.LocalTimestamp]" => typOptTIMESTAMP
+    case "scala.Option[java.time.LocalDateTime]" | "Option[java.time.LocalDateTime]" => typOptTIMESTAMP
     case "scala.Option[java.time.LocalDate]" | "Option[java.time.LocalDate]" => typOptDATE
     case "scala.Option[java.time.LocalTime]" | "Option[java.time.LocalTime]" => typOptTIME
     case _ => {

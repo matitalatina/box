@@ -3,7 +3,20 @@ package ch.wsl.box.shared.utils
 import ch.wsl.box.model.shared.{JSONMetadata, SubLayoutBlock}
 import io.circe._
 
+import java.time.LocalDateTime
+
 object Formatters {
+
+  import io.circe.{ Decoder, Encoder }
+  import scala.util.Try
+
+  implicit val encodeLocalDateTime: Encoder[LocalDateTime] = Encoder.encodeString.contramap[LocalDateTime](_.toString)
+  // encodeLocalDateTime: Encoder[LocalDateTime] = io.circe.Encoder$$anon$1@2a71e163
+
+  implicit val decodeLocalDateTime: Decoder[LocalDateTime] = Decoder.decodeString.emapTry { str =>
+    Try(LocalDateTime.parse(str))
+  }
+
 
   import io.circe.generic.auto._
 
