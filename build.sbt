@@ -39,10 +39,14 @@ lazy val server: Project  = (project in file("server"))
     resourceDirectory in Compile := baseDirectory.value / "../resources",
     testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html"),
     mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
-    mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot")
+    mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot"),
+    dockerExposedPorts ++= Seq(8080),
+    packageName in Docker := "minettiandrea/box-framework",
+    dockerEntrypoint := Seq("/opt/docker/bin/boot")
   )
   .enablePlugins(TomcatPlugin)
   .enablePlugins(JavaAppPackaging)
+  .enablePlugins(DockerPlugin)
   //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)
   .dependsOn(codegen)
@@ -115,6 +119,8 @@ lazy val client: Project = (project in file("client"))
   .dependsOn(sharedJS)
 
 
+
+
 lazy val root: Project = (project in file("."))
   .settings(
     serve := Def.sequential(
@@ -134,6 +140,13 @@ lazy val root: Project = (project in file("."))
         (fullOptJS in Compile in client),
         copyUiFiles,
         (packageBin in Universal in server)
+      ).value,
+      boxDocker := Def.sequential(
+        cleanUi,
+        cleanAll,
+        (fullOptJS in Compile in client),
+        copyUiFiles,
+        (publishLocal in Docker in server)
       ).value,
     installBox := Def.sequential(
       //cleanAll,
@@ -170,6 +183,7 @@ lazy val sharedJS: Project = shared.js.settings(name := "sharedJS")
 
 
 lazy val box = taskKey[Unit]("Package box")
+lazy val boxDocker = taskKey[Unit]("Package box in Docker")
 lazy val installBox = taskKey[Unit]("Install box")
 lazy val dropBox = taskKey[Unit]("Remove box tables")
 

@@ -56,7 +56,7 @@ object Settings {
     val circe = "0.12.3"
 
     //database
-    val postgres = "42.2.8"
+    val postgres = "42.2.11"
     val slick = "3.2.3"
     val slickPg = "0.18.0"
 

@@ -2,7 +2,7 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.29")
 
 addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "4.0.2")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.6")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.7.0")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject"      % "0.6.1")
 
