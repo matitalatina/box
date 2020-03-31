@@ -10,11 +10,11 @@ object Formatters {
   import io.circe.{ Decoder, Encoder }
   import scala.util.Try
 
-  implicit val encodeLocalDateTime: Encoder[LocalDateTime] = Encoder.encodeString.contramap[LocalDateTime](_.toString)
+  implicit val encodeLocalDateTime: Encoder[LocalDateTime] = Encoder.encodeString.contramap[LocalDateTime](_.toString.replace('T', ' '))
   // encodeLocalDateTime: Encoder[LocalDateTime] = io.circe.Encoder$$anon$1@2a71e163
 
   implicit val decodeLocalDateTime: Decoder[LocalDateTime] = Decoder.decodeString.emapTry { str =>
-    Try(LocalDateTime.parse(str))
+    Try(LocalDateTime.parse(str.replace(' ','T')))
   }
 
 

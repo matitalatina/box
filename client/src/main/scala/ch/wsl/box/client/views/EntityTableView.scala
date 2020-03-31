@@ -375,7 +375,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     fieldQuery.field.`type` match {
       case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
       case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATETIME => ClientConf.filterEqualityPrecisionDatetime match{
+      case JSONFieldTypes.DATETIME => ClientConf.filterPrecisionDatetime match{
         case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
         case _ => DateTimeWidget.DateTimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
       }

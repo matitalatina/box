@@ -163,7 +163,8 @@ lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
     libraryDependencies ++= Settings.sharedJVMJSDependencies.value
   )
   .jsSettings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.0"
+//    libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.0"       //this doeas not have LocalDateTime implementation
+    libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC5"
   )
 
 lazy val sharedJVM: Project = shared.jvm.settings(name := "sharedJVM")

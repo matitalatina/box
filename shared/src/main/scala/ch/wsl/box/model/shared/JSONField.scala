@@ -65,6 +65,7 @@ object JSONFieldTypes{
   val DATE = "date"
   val DATETIME = "datetime"
   val TIME = "time"
+  val INTERVAL = "interval"
   val BOOLEAN = "boolean"
   val ARRAY_NUMBER = "array_number"
   val ARRAY_STRING = "array_string"

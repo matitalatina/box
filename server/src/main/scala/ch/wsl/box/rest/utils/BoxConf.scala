@@ -41,33 +41,24 @@ object BoxConf extends Logging {
               "server-secret",
               "max-age",
               "logger.level",
-//              "manual_edit.key_fields",
-//              "manual_edit.single.key_fields",
-              "rest.lookup.labels",
-              "limitLookupFromFk"
+              "fks.lookup.labels",
+              "fks.lookup.rowsLimit"
          ).contains(k)}
-//              "image_height",
-//              "langs",
-//              "filterEqualityPrecision.double",
-//              "filterEqualityPrecision.datetime",
-//              "display.index.html",
-//              "display.index.news"
-//            ))
 
-  def restLookupLabels = ConfigFactory.parseString( Try(conf("rest.lookup.labels")).getOrElse("default=firstNoPKField"))
 
   def langs = Try(conf("langs")).getOrElse("en").split(",").toSeq
 
-  def limitLookupFromFk = Try(conf("limitLookupFromFk").toInt).getOrElse(50)
+  def fksLookupLabels = ConfigFactory.parseString( Try(conf("fks.lookup.labels")).getOrElse("default=firstNoPKField"))
+
+  def fksLookupRowsLimit = Try(conf("fks.lookup.rowsLimit").toInt).getOrElse(50)
 
   def akkaHttpSession = {
-    val cookieName = Try(conf("cookie.name")).getOrElse("_boxsession")
+    val cookieName = Try(conf("cookie.name")).getOrElse("_boxsession_myapp")
     val maxAge = Try(conf("max-age")).getOrElse("2000")
     val serverSecret = Try(conf("server-secret")).getOrElse {
       logger.warn("Set server secret in application.conf table, use the default value only for development")
-      "changeme530573985739845704357308s70487s08970897403854s038954s38754s30894387048s09e8u408su5389s5"
+      "changeMe530573985739845704357308s70487s08970897403854s038954s38754s30894387048s09e8u408su5389s5"
     }
-
 
     ConfigFactory.parseString(
       s"""akka.http.session {
@@ -93,34 +84,34 @@ object BoxConf extends Logging {
   }
 
 
-  def enableCache:Boolean = Try(conf("enableCache").equals("true")).getOrElse(true)
+  def enableCache:Boolean = Try(conf("cache.enable").equals("true")).getOrElse(true)
 
 
   def dtFormatDatetime = Try(conf("dtformat.datetime")).getOrElse("yyyy-MM-dd HH:mm")
   def dtFormatDate = Try(conf("dtformat.date")).getOrElse("yyyy-MM-dd")
   def dtFormatTime = Try(conf("dtformat.time")).getOrElse("HH:mm:ss.S")
 
-  def filterEqualityPrecisionDatetime = Try(conf("filterEqualityPrecision.datetime").toUpperCase).toOption match {
+  def filterPrecisionDatetime = Try(conf("filter.precision.datetime").toUpperCase).toOption match {
     case Some("DATE") => JSONFieldTypes.DATE
     case Some("DATETIME") => JSONFieldTypes.DATETIME
     case _ => JSONFieldTypes.DATETIME //for None or wrong values
   }
 
-  def prepareDatetime = filterEqualityPrecisionDatetime match {
+  def prepareDatetime = filterPrecisionDatetime match {
     case JSONFieldTypes.DATE => ((x: LocalDateTime) => x.truncatedTo(ChronoUnit.DAYS))
     case JSONFieldTypes.DATETIME => ((x: LocalDateTime) => x)
     case _ => ((x: LocalDateTime) => x)
   }
 
-  def filterEqualityPrecisionDouble: Option[Int] = Try(conf("filterEqualityPrecision.double").toInt).toOption
+  def filterPrecisionDouble: Option[Int] = Try(conf("filter.precision.double").toInt).toOption
 
-  def prepareDouble = filterEqualityPrecisionDouble match {
+  def prepareDouble = filterPrecisionDouble match {
     case None => ((x: Double) => x)
-    case Some(p) => ((x: Double) => roundAt(p)(x))
-    //    case Some(p) if p<0 => ((x:Double) => roundAt(-p)(x))
+    case Some(p) => ((x: Double) => roundAtDigit(p)(x))
+    //    case Some(p) if p<0 => ((x:Double) => roundAtDigit(-p)(x))
   }
 
 
-  def roundAt(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.round(n) * s) / s }
-  def truncateAt(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.floor(n) * s) / s }
+  def roundAtDigit(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.round(n) * s) / s }
+  def truncateAtDigit(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.floor(n) * s) / s }
 }

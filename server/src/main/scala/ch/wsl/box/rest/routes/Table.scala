@@ -65,7 +65,7 @@ case class Table[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Pro
 //    val jsonActions= new JsonTableActions(table)
     val dbActions = new DbActions[T,M](table)
     val jsonActions = JSONTableActions[T,M](table)
-    val limitLookupFromFk: Int = BoxConf.limitLookupFromFk
+    val limitLookupFromFk: Int = BoxConf.fksLookupRowsLimit
 
     import JSONSupport._
     import akka.http.scaladsl.model._
