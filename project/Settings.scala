@@ -70,7 +70,7 @@ object Settings {
     val udashJQuery = "1.2.0"
 
     val scribe = "2.6.0"
-    val scalaCSV = "1.3.6-SNAPSHOT-scalajs"
+    val scalaCSV = "1.3.6-scalajs"
 
   }
 
@@ -145,7 +145,7 @@ object Settings {
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
     "org.scala-js" %%% "scalajs-dom" % "0.9.0",
-    "ch.wavein" %%% "scala-js-leaflet" % "0.1.0-SNAPSHOT",
+    "ch.wavein" %%% "scala-js-leaflet" % "0.1.0",
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

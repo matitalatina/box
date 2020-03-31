@@ -15,6 +15,7 @@ lazy val codegen  = (project in file("codegen")).settings(
   scalaVersion := Settings.versions.scala,
   libraryDependencies ++= Settings.codegenDependecies.value,
   resolvers += Resolver.jcenterRepo,
+  resolvers += Resolver.bintrayRepo("waveinch","maven"),
   resourceDirectory in Compile := baseDirectory.value / "../resources"
 )
 
@@ -33,6 +34,7 @@ lazy val server: Project  = (project in file("server"))
     scalacOptions ++= Settings.scalacOptionsServer,
     libraryDependencies ++= Settings.jvmDependencies.value,
     resolvers ++= Seq(Resolver.jcenterRepo, Resolver.bintrayRepo("hseeberger", "maven")),
+    resolvers += Resolver.bintrayRepo("waveinch","maven"),
     slick := slickCodeGenTask.value , // register manual sbt command
     hello := println("hello"),
     sourceGenerators in Compile +=  slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
@@ -57,6 +59,8 @@ lazy val client: Project = (project in file("client"))
     version := Settings.version,
     scalaVersion := Settings.versions.scala,
     scalacOptions ++= Settings.scalacOptions,
+    resolvers += Resolver.jcenterRepo,
+    resolvers += Resolver.bintrayRepo("waveinch","maven"),
     libraryDependencies ++= Settings.scalajsDependencies.value,
     jsDependencies ++= Settings.jsDependencies.value,
     // yes, we want to package JS dependencies
@@ -173,7 +177,9 @@ lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
   .settings(
     name := "shared",
     scalaVersion := Settings.versions.scala,
-    libraryDependencies ++= Settings.sharedJVMJSDependencies.value
+    libraryDependencies ++= Settings.sharedJVMJSDependencies.value,
+    resolvers += Resolver.jcenterRepo,
+    resolvers += Resolver.bintrayRepo("waveinch","maven"),
   )
 
 lazy val sharedJVM: Project = shared.jvm.settings(name := "sharedJVM")
