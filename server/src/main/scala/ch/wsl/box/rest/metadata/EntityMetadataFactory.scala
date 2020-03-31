@@ -33,17 +33,17 @@ object EntityMetadataFactory extends Logging {
 
   def lookupField(referencingTable:String,lang:String, firstNoPK:Option[String]):String = {
 
-    val restLookupConf = BoxConf.restLookupLabels
+    val lookupLabelFields = BoxConf.fksLookupLabels
 
-    val default = restLookupConf.as[Option[String]]("default").getOrElse("name")
+    val default = lookupLabelFields.as[Option[String]]("default").getOrElse("name")
 
-    val myDefaultTableLookupField: String = default match {
+    val myDefaultTableLookupLabelField: String = default match {
       case "firstNoPKField" => firstNoPK.getOrElse("name")
       case JSONUtils.LANG => lang
       case _ => default
     }
 
-    restLookupConf.as[Option[String]](referencingTable).getOrElse(myDefaultTableLookupField)
+    lookupLabelFields.as[Option[String]](referencingTable).getOrElse(myDefaultTableLookupLabelField)
   }
 
   def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
@@ -185,40 +185,42 @@ object EntityMetadataFactory extends Logging {
 
 
   val typesMapping =  Map(
+    "numeric" -> JSONFieldTypes.NUMBER,
     "integer" -> JSONFieldTypes.NUMBER,
+    "bigint" -> JSONFieldTypes.NUMBER,
+    "smallint" -> JSONFieldTypes.NUMBER,
+    "double precision" -> JSONFieldTypes.NUMBER,
+    "real" -> JSONFieldTypes.NUMBER,
+    "text" -> JSONFieldTypes.STRING,
     "character varying" -> JSONFieldTypes.STRING,
     "character" -> JSONFieldTypes.STRING,
-    "smallint" -> JSONFieldTypes.NUMBER,
-    "bigint" -> JSONFieldTypes.NUMBER,
-    "double precision" -> JSONFieldTypes.NUMBER,
-    "timestamp without time zone" -> JSONFieldTypes.DATETIME,
-    "date" -> JSONFieldTypes.DATE,
-    "real" -> JSONFieldTypes.NUMBER,
-    "boolean" -> "boolean",
+    "boolean" -> JSONFieldTypes.BOOLEAN,
     "bytea" -> JSONFieldTypes.FILE,
-    "numeric" -> JSONFieldTypes.NUMBER,
-    "text" -> JSONFieldTypes.STRING,
-    "USER-DEFINED" -> JSONFieldTypes.STRING,
+    "timestamp without time zone" -> JSONFieldTypes.DATETIME,
     "time without time zone" -> JSONFieldTypes.TIME,
-    "ARRAY" -> JSONFieldTypes.STRING                              //todo: works only for visualisation
+    "date" -> JSONFieldTypes.DATE,
+    "interval" -> JSONFieldTypes.INTERVAL,
+    "ARRAY" -> JSONFieldTypes.STRING,                              //todo: works only for visualisation
+    "USER-DEFINED" -> JSONFieldTypes.STRING
   )
 
   val defaultWidgetMapping = Map(
     "integer" -> None,
+    "bigint" -> None,
+    "smallint" -> None,
+    "double precision" -> None,
+    "real" -> None,
+    "text" -> Some(WidgetsNames.textinput),
     "character varying" -> Some(WidgetsNames.textinput),
     "character" -> Some(WidgetsNames.textinput),
-    "smallint" -> None,
-    "bigint" -> None,
-    "double precision" -> None,
-    "timestamp without time zone" -> Some(WidgetsNames.datetimePicker),
-    "date" -> Some(WidgetsNames.datepicker),
-    "real" -> None,
     "boolean" -> None,
     "bytea" -> None,
     "numeric" -> None,
-    "text" -> Some(WidgetsNames.textinput),
-    "USER-DEFINED" -> None,
+    "timestamp without time zone" -> Some(WidgetsNames.datetimePicker),
     "time without time zone" -> Some(WidgetsNames.timepicker),
-    "ARRAY" -> Some(WidgetsNames.textinput)                          //todo: works only for visualisation -> provide widget
+    "date" -> Some(WidgetsNames.datepicker),
+    "interval" -> Some(WidgetsNames.datepicker),
+    "ARRAY" -> Some(WidgetsNames.textinput),                          //todo: works only for visualisation -> provide widget
+    "USER-DEFINED" -> None
   )
 }

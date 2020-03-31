@@ -35,7 +35,7 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.12.10"
+    val scala = "2.12.11"
     val ficus = "1.4.0"
 
     //HTTP actors
@@ -58,13 +58,13 @@ object Settings {
     //database
     val postgres = "42.2.11"
     val slick = "3.2.3"
-    val slickPg = "0.18.0"
+    val slickPg = "0.19.0"
 
     //frontend
-    val scalaCss = "0.5.3-RC1"
+    val scalaCss = "0.6.0"
 
     //js
-    val bootstrap =  "3.3.7-1"
+    val bootstrap =  "3.4.1-1"
 
     val udash = "0.8.0"
     val udashJQuery = "1.2.0"
@@ -144,8 +144,8 @@ object Settings {
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
-    "org.scala-js" %%% "scalajs-dom" % "0.9.0",
-    "ch.wavein" %%% "scala-js-leaflet" % "0.1.0",
+    "org.scala-js" %%% "scalajs-dom" % "0.9.8",
+    "ch.wavein" %%% "scala-js-leaflet" % "0.1.0"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

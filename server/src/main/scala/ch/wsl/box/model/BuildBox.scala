@@ -30,24 +30,30 @@ object BuildBox extends App {
         AccessLevel.AccessLevel_row(1000,"Administrator")
       )))
       _ <- Auth.boxDB.run(Conf.table ++= Seq(
-        Conf.Conf_row(key = "page_length",value = Some("30")),
-        Conf.Conf_row(key = "fk_rows",value = Some("30")),
-        Conf.Conf_row(key = "manual_edit.key_fields",value = Some("false")),
-        Conf.Conf_row(key = "display.index.news",value = Some("false")),
-        Conf.Conf_row(key = "display.index.html",value = Some("false")),
-        Conf.Conf_row(key = "filterEqualityPrecision.datetime",value = Some("DATETIME")),
-        Conf.Conf_row(key = "langs",value = Some("en")),
-        Conf.Conf_row(key = "notification.timeout",value = Some("6")),
-        Conf.Conf_row(key = "color.main",value = Some("#343C4B")),
-        Conf.Conf_row(key = "color.link",value = Some("#7C8277")),
-        Conf.Conf_row(key = "color.danger",value = Some("#C54E13")),
-        Conf.Conf_row(key = "color.warning",value = Some("#EB883E")),
-
+        Conf.Conf_row(key = "host", value = Some("0.0.0.0")),
+        Conf.Conf_row(key = "port", value = Some("8080")),
+        Conf.Conf_row(key = "server-secret", value = Some("changeMe-sadf-09fd65465443554345654e565e45653445se554d6554d65r54d65r54d65r546d5r5dasdfiasdf897sdf-as-s9d8fd9f8s09fku")),
+        Conf.Conf_row(key = "cookie.name", value = Some("_boxsession_myapp")),
+        Conf.Conf_row(key = "langs", value = Some("en")),
+        Conf.Conf_row(key = "pks.edit", value = Some("false")),
+        Conf.Conf_row(key = "fks.lookup.labels", value = Some("default = firstNoPKField")),
+        Conf.Conf_row(key = "fks.lookup.rowsLimit", value = Some("50")),
+        Conf.Conf_row(key = "display.index.news", value = Some("false")),
+        Conf.Conf_row(key = "display.index.html", value = Some("false")),
+        Conf.Conf_row(key = "filter.precision.datetime", value = Some("DATETIME")),
+        Conf.Conf_row(key = "filter.precision.double", value = Some("1")),
+        Conf.Conf_row(key = "page.length", value = Some("30")),
+        Conf.Conf_row(key = "notification.timeout", value = Some("6")),
+        Conf.Conf_row(key = "cache.enable", value = Some("_true")),
+        Conf.Conf_row(key = "color.main", value = Some("#343C4B")),
+        Conf.Conf_row(key = "color.link", value = Some("#7C8277")),
+        Conf.Conf_row(key = "color.danger", value = Some("#C54E13")),
+        Conf.Conf_row(key = "color.warning", value = Some("#EB883E"))
       ))
       _ <- Auth.boxDB.run(UIsrcTable.table += UIsrcTable.UIsrc_row(file = Some(Base64.getDecoder.decode(logo)),mime = Some("image/png"),name = Some("logo"),accessLevel = -1))
       _ <- Auth.boxDB.run(UITable.table ++= Seq(
-        UITable.UI_row(key = "footerCopyright", value = "Box framework", accessLevel = -1),
         UITable.UI_row(key = "title", value = "Box Framework", accessLevel = -1),
+        UITable.UI_row(key = "footerCopyright", value = "Box framework", accessLevel = -1),
         UITable.UI_row(key = "enableAllTables", value = "false", accessLevel = 1),
         UITable.UI_row(key = "enableAllTables", value = "true", accessLevel = 1000),
         UITable.UI_row(key = "showEntitiesSidebar", value = "false", accessLevel = 1),

@@ -28,8 +28,8 @@ object ClientConf {
   def pageLength  = Try(conf("page_length").toInt).getOrElse(30)
 //  def lookupMaxRows  = Try(conf("fk_rows").toInt).getOrElse(30)
 
-  def manualEditKeyFields = Try(conf("manual_edit.key_fields").toBoolean).getOrElse(false)
-  def manualEditSingleKeyFields = Try(conf("manual_edit.single.key_fields").trim().replace(' ',',').split(",").toSeq).getOrElse(Seq[String]())
+  def manualEditKeyFields = Try(conf("pks.edit").toBoolean).getOrElse(false)
+  def manualEditSingleKeyFields = Try(conf("pks.edit.single").trim().replace(' ',',').split(",").toSeq).getOrElse(Seq[String]())
 
   def displayIndexNews = Try(conf("display.index.news").toBoolean).getOrElse(false)
   def displayIndexHtml = Try(conf("display.index.html").toBoolean).getOrElse(false)
@@ -45,13 +45,13 @@ object ClientConf {
   lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorLink,colorDanger,colorWarning), tableFontSize))
 
 
-  def filterEqualityPrecisionDatetime = Try(conf("filterEqualityPrecision.datetime").toUpperCase).toOption match {
+  def filterPrecisionDatetime = Try(conf("filter.precision.datetime").toUpperCase).toOption match {
       case Some("DATE") => JSONFieldTypes.DATE
       case Some("DATETIME") => JSONFieldTypes.DATETIME
       case _ => JSONFieldTypes.DATETIME     //for None or wrong values
     }
 
-  def prepareDatetime = filterEqualityPrecisionDatetime match{
+  def prepareDatetime = filterPrecisionDatetime match{
     case JSONFieldTypes.DATE => ((x: Timestamp) => Timestamp.valueOf(x.toLocalDateTime.truncatedTo(ChronoUnit.DAYS)))
     case JSONFieldTypes.DATETIME => ((x:Timestamp) => x)
     case _ => ((x:Timestamp) => x)

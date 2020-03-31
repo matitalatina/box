@@ -53,27 +53,27 @@ object Box {
 
 object Boot extends App  {
   var root = Box.start()
-//
-//  println("Press q to stop, r to reset cache...")
-//
-//  var read = ""
-//  do { //endless loop until q in sbt console is pressed
-//    read = StdIn.readLine()
-//    read match {
-//      case "r" => {
-//        root.stop()
-//        root=Box.start
-//        FormMetadataFactory.resetCache()
-//        EntityMetadataFactory.resetCache()
-//        RuntimeFunction.resetCache()
-//        println("reset cache")
-//      }
-//      case _ => {}
-//    }
-//    println()
-//  } while (read != "q") // let it run until user presses return
-//
-//  root.stop()
+
+  println("Press q to stop, r to reset cache...")
+
+  var read = ""
+  do { //endless loop until q in sbt console is pressed
+    read = StdIn.readLine()
+    read match {
+      case "r" => {
+        root.stop()
+        root=Box.start
+        FormMetadataFactory.resetCache()
+        EntityMetadataFactory.resetCache()
+        RuntimeFunction.resetCache()
+        println("reset cache")
+      }
+      case _ => {}
+    }
+    println()
+  } while (read != "q") // let it run until user presses return
+
+  root.stop()
 
 }
 
