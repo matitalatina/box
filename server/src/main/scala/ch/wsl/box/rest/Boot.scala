@@ -7,7 +7,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
 import ch.wsl.box.rest.logic.functions.RuntimeFunction
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, FormMetadataFactory}
-import ch.wsl.box.rest.routes.{BoxRoutes, GeneratedRoutes, Root}
+import ch.wsl.box.rest.routes.{BoxRoutes, Root}
+import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
@@ -24,7 +25,11 @@ object Box {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val executionContext: ExecutionContext = system.dispatcher
 
+    Registry.load()
+
     BoxConf.load()
+
+
 
 
     override val akkaConf: Config = BoxConf.akkaHttpSession
@@ -35,7 +40,7 @@ object Box {
     Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConf.loggerLevel)).replace()
 
     //TODO need to be reworked now it's based on an hack, it call generated root to populate models
-    GeneratedRoutes("en")(Auth.adminUserProfile, materializer, executionContext)
+    Registry().routes("en")(Auth.adminUserProfile, materializer, executionContext)
     BoxRoutes()(Auth.boxUserProfile, materializer, executionContext)
 
 
@@ -45,6 +50,8 @@ object Box {
 
     val binding: Future[Http.ServerBinding] = Http().bindAndHandle(route, host, port) //attach the root route
     println(s"Server online at http://localhost:$port")
+
+
 
 
 

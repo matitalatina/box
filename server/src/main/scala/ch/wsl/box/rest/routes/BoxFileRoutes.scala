@@ -3,7 +3,6 @@ package ch.wsl.box.rest.routes
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.Materializer
-import ch.wsl.box.model.FileTables._
 import ch.wsl.box.model.boxentities.UIsrcTable
 import ch.wsl.box.model.boxentities.UIsrcTable.UIsrc_row
 import ch.wsl.box.rest.routes.File.{BoxFile, FileHandler}

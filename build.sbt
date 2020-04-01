@@ -37,7 +37,7 @@ lazy val server: Project  = (project in file("server"))
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
     slick := slickCodeGenTask.value , // register manual sbt command
     hello := println("hello"),
-    sourceGenerators in Compile +=  slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
+    //sourceGenerators in Compile +=  slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
     resourceDirectory in Compile := baseDirectory.value / "../resources",
     testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html"),
     mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
@@ -132,17 +132,20 @@ lazy val root: Project = (project in file("."))
         //cleanAll.value,
         (fastOptJS in Compile in client).toTask,
         copyUiFilesDev,
+        (compile in Compile in codegen),
         (run in Compile in server).toTask("")
       ).value,
       cleanAll := {
         (clean in Compile in client).toTask.value
         (clean in Compile in server).toTask.value
+        (clean in Compile in codegen).toTask.value
       },
       box := Def.sequential(
         cleanUi,
         cleanAll,
         (fullOptJS in Compile in client),
         copyUiFiles,
+        (compile in Compile in codegen),
         (packageBin in Universal in server)
       ).value,
       boxDocker := Def.sequential(
@@ -150,6 +153,7 @@ lazy val root: Project = (project in file("."))
         cleanAll,
         (fullOptJS in Compile in client),
         copyUiFiles,
+        (compile in Compile in codegen),
         (publishLocal in Docker in server)
       ).value,
     installBox := Def.sequential(

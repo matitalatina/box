@@ -5,7 +5,6 @@ import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.time.temporal.{ChronoField, ChronoUnit, TemporalAccessor}
 
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.{Filter, JSONFieldTypes, JSONQuery, JSONQueryFilter}
 import ch.wsl.box.rest.utils.BoxConf
 import ch.wsl.box.shared.utils.DateTimeFormatters

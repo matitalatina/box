@@ -13,7 +13,7 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
        |// AUTO-GENERATED Slick data model
        |/** Stand-alone Slick data model for immediate use */
        |
-       |  import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+       |
        |  import slick.model.ForeignKeyAction
        |  import slick.collection.heterogeneous._
        |  import slick.collection.heterogeneous.syntax._
@@ -21,6 +21,8 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
        |
        |object $container {
        |
+       |
+       |      import ch.wsl.box.rest.jdbc.PostgresProfile.api._
        |
        |      val profile = ch.wsl.box.rest.jdbc.PostgresProfile
        |

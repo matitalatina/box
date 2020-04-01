@@ -5,14 +5,15 @@ package ch.wsl.box.model
 import scala.concurrent.ExecutionContext
 import ch.wsl.box.rest.logic.{EntityJSONTableActions, EntityJSONViewActions, JSONTableActions, JSONViewActions}
 import ch.wsl.box.model.boxentities._
+import ch.wsl.box.rest.runtime.Registry
 
-class BoxActionsRegistry(implicit ec:ExecutionContext)  extends EntityActionsRegistry {
+class BoxActionsRegistry(implicit ec:ExecutionContext)  {
 
   import io.circe._
   import io.circe.generic.auto._
   import ch.wsl.box.rest.utils.JSONSupport._
 
-  override def tableActions:String => EntityJSONTableActions = {
+  def tableActions:String => EntityJSONTableActions = {
     case "access_level" => JSONTableActions[AccessLevel.AccessLevel,AccessLevel.AccessLevel_row](AccessLevel.table)
     case "conf" => JSONTableActions[Conf.Conf,Conf.Conf_row](Conf.table)
     case "export" => JSONTableActions[Export.Export,Export.Export_row](Export.Export)
@@ -33,7 +34,7 @@ class BoxActionsRegistry(implicit ec:ExecutionContext)  extends EntityActionsReg
     case "function_i18n" => JSONTableActions[Function.Function_i18n,Function.Function_i18n_row](Function.Function_i18n)
     case "function_field" => JSONTableActions[Function.FunctionField,Function.FunctionField_row](Function.FunctionField)
     case "function_field_i18n" => JSONTableActions[Function.FunctionField_i18n,Function.FunctionField_i18n_row](Function.FunctionField_i18n)
-    case s:String => super.tableActions(s)
+    case s:String => Registry().actions.tableActions(ec)(s)
   }
 
 }
