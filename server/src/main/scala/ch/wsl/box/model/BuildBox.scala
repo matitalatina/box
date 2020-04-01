@@ -44,7 +44,7 @@ object BuildBox extends App {
         Conf.Conf_row(key = "filter.precision.double", value = Some("1")),
         Conf.Conf_row(key = "page.length", value = Some("30")),
         Conf.Conf_row(key = "notification.timeout", value = Some("6")),
-        Conf.Conf_row(key = "cache.enable", value = Some("_true")),
+        Conf.Conf_row(key = "cache.enable", value = Some("true")),
         Conf.Conf_row(key = "color.main", value = Some("#343C4B")),
         Conf.Conf_row(key = "color.link", value = Some("#7C8277")),
         Conf.Conf_row(key = "color.danger", value = Some("#C54E13")),
@@ -65,6 +65,53 @@ object BuildBox extends App {
       ))
       _ <- Auth.boxDB.run(User.table += User.User_row(Auth.dbConf.as[String]("user"),1000))
       _ <- Auth.boxDB.run(Labels.table ++= DefaultLabels.labels)
+
+      _ <- Auth.boxDB.run{sql"""CREATE OR REPLACE VIEW "box"."v_roles" AS
+                          SELECT r.rolname,
+                                r.rolsuper,
+                                r.rolinherit,
+                                r.rolcreaterole,
+                                r.rolcreatedb,
+                                r.rolcanlogin,
+                                r.rolconnlimit,
+                                r.rolvaliduntil,
+                                ARRAY( SELECT b.rolname
+                                       FROM (pg_auth_members m
+                                         JOIN pg_roles b ON ((m.roleid = b.oid)))
+                                      WHERE (m.member = r.oid)) AS memberof,
+                                r.rolreplication,
+                                r.rolbypassrls
+                           FROM pg_roles r
+                           WHERE (r.rolname !~ '^pg_'::text)
+                           ORDER BY r.rolname;
+       """.as[Boolean].headOption}
+
+      _ <- Auth.boxDB.run{sql"""CREATE OR REPLACE FUNCTION box.hasrole(rol text)
+                                       RETURNS boolean
+                                       LANGUAGE plpgsql
+                                       AS $$function$$
+                                       DECLARE
+                                            roles text[];
+                                       BEGIN
+                                             select memberof into roles from box.v_roles where lower(rolname) = lower(current_user);
+                                             return rol = any(roles);
+                                      END
+                                      $$function$$
+      """.as[Boolean].headOption}
+
+      _ <- Auth.boxDB.run{sql"""CREATE OR REPLACE FUNCTION box.hasrolein(rol text[])
+                                       RETURNS boolean
+                                       LANGUAGE plpgsql
+                                        AS $$function$$
+                                        DECLARE
+                                           roles text[];
+                                        BEGIN
+                                          select memberof into roles from box.v_roles where lower(rolname) = lower(current_user);
+                                          return rol && roles;   --intersection of the 2 arrays
+                                        END
+                                        $$function$$
+      """.as[Boolean].headOption}
+
     } yield "ok"
 
 
@@ -85,198 +132,196 @@ object DefaultLabels {
 
   private val rawLabels =
     """
-      |en	login.title	Sign In
-      |en	login.failed	Login failed
-      |en	login.username	Username
-      |en	login.password	Password
-      |en	login.button	Login
-      |en	header.home	Home
-      |en	header.forms	Forms
-      |en	header.entities	Entities
-      |en	header.lang	Language
-      |en	error.notfound	URL not found!
-      |en	message.confirm	Are you sure?
-      |en	form.save	Save
-      |en	form.save_table	Save and back to table
-      |en	form.save_add	Save and insert next
-      |en	subform.add	Add
-      |en	subform.remove	Remove
-      |en	table.actions	Actions
-      |en	table.edit	Edit
-      |en	table.no_action	No action
-      |en	entity.new	New
-      |en	entity.table	Table
-      |en	entity.title	Tables/Views
-      |en	entity.select	Select
-      |en	entity.search	Search
       |en	entity.duplicate	Copy
-      |en	sort.asc	▼
-      |en	sort.desc	▲
-      |en	sort.ignore	-
-      |en	navigation.next	►
-      |en	navigation.previous	◄
-      |en	navigation.first	◅
-      |en	navigation.last	▻
-      |en	navigation.page	Page
-      |en	navigation.record	Record
-      |en	navigation.of	of
-      |it	login.title	Sign in
-      |it	login.failed	Login fallito
-      |it	login.username	Nome utente
-      |it	login.password	Password
-      |it	login.button	Login
-      |it	header.home	Home
-      |it	header.forms	Maschere
-      |it	header.entities	Entità
-      |it	header.lang	Lingua
-      |it	error.notfound	URL non trovato!
-      |it	message.confirm	Sei sicuro?
-      |it	form.save	Salva
-      |it	form.save_table	Salva e ritorna alla tabella
-      |it	form.save_add	Salva e aggiungi
-      |it	subform.add	Aggiungi
-      |it	table.actions	Azioni
-      |it	table.edit	Modifica
-      |it	table.no_action	Nessuna azione
-      |it	entity.new	Nuovo
-      |it	entity.table	Tabella
-      |it	entity.title	Tabelle/Views
-      |it	entity.select	Seleziona
-      |it	entity.search	Cerca
       |it	entity.duplicate	Duplica
-      |it	navigation.page	Pagina
-      |it	navigation.record	Evento
-      |it	navigation.of	di
-      |fr	login.title	Sign in
-      |fr	login.failed	Login pas réussi
-      |fr	login.username	Nom utilisateur
-      |fr	login.password	Password
-      |fr	login.button	Login
-      |fr	header.home	Home
-      |fr	header.forms	Masques
-      |fr	header.entities	Entitées
-      |fr	header.lang	Langue
-      |fr	error.notfound	URL pas trouvé!
-      |fr	message.confirm	Vous êtes sûrs?
-      |fr	form.save	Sauvegarder
-      |fr	form.save_table	Sauvegarder et retourner au tableau
-      |fr	form.save_add	Sauvegarder et ajouter
-      |fr	subform.add	Ajouter
-      |fr	subform.remove	Effacer
-      |fr	table.actions	Actions
-      |fr	table.edit	Modifier
-      |fr	table.no_action	Pas d’actions
-      |fr	entity.new	Nuoveau
-      |fr	entity.table	Tableau
-      |fr	entity.title	Tableaux/Views
-      |fr	entity.select	Sélectionner
-      |fr	entity.search	Cercher
       |fr	entity.duplicate	Copie
-      |fr	navigation.page	Page
-      |fr	navigation.record	Feu
-      |fr	navigation.of	de
-      |fr	block.fire.municipality	Commune
-      |it	sort.desc	▲
-      |it	navigation.next	►
-      |it	navigation.previous	◄
-      |it	navigation.first	◅
-      |it	navigation.last	▻
-      |fr	sort.asc	▼
-      |fr	sort.desc	▲
-      |fr	sort.ignore	-
-      |fr	navigation.previous	◄
-      |fr	navigation.next	►
-      |fr	navigation.first	◅
-      |de	login.title	Sign in
-      |de	login.failed	Fehlgeschlagene Anmeldung
-      |de	login.username	Benutzername
-      |de	login.password	Password
-      |de	login.button	Login
-      |de	header.home	Home
-      |de	header.forms	Masken
-      |de	header.entities	Entität
-      |de	header.lang	Sprache
-      |de	error.notfound	URL nicht gefunden!
-      |de	message.confirm	Sind Sie sicher?
-      |de	form.save	Speichern
-      |de	form.save_table	Speichern und zurück zur Tabelle
-      |de	form.save_add	Speichern und einfügen
-      |de	subform.add	Einfügen
-      |de	subform.remove	Löschen
-      |de	table.actions	Aktionen
-      |de	table.edit	Editieren
-      |de	table.no_action	Keine Aktion
-      |de	entity.new	Neu
-      |de	entity.table	Tabelle
-      |de	entity.title	Tabellen/Views
-      |de	entity.select	Auswählen
-      |de	entity.search	Suchen
       |de	entity.duplicate	Kopie
-      |de	navigation.page	Seite
-      |de	navigation.record	Waldbrand
-      |de	navigation.of	von
-      |it	sort.asc	▼
-      |it	sort.ignore	-
-      |fr	navigation.last	▻
-      |de	sort.asc	▼
-      |de	sort.desc	▲
-      |de	sort.ignore	-
-      |de	navigation.next	►
-      |de	navigation.previous	◄
-      |de	navigation.first	◅
-      |de	navigation.last	▻
-      |en	ui.index.title	<h1>BOX database</h1> Welcome to BOX.
-      |it	ui.index.title	<h1>BOX database</h1> Benvenuti a BOX
-      |fr	ui.index.title	<h1>BOX database</h1> Bienvenue a BOX.
-      |de	ui.index.title	<h1>BOX database</h1> Wilkommen zur BOX
-      |it	navigation.recordFound	Records
-      |it	table.delete	Elimina
-      |fr	table.delete	Supprimer
-      |de	table.delete	Löschen
-      |en	table.delete	Delete
-      |it	navigation.loading	Caricamento
-      |fr	navigation.loading	Chargement
-      |de	navigation.loading	Aktualisierung
-      |en	navigation.loading	Loading
-      |it	navigation.goAway	Vuoi lasciare la pagina senza salvare i cambiamenti?
-      |fr	navigation.goAway	Abandonner la page sans sauver les changements?
-      |de	navigation.goAway	Seite verlassen ohne zu speichern?
-      |en	navigation.goAway	Leave page without saving changes?
-      |en	form.changed	Data changed
-      |de	form.changed	Daten abgeändert
-      |fr	form.changed	Données modifiées
-      |it	form.changed	Dati modificati
-      |fr	navigation.recordFound	Trouvés
-      |it	navigation.recordFound	Trovati
-      |de	navigation.recordFound	Gefundene
-      |en	navigation.recordFound	Found records
-      |fr	messages.confirm	Voulez-vous vraiment effacer?
-      |de	messages.confirm	Möchten Sie wirklich löschen?
-      |it	messages.confirm	Vuoi veramente cancellare?
-      |en	messages.confirm	Do you really want to delete?
-      |it	subform.remove	Rimuovi
-      |it	exports.search	Cerca statistica
-      |it	exports.title	Statistiche
-      |fr	exports.title	Statistiques
-      |de	exports.title	Statistiken
-      |de	exports.search	Statistik suchen
-      |fr	exports.search	Chercher statistique
+      |en	entity.new	New
+      |it	entity.new	Nuovo
+      |fr	entity.new	Nuoveau
+      |de	entity.new	Neu
+      |en	entity.search	Search
+      |it	entity.search	Cerca
+      |fr	entity.search	Cercher
+      |de	entity.search	Suchen
+      |en	entity.select	Select
+      |it	entity.select	Seleziona
+      |fr	entity.select	Sélectionner
+      |de	entity.select	Auswählen
+      |en	entity.table	Table
+      |it	entity.table	Tabella
+      |fr	entity.table	Tableau
+      |de	entity.table	Tabelle
+      |en	entity.title	Tables/Views
+      |it	entity.title	Tabelle/Views
+      |fr	entity.title	Tableaux/Views
+      |de	entity.title	Tabellen/Views
+      |en	error.notfound	URL not found!
+      |it	error.notfound	URL non trovato!
+      |fr	error.notfound	URL pas trouvé!
+      |de	error.notfound	URL nicht gefunden!
       |en	exports.search	Search statistics
-      |en	exports.title	Statistics
+      |it	exports.search	Cerca statistica
+      |fr	exports.search	Chercher statistique
+      |de	exports.search	Statistik suchen
       |en	exports.select	Select a statistic
       |it	exports.select	Scegliere una statistica
       |fr	exports.select	Choisir une statistique
       |de	exports.select	Statistik auswählen
-      |en	table.show	Show
-      |de	table.show	Anzeigen
-      |fr	table.show	Montrer
-      |it	table.show	Mostrare
+      |en	exports.title	Statistics
+      |it	exports.title	Statistiche
+      |fr	exports.title	Statistiques
+      |de	exports.title	Statistiken
+      |en	form.changed	Data changed
+      |it	form.changed	Dati modificati
+      |fr	form.changed	Données modifiées
+      |de	form.changed	Daten abgeändert
+      |en	form.required	REQUIRED
+      |en	form.save	Save
+      |it	form.save	Salva
+      |fr	form.save	Sauvegarder
+      |de	form.save	Speichern
+      |en	form.save_add	Save and insert next
+      |it	form.save_add	Salva e aggiungi
+      |fr	form.save_add	Sauvegarder et ajouter
+      |de	form.save_add	Speichern und einfügen
+      |en	form.save_table	Save and back to table
+      |it	form.save_table	Salva e ritorna alla tabella
+      |fr	form.save_table	Sauvegarder et retourner au tableau
+      |de	form.save_table	Speichern und zurück zur Tabelle
+      |en	header.entities	Entities
+      |it	header.entities	Entità
+      |fr	header.entities	Entitées
+      |de	header.entities	Entität
+      |en	header.forms	Forms
+      |it	header.forms	Maschere
+      |fr	header.forms	Masques
+      |de	header.forms	Masken
+      |en	header.home	Home
+      |it	header.home	Home
+      |fr	header.home	Home
+      |de	header.home	Home
+      |en	header.lang	Language
+      |it	header.lang	Lingua
+      |fr	header.lang	Langue
+      |de	header.lang	Sprache
+      |en	login.button	Login
+      |it	login.button	Login
+      |fr	login.button	Login
+      |de	login.button	Login
+      |en	login.failed	Login failed
+      |it	login.failed	Login fallito
+      |fr	login.failed	Login pas réussi
+      |de	login.failed	Fehlgeschlagene Anmeldung
+      |en	login.password	Password
+      |it	login.password	Password
+      |fr	login.password	Password
+      |de	login.password	Password
+      |en	login.title	Sign In
+      |it	login.title	Sign in
+      |fr	login.title	Sign in
+      |de	login.title	Sign in
+      |en	login.username	Username
+      |it	login.username	Nome utente
+      |fr	login.username	Nom utilisateur
+      |de	login.username	Benutzername
+      |en	message.confirm	Are you sure?
+      |it	message.confirm	Sei sicuro?
+      |fr	message.confirm	Vous êtes sûrs?
+      |de	message.confirm	Sind Sie sicher?
+      |en	messages.confirm	Do you really want to delete?
+      |it	messages.confirm	Vuoi veramente cancellare?
+      |fr	messages.confirm	Voulez-vous vraiment effacer?
+      |de	messages.confirm	Möchten Sie wirklich löschen?
+      |en	navigation.first	◅
+      |it	navigation.first	◅
+      |fr	navigation.first	◅
+      |de	navigation.first	◅
+      |en	navigation.goAway	Leave page without saving changes?
+      |it	navigation.goAway	Vuoi lasciare la pagina senza salvare i cambiamenti?
+      |fr	navigation.goAway	Abandonner la page sans sauver les changements?
+      |de	navigation.goAway	Seite verlassen ohne zu speichern?
+      |en	navigation.last	▻
+      |it	navigation.last	▻
+      |fr	navigation.last	▻
+      |de	navigation.last	▻
+      |en	navigation.loading	Loading
+      |it	navigation.loading	Caricamento
+      |fr	navigation.loading	Chargement
+      |de	navigation.loading	Aktualisierung
+      |en	navigation.next	►
+      |it	navigation.next	►
+      |fr	navigation.next	►
+      |de	navigation.next	►
+      |en	navigation.of	of
+      |it	navigation.of	di
+      |fr	navigation.of	de
+      |de	navigation.of	von
+      |en	navigation.page	Page
+      |it	navigation.page	Pagina
+      |fr	navigation.page	Page
+      |de	navigation.page	Seite
+      |en	navigation.previous	◄
+      |it	navigation.previous	◄
+      |fr	navigation.previous	◄
+      |de	navigation.previous	◄
+      |en	navigation.record	Record
+      |it	navigation.record	Evento
+      |fr	navigation.record	Feu
+      |de	navigation.record	Waldbrand
+      |en	navigation.recordFound	Found records
+      |it	navigation.recordFound	Records
+      |it	navigation.recordFound	Trovati
+      |fr	navigation.recordFound	Trouvés
+      |de	navigation.recordFound	Gefundene
+      |en	sort.asc	▼
+      |it	sort.asc	▼
+      |fr	sort.asc	▼
+      |de	sort.asc	▼
+      |en	sort.desc	▲
+      |it	sort.desc	▲
+      |fr	sort.desc	▲
+      |de	sort.desc	▲
+      |en	sort.ignore	-
+      |it	sort.ignore	-
+      |fr	sort.ignore	-
+      |de	sort.ignore	-
+      |en	subform.add	Add
+      |it	subform.add	Aggiungi
+      |fr	subform.add	Ajouter
+      |de	subform.add	Einfügen
+      |en	subform.remove	Remove
+      |it	subform.remove	Rimuovi
+      |fr	subform.remove	Effacer
+      |de	subform.remove	Löschen
+      |en	table.actions	Actions
+      |it	table.actions	Azioni
+      |fr	table.actions	Actions
+      |de	table.actions	Aktionen
       |en	table.confirmDelete	Do you really want to delete the record?
       |it	table.confirmDelete	Vuole veramente cancellare i dati?
-      |de	table.confirmDelete	Möchten Sie den Datensatz wirklich löschen?
       |fr	table.confirmDelete	Voulvez-vous vraiment effacer las données?
-      |en	form.required	REQUIRED
-      |
+      |de	table.confirmDelete	Möchten Sie den Datensatz wirklich löschen?
+      |en	table.delete	Delete
+      |it	table.delete	Elimina
+      |fr	table.delete	Supprimer
+      |de	table.delete	Löschen
+      |en	table.edit	Edit
+      |it	table.edit	Modifica
+      |fr	table.edit	Modifier
+      |de	table.edit	Editieren
+      |en	table.no_action	No action
+      |it	table.no_action	Nessuna azione
+      |fr	table.no_action	Pas d’actions
+      |de	table.no_action	Keine Aktion
+      |en	table.show	Show
+      |it	table.show	Mostrare
+      |fr	table.show	Montrer
+      |de	table.show	Anzeigen
+      |en	ui.index.title	<h1>BOX database</h1> Welcome to BOX.
+      |it	ui.index.title	<h1>BOX database</h1> Benvenuti a BOX
+      |fr	ui.index.title	<h1>BOX database</h1> Bienvenue a BOX.
+      |de	ui.index.title	<h1>BOX database</h1> Wilkommen zur BOX.      |
     """.stripMargin
 
   val labels:Seq[Labels.Labels_row] = rawLabels.lines.map(_.split("\\t")).filterNot(_.length < 3).map{ line =>
