@@ -1,7 +1,6 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic.{PgColumn, PgInformationSchema}
 import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
@@ -12,6 +11,7 @@ import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.duration._
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.runtime.Registry
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -73,7 +73,7 @@ object EntityMetadataFactory extends Logging {
           } yield {
             fk match {
               case Some(fk) => {
-                if (Await.result(EntityActionsRegistry().tableActions(fk.referencingTable).count().map(_.count), 1 second) <= lookupMaxRows) {
+                if (Await.result(Registry().actions.tableActions(ec)(fk.referencingTable).count().map(_.count), 1 second) <= lookupMaxRows) {
                   if (constraints.contains(fk.constraintName)) {
                     logger.info("error: " + fk.constraintName)
                     logger.info(field.column_name)
@@ -91,7 +91,7 @@ object EntityMetadataFactory extends Logging {
                     import ch.wsl.box.shared.utils.JSONUtils._
                     for {
                       keys <- keysOf(model)
-                      lookupData <- EntityActionsRegistry().tableActions(model).find()
+                      lookupData <- Registry().actions.tableActions(ec)(model).find()
                     } yield {
                       val options = lookupData.map { lookupRow =>
                         JSONLookup(lookupRow.get(value), lookupRow.get(text))

@@ -1,13 +1,13 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
 import ch.wsl.box.model.boxentities.Form.{Form, Form_i18n, Form_row}
 import ch.wsl.box.model.boxentities.{Field, Form}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic._
+import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import io.circe._
 import io.circe.parser._
@@ -182,7 +182,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
             query <- queryJson.as[JSONQuery].right.toOption
           } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
 
-          lookupData <- EntityActionsRegistry().actions(refEntity).get.find(filter)
+          lookupData <- Registry().actions.actions(refEntity)(ec).get.find(filter)
 
         } yield {
 //          val options = lookupData.map{ lookupRow =>

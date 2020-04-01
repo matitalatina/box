@@ -6,7 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
-import ch.wsl.box.model.{BoxActionsRegistry, EntityActionsRegistry}
+import ch.wsl.box.model.BoxActionsRegistry
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.model.boxentities.{Conf, Schema, UITable}
 import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
@@ -20,6 +20,7 @@ import ch.wsl.box.rest.jdbc.JdbcConnect
 import ch.wsl.box.rest.logic.functions.RuntimeFunction
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, EntityMetadataFactory, FormMetadataFactory, StubMetadataFactory}
 import ch.wsl.box.rest.pdf.Pdf
+import ch.wsl.box.rest.runtime.Registry
 import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
 import scribe.Logging
@@ -189,11 +190,11 @@ trait Root extends Logging {
                 Functions.route
               } ~
               pathPrefix("file") {
-                FileRoutes.route
+                Registry().fileRoutes()
               } ~
               pathPrefix("entity") {
                 pathPrefix(Segment) { lang =>
-                  GeneratedRoutes(lang)
+                  Registry().routes(lang)
                 }
               } ~
               path("entities") {
@@ -220,7 +221,7 @@ trait Root extends Logging {
               pathPrefix("form") {
                 pathPrefix(Segment) { lang =>
                   pathPrefix(Segment) { name =>
-                    Form(name, lang,EntityActionsRegistry().tableActions,FormMetadataFactory(),up.db,EntityKind.FORM.kind).route
+                    Form(name, lang,Registry().actions.tableActions(executionContext),FormMetadataFactory(),up.db,EntityKind.FORM.kind).route
                   }
                 }
               } ~

@@ -1,10 +1,10 @@
 package ch.wsl.box.rest.logic.functions
 
 import akka.stream.Materializer
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.shared.JSONQuery
 import ch.wsl.box.rest.jdbc.JdbcConnect
 import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
+import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Lang, UserProfile}
 import io.circe.Json
 
@@ -22,7 +22,7 @@ object PSQLImpl extends RuntimePSQL {
 
     implicit def db = up.db
 
-    val actions = EntityActionsRegistry().actions(name).get
+    val actions = Registry().actions.actions(name)(ec).get
 
     for {
       rows <- actions.find(query)

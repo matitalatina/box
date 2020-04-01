@@ -23,30 +23,29 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |import scala.concurrent.ExecutionContext
          |import scala.util.Try
          |import ch.wsl.box.rest.logic.{JSONTableActions, JSONViewActions, EntityJSONTableActions, EntityJSONViewActions}
-         |import $modelPackages._
          |
-         |class EntityActionsRegistry(implicit ec:ExecutionContext) {
+         |import ch.wsl.box.rest.runtime._
          |
+         |object EntityActionsRegistry extends ActionRegistry {
+         |
+         |  import $modelPackages._
          |  import io.circe._
          |  import io.circe.generic.auto._
          |  import ch.wsl.box.rest.utils.JSONSupport._
          |
-         |  def tableActions:String => EntityJSONTableActions = {
+         |  def tableActions(implicit ec: ExecutionContext) :String => EntityJSONTableActions = {
          |    ${tableList.flatMap(mapTable).mkString("\n")}
          |  }
          |
-         |  def viewActions:String => Option[EntityJSONViewActions] = {
+         |  def viewActions(implicit ec: ExecutionContext) :String => Option[EntityJSONViewActions] = {
          |    ${viewList.flatMap(mapView).mkString("\n")}
          |    case _ => None
          |  }
          |
-         |  def actions(name:String): Option[EntityJSONViewActions] = viewActions(name).orElse(Try(tableActions(name)).toOption)
+         |  def actions(name:String)(implicit ec: ExecutionContext) : Option[EntityJSONViewActions] = viewActions(ec)(name).orElse(Try(tableActions(ec)(name)).toOption)
          |
          |}
-         |
-         |object EntityActionsRegistry{
-         |  def apply()(implicit ec: ExecutionContext) = new EntityActionsRegistry
-         |}
+
            """.stripMargin
 
     def writeToFile(folder:String, pkg:String, fileName:String, modelPackages:String) =

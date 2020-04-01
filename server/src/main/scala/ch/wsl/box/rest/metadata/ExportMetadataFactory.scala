@@ -1,7 +1,6 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.EntityActionsRegistry
 import ch.wsl.box.model.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
 import ch.wsl.box.model.boxentities.{Export, ExportField}
 import ch.wsl.box.model.shared._
@@ -10,6 +9,7 @@ import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.runtime.Registry
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -137,7 +137,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
           query <- queryJson.as[JSONQuery].right.toOption
         } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
 
-        lookupData <- EntityActionsRegistry().tableActions(entity).find(filter)
+        lookupData <- Registry().actions.tableActions(ec)(entity).find(filter)
 
       } yield {
         Some(JSONFieldLookup.fromData(entity, JSONFieldMap(value, text), lookupData))

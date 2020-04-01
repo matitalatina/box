@@ -20,13 +20,17 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
   def generate(pkg:String,name:String,modelPackages:String):String =
     s"""package ${pkg}
        |
+       |import ch.wsl.box.rest.runtime._
        |import akka.http.scaladsl.server.{Directives, Route}
        |import akka.stream.Materializer
        |import scala.concurrent.ExecutionContext
        |import ch.wsl.box.rest.utils.UserProfile
-       |import $modelPackages._
        |
-             |object $name {
+       |
+             |object $name extends GeneratedRoutes {
+             |
+             |  import $modelPackages._
+             |  import ch.wsl.box.rest.routes._
        |  import ch.wsl.box.rest.utils.JSONSupport._
        |  import Directives._
        |  import io.circe.generic.auto._

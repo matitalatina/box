@@ -18,8 +18,8 @@ import scala.util.Try
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class DbActions[T <: ch.wsl.box.model.Entities.profile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit ec:ExecutionContext) extends UglyDBFilters with Logging {
-  import ch.wsl.box.model.Entities.profile.api._
+class DbActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit ec:ExecutionContext) extends UglyDBFilters with Logging {
+  import ch.wsl.box.rest.jdbc.PostgresProfile.api._
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
   implicit class QueryBuilder(base:Query[T,M,Seq]) {
