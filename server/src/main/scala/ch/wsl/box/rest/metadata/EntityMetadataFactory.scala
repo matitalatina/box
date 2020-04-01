@@ -15,6 +15,8 @@ import ch.wsl.box.rest.runtime.Registry
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 
+case class ColType(name:String,nullable:Boolean)
+
 object EntityMetadataFactory extends Logging {
 
   val dbConf: Config = com.typesafe.config.ConfigFactory.load().as[com.typesafe.config.Config]("db")
@@ -25,10 +27,12 @@ object EntityMetadataFactory extends Logging {
 
   private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()
   private var cacheKeys = Map[String, Future[Seq[String]]]()
+  private var cacheFields = Map[(String,String), Future[ColType]]()
 
   def resetCache() = {
     cacheTable = Map()
     cacheKeys = Map()
+    cacheFields = Map()
   }
 
   def lookupField(referencingTable:String,lang:String, firstNoPK:Option[String]):String = {
@@ -176,6 +180,26 @@ object EntityMetadataFactory extends Logging {
 //      logger.info("Columns " + c.map(_.column_name).diff(pks).mkString("-") + " that are not PK")
       c.map(_.column_name).diff(pks).headOption
     }
+  }
+
+  def fieldType(table:String,field:String)(implicit ec:ExecutionContext) = {
+    cacheFields.lift((table,field)) match {
+      case Some(t) => Await.result(t,10.seconds)
+      case None => {
+        val result = new PgInformationSchema(table, Auth.adminDB, excludeFields).columns.map{ columns =>
+
+          columns.find(_.column_name == field).map{ c =>
+            ColType(
+              name = c.data_type,
+              nullable = c.nullable
+            )
+          }.getOrElse(ColType("Unknown",false))
+        }
+        if(BoxConf.enableCache) cacheFields = cacheFields ++ Map((table,field) -> result)
+        Await.result(result,10.seconds)
+      }
+    }
+
   }
 
 

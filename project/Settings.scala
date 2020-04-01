@@ -36,7 +36,7 @@ object Settings {
 
     //General
     val scala = "2.12.11"
-    val ficus = "1.4.0"
+    val ficus = "1.4.7"
 
     //HTTP actors
     val akka = "2.5.16"
@@ -90,6 +90,7 @@ object Settings {
   val sharedJVMCodegenDependencies = Def.setting(Seq(
     "com.typesafe.slick"       %% "slick"           % versions.slick,
     "org.postgresql"           %  "postgresql"      % versions.postgres,
+    "com.typesafe"             % "config"           % "1.3.3",
     "com.iheart"               %% "ficus"           % versions.ficus
   ))
 
@@ -112,7 +113,8 @@ object Settings {
     "com.github.tminglei"      %% "slick-pg"         % versions.slickPg,
 //    "com.github.tminglei"      %% "slick-pg_jts"     % versions.slickPg,
   //    "com.vividsolutions"        % "jts-core"        % "1.14.0"
-    "org.webjars"              % "webjars-locator"   % "0.32",
+    "org.webjars"               % "webjars-locator-core" % "0.44",
+    "org.webjars"              % "webjars-locator"   % "0.39",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
     "org.scalatest"            %% "scalatest"        % versions.scalatest % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
@@ -131,7 +133,8 @@ object Settings {
     "org.scala-lang"           % "scala-compiler"    % versions.scala,
     "com.openhtmltopdf"        % "openhtmltopdf-pdfbox" % "1.0.0",
     "org.jsoup"                % "jsoup"             % "1.12.1",
-    "com.github.spullara.mustache.java" % "compiler" % "0.9.6"
+    "com.github.spullara.mustache.java" % "compiler" % "0.9.6",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

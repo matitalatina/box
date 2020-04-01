@@ -11,6 +11,7 @@ import ch.wsl.box.shared.utils.DateTimeFormatters
 import scribe.Logging
 import ch.wsl.box.rest.jdbc.PostgresProfile
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.metadata.ColType
 
 import scala.util.{Failure, Try}
 
@@ -76,30 +77,32 @@ trait UglyDBFilters extends DbFilters with Logging {
   final val typOptTIME = 18
   final val typError = 100
 
+  //Not mapped, can be a filter applyed with those types?
+  //"bytea" -> JSONFieldTypes.FILE,
+  //"interval" -> JSONFieldTypes.INTERVAL,
+  //"ARRAY" -> JSONFieldTypes.STRING,
+  //"USER-DEFINED" -> JSONFieldTypes.STRING
 
-  def typ(myType:String):Int = myType match{
-    case "scala.Short" | "Short" => typSHORT
-    case "Double" | "scala.Double" => typDOUBLE
-    case "BigDecimal" | "scala.math.BigDecimal" => typBIGDECIMAL
-    case "scala.Int" | "java.lang.Integer" | "Int" => typINT
-    case "scala.Long" | "Long" => typLONG
-    case "String" => typSTRING
-    case "Boolean" | "scala.Boolean" => typBOOLEAN
-    case "java.time.LocalTimestamp" => typTIMESTAMP
-    case "java.time.LocalDateTime" => typTIMESTAMP
-    case "java.time.LocalDate" => typDATE
-    case "java.time.LocalTime" => typTIME
-    case "scala.Option[scala.Short]" | "Option[Short]" =>  typOptSHORT
-    case "scala.Option[scala.Double]" | "Option[Double]" => typOptDOUBLE
-    case "scala.Option[scala.BigDecimal]" | "Option[scala.math.BigDecimal]" => typOptBIGDECIMAL
-    case "scala.Option[scala.Int]" | "scala.Option[java.lang.Integer]" | "Option[Int]" | "Option[java.lang.Integer]" => typOptINT
-    case "scala.Option[scala.Long]"  | "Option[Long]" => typOptLONG
-    case "scala.Option[String]" | "Option[String]" => typOptSTRING
-    case "scala.Option[scala.Boolean]" | "Option[Boolean]" => typOptBOOLEAN
-    case "scala.Option[java.time.LocalTimestamp]" | "Option[java.time.LocalTimestamp]" => typOptTIMESTAMP
-    case "scala.Option[java.time.LocalDateTime]" | "Option[java.time.LocalDateTime]" => typOptTIMESTAMP
-    case "scala.Option[java.time.LocalDate]" | "Option[java.time.LocalDate]" => typOptDATE
-    case "scala.Option[java.time.LocalTime]" | "Option[java.time.LocalTime]" => typOptTIME
+  def typ(myType:ColType):Int = myType match{
+    case ColType("smallint",true) => typOptSHORT
+    case ColType("double precision" | "real" | "numeric",true) => typOptDOUBLE
+    //case "BigDecimal" | "scala.math.BigDecimal" => typBIGDECIMAL //when it's used?
+    case ColType("integer",true) => typOptINT
+    case ColType("bigint",true) => typOptLONG
+    case ColType("text" | "character varying" | "character",true) => typOptSTRING
+    case ColType("boolean",true) => typOptBOOLEAN
+    case ColType("timestamp without time zone",true) => typOptTIMESTAMP
+    case ColType("date",true) => typOptDATE
+    case ColType("time without time zone",true) => typOptTIME
+    case ColType("smallint",false) => typSHORT
+    case ColType("double precision" | "real" | "numeric",false) => typDOUBLE
+    case ColType("integer",false) => typINT
+    case ColType("bigint",false) => typLONG
+    case ColType("text" | "character varying" | "character",false) => typSTRING
+    case ColType("boolean",false) => typBOOLEAN
+    case ColType("timestamp without time zone",false) => typTIMESTAMP
+    case ColType("date",false) => typDATE
+    case ColType("time without time zone",false) => typTIME
     case _ => {
       logger.error("Type mapping for: " + myType + " not found")
       typError

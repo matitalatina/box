@@ -5,9 +5,13 @@ import slick.lifted.{AbstractTable, TableQuery}
 
 import scala.reflect.runtime.universe._
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.metadata.{ColType, EntityMetadataFactory}
+
+import scala.concurrent.ExecutionContext
 
 
-case class Col(rep:Rep[_],`type`:String)
+case class Col(rep:Rep[_],`type`:ColType)
+
 
 /**
  * Created by andreaminetti on 16/02/16.
@@ -38,19 +42,18 @@ object EnhancedTable extends Logging {
       }
 
 
-    def col(field: String):Col = Col(
+    def col(field: String)(implicit ec:ExecutionContext):Col = Col(
       rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep[_]],
       typ(field)
     )
 
-    def typ(field:String) = {
-      //=> ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep[scala.Option[String]]
-      accessor(field).info.toString.stripPrefix("=> ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep[").stripSuffix("]")
+    def typ(field:String)(implicit ec:ExecutionContext) = {
+      EntityMetadataFactory.fieldType(t.tableName,field)
     }
 
-    def cols(fields: Seq[String]):Seq[Col] = fields.map(col(_))
+    def cols(fields: Seq[String])(implicit ec:ExecutionContext):Seq[Col] = fields.map(col(_))
 
-    def reps(fields: Seq[String]):Seq[Rep[_]] = fields.map(col(_).rep)
+    def reps(fields: Seq[String])(implicit ec:ExecutionContext):Seq[Rep[_]] = fields.map(col(_).rep)
 
 
   }

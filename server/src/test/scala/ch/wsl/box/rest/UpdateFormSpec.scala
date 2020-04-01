@@ -5,7 +5,6 @@ import io.circe.Json
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.ScalaFutures
 import ch.wsl.box.rest.jdbc.PostgresProfile.api._
-import ch.wsl.box.model.Entities._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
