@@ -17,7 +17,7 @@ object FormUIDef {
       JSONField(JSONFieldTypes.NUMBER,"form_id",false),
       JSONField(JSONFieldTypes.STRING,"name",false),
       JSONField(JSONFieldTypes.STRING,"description",true),
-      JSONField(JSONFieldTypes.STRING,"layout",true, widget = Some(WidgetsNames.textarea),label = Some("")),
+      JSONField(JSONFieldTypes.STRING,"layout",true, widget = Some(WidgetsNames.code),label = Some("")),
       JSONField(JSONFieldTypes.STRING,"entity",false,lookup = Some(JSONFieldLookup.prefilled(
         tables.map(x => JSONLookup(x,x))
       ))),

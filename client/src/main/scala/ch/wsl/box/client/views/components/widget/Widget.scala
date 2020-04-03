@@ -59,6 +59,7 @@ trait Widget extends Logging {
 
   def killWidget() = {
     bindings.foreach(_.kill())
+    bindings = List()
   }
   private var bindings:List[Binding] = List()
 

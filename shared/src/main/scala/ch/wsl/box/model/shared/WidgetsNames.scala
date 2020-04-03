@@ -22,6 +22,7 @@ object WidgetsNames {
   val fullWidth = "fullWidth"
   val mapPoint = "mapPoint"
   val code = "code"
+  val richTextEditor = "richTextEditor"
 
   val all = Seq(
     textinput,
@@ -39,6 +40,8 @@ object WidgetsNames {
     twoLines,
     popup,
     fullWidth,
-    mapPoint
+    mapPoint,
+    code,
+    richTextEditor
   ).sorted
 }

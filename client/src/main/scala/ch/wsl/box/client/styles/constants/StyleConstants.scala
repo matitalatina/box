@@ -25,11 +25,20 @@ object StyleConstants extends StyleSheet.Inline{
   /**
     * COLORS
     */
-  case class Colors(mainColor:String,linkColor:String,dangerColor:String,warningColor:String) {
+  case class Colors(
+                     mainColor:String,
+                     mainTextColor:String,
+                     mainLinkColor:String,
+                     linkColor:String,
+                     dangerColor:String,
+                     warningColor:String
+                   ) {
 
     val danger:Color = Color(dangerColor) //default "#4c1c24"
 
     val main = Color(mainColor) //default "#006268"
+    val mainText = Color(mainTextColor)
+    val mainLink = Color(mainLinkColor)
     val link = Color(linkColor) //default "#fbf0b2"
 
     val warning = Color(warningColor) //defualt "#ffa500"
