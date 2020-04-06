@@ -43,7 +43,7 @@ lazy val server: Project  = (project in file("server"))
     mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
     mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot"),
     dockerExposedPorts ++= Seq(8080),
-    packageName in Docker := "minettiandrea/box-framework",
+    packageName in Docker := "boxframework/box-framework",
     dockerEntrypoint := Seq("/opt/docker/bin/boot")
   )
   .enablePlugins(TomcatPlugin)

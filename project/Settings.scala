@@ -11,10 +11,10 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
   */
 object Settings {
   /** The name of your application */
-  val name = "postgres-rest-ui"
+  val name = "box-framework"
 
   /** The version of your application */
-  val version = "1.0.0"
+  val version = "1.0.0-bostrico"
 
 
   val scalacOptions = Seq(

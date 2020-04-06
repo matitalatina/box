@@ -113,7 +113,11 @@ object Labels {
   object header{
     def home = get("header.home")
     def entities = get("header.entities")
+    def tables = get("header.tables")
+    def views = get("header.views")
     def forms = get("header.forms")
+    def exports = get("header.exports")
+    def functions = get("header.functions")
     def lang = get("header.lang")
   }
 

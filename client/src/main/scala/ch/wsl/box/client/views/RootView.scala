@@ -42,12 +42,12 @@ class RootView() extends ContainerView {
       {if(UI.enableAllTables) {
         Seq(
           MenuLink("Admin",AdminState),
-          MenuLink(Labels.header.entities,EntitiesState("entity","")),
-          MenuLink("Tables",EntitiesState("table","")),
-          MenuLink("Views",EntitiesState("view","")),
-          MenuLink(Labels.header.forms,EntitiesState("form","")),
-          MenuLink("Exports",DataListState(DataKind.EXPORT,"")),
-          MenuLink("Functions",DataListState(DataKind.FUNCTION,""))
+          MenuLink(Labels.header.entities, EntitiesState("entity","")),
+          MenuLink(Labels.header.tables, EntitiesState("table","")),
+          MenuLink(Labels.header.views, EntitiesState("view","")),
+          MenuLink(Labels.header.forms, EntitiesState("form","")),
+          MenuLink(Labels.header.exports, DataListState(DataKind.EXPORT,"")),
+          MenuLink(Labels.header.functions, DataListState(DataKind.FUNCTION,""))
         )
       } else Seq()}
 //      Seq(MenuLink("BoxTables", EntitiesState("table","")))

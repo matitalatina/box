@@ -176,7 +176,10 @@ object DefaultLabels {
       |it	form.changed	Dati modificati
       |fr	form.changed	Données modifiées
       |de	form.changed	Daten abgeändert
-      |en	form.required	REQUIRED
+      |en	form.required	required
+      |it	form.required	obbligatorio
+      |fr	form.required	REQUIRED
+      |de	form.required	erforderlich
       |en	form.save	Save
       |it	form.save	Salva
       |fr	form.save	Sauvegarder
@@ -193,10 +196,18 @@ object DefaultLabels {
       |it	header.entities	Entità
       |fr	header.entities	Entitées
       |de	header.entities	Entität
+      |en	header.exports	Exports
+      |it	header.exports	Statistiche
+      |fr	header.exports	Statistiques
+      |de	header.exports	Statistiken
       |en	header.forms	Forms
       |it	header.forms	Maschere
       |fr	header.forms	Masques
       |de	header.forms	Masken
+      |en	header.functions	Functions
+      |it	header.functions	Funzioni
+      |fr	header.functions	Fonctions
+      |de	header.functions	Funktionen
       |en	header.home	Home
       |it	header.home	Home
       |fr	header.home	Home
@@ -205,6 +216,14 @@ object DefaultLabels {
       |it	header.lang	Lingua
       |fr	header.lang	Langue
       |de	header.lang	Sprache
+      |en	header.tables	Tables
+      |it	header.tables	Tabelle
+      |fr	header.tables	Tableaux
+      |de	header.tables	Tabellen
+      |en	header.views	Views
+      |it	header.views	Views
+      |fr	header.views	Views
+      |de	header.views	Views
       |en	login.button	Login
       |it	login.button	Login
       |fr	login.button	Login
@@ -270,10 +289,9 @@ object DefaultLabels {
       |fr	navigation.record	Feu
       |de	navigation.record	Waldbrand
       |en	navigation.recordFound	Found records
-      |it	navigation.recordFound	Records
-      |it	navigation.recordFound	Trovati
-      |fr	navigation.recordFound	Trouvés
-      |de	navigation.recordFound	Gefundene
+      |it	navigation.recordFound	Righe trovate
+      |fr	navigation.recordFound	LIgnes trouvés
+      |de	navigation.recordFound	Gefundene Zeilen
       |en	sort.asc	▼
       |it	sort.asc	▼
       |fr	sort.asc	▼
@@ -282,10 +300,10 @@ object DefaultLabels {
       |it	sort.desc	▲
       |fr	sort.desc	▲
       |de	sort.desc	▲
-      |en	sort.ignore	-
-      |it	sort.ignore	-
-      |fr	sort.ignore	-
-      |de	sort.ignore	-
+      |en	sort.ignore	‎
+      |it	sort.ignore	‎
+      |fr	sort.ignore	‎
+      |de	sort.ignore	‎
       |en	subform.add	Add
       |it	subform.add	Aggiungi
       |fr	subform.add	Ajouter
@@ -298,6 +316,10 @@ object DefaultLabels {
       |it	table.actions	Azioni
       |fr	table.actions	Actions
       |de	table.actions	Aktionen
+      |en	table.csv	Download CSV
+      |it	table.csv	Scarica CSV
+      |fr	table.csv	Télécharger CSV
+      |de	table.csv	CSV herunterladen
       |en	table.confirmDelete	Do you really want to delete the record?
       |it	table.confirmDelete	Vuole veramente cancellare i dati?
       |fr	table.confirmDelete	Voulvez-vous vraiment effacer las données?
