@@ -51,10 +51,6 @@ object EnhancedTable extends Logging {
       EntityMetadataFactory.fieldType(t.tableName,field)
     }
 
-    def cols(fields: Seq[String])(implicit ec:ExecutionContext):Seq[Col] = fields.map(col(_))
-
-    def reps(fields: Seq[String])(implicit ec:ExecutionContext):Seq[Rep[_]] = fields.map(col(_).rep)
-
 
   }
 

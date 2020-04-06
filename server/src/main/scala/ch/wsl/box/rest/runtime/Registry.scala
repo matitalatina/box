@@ -77,10 +77,15 @@ object Registry {
     //println(new java.io.File(".").getAbsolutePath())
 
     import scala.tools.reflect.ToolBox
-    val toolbox = currentMirror.mkToolBox()
-    val tree = toolbox.parse(source)
-    _registry = toolbox.eval(tree).asInstanceOf[GeneratedRegistry]
-
+    try {
+      val toolbox = currentMirror.mkToolBox()
+      val tree = toolbox.parse(source)
+      _registry = toolbox.eval(tree).asInstanceOf[GeneratedRegistry]
+    } catch { case e:Throwable =>
+      e.printStackTrace()
+      reflect.io.File("ErroredRuntimeCompile.scala").writeAll(source)
+      println(s"Saved generated file in: ${new java.io.File(".").getAbsolutePath()}/ErroredRuntimeCompile.scala")
+    }
   }
 
 }

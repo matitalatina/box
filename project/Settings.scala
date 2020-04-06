@@ -14,7 +14,7 @@ object Settings {
   val name = "box-framework"
 
   /** The version of your application */
-  val version = "1.0.0-bostrico"
+  val version = "1.0.5-fl"
 
 
   val scalacOptions = Seq(
@@ -125,6 +125,7 @@ object Settings {
     "org.webjars"              % "Eonasdan-bootstrap-datetimepicker" % "4.17.47",
     "org.webjars"              % "leaflet"           % "1.4.0",
     "org.webjars.npm"          % "monaco-editor"     % "0.18.1",
+    "org.webjars.npm" % "quill" % "1.3.7",
     "com.outr"                 %% "scribe"           % versions.scribe,
     "com.outr"                 %% "scribe-slf4j"     % versions.scribe,
     "nz.co.rossphillips"       %% "scala-thumbnailer" % "0.5.SNAPSHOT",

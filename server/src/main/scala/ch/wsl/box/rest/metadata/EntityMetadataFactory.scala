@@ -186,15 +186,21 @@ object EntityMetadataFactory extends Logging {
     cacheFields.lift((table,field)) match {
       case Some(t) => Await.result(t,10.seconds)
       case None => {
-        val result = new PgInformationSchema(table, Auth.adminDB, excludeFields).columns.map{ columns =>
+        val result = for{
+          db <- new PgInformationSchema(table, Auth.adminDB, excludeFields).columns
+          box <- new PgInformationSchema(table, Auth.boxDB, excludeFields).columns
+        } yield {
 
-          columns.find(_.column_name == field).map{ c =>
-            ColType(
-              name = c.data_type,
-              nullable = c.nullable
-            )
+          def toColType(c:PgColumn) = ColType(
+            name = c.data_type,
+            nullable = c.nullable
+          )
+
+          db.find(_.column_name == field).map(toColType).orElse{
+            box.find(_.column_name == field).map(toColType)
           }.getOrElse(ColType("Unknown",false))
         }
+
         if(BoxConf.enableCache) cacheFields = cacheFields ++ Map((table,field) -> result)
         Await.result(result,10.seconds)
       }

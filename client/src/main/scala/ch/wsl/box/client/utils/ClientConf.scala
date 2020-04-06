@@ -36,13 +36,15 @@ object ClientConf {
 
 
   def colorMain = Try(conf("color.main")).getOrElse("#006268")
+  def colorMainText = Try(conf("color.main.text")).getOrElse("#ffffff")
+  def colorMainLink = Try(conf("color.main.link")).getOrElse(colorMain)
   def colorLink = Try(conf("color.link")).getOrElse("#fbf0b2")
   def colorDanger = Try(conf("color.danger")).getOrElse("#4c1c24")
   def colorWarning = Try(conf("color.warning")).getOrElse("#ffa500")
 
   def tableFontSize = Try(conf("table.fontSize").toInt).getOrElse(10)
 
-  lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorLink,colorDanger,colorWarning), tableFontSize))
+  lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorMainText,colorMainLink,colorLink,colorDanger,colorWarning), tableFontSize))
 
 
   def filterPrecisionDatetime = Try(conf("filter.precision.datetime").toUpperCase).toOption match {

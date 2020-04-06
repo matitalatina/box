@@ -93,7 +93,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       padding(10 px),
       lineHeight(29 px),
       borderBottom(1 px,solid,black),
-      color.white,
+      color(conf.colors.mainText),
       backgroundColor(conf.colors.main)
     ),
 
@@ -133,9 +133,9 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
     unsafeRoot("a")(
       &.hover(
-        color(conf.colors.main)
+        color(conf.colors.mainLink)
       ),
-      color(conf.colors.main)
+      color(conf.colors.mainLink)
     ),
 
     unsafeRoot("#box-table table")(
@@ -278,7 +278,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     lineHeight(12 px),
     margin(3 px, 1 px),
     border(1 px,solid,conf.colors.main),
-    color(conf.colors.main),
+    color(conf.colors.mainLink),
     backgroundColor(white),
     &.hover(
       color(white),
@@ -306,10 +306,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     margin(3 px, 1 px),
     border(1 px,solid,conf.colors.main),
     backgroundColor(conf.colors.main),
-    color.white,
+    color(conf.colors.mainText),
     &.hover(
       backgroundColor.white,
-      color(conf.colors.main)
+      color(conf.colors.mainLink)
     )
   )
 
@@ -345,7 +345,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val imageThumb = style(
     height.auto,
-    width(100 %%)
+    maxWidth(100 %%)
   )
 
   val noBullet = style(

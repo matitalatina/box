@@ -181,6 +181,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     override protected def edit(): JsDom.all.Modifier = render(true)
 
     var out:Binding = null;
+    var out2:Binding = null;
 
     private def render(write: Boolean) = {
 
@@ -189,25 +190,28 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
         case Some(f) => {
 
           div(
-            {out = produce(entitySize) { size =>
-              div(
-                if (write || size > 0) label(f.label) else frag(),
-                for {i <- 0 until size} yield {
-                  val subResults = entity.transform(splitJsonRows(f, i), mergeJsonRows(entity, f, i))
-                  val widget = findOrAdd(f, subResults, children)
-                  div(ClientConf.style.subform,
-                    widget.render(write, Property(true)),
-                    if (write) div(
-                      BootstrapStyles.row,
-                      div(BootstrapCol.md(12), ClientConf.style.block,
-                        div(BootstrapStyles.pullRight,
-                          a(onclick :+= ((e: Event) => removeItem(entity.get(i), child)), Labels.subform.remove)
+            {out = produce(id) { _ =>
+              out2 = produce(entitySize) { size =>
+                div(
+                  if (write || size > 0) label(f.label) else frag(),
+                  for {i <- 0 until size} yield {
+                    val subResults = entity.transform(splitJsonRows(f, i), mergeJsonRows(entity, f, i))
+                    val widget = findOrAdd(f, subResults, children)
+                    div(ClientConf.style.subform,
+                      widget.render(write, Property(true)),
+                      if (write) div(
+                        BootstrapStyles.row,
+                        div(BootstrapCol.md(12), ClientConf.style.block,
+                          div(BootstrapStyles.pullRight,
+                            a(onclick :+= ((e: Event) => removeItem(entity.get(i), child)), Labels.subform.remove)
+                          )
                         )
-                      )
-                    ) else frag()
-                  ).render
-                }
-              ).render
+                      ) else frag()
+                    ).render
+                  }
+                ).render
+              }
+              div(out2).render
             }; out},
             if (write) a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add) else frag()
           )
@@ -222,8 +226,11 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       if(firstRun) {
         firstRun = false;
       } else {
-        out.kill()
+//        out.kill()
+//        out2.kill()
       }
+
+      childWidgets = Seq()
 
       val seq = splitJson(prop.get)
       entity.set(seq)
@@ -231,8 +238,10 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       entity.clearListeners()
       entity.listen({ seq =>
         prop.set(mergeJson(seq))
-      })
+      },true)
     },true)
+
+
 
   }
 

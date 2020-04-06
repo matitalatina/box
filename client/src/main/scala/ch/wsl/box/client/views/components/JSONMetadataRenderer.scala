@@ -123,6 +123,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (FILE, _, _, _, _)                                     => FileWidgetFactory(metadata.entity)
           case (_,Some(WidgetsNames.mapPoint),_,_,_)                  => MapPointWidget
           case (_,Some(c),_,_,_) if c.startsWith(WidgetsNames.code)   => MonacoWidget
+          case (_,Some(c),_,_,_) if c.startsWith(WidgetsNames.richTextEditor)   => RichTextEditorWidget
           case (_, _, _, _, _)                                        => InputWidgetFactory.Text
     }
 
