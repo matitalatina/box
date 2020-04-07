@@ -21,6 +21,7 @@ object WidgetsNames {
   val popup = "popup"
   val fullWidth = "fullWidth"
   val mapPoint = "mapPoint"
+  val map = "map"
   val code = "code"
   val richTextEditor = "richTextEditor"
 
@@ -41,6 +42,7 @@ object WidgetsNames {
     popup,
     fullWidth,
     mapPoint,
+    map,
     code,
     richTextEditor
   ).sorted

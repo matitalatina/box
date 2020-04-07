@@ -36,8 +36,7 @@ lazy val server: Project  = (project in file("server"))
     resolvers ++= Seq(Resolver.jcenterRepo, Resolver.bintrayRepo("hseeberger", "maven")),
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
     slick := slickCodeGenTask.value , // register manual sbt command
-    hello := println("hello"),
-    //sourceGenerators in Compile +=  slickCodeGenTask, // register automatic code generation on every compile, comment this line for only manual use
+    deleteSlick := deleteSlickTask.value,
     resourceDirectory in Compile := baseDirectory.value / "../resources",
     testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html"),
     mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
@@ -137,6 +136,7 @@ lazy val root: Project = (project in file("."))
       ).value,
       cleanAll := {
         (clean in Compile in client).toTask.value
+        (deleteSlick in Compile in server).toTask.value
         (clean in Compile in server).toTask.value
         (clean in Compile in codegen).toTask.value
       },
@@ -210,17 +210,28 @@ lazy val cleanAll = taskKey[Unit]("clean all projects")
 // code generation task that calls the customized code generator
 lazy val slick = taskKey[Seq[File]]("gen-tables")
 lazy val slickCodeGenTask = Def.task{
-  val dir = sourceManaged.value
+  val dir = sourceDirectory.value
   val cp = (dependencyClasspath in Compile).value
   val s = streams.value
-  val outputDir = (dir / "slick").getPath // place generated files in sbt's managed sources folder
+  val outputDir = (dir / "main" / "scala").getPath // place generated files in sbt's managed sources folder
+  println(outputDir)
   runner.value.run("ch.wsl.box.codegen.CustomizedCodeGenerator", cp.files, Array(outputDir), s.log).failed foreach (sys error _.getMessage)
-  val fname = outputDir + "/ch/wsl/box/model/Entities.scala"
-  val ffname = outputDir + "/ch/wsl/box/model/FileTables.scala"
-  val rname = outputDir + "/ch/wsl/box/rest/routes/GeneratedRoutes.scala"
-  val registryname = outputDir + "/ch/wsl/box/model/EntityActionsRegistry.scala"
-  val filename = outputDir + "/ch/wsl/box/rest/routes/FileRoutes.scala"
-  Seq(file(fname),file(ffname),file(rname),file(registryname),file(filename))    //include the generated files in the sbt project
+  val fname = outputDir + "/ch/wsl/box/generated/Entities.scala"
+  val ffname = outputDir + "/ch/wsl/box/generated/FileTables.scala"
+  val rname = outputDir + "/ch/wsl/box/generated/GeneratedRoutes.scala"
+  val registryname = outputDir + "/ch/wsl/box/generated/EntityActionsRegistry.scala"
+  val filename = outputDir + "/ch/wsl/box/generated/FileRoutes.scala"
+  val regname = outputDir + "/ch/wsl/box/generated/GenRegistry.scala"
+  Seq(file(fname),file(ffname),file(rname),file(registryname),file(filename),file(regname))    //include the generated files in the sbt project
+}
+
+lazy val deleteSlick = taskKey[Unit]("Delete slick generated files")
+lazy val deleteSlickTask = Def.task{
+  val dir = sourceDirectory.value
+  val outputDir = (dir / "main" / "scala" / "ch" / "wsl" / "box" / "generated")
+  IO.delete(Seq(
+    outputDir
+  ))
 }
 
 lazy val copyUiFiles = Def.task{

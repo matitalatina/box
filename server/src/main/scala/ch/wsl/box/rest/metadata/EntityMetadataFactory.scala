@@ -231,7 +231,8 @@ object EntityMetadataFactory extends Logging {
     "date" -> JSONFieldTypes.DATE,
     "interval" -> JSONFieldTypes.INTERVAL,
     "ARRAY" -> JSONFieldTypes.STRING,                              //todo: works only for visualisation
-    "USER-DEFINED" -> JSONFieldTypes.STRING
+    "USER-DEFINED" -> JSONFieldTypes.STRING,
+    "geometry" -> JSONFieldTypes.GEOMETRY
   )
 
   val defaultWidgetMapping = Map(
@@ -251,6 +252,7 @@ object EntityMetadataFactory extends Logging {
     "date" -> Some(WidgetsNames.datepicker),
     "interval" -> Some(WidgetsNames.datepicker),
     "ARRAY" -> Some(WidgetsNames.textinput),                          //todo: works only for visualisation -> provide widget
-    "USER-DEFINED" -> None
+    "USER-DEFINED" -> None,
+    "geometry" -> Some(WidgetsNames.map)
   )
 }
