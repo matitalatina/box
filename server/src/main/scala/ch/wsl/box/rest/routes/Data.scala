@@ -20,7 +20,7 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import scribe.Logging
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic.{DataResult, DataResultObject, DataResultTable}
 import ch.wsl.box.rest.metadata.DataMetadataFactory
 import ch.wsl.box.rest.pdf.Pdf

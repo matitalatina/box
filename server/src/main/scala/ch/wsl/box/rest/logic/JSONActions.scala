@@ -7,9 +7,9 @@ import io.circe._
 import io.circe.syntax._
 import scribe.Logging
 import slick.basic.DatabasePublisher
-import ch.wsl.box.rest.jdbc.PostgresProfile
+import ch.wsl.box.jdbc.PostgresProfile
 import slick.lifted.TableQuery
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,7 +47,7 @@ trait EntityJSONTableActions extends EntityJSONViewActions {
 }
 
 
-case class JSONViewActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONViewActions {
+case class JSONViewActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONViewActions {
 
   val dbActions = new DbActions[T,M](entity)
 
@@ -80,7 +80,7 @@ case class JSONViewActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M
 
 }
 
-case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONTableActions with Logging {
+case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONTableActions with Logging {
 
   lazy val jsonView = JSONViewActions[T,M](table)
 
@@ -93,7 +93,7 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
   override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = jsonView.ids(query)
 
 
-  override def update(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
+  override def update(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
@@ -103,7 +103,7 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
     }
   }
 
-  override def updateIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
+  override def updateIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
@@ -120,7 +120,7 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
     result.map(_.asJson)
   }
 
-  override def upsert(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
+  override def upsert(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
       current <- getById(id).recover{case _ => None} //retrieve values in db
       result <- if (current.isDefined){   //if exists, check if we have to update
@@ -135,7 +135,7 @@ case class JSONTableActions[T <: ch.wsl.box.rest.jdbc.PostgresProfile.api.Table[
     }
   }
 
-  override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.rest.jdbc.PostgresProfile.api.Database): Future[Json] = {
+  override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Json] = {
     for{
       current <- getById(id).recover{case _ => None} //retrieve values in db
       result <- if (current.isDefined){   //if exists, check if we have to skip the update (if row is the same)

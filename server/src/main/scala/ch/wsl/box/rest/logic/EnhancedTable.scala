@@ -4,7 +4,7 @@ import scribe.Logging
 import slick.lifted.{AbstractTable, TableQuery}
 
 import scala.reflect.runtime.universe._
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.{ColType, EntityMetadataFactory}
 
 import scala.concurrent.ExecutionContext
@@ -43,7 +43,7 @@ object EnhancedTable extends Logging {
 
 
     def col(field: String)(implicit ec:ExecutionContext):Col = Col(
-      rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[ch.wsl.box.rest.jdbc.PostgresProfile.api.Rep[_]],
+      rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[ch.wsl.box.jdbc.PostgresProfile.api.Rep[_]],
       typ(field)
     )
 

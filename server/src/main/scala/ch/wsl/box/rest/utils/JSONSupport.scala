@@ -10,7 +10,9 @@ import akka.http.scaladsl.model.{ContentTypeRange, HttpEntity}
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
 import ch.wsl.box.shared.utils.DateTimeFormatters
+import geotrellis.vector.io.json.GeoJsonSupport
 import io.circe.Decoder.Result
+import geotrellis.vector._
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -21,7 +23,7 @@ import scala.util.Try
   * this contains the serializer between the JSON and the Scala objects  (in the server)
   *
   */
-object JSONSupport {
+object JSONSupport extends GeoJsonSupport {
 
 
   private def jsonContentTypes: List[ContentTypeRange] =
@@ -78,5 +80,16 @@ object JSONSupport {
       DateTimeFormatters.time.parse(s).get
     }.apply(c)
   }
+
+//  implicit val GeoJSON : Encoder[org.locationtech.jts.geom.Geometry] with Decoder[org.locationtech.jts.geom.Geometry] = new Encoder[org.locationtech.jts.geom.Geometry] with Decoder[org.locationtech.jts.geom.Geometry] {
+//
+//    override def apply(a: org.locationtech.jts.geom.Geometry): Json = a.asJson
+//  }.getOrElse(Json.Null)
+//
+//
+//  override def apply(c: HCursor): Result[org.locationtech.jts.geom.Geometry] = Decoder.decodeString.map{s =>
+//    GeoJson.parse[org.locationtech.jts.geom.Geometry](s)
+//  }.apply(c)
+//}
 
 }

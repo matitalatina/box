@@ -1,14 +1,14 @@
 package ch.wsl.box.model.boxentities
 
 //import ch.wsl.box.model.FileTables.{Document, profile}
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 /**
   * Created by andre on 5/15/2017.
   */
 object UIsrcTable {
 
-  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
+  val profile = ch.wsl.box.jdbc.PostgresProfile
   import slick.model.ForeignKeyAction
   // NOTE: GetResult mappers for plai
   // n SQL are only generated for tables where Slick knows how to map the types of all columns.

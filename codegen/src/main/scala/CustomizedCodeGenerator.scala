@@ -51,7 +51,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     val files = generatedFiles()
 
     files.entities.writeToFile(
-      "ch.wsl.box.rest.jdbc.PostgresProfile",
+      "ch.wsl.box.jdbc.PostgresProfile",
       args(0),
       "ch.wsl.box.model",
       "Entities",
@@ -59,7 +59,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     )
 
     files.fileTables.writeToFile(
-      "ch.wsl.box.rest.jdbc.PostgresProfile",
+      "ch.wsl.box.jdbc.PostgresProfile",
       args(0),
       "ch.wsl.box.model",
       "FileTables",

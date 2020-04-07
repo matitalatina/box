@@ -8,7 +8,7 @@ import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
 
 import scala.concurrent.{ExecutionContext, Future}

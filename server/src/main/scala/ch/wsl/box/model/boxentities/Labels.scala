@@ -1,7 +1,7 @@
 package ch.wsl.box.model.boxentities
 
 
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import slick.model.ForeignKeyAction
 import slick.collection.heterogeneous._
 import slick.collection.heterogeneous.syntax._
@@ -13,7 +13,7 @@ object Labels {
 
 
 
-  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
+  val profile = ch.wsl.box.jdbc.PostgresProfile
 
   import profile._
 

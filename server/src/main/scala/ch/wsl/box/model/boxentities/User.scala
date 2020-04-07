@@ -1,6 +1,6 @@
 package ch.wsl.box.model.boxentities
 
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 /**
   * Created by andre on 5/15/2017.
@@ -8,7 +8,7 @@ import ch.wsl.box.rest.jdbc.PostgresProfile.api._
 
 object User {
 
-  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
+  val profile = ch.wsl.box.jdbc.PostgresProfile
 
 
   case class User_row(username:String, access_level_id: Int)

@@ -1,7 +1,7 @@
 package ch.wsl.box.codegen
 
+import ch.wsl.box.jdbc.PostgresProfile
 import com.typesafe.config.Config
-import slick.jdbc.PostgresProfile
 import slick.jdbc.meta.MTable
 import net.ceedubs.ficus.Ficus._
 

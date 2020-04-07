@@ -9,8 +9,8 @@ import ch.wsl.box.model.shared.{Filter, JSONFieldTypes, JSONQuery, JSONQueryFilt
 import ch.wsl.box.rest.utils.BoxConf
 import ch.wsl.box.shared.utils.DateTimeFormatters
 import scribe.Logging
-import ch.wsl.box.rest.jdbc.PostgresProfile
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.ColType
 
 import scala.util.{Failure, Try}

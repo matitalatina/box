@@ -10,7 +10,7 @@ import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
 
 

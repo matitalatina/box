@@ -10,7 +10,7 @@ import ch.wsl.box.model.BoxActionsRegistry
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.model.boxentities.{Conf, Schema, UITable}
 import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import com.softwaremill.session.SessionDirectives._

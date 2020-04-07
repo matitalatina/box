@@ -1,10 +1,10 @@
 package ch.wsl.box.rest.logic
 
 import ch.wsl.box.rest.utils.Auth
-import ch.wsl.box.rest.jdbc.PostgresProfile
+import ch.wsl.box.jdbc.PostgresProfile
 import PostgresProfile.api._
 import net.ceedubs.ficus.Ficus._
-import ch.wsl.box.rest.jdbc.PostgresProfile
+import ch.wsl.box.jdbc.PostgresProfile
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -10,7 +10,7 @@ import scribe.Logging
 import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.duration._
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
 
 import scala.concurrent.{Await, ExecutionContext, Future}

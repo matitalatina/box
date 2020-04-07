@@ -23,14 +23,14 @@ object Registry {
     val files = CustomizedCodeGenerator.generatedFiles()
 
     val entitiesCode =  files.entities.packageCode(
-      profile = "ch.wsl.box.rest.jdbc.PostgresProfile",
+      profile = "ch.wsl.box.jdbc.PostgresProfile",
       pkg = "",
       container = "Entities",
       parentType = None
     )
 
     val fileEntitiesCode =  files.fileTables.packageCode(
-      profile = "ch.wsl.box.rest.jdbc.PostgresProfile",
+      profile = "ch.wsl.box.jdbc.PostgresProfile",
       pkg = "",
       container = "FileTables",
       parentType = None

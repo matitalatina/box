@@ -7,7 +7,7 @@ import ch.wsl.box.model.boxentities.UIsrcTable
 import ch.wsl.box.model.boxentities.UIsrcTable.UIsrc_row
 import ch.wsl.box.rest.routes.File.{BoxFile, FileHandler}
 import ch.wsl.box.rest.utils.UserProfile
-import ch.wsl.box.rest.jdbc.PostgresProfile.api.Database
+import ch.wsl.box.jdbc.PostgresProfile.api.Database
 
 import scala.concurrent.ExecutionContext
 

@@ -5,7 +5,7 @@ import ch.wsl.box.rest.routes.File.BoxFile
 import ch.wsl.box.rest.utils.Auth
 
 import scala.concurrent.{ExecutionContext, Future}
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 
 object UIProvider {
