@@ -1,13 +1,13 @@
 package ch.wsl.box.model.boxentities
 
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 /**
   * Created by andre on 5/15/2017.
   */
 object AccessLevel {
 
-  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
+  val profile = ch.wsl.box.jdbc.PostgresProfile
 
 
   case class AccessLevel_row(access_level_id: Int, access_level:String)

@@ -2,7 +2,7 @@ package ch.wsl.box.rest
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import ch.wsl.box.rest.jdbc.PostgresProfile
+import ch.wsl.box.jdbc.PostgresProfile
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.ScalaFutures
 import ch.wsl.box.rest.logic._
@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 
 //class RuntimeFunctionSpec extends FlatSpec with ScalaFutures {
 //
-//  import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+//  import ch.wsl.box.jdbc.PostgresProfile.api._
 //  import scala.concurrent.ExecutionContext.Implicits.global
 //
 //  implicit override val patienceConfig = PatienceConfig(timeout = 10 seconds)

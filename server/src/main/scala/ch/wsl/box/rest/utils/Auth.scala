@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.directives.{AuthenticationDirective, Authentica
 import akka.http.scaladsl.server.directives.Credentials.Missing
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}

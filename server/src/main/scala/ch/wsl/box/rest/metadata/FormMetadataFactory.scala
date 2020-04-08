@@ -5,7 +5,7 @@ import ch.wsl.box.model.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_
 import ch.wsl.box.model.boxentities.Form.{Form, Form_i18n, Form_row}
 import ch.wsl.box.model.boxentities.{Field, Form}
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}

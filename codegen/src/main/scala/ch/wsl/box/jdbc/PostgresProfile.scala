@@ -1,4 +1,4 @@
-package ch.wsl.box.rest.jdbc
+package ch.wsl.box.jdbc
 
 
 import com.github.tminglei.slickpg._
@@ -8,13 +8,13 @@ import slick.driver.JdbcProfile
 trait PostgresProfile extends ExPostgresProfile
   with PgArraySupport
   with PgDate2Support
-//  with PgRangeSupport
-//  with PgHStoreSupport
-//  with PgPlayJsonSupport
+  //  with PgRangeSupport
+  //  with PgHStoreSupport
+  //  with PgPlayJsonSupport
   with PgSearchSupport
-//  with PgPostGISSupport
-//  with PgNetSupport
-//  with PgLTreeSupport
+  with PgPostGISSupport
+  //  with PgNetSupport
+  //  with PgLTreeSupport
 {
   def pgjson = "jsonb" // jsonb support is in postgres 9.4.0 onward; for 9.3.x use "json"
 
@@ -26,13 +26,15 @@ trait PostgresProfile extends ExPostgresProfile
 
   object MyAPI extends API with ArrayImplicits
     with DateTimeImplicits
-//    with JsonImplicits
-//    with NetImplicits
-//    with LTreeImplicits
-//    with RangeImplicits
-//    with HStoreImplicits
+    //    with JsonImplicits
+    //    with NetImplicits
+    //    with LTreeImplicits
+    //    with RangeImplicits
+    //    with HStoreImplicits
     with SearchImplicits
     with SearchAssistants
+    with PostGISImplicits
+    with PostGISAssistants
   {
     implicit val strListTypeMapper = new SimpleArrayJdbcType[String]("text").to(_.toList)
     implicit val shortListTypeMapper = new SimpleArrayJdbcType[Short]("int2").to(_.toList)
@@ -42,18 +44,19 @@ trait PostgresProfile extends ExPostgresProfile
     implicit val doubleListTypeMapper = new SimpleArrayJdbcType[Double]("float8").to(_.toList)
     implicit val bigdecimalListTypeMapper = new SimpleArrayJdbcType[java.math.BigDecimal]("numeric")
       .mapTo[scala.math.BigDecimal](javaBigDecimal => scala.math.BigDecimal(javaBigDecimal),
-      scalaBigDecimal => scalaBigDecimal.bigDecimal).to(_.toList)
+        scalaBigDecimal => scalaBigDecimal.bigDecimal).to(_.toList)
   }
 
 
   val plainAPI = new API with ByteaPlainImplicits
     with SimpleArrayPlainImplicits
     with Date2DateTimePlainImplicits
-//    with SimpleJsonPlainImplicits
-//    with SimpleNetPlainImplicits
-//    with SimpleLTreePlainImplicits
-//    with SimpleRangePlainImplicits
-//    with SimpleHStorePlainImplicits
+    with PostGISPlainImplicits
+    //    with SimpleJsonPlainImplicits
+    //    with SimpleNetPlainImplicits
+    //    with SimpleLTreePlainImplicits
+    //    with SimpleRangePlainImplicits
+    //    with SimpleHStorePlainImplicits
     with SimpleSearchPlainImplicits {}
 
 

@@ -7,7 +7,7 @@ import ch.wsl.box.rest.utils.{BoxConf, Lang, UserProfile}
 import io.circe.Json
 
 import scala.concurrent.{ExecutionContext, Future}
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
 
 
@@ -46,7 +46,7 @@ object RuntimeFunction {
                   |import ch.wsl.box.shared.utils.JSONUtils._
                   |import ch.wsl.box.rest.logic.functions.Context
                   |import ch.wsl.box.rest.logic._
-                  |import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+                  |import ch.wsl.box.jdbc.PostgresProfile.api._
                   |import akka.stream.Materializer
                   |import akka.actor.ActorSystem
                   |import ch.wsl.box.rest.utils.UserProfile

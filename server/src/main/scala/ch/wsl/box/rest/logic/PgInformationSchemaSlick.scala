@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import StringHelper._
 import ch.wsl.box.rest.metadata.EntityMetadataFactory
 
@@ -31,7 +31,8 @@ case class PgColumn(
   column_name:String,
   is_nullable:String,
   is_updatable:String,
-  data_type:String,                         //todo: for ARRAYS it does not specify inner type. How to get it?
+  _data_type:String,                         //todo: for ARRAYS it does not specify inner type. How to get it?
+  udt_name:String,
   character_maximum_length:Option[Int],
   numeric_precision:Option[Int],
   numeric_scale:Option[Int],
@@ -44,6 +45,7 @@ case class PgColumn(
   def jsonType = EntityMetadataFactory.typesMapping(data_type)
   def defaultWidget = EntityMetadataFactory.defaultWidgetMapping(data_type)
   def boxName = column_name.slickfy
+  def data_type = if(_data_type == "USER-DEFINED") udt_name else _data_type
 }
 
 class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema"), "columns") {
@@ -55,11 +57,12 @@ class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema
   def character_maximum_length = column[Option[Int]]("character_maximum_length")
   def numeric_precision = column[Option[Int]]("numeric_precision")
   def numeric_scale = column[Option[Int]]("numeric_scale")
+  def udt_name = column[String]("udt_name")
   def table_name = column[String]("table_name")
   def table_schema = column[String]("table_schema")
   def ordinal_position = column[Int]("ordinal_position")
     
-  def * = (column_name, is_nullable, is_updatable, data_type, character_maximum_length, numeric_precision, numeric_scale, table_name, table_schema, ordinal_position) <> (PgColumn.tupled, PgColumn.unapply)
+  def * = (column_name, is_nullable, is_updatable, data_type, udt_name, character_maximum_length, numeric_precision, numeric_scale, table_name, table_schema, ordinal_position) <> (PgColumn.tupled, PgColumn.unapply)
 }
 
 case class PgConstraint(

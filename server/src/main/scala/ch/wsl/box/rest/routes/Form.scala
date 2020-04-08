@@ -10,7 +10,7 @@ import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, MetadataFactory}
 
 import scala.concurrent.{ExecutionContext, Future}

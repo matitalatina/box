@@ -13,10 +13,9 @@ case class GeneratedFiles(
                        fileTables: SourceCodeGenerator,
                        generatedRoutes: RoutesGenerator,
                        entityActionsRegistry: EntityActionsRegistryGenerator,
-                       fileAccessGenerator: FileAccessGenerator
-                         ) {
-
-}
+                       fileAccessGenerator: FileAccessGenerator,
+                       registry: RegistryGenerator
+                         )
 
 object CustomizedCodeGenerator extends BaseCodeGenerator {
 
@@ -41,7 +40,8 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       fileTables = EntitiesGenerator(modelWithOnlyFilesTables,dbConf),
       generatedRoutes = RoutesGenerator(calculatedViews,calculatedTables,dbModel),
       entityActionsRegistry = EntityActionsRegistryGenerator(calculatedViews,calculatedTables,dbModel),
-      fileAccessGenerator = FileAccessGenerator(dbModel,dbConf)
+      fileAccessGenerator = FileAccessGenerator(dbModel,dbConf),
+      registry = RegistryGenerator(dbModel)
     )
 
   }
@@ -51,17 +51,17 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     val files = generatedFiles()
 
     files.entities.writeToFile(
-      "ch.wsl.box.rest.jdbc.PostgresProfile",
+      "ch.wsl.box.jdbc.PostgresProfile",
       args(0),
-      "ch.wsl.box.model",
+      "ch.wsl.box.generated",
       "Entities",
       "Entities.scala"
     )
 
     files.fileTables.writeToFile(
-      "ch.wsl.box.rest.jdbc.PostgresProfile",
+      "ch.wsl.box.jdbc.PostgresProfile",
       args(0),
-      "ch.wsl.box.model",
+      "ch.wsl.box.generated",
       "FileTables",
       "FileTables.scala"
     )
@@ -69,26 +69,28 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
 
     files.generatedRoutes.writeToFile(
       args(0),
-      "ch.wsl.box.rest.routes",
+      "ch.wsl.box.generated",
       "GeneratedRoutes",
       "GeneratedRoutes.scala",
-      "ch.wsl.box.model.Entities"
+      "Entities"
     )
 
     files.entityActionsRegistry.writeToFile(
       args(0),
-      "ch.wsl.box.model",
+      "ch.wsl.box.generated",
       "EntityActionsRegistry.scala",
-      "ch.wsl.box.model.Entities"
+      "Entities"
     )
 
     files.fileAccessGenerator.writeToFile(
       args(0),
-      "ch.wsl.box.rest.routes",
+      "ch.wsl.box.generated",
       "FileRoutes",
       "FileRoutes.scala",
-      "ch.wsl.box.model.FileTables"
+      "FileTables"
     )
+
+    files.registry.writeToFile(args(0),"ch.wsl.box.generated","","GenRegistry.scala")
 
 
 

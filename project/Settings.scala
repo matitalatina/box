@@ -14,7 +14,7 @@ object Settings {
   val name = "box-framework"
 
   /** The version of your application */
-  val version = "1.0.5-fl"
+  val version = "1.0.6-fl"
 
 
   val scalacOptions = Seq(
@@ -91,11 +91,15 @@ object Settings {
     "com.typesafe.slick"       %% "slick"           % versions.slick,
     "org.postgresql"           %  "postgresql"      % versions.postgres,
     "com.typesafe"             % "config"           % "1.3.3",
-    "com.iheart"               %% "ficus"           % versions.ficus
+    "com.iheart"               %% "ficus"           % versions.ficus,
+    "com.github.tminglei"      %% "slick-pg"         % versions.slickPg,
+    "com.github.tminglei"      %% "slick-pg_jts_lt"     % versions.slickPg,
+    "org.locationtech.jts" % "jts-core" % "1.16.1",
   ))
 
   val codegenDependecies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(
-    "com.typesafe.slick" %% "slick-codegen" % versions.slick
+    "com.typesafe.slick" %% "slick-codegen" % versions.slick,
+    "com.outr" %% "scribe" % versions.scribe,
   ))
 
   /** Dependencies only used by the JVM project */
@@ -110,9 +114,6 @@ object Settings {
     "io.circe"                 %% "circe-generic"    % versions.circe,
     "io.circe"                 %% "circe-parser"     % versions.circe,
     "io.udash"                 %% "udash-rpc"        % versions.udash,
-    "com.github.tminglei"      %% "slick-pg"         % versions.slickPg,
-//    "com.github.tminglei"      %% "slick-pg_jts"     % versions.slickPg,
-  //    "com.vividsolutions"        % "jts-core"        % "1.14.0"
     "org.webjars"               % "webjars-locator-core" % "0.44",
     "org.webjars"              % "webjars-locator"   % "0.39",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
@@ -135,7 +136,8 @@ object Settings {
     "com.openhtmltopdf"        % "openhtmltopdf-pdfbox" % "1.0.0",
     "org.jsoup"                % "jsoup"             % "1.12.1",
     "com.github.spullara.mustache.java" % "compiler" % "0.9.6",
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3"
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3",
+    "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.2.0"
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */

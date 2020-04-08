@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import ch.wsl.box.model.boxentities.Labels
 import ch.wsl.box.rest.utils.Auth
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 

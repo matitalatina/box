@@ -1,7 +1,7 @@
 package ch.wsl.box.model
 
 import ch.wsl.box.model.boxentities.Schema
-import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.utils.Auth
 import net.ceedubs.ficus.Ficus._
 

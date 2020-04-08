@@ -3,6 +3,7 @@ package ch.wsl.box.codegen
 import com.typesafe.config.Config
 import slick.model.Model
 import slick.ast.ColumnOption
+import scribe.Logging
 
 
 
@@ -17,14 +18,13 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
        |  import slick.model.ForeignKeyAction
        |  import slick.collection.heterogeneous._
        |  import slick.collection.heterogeneous.syntax._
-//       |  import com.vividsolutions.jts.geom.Geometry
        |
        |object $container {
        |
        |
-       |      import ch.wsl.box.rest.jdbc.PostgresProfile.api._
+       |      import ch.wsl.box.jdbc.PostgresProfile.api._
        |
-       |      val profile = ch.wsl.box.rest.jdbc.PostgresProfile
+       |      val profile = ch.wsl.box.jdbc.PostgresProfile
        |
        |      import profile._
        |
@@ -35,7 +35,7 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
 }
 
 //exteded code generator (add route and registry generation)
-case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.SourceCodeGenerator(model) with BoxSourceCodeGenerator with MyOutputHelper {
+case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.SourceCodeGenerator(model) with BoxSourceCodeGenerator with MyOutputHelper with Logging {
 
 
 
@@ -124,17 +124,21 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
         model.options.find(_.isInstanceOf[slick.sql.SqlProfile.ColumnOption.SqlType]).flatMap {
           tpe =>
             tpe.asInstanceOf[slick.sql.SqlProfile.ColumnOption.SqlType].typeName match {
+              case "serial" => Option("Int")
               case "hstore" => Option("Map[String, String]")
               case "_text" | "text[]" | "_varchar" | "varchar[]" => Option("List[String]")
               case "varchar" => Option("String")                            // type 2003
-//              case "geometry" => Option("com.vividsolutions.jts.geom.Geometry")
               case "_float8" | "float8[]" => Option("List[Double]")
               case "_float4" | "float4[]" => Option("List[Float]")
               case "_int8" | "int8[]" => Option("List[Long]")
               case "_int4" | "int4[]" => Option("List[Int]")
               case "_int2" | "int2[]" => Option("List[Short]")
               case "_decimal" | "decimal[]" | "_numeric" | "numeric[]"  => Option("List[scala.math.BigDecimal]")
-              case _ => None
+              case _ => {
+                logger.warn(s"Mapping of ${tableModel.name}.$rawName for ${tpe.asInstanceOf[slick.sql.SqlProfile.ColumnOption.SqlType].typeName} not found")
+                None
+              }
+
             }
         }.getOrElse {
           model.tpe match {

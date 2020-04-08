@@ -9,7 +9,7 @@ package ch.wsl.box.model.boxentities
 object ExportField {
 
 
-  val profile = ch.wsl.box.rest.jdbc.PostgresProfile
+  val profile = ch.wsl.box.jdbc.PostgresProfile
 
   import profile._
   import api._
