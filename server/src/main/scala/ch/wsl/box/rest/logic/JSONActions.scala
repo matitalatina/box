@@ -17,45 +17,15 @@ import scala.concurrent.{ExecutionContext, Future}
   * Created by andre on 5/19/2017.
   */
 
-trait EntityJSONViewActions {
+class JSONViewActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends ViewActions[Json] {
 
-  def find(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): Future[Seq[Json]] = Source.fromPublisher(findStreamed(query)).runFold(Seq[Json]())(_ ++ Seq(_))
+  protected val dbActions = new DbActions[T,M](entity)
 
-  def findStreamed(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): DatabasePublisher[Json]
-
-  def getById(id: JSONID=JSONID.empty)(implicit db: Database): Future[Option[Json]]
-
-  def count()(implicit db: Database): Future[JSONCount]
-
-  def ids(query: JSONQuery)(implicit db: Database, mat:Materializer): Future[IDs]
-}
-
-
-trait EntityJSONTableActions extends EntityJSONViewActions {
-
-  def insert(json: Json)(implicit db:Database):Future[Json]
-
-  def delete(id:JSONID)(implicit db:Database):Future[Int]
-
-  def update(id:JSONID, json: Json)(implicit db:Database):Future[Json]
-
-  def updateIfNeeded(id:JSONID, json: Json)(implicit db:Database):Future[Json]
-
-  def upsert(id:JSONID, json: Json)(implicit db:Database):Future[Json]
-
-  def upsertIfNeeded(id:JSONID, json: Json)(implicit db:Database):Future[Json]
-}
-
-
-case class JSONViewActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONViewActions {
-
-  val dbActions = new DbActions[T,M](entity)
-
-  override def findStreamed(query: JSONQuery=JSONQuery.empty)(implicit db:Database, mat:Materializer): DatabasePublisher[Json] = dbActions.findStreamed(query).mapResult(_.asJson)
+  override def findStreamed(query: JSONQuery=JSONQuery.empty)(implicit db:Database): DatabasePublisher[Json] = dbActions.findStreamed(query).mapResult(_.asJson)
 
   override def getById(id: JSONID=JSONID.empty)(implicit db:Database): Future[Option[Json]] = dbActions.getById(id).map(_.map(_.asJson))
 
-  override def count()(implicit db:Database) = dbActions.count().map(JSONCount(_))
+  override def count()(implicit db:Database) = dbActions.count()
 
   override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = {
     for{
@@ -80,79 +50,51 @@ case class JSONViewActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <
 
 }
 
-case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends EntityJSONTableActions with Logging {
-
-  lazy val jsonView = JSONViewActions[T,M](table)
-
-  override def findStreamed(query: JSONQuery)(implicit db:Database, mat:Materializer):DatabasePublisher[Json] = jsonView.findStreamed(query)
-
-  override def getById(id: JSONID)(implicit db:Database): Future[Option[Json]] = jsonView.getById(id)
-
-  override def count()(implicit db:Database) = jsonView.count()
-
-  override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = jsonView.ids(query)
+case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](table:TableQuery[T])(implicit encoder: Encoder[M], decoder: Decoder[M], ec:ExecutionContext) extends JSONViewActions[T,M](table) with TableActions[Json] with Logging {
 
 
-  override def update(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Json] = {
+
+  override def update(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Int] = {
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
-      _ <- jsonView.dbActions.updateById(id, toM(merged))
-    } yield {
-      merged //json
-    }
+      updatedCount <- dbActions.update(id, toM(merged))
+    } yield updatedCount
   }
 
-  override def updateIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Json] = {
+  override def updateIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Int] = {
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
-      _ <- if (toM(current.get) != toM(merged)) {  //check if same
-        jsonView.dbActions.updateById(id, toM(merged))            //could also use updateIfNeeded and no check
-      } else Future.successful()
+      updateCount <- if (toM(current.get) != toM(merged)) {  //check if same
+        dbActions.update(id, toM(merged))            //could also use updateIfNeeded and no check
+      } else Future.successful(0)
     } yield {
-      merged //json
+      updateCount
     }
   }
 
-  override def insert(json: Json)(implicit db:Database): Future[Json] = {
-    val result: Future[M] = jsonView.dbActions.insert(toM(json))
-    result.map(_.asJson)
-  }
+  override def insert(json: Json)(implicit db:Database): Future[JSONID] = dbActions.insert(toM(json))
 
-  override def upsert(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Json] = {
-    for{
-      current <- getById(id).recover{case _ => None} //retrieve values in db
-      result <- if (current.isDefined){   //if exists, check if we have to update
-        val merged  = current.get.deepMerge(json) //merge old and new json
-        jsonView.dbActions.updateById(id, toM(merged)).map(_ => merged)
-      } else{
-      //        jsonView.dbActions.upsertById(id, toM(json))
-        insert(json).map(_ => json)
-      }
-    } yield {
-      result
-    }
-  }
 
-  override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Json] = {
+
+  override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: Database): Future[Int] = {
     for{
       current <- getById(id).recover{case _ => None} //retrieve values in db
       result <- if (current.isDefined){   //if exists, check if we have to skip the update (if row is the same)
         val merged  = current.get.deepMerge(json) //merge old and new json
         if (toM(current.get) != toM(merged)) {
-          jsonView.dbActions.updateById(id, toM(merged)).map(_ => merged)          //could also use updateIfNeeded and no check
-        } else Future.successful(merged)
+          dbActions.update(id, toM(merged))        //could also use updateIfNeeded and no check
+        } else Future.successful(0)
       } else{
-      //        jsonView.dbActions.upsertById(id, toM(json))
-        insert(json).map(_ => json)
+        insert(json).map(_ => 1)
       }
     } yield {
       result
     }
   }
 
-  override def delete(id: JSONID)(implicit db: PostgresProfile.api.Database) = jsonView.dbActions.deleteById(id)
+  override def delete(id: JSONID)(implicit db: Database) = dbActions.delete(id)
 
   protected def toM(json: Json):M =json.as[M].fold(
       { fail =>

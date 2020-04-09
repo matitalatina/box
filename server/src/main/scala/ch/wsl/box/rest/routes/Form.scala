@@ -22,7 +22,7 @@ import scala.util.{Failure, Success}
 case class Form(
                  name:String,
                  lang:String,
-                 jsonActions: String => EntityJSONTableActions, //EntityActionsRegistry().tableActions
+                 jsonActions: String => TableActions[Json], //EntityActionsRegistry().tableActions
                  metadataFactory: MetadataFactory, //JSONFormMetadataFactory(),
                  db:Database,
                  kind:String
@@ -32,6 +32,7 @@ case class Form(
     import akka.http.scaladsl.model._
     import akka.http.scaladsl.server.Directives._
     import io.circe.generic.auto._
+    import io.circe.syntax._
     import ch.wsl.box.shared.utils.Formatters._ //need to be after circe generic auto or it will be overridden
     import ch.wsl.box.shared.utils.JSONUtils._
     import ch.wsl.box.model.shared.EntityKind
@@ -67,7 +68,7 @@ case class Form(
               complete(actions(metadata) { fs =>
                 fs.getById(id).map { record =>
                   logger.info(record.toString)
-                  HttpEntity(ContentTypes.`application/json`, record)
+                  HttpEntity(ContentTypes.`application/json`, record.asJson)
                 }
               })
             } ~
@@ -76,8 +77,8 @@ case class Form(
                   complete {
                     actions(metadata) { fs =>
                       for {
-                        _ <- fs.updateIfNeeded(e)
-                        data <- fs.getById(e.ID(fs.metadata.keys))
+                        _ <- fs.updateIfNeeded(id,e)
+                        data <- fs.getById(id)
                       } yield data
                     }
                   }

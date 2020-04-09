@@ -56,13 +56,11 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
 
     implicit val db = up.db
 
-//    println(s"adding table: $name" )
     isBoxTable match{
       case false => Table.tables = Set(name) ++ Table.tables
       case true => Table.boxTables = Set(name) ++ Table.boxTables
     }
 
-//    val jsonActions= new JsonTableActions(table)
     val dbActions = new DbActions[T,M](table)
     val jsonActions = JSONTableActions[T,M](table)
     val limitLookupFromFk: Int = BoxConf.fksLookupRowsLimit
@@ -95,14 +93,14 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
                 } ~
                   put {
                     entity(as[M]) { e =>
-                      onComplete(dbActions.updateIfNeededById(id, e)) {
+                      onComplete(dbActions.updateIfNeeded(id, e)) {
                         case Success(entity) => complete(e)
                         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                       }
                     }
                   } ~
                   delete {
-                    onComplete(dbActions.deleteById(id)) {
+                    onComplete(dbActions.delete(id)) {
                       case Success(affectedRow) => complete(JSONCount(affectedRow))
                       case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                     }

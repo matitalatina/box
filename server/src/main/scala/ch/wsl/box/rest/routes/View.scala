@@ -55,7 +55,6 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     implicit val db  = up.db
 
   val dbActions = new DbActions[T,M](table)
-  val jsonActions = JSONViewActions[T,M](table)
 
     def route = pathPrefix(name) {
         logger.info(s"view with name: $name")
@@ -92,7 +91,7 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
           post {
             entity(as[JSONQuery]) { query =>
               complete {
-                jsonActions.ids(query)
+                dbActions.ids(query)
 //                EntityActionsRegistry().viewActions(name).map(_.ids(query))
               }
             }

@@ -13,7 +13,8 @@ import io.circe._
 import io.circe.parser._
 import scribe.Logging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 import scala.util.Try
 
 /**
@@ -22,6 +23,13 @@ import scala.util.Try
   * mapping from form specs in box schema into JSONForm
   */
 object FormMetadataFactory{
+  /**
+   * Caches
+   * cache keys contains lang identifier of the form (id or name) and username,
+   * username it's crucial to avoid exposing rows that are not accessible by the user (in foreign keys)
+   *
+   * cache should be resetted when an external field changes
+   */
   private var cacheName = Map[(String, String, String),Future[JSONMetadata]]()
   private var cacheId = Map[(String, Int, String),Future[JSONMetadata]]()
 
@@ -29,6 +37,12 @@ object FormMetadataFactory{
     cacheName = Map()
     cacheId = Map()
   }
+
+  def resetCacheForEntity(e:String) = {
+    cacheId = cacheId.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
+    cacheName = cacheName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
+  }
+
 }
 
 
