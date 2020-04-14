@@ -24,6 +24,7 @@ import ch.wsl.box.rest.runtime.Registry
 import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
 import scribe.Logging
+import akka.http.scaladsl.server.directives.CachingDirectives._
 
 import scala.util.{Failure, Success}
 
@@ -35,7 +36,6 @@ trait Root extends Logging {
   implicit val materializer:Materializer
   implicit val executionContext:ExecutionContext
 
-  val binding: Future[Http.ServerBinding]
   implicit val system: ActorSystem
 
   val akkaConf:Config
@@ -49,12 +49,6 @@ trait Root extends Logging {
   def boxSetSession(v: BoxSession) = setSession(oneOff, usingCookies, v)
 
 
-  def stop() = {
-    binding
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate())
-  }
-
   val route:Route = {
 
     import Directives._
@@ -67,6 +61,13 @@ trait Root extends Logging {
 
     //Serving UI
     UI.clientFiles ~
+    path("status") {
+      cachingProhibited {
+        complete(
+          HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"RUNNING"))
+        )
+      }
+    } ~
     pathPrefix("webjars") {
       WebJarsSupport.webJars
     } ~
