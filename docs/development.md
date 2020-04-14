@@ -32,32 +32,6 @@ Serve task compiles both client (with fastOptJS) and server then starts the serv
 - [UDash](http://udash.io/)
 
 
-## Deploy
-
-Generate the application package with `sbt box`, note that in order to build the correct package for the database the
-`box` task should be run when a schema equivalent database is set-up in the config.
-
-Standalone package is availabe in
-`server/target/universal/server-1.0.0.zip
-`
-
-Cloud providers:
-- Cloud foundry (Swisscom developer cloud): `cf push -p server/target/universal/server-1.0.0.zip <app-name>`
-
-Database configuration can be done in `resources/application.conf`, a template of `application.conf` is provided in
-`application.template.conf`, we therefore advise to use env variables to setup the database connection
-
-Set Env variables:
-- `DB_URL`
-- `DB_USER`
-- `DB_PASSWORD`
-- `DB_SCHEMA`
-- `BOX_DB_URL`
-- `BOX_DB_USER`
-- `BOX_DB_PASSWORD`
-- `BOX_DB_SCHEMA`
-
-
 ### Knows Issues
 
 
@@ -69,5 +43,5 @@ sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:MaxPermSize=1G -J-XX:+CMSClassUnloa
 
 Before compilation after adding JS dependencies call  
 ```
-sbt clinet/packageJSDependencies
+sbt client/packageJSDependencies
 ```

@@ -10,11 +10,10 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
   * You normally don't have to touch the actual build definition after this.
   */
 object Settings {
-  /** The name of your application */
-  val name = "postgres-rest-ui"
+
 
   /** The version of your application */
-  val version = "1.0.7-wsl"
+  val version = "1.0.9"
 
 
   val scalacOptions = Seq(
