@@ -86,9 +86,6 @@ object Registry extends Logging {
                       |""".stripMargin
 
 
-      //uncomment for debugging
-      //reflect.io.File("test.out.scala").writeAll(source)
-      //println(new java.io.File(".").getAbsolutePath())
 
       import scala.tools.reflect.ToolBox
       try {

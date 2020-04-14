@@ -14,7 +14,7 @@ object Settings {
   val name = "box-framework"
 
   /** The version of your application */
-  val version = "1.0.6-fl"
+  val version = "1.0.7-wsl"
 
 
   val scalacOptions = Seq(
@@ -124,7 +124,9 @@ object Settings {
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp  % "test",
     "org.webjars"              % "bootstrap"         % "3.3.7",
     "org.webjars"              % "Eonasdan-bootstrap-datetimepicker" % "4.17.47",
-    "org.webjars"              % "leaflet"           % "1.4.0",
+    "org.webjars.npm"          % "leaflet"           % "1.6.0",
+    "org.webjars.npm"          % "leaflet-editable"  % "1.2.0",
+    "org.webjars.npm"          % "leaflet.path.drag"  % "0.0.6",
     "org.webjars.npm"          % "monaco-editor"     % "0.18.1",
     "org.webjars.npm" % "quill" % "1.3.7",
     "com.outr"                 %% "scribe"           % versions.scribe,
@@ -151,7 +153,7 @@ object Settings {
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
     "org.scala-js" %%% "scalajs-dom" % "0.9.8",
-    "ch.wavein" %%% "scala-js-leaflet" % "0.1.0"
+    "ch.wavein" %%% "scala-js-leaflet" % "0.2.0"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */
