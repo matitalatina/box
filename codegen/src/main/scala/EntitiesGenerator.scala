@@ -126,8 +126,9 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
             tpe.asInstanceOf[slick.sql.SqlProfile.ColumnOption.SqlType].typeName match {
               case "serial" => Option("Int")
               case "hstore" => Option("Map[String, String]")
-              case "_text" | "text[]" | "_varchar" | "varchar[]" => Option("List[String]")
               case "varchar" => Option("String")                            // type 2003
+              case "_text" | "text[]" | "_varchar" | "varchar[]" => Option("List[String]")
+              case "_bool" => Option("List[Boolean]")
               case "_float8" | "float8[]" => Option("List[Double]")
               case "_float4" | "float4[]" => Option("List[Float]")
               case "_int8" | "int8[]" => Option("List[Long]")
