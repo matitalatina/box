@@ -24,7 +24,9 @@ if you want to provide an external configuration file you may use:
 ## Cloud foundry 
 
 To deploy to cloud foundry (i.e. Swisscom developer cloud) first package the app with
-```sbt box```
+```
+sbt box
+```
 then upload it with:  
 ```cf push -p server/target/universal/server-1.0.0.zip <app-name>```
 
@@ -48,8 +50,15 @@ The official repository is https://hub.docker.com/r/boxframework/box-framework
 You need a to have docker installed in your machine (for desktop use https://www.docker.com/products/docker-desktop)
 
 to run Box using docker first create a configuration
-```docker config box-config application.template.conf```
+
+```
+docker config box-config application.template.conf
+```
+
 then run box as a service
-``` docker service create --config src=aws-server,target=/application.conf --publish published=8080,target=8080 --name box boxframework/box-framework:1.0.9 ```
+
+```
+docker service create --config src=aws-server,target=/application.conf --publish published=8080,target=8080 --name box boxframework/box-framework:1.0.9
+```
 
 
