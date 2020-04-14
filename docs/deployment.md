@@ -9,17 +9,24 @@ nav_order: 3
 
 ## Standalone
 
-Generate the application package with `sbt box`, note that in order to build the correct package for the database the
+Generate the application package with
+```
+sbt box
+```
+note that in order to build the correct package for the database the
 `box` task should be run when a schema equivalent database is set-up in the config.
 
 Standalone package is availabe in
-`server/target/universal/server-1.0.0.zip
-`
+`server/target/universal/server-1.0.0.zip`
 
 In the zip you will find a `bin/` directory to start the server use: 
-``` bin/boot ```
+```
+bin/boot
+```
 if you want to provide an external configuration file you may use:
-``` bin/boot -Dconfig.file=<path of the file>```
+```
+bin/boot -Dconfig.file=<path of the file>
+```
 
 ## Cloud foundry 
 
@@ -28,7 +35,9 @@ To deploy to cloud foundry (i.e. Swisscom developer cloud) first package the app
 sbt box
 ```
 then upload it with:  
-```cf push -p server/target/universal/server-1.0.0.zip <app-name>```
+```
+cf push -p server/target/universal/server-1.0.0.zip <app-name>
+```
 
 Database configuration can be done in `resources/application.conf`, a template of `application.conf` is provided in
 `application.template.conf`, we therefore advise to use env variables to setup the database connection
@@ -62,3 +71,4 @@ docker service create --config src=aws-server,target=/application.conf --publish
 ```
 
 
+If you don't want to use the provided images of box you can package your own by using the `boxDocker` sbt task
