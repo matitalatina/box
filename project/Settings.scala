@@ -10,11 +10,10 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
   * You normally don't have to touch the actual build definition after this.
   */
 object Settings {
-  /** The name of your application */
-  val name = "box-framework"
+
 
   /** The version of your application */
-  val version = "1.0.7-wsl"
+  val version = "1.0.9"
 
 
   val scalacOptions = Seq(
@@ -39,9 +38,9 @@ object Settings {
     val ficus = "1.4.7"
 
     //HTTP actors
-    val akka = "2.5.16"
-    val akkaHttp = "10.1.5"
-    val akkaHttpJson = "1.21.1"
+    val akka = "2.5.26"
+    val akkaHttp = "10.1.11"
+    val akkaHttpJson = "1.32.0"
 
     //Testing
     val specs2 = "4.3.4"
@@ -106,6 +105,7 @@ object Settings {
   val jvmDependencies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(
     "org.scala-lang"           % "scala-reflect"     % versions.scala,
     "com.typesafe.akka"        %% "akka-http-core"   % versions.akkaHttp,
+    "com.typesafe.akka"        %% "akka-http-caching" % versions.akkaHttp,
     "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
     "com.typesafe.akka"        %% "akka-actor"       % versions.akka,
     "com.typesafe.akka"        %% "akka-stream"      % versions.akka,
