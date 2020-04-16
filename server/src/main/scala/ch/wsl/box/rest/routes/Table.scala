@@ -94,7 +94,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
                   put {
                     entity(as[M]) { e =>
                       onComplete(dbActions.updateIfNeeded(id, e)) {
-                        case Success(entity) => complete(e)
+                        case Success(entity) => complete(entity)
                         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                       }
                     }
@@ -196,8 +196,8 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
         post {                            //inserts
           entity(as[M]) { e =>
             logger.info("Inserting: " + e)
-            val data: Future[M] = db.run { table.returning(table) += e } //returns object with id
-            complete(data)
+            val id: Future[JSONID] = dbActions.insert(e) //returns object with id
+            complete(id)
           }
         }
       }

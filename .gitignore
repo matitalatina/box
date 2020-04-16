@@ -50,9 +50,10 @@ js/*
 
 .hydra/
 /project/hydra.sbt
-/resources/application.test.conf
+/resources/*.conf
 /resources/db.test.conf
 /resources/js
+!/resources/application.template.conf
 
 
 /resources/application.conf

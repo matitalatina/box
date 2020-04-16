@@ -4,7 +4,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import ch.wsl.box.jdbc.PostgresProfile
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.metadata.EntityMetadataFactory
+import ch.wsl.box.rest.metadata.{EntityMetadataFactory, FormMetadataFactory}
 import scribe.Logging
 import slick.ast.Node
 import slick.basic.DatabasePublisher
@@ -50,6 +50,11 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     }
 
 //    def select(fields:Seq[String]): Query[T, _, Seq] =  base.map(x => x.reps(fields))
+  }
+
+  private def resetMetadataCache(): Unit = {
+    FormMetadataFactory.resetCacheForEntity(entity.baseTableRow.tableName)
+    EntityMetadataFactory.resetCacheForEntity(entity.baseTableRow.tableName)
   }
 
   def count()(implicit db:Database):Future[JSONCount] =  db.run {
@@ -142,6 +147,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def insert(e: M)(implicit db:Database): Future[JSONID] = {
     logger.info(s"INSERT $e")
+    resetMetadataCache()
     for{
       result <- db.run {
         (entity.returning(entity) += e).transactionally
@@ -152,6 +158,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def delete(id:JSONID)(implicit db:Database):Future[Int] = {
     logger.info(s"DELETE BY ID $id")
+    resetMetadataCache()
     for{
       result <- db.run{
         val action = filter(id).delete
@@ -163,6 +170,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def update(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
     logger.info(s"UPDATE BY ID $id")
+    resetMetadataCache()
     for{
       result <- db.run {
         val action = filter(id).update(e)
@@ -174,6 +182,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def updateIfNeeded(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
     logger.info(s"UPDATE IF NEEDED BY ID $id")
+    resetMetadataCache()
     for {
       current <- getById(id)
       updated <- if (current.get != e) {
@@ -190,6 +199,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def upsertIfNeeded(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
     logger.info(s"UPSERT IF NEEDED BY ID $id")
+    resetMetadataCache()
     for {
       current <- getById(id)
       upserted <-  if (current.isDefined) {

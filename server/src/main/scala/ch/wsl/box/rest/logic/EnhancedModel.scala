@@ -26,11 +26,11 @@ class EnhancedModel(m:Product) extends Logging {
 
     private val rm = scala.reflect.runtime.currentMirror
 
-    private def accessor(field:String):TermSymbol = {
+    private def accessor(field:String):MethodSymbol = {
       try {
 
         rm.classSymbol(m.getClass).toType.members.collectFirst {
-          case m: TermSymbol if m.name.toString == field => m
+          case m: MethodSymbol if m.name.toString == field => m
         }.get
       } catch {
         case e: Exception => {
@@ -44,7 +44,8 @@ class EnhancedModel(m:Product) extends Logging {
     def ID(fields:Seq[String]):JSONID = {
       val values = fields map { field =>
         field -> {
-          rm.reflect(m).reflectField(accessor(field)).get match {
+          val f = accessor(field)
+          rm.reflect(m).reflectMethod(f)() match {
             case opt: Option[_] => opt.map(_.toString).getOrElse("")
             case o: Any => o.toString()
           }

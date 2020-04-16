@@ -130,9 +130,15 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
       val data:Json = m.data
 
-      def saveAction(data:Json) = JSONID.fromString(m.id.getOrElse("")) match {
-        case Some(id) => REST.update(m.kind,Session.lang(),m.name,id,data)
-        case None => REST.insert(m.kind,Session.lang(),m.name, data)
+      def saveAction(data:Json) = {
+        for {
+          id <- JSONID.fromString(m.id.getOrElse("")) match {
+            case Some (id) => REST.update (m.kind, Session.lang(), m.name, id, data).map (_ => id)
+            case None => REST.insert (m.kind, Session.lang (), m.name, data)
+          }
+          result <- REST.get(m.kind, Session.lang(), m.name, id)
+        } yield result
+
       }
 
       println(s"data: $data")

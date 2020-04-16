@@ -60,7 +60,7 @@ trait BaseCodeGenerator {
 
   private val slickDbModel = Await.result(db.run{
     PostgresProfile.createModelBuilder(enabledEntities,true).buildModel   //create model based on specific db (here postgres)
-  }, 200 seconds)
+  }, 300 seconds)
 
 
   //exclude fields

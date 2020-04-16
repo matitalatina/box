@@ -77,9 +77,8 @@ case class Form(
                   complete {
                     actions(metadata) { fs =>
                       for {
-                        _ <- fs.updateIfNeeded(id,e)
-                        data <- fs.getById(id)
-                      } yield data
+                        rowsChanged <- fs.updateIfNeeded(id,e)
+                      } yield rowsChanged
                     }
                   }
                 }
