@@ -13,7 +13,7 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
     }
 
     def mapView(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
-      s"""   case "${table.model.name.table}" => Some(JSONViewActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name}))"""
+      s"""   case "${table.model.name.table}" => Some(new JSONViewActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name}))"""
     }
 
 
