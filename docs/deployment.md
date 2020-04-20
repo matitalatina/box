@@ -61,13 +61,13 @@ You need a to have docker installed in your machine (for desktop use https://www
 to run Box using docker first create a configuration
 
 ```
-docker config box-config application.template.conf
+docker config create box-config <path-to>/application.conf
 ```
 
 then run box as a service
 
 ```
-docker service create --config src=aws-server,target=/application.conf --publish published=8080,target=8080 --name box boxframework/box-framework:1.0.9
+docker service create --config src=box-config,target=/application.conf --publish published=8080,target=8080 --name box boxframework/box-framework:1.0.9
 ```
 
 

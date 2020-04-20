@@ -241,7 +241,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     ),
     color(conf.colors.link),
     textTransform.uppercase,
-    fontWeight.bold
+    fontWeight.bold,
+    cursor.pointer
   )
 
   val contentMinHeight = style(

@@ -48,7 +48,7 @@ trait DbFilters {
 
 }
 
-trait UglyDBFilters extends DbFilters with Logging {
+trait DBFiltersImpl extends DbFilters with Logging {
 
 
   val toTimestamp = DateTimeFormatters.timestamp.parse _

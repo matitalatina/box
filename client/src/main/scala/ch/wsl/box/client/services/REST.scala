@@ -57,8 +57,8 @@ object REST {
 
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json] = client.get[Json](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}")
-  def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[Json] = client.put[Json,Json](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}",data)
-  def insert(kind:String, lang:String, entity:String, data:Json): Future[Json] = client.post[Json,Json](s"/${EntityKind(kind).entityOrForm}/$lang/$entity",data)
+  def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[Int] = client.put[Json,Int](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}",data)
+  def insert(kind:String, lang:String, entity:String, data:Json): Future[JSONID] = client.post[Json,JSONID](s"/${EntityKind(kind).entityOrForm}/$lang/$entity",data)
   def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount] = client.delete[JSONCount](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}")
 
   //files

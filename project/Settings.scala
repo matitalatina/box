@@ -13,7 +13,7 @@ object Settings {
 
 
   /** The version of your application */
-  val version = "1.0.9"
+  val version = "1.0.10"
 
 
   val scalacOptions = Seq(

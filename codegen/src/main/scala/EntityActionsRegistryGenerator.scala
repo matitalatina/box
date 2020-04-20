@@ -22,7 +22,7 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |
          |import scala.concurrent.ExecutionContext
          |import scala.util.Try
-         |import ch.wsl.box.rest.logic.{JSONTableActions, JSONViewActions, EntityJSONTableActions, EntityJSONViewActions}
+         |import ch.wsl.box.rest.logic.{JSONTableActions, JSONViewActions, TableActions, ViewActions}
          |
          |import ch.wsl.box.rest.runtime._
          |
@@ -33,16 +33,16 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |  import io.circe.generic.auto._
          |  import ch.wsl.box.rest.utils.JSONSupport._
          |
-         |  def tableActions(implicit ec: ExecutionContext) :String => EntityJSONTableActions = {
+         |  def tableActions(implicit ec: ExecutionContext) :String => TableActions[Json] = {
          |    ${tableList.flatMap(mapTable).mkString("\n")}
          |  }
          |
-         |  def viewActions(implicit ec: ExecutionContext) :String => Option[EntityJSONViewActions] = {
+         |  def viewActions(implicit ec: ExecutionContext) :String => Option[ViewActions[Json]] = {
          |    ${viewList.flatMap(mapView).mkString("\n")}
          |    case _ => None
          |  }
          |
-         |  def actions(name:String)(implicit ec: ExecutionContext) : Option[EntityJSONViewActions] = viewActions(ec)(name).orElse(Try(tableActions(ec)(name)).toOption)
+         |  def actions(name:String)(implicit ec: ExecutionContext) : Option[ViewActions[Json]] = viewActions(ec)(name).orElse(Try(tableActions(ec)(name)).toOption)
          |
          |}
 

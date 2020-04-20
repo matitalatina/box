@@ -35,6 +35,10 @@ object EntityMetadataFactory extends Logging {
     cacheFields = Map()
   }
 
+  def resetCacheForEntity(e:String) = {
+    cacheTable = cacheTable.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
+  }
+
   def lookupField(referencingTable:String,lang:String, firstNoPK:Option[String]):String = {
 
     val lookupLabelFields = BoxConf.fksLookupLabels

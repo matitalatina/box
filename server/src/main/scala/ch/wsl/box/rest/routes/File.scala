@@ -76,7 +76,7 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
         }
 
       }
-      result <- dbActions.updateById(id,rowWithFileAndThumb)
+      result <- dbActions.update(id,rowWithFileAndThumb)
     } yield result
   }
 
@@ -105,7 +105,7 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
                       thumbnail <- createThumbnail(file,mime)
                     } yield {
                       val row = handler.injectThumbnail(result.head,thumbnail)
-                      dbActions.updateById(id,row)
+                      dbActions.update(id,row)
                       handler.extractThumbnail(row)
                     }
                     thumbnailFile match {

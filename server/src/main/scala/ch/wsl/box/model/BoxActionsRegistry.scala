@@ -3,7 +3,7 @@ package ch.wsl.box.model
 
 
 import scala.concurrent.ExecutionContext
-import ch.wsl.box.rest.logic.{EntityJSONTableActions, EntityJSONViewActions, JSONTableActions, JSONViewActions}
+import ch.wsl.box.rest.logic.{JSONTableActions, JSONViewActions, TableActions}
 import ch.wsl.box.model.boxentities._
 import ch.wsl.box.rest.runtime.Registry
 
@@ -13,7 +13,7 @@ class BoxActionsRegistry(implicit ec:ExecutionContext)  {
   import io.circe.generic.auto._
   import ch.wsl.box.rest.utils.JSONSupport._
 
-  def tableActions:String => EntityJSONTableActions = {
+  def tableActions:String => TableActions[Json] = {
     case "access_level" => JSONTableActions[AccessLevel.AccessLevel,AccessLevel.AccessLevel_row](AccessLevel.table)
     case "conf" => JSONTableActions[Conf.Conf,Conf.Conf_row](Conf.table)
     case "export" => JSONTableActions[Export.Export,Export.Export_row](Export.Export)
