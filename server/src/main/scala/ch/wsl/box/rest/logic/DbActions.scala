@@ -197,7 +197,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def upsertIfNeeded(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
+  def upsertIfNeeded(id:JSONID, e:M)(implicit db:Database):Future[JSONID] = {
     logger.info(s"UPSERT IF NEEDED BY ID $id")
     resetMetadataCache()
     for {
@@ -207,14 +207,14 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
           val result = update(id,e)
           logger.info(s"UPSERTED (UPDATED) IF NEEDED BY ID $id")
-          result
+          result.map(_ => id)
         } else {
-          Future.successful(0)
+          Future.successful(id)
         }
       }else{
         val result = insert(e)
         logger.info(s"UPSERTED (INSERTED) IF NEEDED BY ID $id")
-        result.map(_ => 1)
+        result
       }
     } yield upserted
   }

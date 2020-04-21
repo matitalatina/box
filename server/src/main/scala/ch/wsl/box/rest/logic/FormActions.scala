@@ -76,15 +76,15 @@ case class FormActions(metadata:JSONMetadata,
     }
   }
 
-  def subAction[T](e:Json, action: FormActions => ((JSONID,Json) => Future[Int])): Seq[Future[List[Int]]] = metadata.fields.filter(_.child.isDefined).map { field =>
+  def subAction[T](e:Json, action: FormActions => ((JSONID,Json) => Future[_])): Seq[Future[List[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
       form <- metadataFactory.of(field.child.get.objId, metadata.lang)
       dbSubforms <- getChild(e,field,form,field.child.get)
       subJson = attachArrayIndex(e.seq(field.name),form)
       deleted = deleteChild(form,subJson,dbSubforms)
       result <- FutureUtils.seqFutures(subJson){ json => //order matters so we do it synchro
-        action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys),json).recover{case t => t.printStackTrace(); 0}
-      }
+        action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys),json).map(x => Some(x)).recover{case t => t.printStackTrace(); None}
+      }.map(_.flatten)
     } yield result
   }
 
@@ -109,7 +109,7 @@ case class FormActions(metadata:JSONMetadata,
       json <- getById(id)
       subs <- Future.sequence(subAction(json.get,_.deleteSingle))
       current <- deleteSingle(id,json.get)
-    } yield current + subs.flatten.sum
+    } yield current + subs.size
   }
 
   def insert(e:Json)(implicit db: PostgresProfile.api.Database):Future[JSONID] = for{
@@ -146,13 +146,13 @@ case class FormActions(metadata:JSONMetadata,
     } yield result
   }
 
-  def upsertIfNeeded(id:JSONID,e:Json)(implicit db:Database):Future[Int] = {
+  def upsertIfNeeded(id:JSONID,e:Json)(implicit db:Database):Future[JSONID] = {
 
     for{
-      result <- jsonAction.upsertIfNeeded(id,e)
-      model <- jsonAction.getById(id)
+      newId <- jsonAction.upsertIfNeeded(id,e)
+      model <- jsonAction.getById(newId) // in some circumstances returns null, probably with autoincrements fields
       _ <- Future.sequence(subAction(model.get,_.upsertIfNeeded))
-    } yield result
+    } yield newId
   }
 
   private def createQuery(entity:Json, child: Child):JSONQuery = {

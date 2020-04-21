@@ -78,16 +78,16 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
 
 
 
-  override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: Database): Future[Int] = {
+  override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: Database): Future[JSONID] = {
     for{
       current <- getById(id).recover{case _ => None} //retrieve values in db
       result <- if (current.isDefined){   //if exists, check if we have to skip the update (if row is the same)
         val merged  = current.get.deepMerge(json) //merge old and new json
         if (toM(current.get) != toM(merged)) {
-          dbActions.update(id, toM(merged))        //could also use updateIfNeeded and no check
-        } else Future.successful(0)
+          dbActions.update(id, toM(merged)).map(_ => id)        //could also use updateIfNeeded and no check
+        } else Future.successful(id)
       } else{
-        insert(json).map(_ => 1)
+        insert(json)
       }
     } yield {
       result

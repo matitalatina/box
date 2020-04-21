@@ -38,5 +38,5 @@ trait TableActions[T] extends ViewActions[T] {
 
   def updateIfNeeded(id:JSONID, obj: T)(implicit db:Database):Future[Int]
 
-  def upsertIfNeeded(id:JSONID, obj: T)(implicit db:Database):Future[Int]
+  def upsertIfNeeded(id:JSONID, obj: T)(implicit db:Database):Future[JSONID]
 }
