@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, JSONID}
+import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, JSONID, WidgetsNames}
 import io.circe.Json
 import org.scalajs.dom
 import scalacss.ScalatagsCss._
@@ -34,14 +34,15 @@ object TableFieldsRenderer extends Logging{
   def apply(value:String, field:JSONField, keys:JSONID, routes:Routes):TypedTag[Element] = {
 
 
-    val contentFixed = field.lookup match {
-      case Some(opts) => {
+    val contentFixed = (field.lookup,field.widget) match {
+      case (Some(opts),_) => {
         val label: String = opts.lookup.find(_.id == value).map(_.value).getOrElse(value)
         val finalLabel = if(label.trim.length > 0) label else value
         p(finalLabel)
 //        a(href := routes.edit(JSONKeys.fromMap(Map(field.key -> value)).asString).url,finalLabel)
       }
-      case None => p(value)
+      case (None,Some(WidgetsNames.richTextEditor)) => p(raw(value))
+      case (None,_) => p(value)
     }
 
 //    val editing = Property(false)
