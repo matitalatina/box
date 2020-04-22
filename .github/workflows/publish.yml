@@ -24,9 +24,9 @@ jobs:
         run: sbt box
 
       - uses: ncipollo/release-action@v1
-          with:
-            artifacts: "server/target/universal/server-${{ steps.previoustag.outputs.tag }}.zip,server/target/scala-2.12/server_2.12-${{ steps.previoustag.outputs.tag }}.war"
-            token: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          artifacts: "server/target/universal/server-${{ steps.previoustag.outputs.tag }}.zip,server/target/scala-2.12/server_2.12-${{ steps.previoustag.outputs.tag }}.war"
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build docker image
         run: sbt boxDocker
 
