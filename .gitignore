@@ -54,7 +54,7 @@ js/*
 /resources/db.test.conf
 /resources/js
 !/resources/application.template.conf
-!/server/src/test/resources/application.conf
+!/resources/application.test.conf
 
 
 /resources/application.conf

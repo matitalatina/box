@@ -23,7 +23,8 @@ trait BaseSpec extends FlatSpec with ScalaFutures with Matchers {
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-  val dbConf: Config = ConfigFactory.load().as[Config]("db")
+  val dbConf: Config = ConfigFactory.load("application.test").as[Config]("db")
+  println(dbConf)
   val dbPath = dbConf.as[String]("url")
   val dbSchema = dbConf.as[String]("schema")
   val dbUsername = dbConf.as[String]("user")
