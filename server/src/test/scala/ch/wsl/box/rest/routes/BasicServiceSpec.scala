@@ -6,7 +6,7 @@
 //
 //  "The service" should {
 //
-//    "Respond with greeting on root path" in {
+//    "Respond with status" in {
 //      Get("/") ~> route ~> check {
 //        response.toString must contain("Postgres-UI")
 //      }

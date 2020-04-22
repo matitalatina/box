@@ -9,17 +9,15 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 import scala.concurrent.Future
 import scala.reflect.macros.whitebox
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by pezzatti on 7/20/17.
   *
   * server/test-only ch.wsl.box.rest.InformationSchemaSpec
   */
-class InformationSchemaSpec extends FlatSpec with ScalaFutures {
+class InformationSchemaSpec extends BaseSpec {
 
-  val db = Database.forURL("jdbc:postgresql:swissfire", "incendi", "incendi", driver="org.postgresql.Driver")
-  val infoSchema = new PgInformationSchema("fire", db)
+  val infoSchema = new PgInformationSchema("simple", db)
 
   "The service" should "query pgcolumn" in {
 

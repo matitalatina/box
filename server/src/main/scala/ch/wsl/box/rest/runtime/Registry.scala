@@ -26,6 +26,12 @@ object Registry extends Logging {
 
   def apply():RegistryInstance = _registry
 
+  /**
+   * Test purposes only
+   * @param r
+   */
+  def set(r:RegistryInstance) = _registry = r
+
   def load() = {
   try {
     _registry = Class.forName("ch.wsl.box.generated.GenRegistry")

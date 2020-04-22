@@ -38,7 +38,7 @@ object Settings {
     val ficus = "1.4.7"
 
     //HTTP actors
-    val akka = "2.5.26"
+    val akka = "2.6.4"
     val akkaHttp = "10.1.11"
     val akkaHttpJson = "1.32.0"
 

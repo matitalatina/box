@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 
 
-class EnhancedModelSpec extends FlatSpec with Matchers {
+class EnhancedModelSpec extends BaseSpec {
   import _root_.ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
 

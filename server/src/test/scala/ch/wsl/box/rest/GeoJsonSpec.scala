@@ -6,7 +6,7 @@ import io.circe.syntax._
 import org.locationtech.jts.geom.{Coordinate, GeometryFactory}
 import org.scalatest._
 
-class GeoJsonSpec extends FlatSpec with Matchers {
+class GeoJsonSpec extends BaseSpec {
   import _root_.ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
 
