@@ -55,7 +55,6 @@ lazy val server: Project  = (project in file("server"))
 lazy val client: Project = (project in file("client"))
   .settings(
     name := "client",
-    version := Settings.version,
     scalaVersion := Settings.versions.scala,
     scalacOptions ++= Settings.scalacOptions,
     resolvers += Resolver.jcenterRepo,
