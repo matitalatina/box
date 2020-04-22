@@ -188,7 +188,7 @@ object EntityMetadataFactory extends Logging {
 
   def fieldType(table:String,field:String)(implicit ec:ExecutionContext) = {
     cacheFields.lift((table,field)) match {
-      case Some(t) => Await.result(t,10.seconds)
+      case Some(t) => Await.result(t,20.seconds)
       case None => {
         val result = for{
           db <- new PgInformationSchema(table, Auth.adminDB, excludeFields).columns
@@ -206,7 +206,7 @@ object EntityMetadataFactory extends Logging {
         }
 
         if(BoxConf.enableCache) cacheFields = cacheFields ++ Map((table,field) -> result)
-        Await.result(result,10.seconds)
+        Await.result(result,20.seconds)
       }
     }
 
