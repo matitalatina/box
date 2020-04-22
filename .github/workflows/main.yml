@@ -14,8 +14,18 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+      - name: Copy config
+        run: cp resources/application.template.conf resources/application.conf
       - name: Run tests
         env:
           TEST_DB_URL: ${{ secrets.TEST_DB_URL }}
           TEST_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          DB_URL: ${{ secrets.TEST_DB_URL }}
+          DB_SCHEMA: 'public'
+          DB_USER: 'postgres'
+          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          BOX_DB_URL: ${{ secrets.TEST_DB_URL }}
+          BOX_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          BOX_DB_SCHEMA: 'public'
+          BOX_DB_USER: 'postgres'
         run: sbt server/test
