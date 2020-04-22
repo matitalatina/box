@@ -21,11 +21,21 @@ import scala.io.StdIn
 
 
 object Box {
-  def start() = new Root {
+  private var server:Http.ServerBinding = null
+
+  def restart()(implicit ec:ExecutionContext) = {
+    if(server != null) {
+      server.terminate(5.seconds).map{ _ =>
+        start(ec)
+      }
+    }
+  }
+
+  def start(ec:ExecutionContext) = new Root {
 
     implicit val system: ActorSystem = ActorSystem()
     implicit val materializer: ActorMaterializer = ActorMaterializer()
-    implicit val executionContext: ExecutionContext = system.dispatcher
+    implicit val executionContext: ExecutionContext = ec
 
 
 
@@ -51,26 +61,28 @@ object Box {
 
     implicit def handler: ExceptionHandler = BoxExceptionHandler()
 
-    val binding = for{
+    for{
       pl <- preloading
       _ <- pl.terminate(1.seconds)
       b <- Http().bindAndHandle(route, host, port) //attach the root route
     } yield {
       println("Stopped preloading server and started box")
-      b
+      server = b
     }
 
 
     println(s"Server online at http://localhost:$port")
 
 
-
-
-
   }
 }
 
 object Boot extends App  {
-  Box.start()
+
+  val executionContext = ExecutionContext.fromExecutor(
+    new java.util.concurrent.ForkJoinPool(Runtime.getRuntime.availableProcessors())
+  )
+
+  Box.start(executionContext)
 }
 

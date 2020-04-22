@@ -25,6 +25,7 @@ import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, Ses
 import com.typesafe.config.Config
 import scribe.Logging
 import akka.http.scaladsl.server.directives.CachingDirectives._
+import ch.wsl.box.rest.Box
 
 import scala.util.{Failure, Success}
 
@@ -79,6 +80,14 @@ trait Root extends Logging {
               .replaceAll(",",",\n\t")
               .replaceAll("\" \\(", "\" (\n\t")
           ))
+        )
+      }
+    } ~
+    pathPrefix("server") {
+      path("reset") {
+        Box.restart()
+        complete(
+          HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"restart server"))
         )
       }
     } ~
