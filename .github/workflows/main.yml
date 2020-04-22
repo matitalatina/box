@@ -26,6 +26,6 @@ jobs:
           DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
           BOX_DB_URL: ${{ secrets.TEST_DB_URL }}
           BOX_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-          BOX_DB_SCHEMA: 'public'
+          BOX_DB_SCHEMA: 'box'
           BOX_DB_USER: 'postgres'
         run: sbt server/test
