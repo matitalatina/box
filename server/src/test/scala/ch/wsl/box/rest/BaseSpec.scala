@@ -10,8 +10,7 @@ import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.testmodel.GenRegistry
-import com.typesafe.config.{Config, ConfigFactory}
-import net.ceedubs.ficus.Ficus._
+
 
 trait BaseSpec extends FlatSpec with ScalaFutures with Matchers {
 
@@ -23,11 +22,10 @@ trait BaseSpec extends FlatSpec with ScalaFutures with Matchers {
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-  val dbConf: Config = ConfigFactory.load("test").as[Config]("db")
-  val dbPath = dbConf.as[String]("url")
-  val dbSchema = dbConf.as[String]("schema")
-  val dbUsername = dbConf.as[String]("user")
-  val dbPassword = dbConf.as[String]("password")
+  val dbPath = System.getenv("TEST_DB_URL")
+  val dbSchema = "public"
+  val dbUsername = "postgres"
+  val dbPassword = System.getenv("TEST_DB_PASSWORD")
 
   implicit val db = Database.forURL(s"$dbPath?currentSchema=$dbSchema",
     driver="org.postgresql.Driver",
