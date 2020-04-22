@@ -26,7 +26,6 @@ lazy val hello = taskKey[Unit]("Prints 'Hello World'")
 lazy val server: Project  = (project in file("server"))
   .settings(
     name := "server",
-    version := Settings.version,
     scalaVersion := Settings.versions.scala,
     //resolvers += "nightlies" at "https://scala-ci.typesafe.com/artifactory/scala-release-temp/",
     //scalaVersion := "2.12.5-bin-2791989",
@@ -48,6 +47,7 @@ lazy val server: Project  = (project in file("server"))
   .enablePlugins(TomcatPlugin)
   .enablePlugins(JavaAppPackaging)
   .enablePlugins(DockerPlugin)
+  .enablePlugins(GitVersioning)
   //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)
   .dependsOn(codegen)

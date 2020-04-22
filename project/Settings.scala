@@ -12,8 +12,6 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 object Settings {
 
 
-  /** The version of your application */
-  val version = "1.0.11"
 
 
   val scalacOptions = Seq(
