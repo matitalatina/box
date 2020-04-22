@@ -9,7 +9,7 @@ import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup, JSONLookup, JSONMeta
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.shared.utils.JSONUtils._
-import scribe.Logging
+import scribe.{Logger, Logging}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalatags.JsDom.all._
@@ -138,8 +138,17 @@ trait LookupWidget extends Widget {
     if(query.find(_ == '#').nonEmpty) {
       allData.listen({ json =>
         val variables = extractVariables(query)
-        val queryWithSubstitutions = variables.foldRight(query)((variable, finalQuery) => finalQuery.replaceAll("#" + variable, json.js(variable).toString()))
-        REST.lookup(look.lookupEntity, look.map, parser.parse(queryWithSubstitutions).right.get).map { lookups =>
+        val queryWithSubstitutions = variables.foldRight(query){(variable, finalQuery) =>
+          finalQuery.replaceAll("#" + variable, "\"" + json.js(variable).string + "\"")
+        }
+        val jsonQuery = parser.parse(queryWithSubstitutions) match {
+          case Left(e) => {
+            logger.error(e.message)
+            Json.Null
+          }
+          case Right(j) => j
+        }
+        REST.lookup(look.lookupEntity, look.map, jsonQuery).map { lookups =>
           val newLookup = toSeq(lookups)
           if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
             lookup.set(newLookup, true)
@@ -152,7 +161,7 @@ trait LookupWidget extends Widget {
   private def extractVariables(query:String):Seq[String] = {
     query.zipWithIndex.filter(_._1 == '#').map{ case (_,i) =>
       val nextIndex = Seq(query.length,query.indexOf(' ',i),query.indexOf('}',i),query.indexOf(',',i)).min
-      query.substring(i+1,nextIndex)
+      query.substring(i+1,nextIndex).replaceAll("\n","").trim
     }.distinct
   }
 
