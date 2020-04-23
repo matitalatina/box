@@ -108,6 +108,13 @@ case class Form(
         }
       }
     } ~
+    path("schema") {
+      get {
+        complete {
+          metadata.map(new JSONSchemas().of)
+        }
+      }
+    } ~
     path("children") {
       get {
         complete {

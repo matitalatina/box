@@ -69,6 +69,8 @@ object Settings {
     val scribe = "2.6.0"
     val scalaCSV = "1.3.6-scalajs"
 
+    val scalaJsonSchema = "0.2.6"
+
   }
 
   /**
@@ -137,7 +139,9 @@ object Settings {
     "org.jsoup"                % "jsoup"             % "1.12.1",
     "com.github.spullara.mustache.java" % "compiler" % "0.9.6",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3",
-    "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.2.0"
+    "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.2.0",
+//    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
+//    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))
 
   /** Dependencies only used by the JS project (note the use of %%% instead of %%) */
