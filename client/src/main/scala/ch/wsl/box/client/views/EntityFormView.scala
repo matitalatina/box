@@ -118,7 +118,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   import io.circe.syntax._
   import ch.wsl.box.client._
 
-  def save(action:() => Unit) = {
+  def save(action:String => Unit) = {
 
     val m = model.get
     m.metadata.foreach{ metadata =>
@@ -154,8 +154,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         model.subProp(_.id).set(Some(newId.asString))
         model.subProp(_.data).set(resultSaved)
         enableGoAway
-        Navigate.to(Routes(model.get.kind, model.get.name).edit(model.get.id.getOrElse("")))
-        action()
+
+        action(model.get.id.getOrElse(""))
 
       }}.recover{ case e =>
         e.getStackTrace.foreach(x => logger.error(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
@@ -163,6 +163,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       }
     }
   }
+
+
 
   def delete() = {
 
@@ -180,7 +182,16 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     }
   }
 
-  def duplicate() = {
+  def reset(): Unit = {
+    model.subProp(_.data).set(Json.Null)
+    model.subProp(_.id).set(None)
+    enableGoAway
+  }
+
+  def duplicate():Unit = {
+    if(model.subProp(_.changed).get && !window.confirm(Labels.navigation.goAway)) {
+      return
+    }
     val oldModel = model.get
     model.set(oldModel.copy(
       id = None,
@@ -353,17 +364,20 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
               //save and stay on same record
               button(
                 ClientConf.style.boxButtonImportant,
-                onclick :+= ((ev: Event) => presenter.save(() => Unit), true)
+                onclick :+= ((ev: Event) => presenter.save(id => Navigate.to(Routes(model.get.kind, model.get.name).edit(id))), true)
               )(Labels.form.save), " ",
               //save and go to table view
               button(
                 ClientConf.style.boxButton,ClientConf.style.noMobile,
-                onclick :+= ((ev: Event) => presenter.save(() => Navigate.to(Routes(model.get.kind, model.get.name).entity())), true)
+                onclick :+= ((ev: Event) => presenter.save(_ => Navigate.to(Routes(model.get.kind, model.get.name).entity())), true)
               )(Labels.form.save_table), " ",
               //save and go insert new record
               button(
                 ClientConf.style.boxButton,ClientConf.style.noMobile,
-                onclick :+= ((ev: Event) => presenter.save(() => Navigate.to(Routes(model.subProp(_.kind).get, m).add())), true)
+                onclick :+= ((ev: Event) => presenter.save{_ =>
+                  presenter.reset()
+                  Navigate.to(Routes(model.subProp(_.kind).get, m).add())
+                }, true)
               )(Labels.form.save_add), " ",
               button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
               button(ClientConf.style.boxButton, onclick :+= ((ev:Event) => presenter.duplicate()))(Labels.entities.duplicate), " ",
