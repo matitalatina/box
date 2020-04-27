@@ -66,7 +66,7 @@ case class Form(
           case Some(id) =>
             get {
               complete(actions(metadata) { fs =>
-                fs.getById(id).map { record =>
+                db.run(fs.getById(id).transactionally).map { record =>
                   logger.info(record.toString)
                   HttpEntity(ContentTypes.`application/json`, record.asJson)
                 }
@@ -77,7 +77,7 @@ case class Form(
                   complete {
                     actions(metadata) { fs =>
                       for {
-                        rowsChanged <- fs.updateIfNeeded(id,e)
+                        rowsChanged <- db.run(fs.updateIfNeeded(id,e).transactionally)
                       } yield rowsChanged
                     }
                   }
@@ -87,7 +87,7 @@ case class Form(
                 complete {
                   actions(metadata) { fs =>
                     for {
-                      count <- fs.delete(id)
+                      count <- db.run(fs.delete(id).transactionally)
                     } yield JSONCount(count)
                   }
                 }
@@ -135,7 +135,7 @@ case class Form(
           complete {
             for{
               f <- metadata
-              data <- jsonActions(f.entity).ids(query)
+              data <- db.run(jsonActions(f.entity).ids(query))
             } yield data
           }
         }
@@ -145,7 +145,7 @@ case class Form(
       get {
         complete {
           metadata.map { f =>
-            jsonActions(f.entity).count()
+            db.run(jsonActions(f.entity).count())
           }
         }
       }
@@ -208,7 +208,7 @@ case class Form(
           entity(as[Json]) { e =>
             complete {
               actions(metadata){ fs =>
-                fs.insert(e)
+                db.run(fs.insert(e).transactionally)
               }
             }
           }

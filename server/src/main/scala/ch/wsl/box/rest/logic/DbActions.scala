@@ -57,18 +57,16 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     EntityMetadataFactory.resetCacheForEntity(entity.baseTableRow.tableName)
   }
 
-  def count()(implicit db:Database):Future[JSONCount] =  db.run {
-    entity.length.result
-  }.map(JSONCount)
 
-  def count(query:JSONQuery)(implicit db:Database):Future[Int] = {
+  def count()(implicit db:Database):DBIO[JSONCount] = {
+    entity.length.result
+  }.transactionally.map(JSONCount)
+
+  def count(query:JSONQuery)(implicit db:Database):DBIO[Int] = {
     val q = entity.where(query.filter)
 
-    for {
-      c <- db.run{
-        q.length.result
-      }
-    } yield c
+    (q.length.result).transactionally
+
   }
 
 
@@ -83,22 +81,20 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   }
 
-  override def find(query:JSONQuery)(implicit db:Database, mat: Materializer): Future[Seq[M]] = {
+  override def find(query:JSONQuery)(implicit db:Database, mat: Materializer): DBIO[Seq[M]] = {
 
     val q = entity.where(query.filter).sort(query.sort)
     val qPaged = q.page(query.paging).result
 
-    for{
-      data <- db.run(qPaged)
-    } yield {
-      data
-    }
+    qPaged.transactionally
   }
 
-  override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer): Future[IDs] = {
+  def keys(): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(EntityMetadataFactory.keysOf(entity.baseTableRow.tableName))
+
+  override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer): DBIO[IDs] = {
     for{
       data <- find(query)
-      keys <- keys()   // JSONMetadataFactory.keysOf(table.baseTableRow.tableName)
+      keys <- keys()
       n <- count(query)
     } yield {
 
@@ -114,13 +110,8 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
         n
       )
     }
-  }
+  }.transactionally
 
-  def keys() = for{
-    k <- EntityMetadataFactory.keysOf(entity.baseTableRow.tableName)
-  } yield{
-    k
-  }
 
   private def filter(id:JSONID):Query[T, M, Seq]  = {
     if(id.id.isEmpty) throw new Exception("No key is defined")
@@ -131,90 +122,75 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def getById(id:JSONID)(implicit db:Database):Future[Option[M]] = {
+  def getById(id:JSONID)(implicit db:Database) = {
     logger.info(s"GET BY ID $id")
     Try(filter(id)).toOption match {
       case Some(f) => for {
-        result <- db.run {
+        result <-  {
           val action = f.take(1).result
           logger.info(action.statements.toString)
           action
-        }
+        }.transactionally
       } yield result.headOption
-      case None => Future.successful(None)
+      case None => DBIO.successful(None)
     }
   }
 
-  def insert(e: M)(implicit db:Database): Future[JSONID] = {
+  def insert(e: M)(implicit db:Database) = {
     logger.info(s"INSERT $e")
     resetMetadataCache()
     for{
-      result <- db.run {
-        (entity.returning(entity) += e).transactionally
-      }
+      result <-  {
+        (entity.returning(entity) += e)
+      }.transactionally
       keys <- keys()
     } yield new EnhancedModel(result).ID(keys)
   }
 
-  def delete(id:JSONID)(implicit db:Database):Future[Int] = {
+  def delete(id:JSONID)(implicit db:Database) = {
     logger.info(s"DELETE BY ID $id")
     resetMetadataCache()
-    for{
-      result <- db.run{
-        val action = filter(id).delete
-        //println(action.statements)
-        action.transactionally
-      }
-    } yield result
+    filter(id).delete.transactionally
   }
 
-  def update(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
+  def update(id:JSONID, e:M)(implicit db:Database) = {
     logger.info(s"UPDATE BY ID $id")
     resetMetadataCache()
-    for{
-      result <- db.run {
-        val action = filter(id).update(e)
-        logger.info (action.statements.toString)
-        action.transactionally
-      }
-    } yield result
+    filter(id).update(e).transactionally
   }
 
-  def updateIfNeeded(id:JSONID, e:M)(implicit db:Database):Future[Int] = {
+  def updateIfNeeded(id:JSONID, e:M)(implicit db:Database) = {
     logger.info(s"UPDATE IF NEEDED BY ID $id")
     resetMetadataCache()
     for {
       current <- getById(id)
       updated <- if (current.get != e) {
-
-        val result = update(id,e)
-        logger.info(s"UPDATED IF NEEDED BY ID $id")
-        result
+        update(id,e).transactionally
       } else {
-        Future.successful(0)
+        DBIO.successful(0)
       }
     } yield updated
   }
 
 
-  def upsertIfNeeded(id:JSONID, e:M)(implicit db:Database):Future[JSONID] = {
+  def upsertIfNeeded(id:JSONID, e:M)(implicit db:Database) = {
     logger.info(s"UPSERT IF NEEDED BY ID $id")
     resetMetadataCache()
     for {
       current <- getById(id)
-      upserted <-  if (current.isDefined) {
+      upserted <- if (current.isDefined) {
         if (current.get != e) {
 
-          val result = update(id,e)
+          val result = update(id,e).transactionally
           logger.info(s"UPSERTED (UPDATED) IF NEEDED BY ID $id")
           result.map(_ => id)
         } else {
-          Future.successful(id)
+          DBIO.successful(id)
         }
       }else{
         val result = insert(e)
         logger.info(s"UPSERTED (INSERTED) IF NEEDED BY ID $id")
-        result
+        result.transactionally
       }
     } yield upserted
   }

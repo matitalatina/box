@@ -91,7 +91,7 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
           post {
             entity(as[JSONQuery]) { query =>
               complete {
-                dbActions.ids(query)
+                db.run(dbActions.ids(query))
 //                EntityActionsRegistry().viewActions(name).map(_.ids(query))
               }
             }
@@ -110,7 +110,7 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("list")
-              complete(dbActions.find(query))
+              complete(db.run(dbActions.find(query)))
             }
           }
         } ~

@@ -2,6 +2,7 @@ package ch.wsl.box.rest.logic
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import ch.wsl.box.jdbc
 import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
@@ -23,11 +24,14 @@ class JSONViewActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Pro
 
   override def findStreamed(query: JSONQuery=JSONQuery.empty)(implicit db:Database): DatabasePublisher[Json] = dbActions.findStreamed(query).mapResult(_.asJson)
 
-  override def getById(id: JSONID=JSONID.empty)(implicit db:Database): Future[Option[Json]] = dbActions.getById(id).map(_.map(_.asJson))
+
+  override def find(query: JSONQuery)(implicit db: jdbc.PostgresProfile.api.Database, mat: Materializer): DBIO[Seq[Json]] = dbActions.find(query).map(_.map(_.asJson))
+
+  override def getById(id: JSONID=JSONID.empty)(implicit db:Database):DBIO[Option[Json]] = dbActions.getById(id).map(_.map(_.asJson))
 
   override def count()(implicit db:Database) = dbActions.count()
 
-  override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):Future[IDs] = {
+  override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):DBIO[IDs] = {
     for{
       data <- dbActions.find(query)
       keys <- dbActions.keys()   // JSONMetadataFactory.keysOf(table.baseTableRow.tableName)
@@ -54,7 +58,7 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
 
 
 
-  override def update(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Int] = {
+  override def update(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database):DBIO[Int] = {
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
@@ -62,30 +66,30 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
     } yield updatedCount
   }
 
-  override def updateIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database): Future[Int] = {
+  override def updateIfNeeded(id:JSONID, json: Json)(implicit db: _root_.ch.wsl.box.jdbc.PostgresProfile.api.Database):DBIO[Int] = {
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
       updateCount <- if (toM(current.get) != toM(merged)) {  //check if same
         dbActions.update(id, toM(merged))            //could also use updateIfNeeded and no check
-      } else Future.successful(0)
+      } else DBIO.successful(0)
     } yield {
       updateCount
     }
   }
 
-  override def insert(json: Json)(implicit db:Database): Future[JSONID] = dbActions.insert(toM(json))
+  override def insert(json: Json)(implicit db:Database):DBIO[JSONID] = dbActions.insert(toM(json))
 
 
 
-  override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: Database): Future[JSONID] = {
+  override def upsertIfNeeded(id:JSONID, json: Json)(implicit db: Database):DBIO[JSONID] = {
     for{
-      current <- getById(id).recover{case _ => None} //retrieve values in db
+      current <- getById(id) //retrieve values in db
       result <- if (current.isDefined){   //if exists, check if we have to skip the update (if row is the same)
         val merged  = current.get.deepMerge(json) //merge old and new json
         if (toM(current.get) != toM(merged)) {
           dbActions.update(id, toM(merged)).map(_ => id)        //could also use updateIfNeeded and no check
-        } else Future.successful(id)
+        } else DBIO.successful(id)
       } else{
         insert(json)
       }
@@ -94,7 +98,7 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
     }
   }
 
-  override def delete(id: JSONID)(implicit db: Database) = dbActions.delete(id)
+  override def delete(id: JSONID)(implicit db: Database):DBIO[Int] = dbActions.delete(id)
 
   protected def toM(json: Json):M =json.as[M].fold(
       { fail =>

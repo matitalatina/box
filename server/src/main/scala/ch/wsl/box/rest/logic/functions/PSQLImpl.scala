@@ -24,7 +24,7 @@ object PSQLImpl extends RuntimePSQL {
 
     val actions = Registry().actions.actions(name)(ec).get
 
-    for {
+    val io = for {
       rows <- actions.find(query)
     } yield {
       rows.headOption.map { firstRow =>
@@ -36,6 +36,6 @@ object PSQLImpl extends RuntimePSQL {
         )
       }
     }
-
+    db.run(io)
   }
 }

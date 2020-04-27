@@ -3,6 +3,7 @@ package ch.wsl.box.rest.logic
 import akka.NotUsed
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import ch.wsl.box.jdbc
 import ch.wsl.box.jdbc.PostgresProfile
 import io.circe._
 import io.circe.syntax._
@@ -36,17 +37,18 @@ case class FormActions(metadata:JSONMetadata,
 
 
 
-  def getById(id:JSONID)(implicit db: Database):Future[Option[Json]] = {
+  def getById(id:JSONID)(implicit db: Database) = {
     logger.info("Getting Form data")
-    get(id.query)
+    DBIO.from(get(id.query))
   }
 
   private def streamSeq(query:JSONQuery):Source[Json,NotUsed] = {
     Source
       .fromPublisher(jsonAction.findStreamed(query))
-      .flatMapConcat( json => Source.fromFuture(expandJson(json)))
+      .flatMapConcat( json => Source.fromFuture(db.run{ expandJson(json) }))
   }
   def streamArray(query:JSONQuery):Source[Json,NotUsed] = streamSeq(query)
+
   def get(query:JSONQuery):Future[Option[Json]] = streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x =>
       if(x.length >1){
         throw new Exception("Multiple rows retrieved with single id")
@@ -84,19 +86,19 @@ case class FormActions(metadata:JSONMetadata,
     }
   }
 
-  def subAction[T](e:Json, action: FormActions => ((JSONID,Json) => Future[_])): Seq[Future[List[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
+  def subAction[T](e:Json, action: FormActions => ((JSONID,Json) => DBIO[_])): Seq[DBIO[Seq[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
-      form <- metadataFactory.of(field.child.get.objId, metadata.lang)
+      form <- DBIO.from(metadataFactory.of(field.child.get.objId, metadata.lang))
       dbSubforms <- getChild(e,field,form,field.child.get)
       subJson = attachArrayIndex(e.seq(field.name),form)
-      deleted = deleteChild(form,subJson,dbSubforms)
-      result <- FutureUtils.seqFutures(subJson){ json => //order matters so we do it synchro
-        action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys),json).map(x => Some(x)).recover{case t => t.printStackTrace(); None}
-      }.map(_.flatten)
+      deleted <- DBIO.sequence(deleteChild(form,subJson,dbSubforms))
+      result <- DBIO.sequence(subJson.map{ json => //order matters so we do it synchro
+        action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys),json).map(x => Some(x))
+      }).map(_.flatten)
     } yield result
   }
 
-  def deleteSingle(id: JSONID,e:Json):Future[Int] = {
+  def deleteSingle(id: JSONID,e:Json) = {
     jsonAction.delete(id)
   }
 
@@ -108,7 +110,7 @@ case class FormActions(metadata:JSONMetadata,
    * @param dbJson list of child present in DB
    * @return number of deleted rows
    */
-  def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]): Seq[Future[Int]] = {
+  def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]): Seq[DBIO[Int]] = {
     val receivedID = receivedJson.map(_.ID(child.keys))
     val dbID = dbJson.map(_.ID(child.keys))
     logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
@@ -119,55 +121,55 @@ case class FormActions(metadata:JSONMetadata,
   }
 
 
-  def delete(id:JSONID)(implicit db: PostgresProfile.api.Database): Future[Int] = {
+  def delete(id:JSONID)(implicit db: PostgresProfile.api.Database) = {
     for{
       json <- getById(id)
-      subs <- Future.sequence(subAction(json.get,_.deleteSingle))
+      subs <- DBIO.sequence(subAction(json.get,_.deleteSingle))
       current <- deleteSingle(id,json.get)
     } yield current + subs.size
   }
 
-  def insert(e:Json)(implicit db: PostgresProfile.api.Database):Future[JSONID] = for{
+  def insert(e:Json)(implicit db: PostgresProfile.api.Database) = for{
     insertedId <- jsonAction.insert(e)
     inserted <- jsonAction.getById(insertedId).map(_.get)
-    _ <- Future.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
+    _ <- DBIO.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
       for {
-        metadata <- metadataFactory.of(field.child.get.objId, metadata.lang)
+        metadata <- DBIO.from(metadataFactory.of(field.child.get.objId, metadata.lang))
         rows = attachArrayIndex(e.seq(field.name),metadata)
         //attach parent id
         rowsWithId = rows.map{ row =>
           val masterChild: Seq[(String, String)] = field.child.get.masterFields.split(",").zip(field.child.get.childFields.split(",")).toSeq
           masterChild.foldLeft(row){ case (acc,(master,child)) => acc.deepMerge(Json.obj(child -> inserted.js(master)))}
         }
-        result <- FutureUtils.seqFutures(rowsWithId)(row => FormActions(metadata,jsonActions,metadataFactory).insert(row))
+        result <- DBIO.sequence(rowsWithId.map(row => FormActions(metadata,jsonActions,metadataFactory).insert(row)))
       } yield result
     })
   } yield insertedId
 
 
 
-  def update(id:JSONID, e:Json)(implicit db: Database):Future[Int] = {
+  def update(id:JSONID, e:Json)(implicit db: Database) = {
     for{
-      _ <- Future.sequence(subAction(e,_.upsertIfNeeded))  //need upsert to add new child records
+      _ <- DBIO.sequence(subAction(e,_.upsertIfNeeded))  //need upsert to add new child records
       result <- jsonAction.update(id,e)
     } yield result
   }
 
-  def updateIfNeeded(id:JSONID, e:Json)(implicit db: Database):Future[Int] = {
+  def updateIfNeeded(id:JSONID, e:Json)(implicit db: Database) = {
 
     for{
-      _ <- Future.sequence(subAction(e,_.upsertIfNeeded))  //need upsert to add new child records
+      _ <- DBIO.sequence(subAction(e,_.upsertIfNeeded))  //need upsert to add new child records
       result <- jsonAction.updateIfNeeded(id,e)
     } yield result
   }
 
-  def upsertIfNeeded(id:JSONID,e:Json)(implicit db:Database):Future[JSONID] = {
+  def upsertIfNeeded(id:JSONID,e:Json)(implicit db:Database) = {
 
     for{
       newId <- jsonAction.upsertIfNeeded(id,e)
       model <- jsonAction.getById(newId)
       newModel = e.deepMerge(model.get) // takes the autogenerated values from db and attach the childs that are in the JSON
-      _ <- Future.sequence(subAction(newModel,_.upsertIfNeeded))
+      _ <- DBIO.sequence(subAction(newModel,_.upsertIfNeeded))
     } yield newId
   }
 
@@ -185,30 +187,27 @@ case class FormActions(metadata:JSONMetadata,
     child.childQuery.getOrElse(JSONQuery.empty).copy(filter=filters.toList.distinct)
   }
 
-  private def getChild(dataJson:Json, field:JSONField, metadata:JSONMetadata, child:Child):Future[Seq[Json]] = {
+  private def getChild(dataJson:Json, field:JSONField, metadata:JSONMetadata, child:Child):DBIO[Seq[Json]] = DBIO.from{
     val query = createQuery(dataJson,child)
     FormActions(metadata,jsonActions,metadataFactory).streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_))
   }
 
-  private def expandJson(dataJson:Json):Future[Json] = {
+  private def expandJson(dataJson:Json):DBIO[Json] = {
 
     val values = metadata.fields.map{ field =>
       {(field.`type`,field.child) match {
-        case ("static",_) => Future.successful(field.name -> field.default.asJson)  //set default value
-        case (_,None) => Future.successful(field.name -> dataJson.js(field.name))        //use given value
+        case ("static",_) => DBIO.successful(field.name -> field.default.asJson)  //set default value
+        case (_,None) => DBIO.successful(field.name -> dataJson.js(field.name))        //use given value
         case (_,Some(child)) => for{
-          form <- metadataFactory.of(child.objId,metadata.lang)
+          form <- DBIO.from(metadataFactory.of(child.objId,metadata.lang))
           data <- getChild(dataJson,field,form,child)
         } yield {
           logger.info(s"expanding child ${field.name} : ${data.asJson}")
           field.name -> data.asJson
         }
-      }}.recover{ case t =>
-        t.printStackTrace()
-        field.name -> Json.Null
-      }
+      }}
     }
-    Future.sequence(values).map(_.toMap.asJson)
+    DBIO.sequence(values).map(_.toMap.asJson)
   }
 
 
@@ -219,7 +218,9 @@ case class FormActions(metadata:JSONMetadata,
   override def findStreamed(query: JSONQuery)(implicit db: PostgresProfile.api.Database): DatabasePublisher[Json] = jsonAction.findStreamed(query)
 
 
-  override def count()(implicit db: PostgresProfile.api.Database): Future[JSONCount] = jsonAction.count()
+  override def find(query: JSONQuery)(implicit db: jdbc.PostgresProfile.api.Database, mat: Materializer): DBIO[Seq[Json]] = jsonAction.find(query)
 
-  override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer): Future[IDs] = jsonAction.ids(query)
+  override def count()(implicit db: PostgresProfile.api.Database) = jsonAction.count()
+
+  override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer) = jsonAction.ids(query)
 }

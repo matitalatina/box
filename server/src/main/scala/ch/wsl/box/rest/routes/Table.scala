@@ -84,7 +84,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
             JSONID.fromString(strId) match {
               case Some(id) =>
                 get {
-                  onComplete(dbActions.getById(id)) {
+                  onComplete(db.run(dbActions.getById(id))) {
                     case Success(data) => {
                       complete(data)
                     }
@@ -93,14 +93,14 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
                 } ~
                   put {
                     entity(as[M]) { e =>
-                      onComplete(dbActions.updateIfNeeded(id, e)) {
+                      onComplete(db.run(dbActions.updateIfNeeded(id, e).transactionally)) {
                         case Success(entity) => complete(entity)
                         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                       }
                     }
                   } ~
                   delete {
-                    onComplete(dbActions.delete(id)) {
+                    onComplete(db.run(dbActions.delete(id))) {
                       case Success(affectedRow) => complete(JSONCount(affectedRow))
                       case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
                     }
@@ -141,8 +141,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
         post {
           entity(as[JSONQuery]) { query =>
             complete {
-              jsonActions.ids(query)
-//              EntityActionsRegistry().tableActions(name).ids(query)
+              db.run(jsonActions.ids(query))
             }
           }
         }
@@ -162,7 +161,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
         post {
           entity(as[JSONQuery]) { query =>
             logger.info("list")
-            complete(dbActions.find(query))
+            complete(db.run(dbActions.find(query)))
           }
         }
       } ~
@@ -196,7 +195,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
         post {                            //inserts
           entity(as[M]) { e =>
             logger.info("Inserting: " + e)
-            val id: Future[JSONID] = dbActions.insert(e) //returns object with id
+            val id: Future[JSONID] = db.run(dbActions.insert(e).transactionally)//returns object with id
             complete(id)
           }
         }

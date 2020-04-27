@@ -137,7 +137,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
           query <- queryJson.as[JSONQuery].right.toOption
         } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
 
-        lookupData <- Registry().actions.tableActions(ec)(entity).find(filter)
+        lookupData <- db.run(Registry().actions.tableActions(ec)(entity).find(filter))
 
       } yield {
         Some(JSONFieldLookup.fromData(entity, JSONFieldMap(value, text), lookupData))

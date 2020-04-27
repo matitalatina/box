@@ -66,14 +66,14 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def upload(id:JSONID)(metadata:FileInfo, byteSource:Source[ByteString, Any]) = {
     for{
-      bytea <- byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray)
+      bytea <- DBIO.from(byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray))
       row <- dbActions.getById(id)
       rowWithFile = handler.inject(row.get,bytea,metadata)
-      rowWithFileAndThumb <- Future{
+      rowWithFileAndThumb <- DBIO.from{Future{
         createThumbnail(bytea,metadata.contentType.mediaType.toString) match {
           case Some(thumbnail) => handler.injectThumbnail(rowWithFile,thumbnail)
           case None => rowWithFile
-        }
+        }}
 
       }
       result <- dbActions.update(id,rowWithFileAndThumb)
@@ -89,13 +89,13 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
         JSONID.fromString(idstr) match {
           case Some(id) => post {
             fileUpload("file") { case (metadata, byteSource) =>
-              val result = upload(id)(metadata, byteSource)
+              val result = db.run(upload(id)(metadata, byteSource).transactionally)
               complete(result)
             }
           } ~
             path("thumb") {
               get {
-                onSuccess(dbActions.getById(id)) { result =>
+                onSuccess(db.run(dbActions.getById(id))) { result =>
                   val thumb = handler.extractThumbnail(result.head)
                   if(thumb.file.isEmpty) {
                     val originalFile = handler.extract(result.head)
@@ -121,7 +121,7 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
             } ~
             pathEnd {
               get {
-                onSuccess(dbActions.getById(id)) { result =>
+                onSuccess(db.run(dbActions.getById(id))) { result =>
                   val f = handler.extract(result.head)
                   File.completeFile(f)
                 }
