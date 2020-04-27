@@ -23,5 +23,6 @@ object Schema {
       Function.Function.schema ++
       Function.Function_i18n.schema ++
       Function.FunctionField.schema ++
-      Function.FunctionField_i18n.schema
+      Function.FunctionField_i18n.schema ++
+      Log.table.schema
 }

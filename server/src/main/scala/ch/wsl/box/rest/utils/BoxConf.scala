@@ -83,6 +83,8 @@ object BoxConf extends Logging {
     case "error" => Level.Error
   }
 
+  def logDB = Try(conf("log.db").equals("true")).getOrElse(false)
+
 
   def enableCache:Boolean = Try(conf("cache.enable").equals("true")).getOrElse(true)
 

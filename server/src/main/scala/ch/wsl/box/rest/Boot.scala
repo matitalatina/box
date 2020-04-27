@@ -9,11 +9,12 @@ import ch.wsl.box.rest.logic.functions.RuntimeFunction
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, FormMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
+import ch.wsl.box.rest.utils.log.DbWriter
 import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}
 import net.ceedubs.ficus.Ficus._
 import scribe._
-
+import scribe.writer.ConsoleWriter
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
@@ -50,7 +51,12 @@ object Box {
 
     Registry.load()
 
-    Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConf.loggerLevel)).replace()
+    val loggerWriter = BoxConf.logDB match  {
+      case false => ConsoleWriter
+      case true => new DbWriter(Auth.boxDB)
+    }
+    Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConf.loggerLevel), writer = loggerWriter).replace()
+
 
     //TODO need to be reworked now it's based on an hack, it call generated root to populate models
     Registry().routes("en")(Auth.adminUserProfile, materializer, executionContext)
