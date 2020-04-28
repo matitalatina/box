@@ -55,14 +55,15 @@ class UpdateFormSpec extends BaseSpec {
   "The service" should "query update nested subforms" in {
 
 
-    val dbio = for{
-      form <- DBIO.from(FormMetadataFactory().of("parent","it"))
+    val future = for{
+      form <- FormMetadataFactory().of("parent","it")
       actions = FormActions(form,EntityActionsRegistry.tableActions,FormMetadataFactory())
-      i <- actions.updateIfNeeded(id,json)
-      result <- actions.getById(id)
+      i <- db.run(actions.updateIfNeeded(id,json).transactionally)
+      result <- db.run(actions.getById(id))
     } yield result
 
-    val future = db.run(dbio.transactionally)
+
+
 
     future.recover{ case t:Throwable =>
       t.printStackTrace()

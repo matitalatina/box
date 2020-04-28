@@ -2,7 +2,7 @@ package ch.wsl.box.rest
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import ch.wsl.box.rest.utils.UserProfile
+import ch.wsl.box.rest.utils.{BoxConf, UserProfile}
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.concurrent.ScalaFutures
 
@@ -10,11 +10,15 @@ import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.testmodel.GenRegistry
+import scribe.{Level, Logger}
 
 
 trait BaseSpec extends FlatSpec with ScalaFutures with Matchers {
 
   private val executor = AsyncExecutor("public-executor",50,50,1000,50)
+
+  Logger.root.clearHandlers().withHandler(minimumLevel = Some(Level.Warn)).replace()
+  //Logger.select(className("scala.slick")).setLevel(Level.Debug)
 
   implicit override val patienceConfig = PatienceConfig(timeout = 10.seconds)
 

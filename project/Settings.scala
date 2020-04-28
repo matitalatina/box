@@ -66,7 +66,7 @@ object Settings {
     val udash = "0.8.0"
     val udashJQuery = "1.2.0"
 
-    val scribe = "2.6.0"
+    val scribe = "2.7.12"
     val scalaCSV = "1.3.6-scalajs"
 
     val scalaJsonSchema = "0.2.6"
