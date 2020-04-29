@@ -74,6 +74,7 @@ object BoxConf extends Logging {
 
   def host = Try(conf("host")).getOrElse("0.0.0.0")
   def port = Try(conf("port").toInt).getOrElse(8080)
+  def origins = Try(conf("origins")).map(_.split(",").toSeq).getOrElse(Seq[String]())
 
   def loggerLevel = Try(conf("logger.level")).getOrElse("warn").toLowerCase match {
     case "trace" => Level.Trace

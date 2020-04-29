@@ -47,7 +47,18 @@ case class FormActions(metadata:JSONMetadata,
       .fromPublisher(jsonAction.findStreamed(query))
       .flatMapConcat( json => Source.fromFuture(db.run{ expandJson(json) }))
   }
-  def streamArray(query:JSONQuery):Source[Json,NotUsed] = streamSeq(query)
+
+
+  def list(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):Future[Seq[Json]] = streamSeq(query).runFold(Seq[Json]()){(acc, row) =>
+
+    val lookup = Lookup.valueExtractor(lookupElements, metadata) _
+
+    val columns = metadata.tabularFields.map{f =>
+      (f, lookup(f,row.js(f).string).map(_.asJson).getOrElse(row.js(f)))
+    }
+    val js = Json.obj(columns:_*)
+    acc ++ Seq(js)
+  }
 
   def get(query:JSONQuery):Future[Option[Json]] = streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x =>
       if(x.length >1){
@@ -62,7 +73,7 @@ case class FormActions(metadata:JSONMetadata,
 
       streamSeq(query).map { json =>
         val row = fields(metadata).map { field =>
-          lookup(field,json.get(field))
+          lookup(field,json.get(field)).getOrElse(json.get(field))
         }
         CSV.writeRow(row)
       }

@@ -154,11 +154,16 @@ case class Form(
       post {
         entity(as[JSONQuery]) { query =>
           logger.info("list")
-          complete(actions(tabularMetadata()){ fs =>
-            fs.streamArray(query).map{ arr =>
-              HttpEntity(ContentTypes.`text/plain(UTF-8)`,arr)
+          complete(
+            for{
+              metadata <- tabularMetadata()
+              formActions = FormActions(metadata,jsonActions,metadataFactory)
+              fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
+              result <- formActions.list(query,fkValues)
+            } yield {
+              result
             }
-          })
+          )
         }
       }
     } ~

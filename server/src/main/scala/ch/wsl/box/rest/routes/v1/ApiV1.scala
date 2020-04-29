@@ -1,0 +1,111 @@
+package ch.wsl.box.rest.routes.v1
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.{Directives, Route}
+import akka.stream.Materializer
+import ch.wsl.box.model.BoxActionsRegistry
+import ch.wsl.box.model.shared.{EntityKind, LoginRequest}
+import ch.wsl.box.rest.logic.{LangHelper, NewsLoader, TableAccess, UIProvider}
+import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, StubMetadataFactory}
+import ch.wsl.box.rest.routes._
+import ch.wsl.box.rest.runtime.Registry
+import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
+import com.softwaremill.session.SessionDirectives.{invalidateSession, optionalSession, setSession, touchRequiredSession}
+import com.softwaremill.session.SessionManager
+import com.softwaremill.session.SessionOptions.{oneOff, usingCookies, usingCookiesOrHeaders}
+
+import scala.concurrent.ExecutionContext
+import scala.util.Success
+
+case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem) {
+
+  import Directives._
+  import ch.wsl.box.rest.utils.Auth
+  import ch.wsl.box.rest.utils.JSONSupport._
+  import io.circe.generic.auto._
+
+  def boxSetSession(v: BoxSession) = setSession(oneOff, usingCookies, v)
+
+
+  def labels = pathPrefix("labels") {
+    path(Segment) { lang =>
+      get {
+        complete(LangHelper(lang).translationTable)
+      }
+    }
+  }
+
+  def conf = path("conf") {
+    get {
+      complete(BoxConf.clientConf)
+    }
+  }
+
+  def logout = path("logout") {
+    get {
+      invalidateSession(oneOff, usingCookies) {
+        complete("ok")
+      }
+    }
+  }
+
+  def login = path("login") {
+    post {
+      entity(as[LoginRequest]) { request =>
+        val usernamePassword = BoxSession.fromLogin(request)
+        onComplete(usernamePassword.userProfile.check) {
+          case Success(true) => boxSetSession(usernamePassword) {
+            complete("ok")
+          }
+          case _ => complete(StatusCodes.Unauthorized, "nok")
+        }
+      }
+    }
+  }
+
+  def ui = path("ui") {
+    get {
+      optionalSession(oneOff, usingCookiesOrHeaders) {
+        case None => complete(UIProvider.forAccessLevel(UIProvider.NOT_LOGGED_IN))
+        case Some(session) => complete(for {
+          accessLevel <- session.userProfile.accessLevel
+          ui <- UIProvider.forAccessLevel(accessLevel)
+        } yield ui)
+      }
+    }
+  }
+
+  def uiFile = pathPrefix("uiFile") {
+    path(Segment) { fileName =>
+      get {
+        optionalSession(oneOff, usingCookiesOrHeaders) { session =>
+          val boxFile = session match {
+            case None => UIProvider.fileForAccessLevel(fileName,UIProvider.NOT_LOGGED_IN)
+            case Some(session) => for {
+              accessLevel <- session.userProfile.accessLevel
+              ui <- UIProvider.fileForAccessLevel(fileName,accessLevel)
+            } yield ui
+          }
+          onSuccess(boxFile){
+            case Some(f) => File.completeFile(f)
+            case None => complete(StatusCodes.NotFound,"Not found")
+          }
+        }
+      }
+    }
+  }
+
+
+  //Serving REST-API
+  val route:Route = pathPrefix("api" / "v1") {
+      labels ~
+      conf ~
+      logout ~
+      login ~
+      ui ~
+      uiFile ~
+      PrivateArea().route
+  }
+
+}

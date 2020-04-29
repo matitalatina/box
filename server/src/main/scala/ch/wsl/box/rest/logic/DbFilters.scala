@@ -344,7 +344,7 @@ trait DBFiltersImpl extends DbFilters with Logging {
     logger.info("Executing like on" + col.toString)
 
     typ(col.`type`) match {
-      case `typSTRING` =>( !(c.asInstanceOf[Rep[String]].toLowerCase like "%"+v.toLowerCase+"%") || (c.asInstanceOf[Rep[String]].length == 0))
+      case `typSTRING` =>( !(c.asInstanceOf[Rep[String]].toLowerCase like "%"+v.toLowerCase+"%") || (c.asInstanceOf[Rep[String]].length === 0))
       case `typOptSTRING` => (!(c.asInstanceOf[Rep[Option[String]]].toLowerCase like "%"+v.toLowerCase+"%") || c.asInstanceOf[Rep[Option[String]]].isEmpty)
       case `typError` => None
       case _ => None

@@ -18,6 +18,9 @@ object UI {
     path("") {
       getFromResource("index.html")
     } ~
+    pathPrefix("webjars") {
+      WebJarsSupport.webJars
+    } ~
     pathPrefix("js") {
       path(Segment) { file =>
         getFromResource("js/"+file)

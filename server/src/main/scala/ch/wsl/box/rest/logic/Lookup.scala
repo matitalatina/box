@@ -23,7 +23,7 @@ object Lookup {
       db.run(io)
   }
 
-  def valueExtractor(lookupElements:Option[Map[String,Seq[Json]]],metadata:JSONMetadata)(field:String, value:String):String = {
+  def valueExtractor(lookupElements:Option[Map[String,Seq[Json]]],metadata:JSONMetadata)(field:String, value:String):Option[String] = {
 
     for{
       elements <- lookupElements
@@ -33,7 +33,7 @@ object Lookup {
       foreignRow <- foreignEntity.find(_.get(lookup.map.valueProperty) == value)
     } yield foreignRow.get(lookup.map.textProperty)
 
-  }.getOrElse(value)
+  }
 
   def values(entity:String,value:String,text:String,query:JSONQuery)(implicit ec: ExecutionContext, db:Database,  mat:Materializer) :Future[Seq[JSONLookup]] = {
     val io = Registry().actions.actions(entity)(ec).get.find(query).map{ _.map{ row =>
