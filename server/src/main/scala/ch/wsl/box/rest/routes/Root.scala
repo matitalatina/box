@@ -21,7 +21,7 @@ import ch.wsl.box.rest.logic.functions.RuntimeFunction
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, EntityMetadataFactory, FormMetadataFactory, StubMetadataFactory}
 import ch.wsl.box.rest.pdf.Pdf
 import ch.wsl.box.rest.runtime.Registry
-import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
+import com.softwaremill.session.{HeaderConfig, InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
 import scribe.Logging
 import akka.http.scaladsl.server.directives.CachingDirectives._
@@ -40,7 +40,8 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
 
 
   lazy val sessionConfig = SessionConfig.fromConfig(akkaConf)
-  implicit lazy val sessionManager = new SessionManager[BoxSession](sessionConfig)
+
+  implicit lazy val sessionManager = new SessionManager[BoxSession](sessionConfig.copy(sessionHeaderConfig = HeaderConfig("X-Box-Auth","X-Box-Auth")))
   implicit lazy val refreshTokenStorage = new InMemoryRefreshTokenStorage[BoxSession] {
     override def log(msg: String): Unit = {}
   }

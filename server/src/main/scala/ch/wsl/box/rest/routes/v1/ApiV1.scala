@@ -13,7 +13,7 @@ import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
 import com.softwaremill.session.SessionDirectives.{invalidateSession, optionalSession, setSession, touchRequiredSession}
 import com.softwaremill.session.SessionManager
-import com.softwaremill.session.SessionOptions.{oneOff, usingCookies, usingCookiesOrHeaders}
+import com.softwaremill.session.SessionOptions._
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
@@ -25,7 +25,8 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
 
-  def boxSetSession(v: BoxSession) = setSession(oneOff, usingCookies, v)
+  def boxSetSessionCookie(v: BoxSession) = setSession(oneOff, usingCookies, v)
+  def boxSetSessionHeader(v: BoxSession) = setSession(oneOff, usingHeaders, v)
 
 
   def labels = pathPrefix("labels") {
@@ -55,7 +56,7 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
       entity(as[LoginRequest]) { request =>
         val usernamePassword = BoxSession.fromLogin(request)
         onComplete(usernamePassword.userProfile.check) {
-          case Success(true) => boxSetSession(usernamePassword) {
+          case Success(true) => boxSetSessionCookie(usernamePassword) {
             complete("ok")
           }
           case _ => complete(StatusCodes.Unauthorized, "nok")
@@ -63,6 +64,21 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
       }
     }
   }
+
+  def loginHeader = path("authorize") {
+    post {
+      entity(as[LoginRequest]) { request =>
+        val usernamePassword = BoxSession.fromLogin(request)
+        onComplete(usernamePassword.userProfile.check) {
+          case Success(true) => boxSetSessionHeader(usernamePassword) {
+            complete("ok")
+          }
+          case _ => complete(StatusCodes.Unauthorized, "nok")
+        }
+      }
+    }
+  }
+
 
   def ui = path("ui") {
     get {
@@ -103,6 +119,7 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
       conf ~
       logout ~
       login ~
+      loginHeader ~
       ui ~
       uiFile ~
       PrivateArea().route
