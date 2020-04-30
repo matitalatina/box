@@ -42,6 +42,7 @@ lazy val server: Project  = (project in file("server"))
     mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot"),
     dockerExposedPorts ++= Seq(8080),
     packageName in Docker := "boxframework/box-framework",
+    dockerUpdateLatest := true,
     dockerEntrypoint := Seq("/opt/docker/bin/boot","-Dconfig.file=/application.conf"),
     git.gitTagToVersionNumber := { tag:String =>
       Some(tag)

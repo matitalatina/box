@@ -37,4 +37,6 @@ jobs:
 
       - name: Push docker image
         run: docker push boxframework/box-framework:${{ steps.previoustag.outputs.tag }}
+      - name: Push latest docker image
+        run: docker push boxframework/box-framework:latest
 
