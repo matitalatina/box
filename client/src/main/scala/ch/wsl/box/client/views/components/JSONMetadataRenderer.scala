@@ -95,9 +95,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
         ( field.`type`,
           field.widget,
           field.lookup,
-          metadata.keys.contains(field.name) & !ClientConf.manualEditSingleKeyFields.contains(metadata.entity + "." + field.name),
+          metadata.keys.contains(field.name) & !( ClientConf.manualEditKeyFields || ClientConf.manualEditSingleKeyFields.contains(metadata.entity + "." + field.name)),
           field.child) match {
-
+          //  TYPE, WIDGET NAME, LOOKUP, IS KEY NOT MANUAL EDITABLE, CHILDS
           case (_, Some(WidgetsNames.hidden), _, _, _)                => HiddenWidget
           case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidthFactory(dataWithChildId)
           case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidgetFactory(dataWithChildId)
