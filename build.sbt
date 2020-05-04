@@ -3,11 +3,7 @@
 //import com.typesafe.sbt.web.SbtWeb
 
 import UDashBuild._
-
-
-import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
-
-
+import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
 /** codegen project containing the customized code generator */
 lazy val codegen  = (project in file("codegen")).settings(
@@ -46,12 +42,16 @@ lazy val server: Project  = (project in file("server"))
     dockerEntrypoint := Seq("/opt/docker/bin/boot","-Dconfig.file=/application.conf"),
     git.gitTagToVersionNumber := { tag:String =>
       Some(tag)
-    }
+    },
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "boxInfo",
+    buildInfoObject := "BoxBuildInfo",
   )
   .enablePlugins(TomcatPlugin)
   .enablePlugins(JavaAppPackaging)
   .enablePlugins(DockerPlugin)
   .enablePlugins(GitVersioning)
+  .enablePlugins(BuildInfoPlugin)
   //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)
   .dependsOn(codegen)

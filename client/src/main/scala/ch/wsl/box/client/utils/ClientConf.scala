@@ -20,10 +20,17 @@ object ClientConf {
   import ch.wsl.box.client.Context._
 
   private var conf:Map[String,String] = Map()
+  private var _version:String = ""
 
-  def load() = REST.conf().map { table =>
+  def load() = for{
+    table <- REST.conf()
+    version <- REST.version()
+  } yield {
     conf = table
+    _version = version
   }
+
+  def version = _version
 
   def pageLength  = Try(conf("page_length").toInt).getOrElse(30)
 //  def lookupMaxRows  = Try(conf("fk_rows").toInt).getOrElse(30)

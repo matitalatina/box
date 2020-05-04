@@ -24,6 +24,7 @@ object REST {
 
   private def client = HttpClient("api/v1")
 
+  def version() = HttpClient("").get[String]("version")
 
   def entities(kind:String):Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).plural}")
 
