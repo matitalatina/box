@@ -10,10 +10,10 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.0")
 
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.9.0")
 
+addSbtPlugin("com.lihaoyi" % "workbench" % "0.4.1")
+
 
 //addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
-
-//addSbtPlugin("com.lihaoyi" % "workbench" % "0.3.0")
 
 //addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.10")
 

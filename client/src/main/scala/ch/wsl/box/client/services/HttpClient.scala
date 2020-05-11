@@ -18,8 +18,14 @@ object HttpClient{
   type Response[T] = Either[ExceptionReport,T]
 }
 
-case class HttpClient(endpoint:String) extends Logging {
+case class HttpClient(_endpoint:String) extends Logging {
 
+  lazy val endpoint = {
+    dom.window.location.port == "12345" match {
+      case false => _endpoint
+      case true => "http://localhost:8080/" + _endpoint
+    }
+  }
 
   import io.circe.parser.decode
   import io.circe.syntax._
@@ -39,6 +45,8 @@ case class HttpClient(endpoint:String) extends Logging {
     blocking {
       val xhr = new dom.XMLHttpRequest()
       xhr.open(method, endpoint + url, false)
+      xhr.withCredentials = true
+      xhr.setRequestHeader("Cache-Control","no-store")
       if (json) {
         xhr.setRequestHeader("Content-Type", "application/json")
       }

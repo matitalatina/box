@@ -4,6 +4,7 @@ import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.{Context, IndexState, LoginState}
 import org.scalajs.dom
 import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
+import io.udash.properties.single.Property
 import scribe.Logging
 
 import scala.concurrent.Future
@@ -27,6 +28,15 @@ object Session extends Logging {
   final val LABELS = "labels"
   final val STATE = "state"
 
+  lazy val logged = {
+    Property(false)
+  }
+
+  isValidSession().map{
+    case true => logged.set(true)
+    case false => logout()
+  }
+
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
     logger.info(s"Setting $key")
     dom.window.sessionStorage.setItem(key,obj.asJson.toString())
@@ -40,6 +50,13 @@ object Session extends Logging {
     } yield query
   }
 
+  def isValidSession():Future[Boolean] = {
+    isSet(USER) match {
+      case false => Future.successful(false)
+      case true => REST.validSession()
+    }
+  }
+
   def isSet(key:String):Boolean = {
     Try(dom.window.sessionStorage.getItem(key).size > 0).isSuccess
   }
@@ -48,7 +65,9 @@ object Session extends Logging {
     dom.window.sessionStorage.setItem(USER,username)
     val fut = for{
       _ <- REST.login(LoginRequest(username,password))
+      _ <- UI.load()
     } yield {
+      logged.set(true)
       if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined && dom.window.sessionStorage.getItem(STATE).trim.length > 0) {
         val state = dom.window.sessionStorage.getItem(STATE).replaceAll("#","")
         logger.info(s"navigate to $state")
@@ -58,13 +77,13 @@ object Session extends Logging {
         dom.window.sessionStorage.removeItem(STATE)
         Navigate.to(IndexState)
       }
-      dom.window.location.reload()
       true
     }
 
     fut.recover{ case t =>
       dom.window.sessionStorage.removeItem(USER)
       dom.window.sessionStorage.removeItem(STATE) // don't persist state if something is wrong
+      logged.set(false)
       t.printStackTrace()
       false
     }
@@ -81,13 +100,15 @@ object Session extends Logging {
   def logout() = {
     Navigate.toAction{ () =>
       dom.window.sessionStorage.removeItem(USER)
-      REST.logout().map { result =>
+      for{
+        _ <- REST.logout()
+        _ <- UI.load()
+      } yield {
+        logged.set(false)
         Navigate.to(LoginState)
       }
     }
   }
-
-  def isLogged() = isSet(USER)
 
   def getQuery():Option[JSONQuery] = get[JSONQuery](QUERY)
   def setQuery(query: JSONQuery) = set(QUERY,query)

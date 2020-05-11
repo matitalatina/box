@@ -24,7 +24,8 @@ object REST {
 
   private def client = HttpClient("api/v1")
 
-  def version() = HttpClient("").get[String]("version")
+  def version() = client.get[String]("/version")
+  def validSession() = client.get[Boolean]("/validSession")
   def cacheReset() = HttpClient("").get[String]("cache/reset")
   def serverReset() = HttpClient("").get[String]("server/reset")
 

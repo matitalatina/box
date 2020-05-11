@@ -94,12 +94,14 @@ lazy val client: Project = (project in file("client"))
     artifactPath in(Compile, packageJSDependencies) :=
       (crossTarget in(Compile, packageJSDependencies)).value / "client-jsdeps.js",
     artifactPath in(Compile, packageMinifiedJSDependencies) :=
-      (crossTarget in(Compile, packageMinifiedJSDependencies)).value / "client-jsdeps.js"
+      (crossTarget in(Compile, packageMinifiedJSDependencies)).value / "client-jsdeps.js",
     //      artifactPath in(Compile, packageScalaJSLauncher) :=
     //        (crossTarget in(Compile, packageScalaJSLauncher)).value / StaticFilesDir / WebContent / "scripts" / "frontend-init.js"
+    workbenchStartMode := WorkbenchStartModes.Manual,
+    workbenchDefaultRootObject := Some(("resources/index-dev.html", "."))
   )
   .enablePlugins(ScalaJSPlugin)
-  //    .enablePlugins(WorkbenchPlugin)
+  .enablePlugins(WorkbenchPlugin)
   //    .settings(workbenchSettings:_*)
   //    .settings(
   //      bootSnippet := "ch.wsl.box.client.Init().main();",
@@ -172,7 +174,7 @@ lazy val root: Project = (project in file("."))
       Def.task{
         (runMain in Compile in server).toTask(" ch.wsl.box.model.DropBox").value
       }
-    ).value
+    ).value,
   )
 
 // Client projects (just one in this case)

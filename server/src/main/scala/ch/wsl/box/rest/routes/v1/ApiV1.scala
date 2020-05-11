@@ -18,6 +18,9 @@ import com.softwaremill.session.SessionOptions._
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
+import boxInfo.BoxBuildInfo
+
+
 case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem) {
 
   import Directives._
@@ -112,9 +115,28 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
     }
   }
 
+  def version = path("version") {
+    get {
+      complete(
+        BoxBuildInfo.version
+      )
+    }
+  }
+
+  def validSession = path("validSession") {
+    get{
+      optionalSession(oneOff, usingCookiesOrHeaders) {
+        case None => complete(false)
+        case Some(session) => complete(true)
+      }
+    }
+  }
+
 
   //Serving REST-API
   val route:Route = pathPrefix("api" / "v1") {
+      version ~
+      validSession ~
       labels ~
       conf ~
       logout ~

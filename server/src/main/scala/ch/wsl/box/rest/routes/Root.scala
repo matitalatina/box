@@ -24,13 +24,11 @@ import ch.wsl.box.rest.runtime.Registry
 import com.softwaremill.session.{HeaderConfig, InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
 import scribe.Logging
-import akka.http.scaladsl.server.directives.CachingDirectives._
 import ch.wsl.box.rest.Box
 import ch.wsl.box.rest.routes.v1.ApiV1
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.megard.akka.http.cors.scaladsl.model.HttpOriginMatcher
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import boxInfo.BoxBuildInfo
 
 import scala.util.{Failure, Success}
 
@@ -54,16 +52,10 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
 
-  def version = path("version") {
-    cachingProhibited {
-      complete(
-        BoxBuildInfo.version
-      )
-    }
-  }
+
 
   def status = path("status") {
-    cachingProhibited {
+    get {
       complete(
         HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"RUNNING"))
       )
@@ -110,7 +102,6 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
     .withAllowedMethods(List(HttpMethods.GET,HttpMethods.POST,HttpMethods.PUT,HttpMethods.DELETE))
 
   val route:Route = UI.clientFiles ~
-    version ~
     status ~
     ddl ~
     resetServer ~

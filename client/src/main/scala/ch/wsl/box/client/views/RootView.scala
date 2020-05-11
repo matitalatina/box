@@ -37,25 +37,11 @@ class RootView() extends ContainerView {
   private val child: Element = div().render
 
 
-  private val menu = if(Session.isLogged()) {
-    Seq(MenuLink(Labels.header.home,IndexState)) ++
-      {if(UI.enableAllTables) {
-        Seq(
-          MenuLink("Admin",AdminState),
-          MenuLink(Labels.header.entities, EntitiesState("entity","")),
-          MenuLink(Labels.header.tables, EntitiesState("table","")),
-          MenuLink(Labels.header.views, EntitiesState("view","")),
-          MenuLink(Labels.header.forms, EntitiesState("form","")),
-          MenuLink(Labels.header.exports, DataListState(DataKind.EXPORT,"")),
-          MenuLink(Labels.header.functions, DataListState(DataKind.FUNCTION,""))
-        )
-      } else Seq()}
-//      Seq(MenuLink("BoxTables", EntitiesState("table","")))
-  } else Seq()
+
 
 
   private def content = div(BootstrapStyles.containerFluid)(
-    Header.navbar(UI.title,menu),
+    Header.navbar(UI.title),
     div(ClientConf.style.notificationArea,
       repeat(Notification.list){ notice =>
         div(ClientConf.style.notification,bind(notice)).render
