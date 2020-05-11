@@ -34,6 +34,10 @@ case class IDsVM(isLastPage:Boolean,
                     count:Int    //stores the number of rows resulting from the query without paging
                    )
 
+object IDsVMFactory{
+  def empty = IDsVM(true,1,Seq(),0)
+}
+
 case class Row(data: Seq[String])
 
 case class FieldQuery(field:JSONField, sort:String, filterValue:String, filterOperator:String)
@@ -43,7 +47,7 @@ case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQuerie
 
 
 object EntityTableModel extends HasModelPropertyCreator[EntityTableModel]{
-  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDsVM(true,1,Seq(),0),1, false)
+  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDsVMFactory.empty,1, false)
   implicit val blank: Blank[EntityTableModel] =
     Blank.Simple(empty)
 }
@@ -132,8 +136,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       qEncoded = encodeFk(fields,query)
 
       access <- REST.writeAccess(form.entity,state.kind)
-      csv <- REST.csv(state.kind, Session.lang(), state.entity, qEncoded)
-      ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
+//      csv <- REST.csv(state.kind, Session.lang(), state.entity, qEncoded)
+//      ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
 //      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
       specificKind <- REST.specificKind(state.kind, Session.lang(), state.entity)
@@ -143,7 +147,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       val m = EntityTableModel(
         name = state.entity,
         kind = specificKind,
-        rows = csv.map(Row(_)),
+        rows = Seq(),
         fieldQueries = form.tabularFields.flatMap(x => form.fields.find(_.name == x)).map{ field =>
 
           val operator = query.filter.find(_.column == field.name).flatMap(_.operator).getOrElse(Filter.default(field))
@@ -157,12 +161,12 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         },
         metadata = Some(form),
         selectedRow = None,
-        ids = IDsVM.fromIDs(ids),
-        pages = Navigation.pageCount(ids.count),
+        ids = IDsVMFactory.empty,
+        pages = Navigation.pageCount(0),
         write = access
       )
 
-      saveIds(ids,query)
+      saveIds(IDs(true,1,Seq(),0),query)
 
       model.set(m)
       model.subProp(_.name).set(state.entity)  //it is not set by the above line

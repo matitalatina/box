@@ -27,7 +27,6 @@ object Header {
   import ch.wsl.box.client.Context
 
   private val links:Seq[Modifier] = Seq(produce(Session.logged) { logged =>
-    println(logged)
     if(!logged) span().render else {
       val l = Seq(MenuLink(Labels.header.home, IndexState)) ++ {
         if (UI.enableAllTables) {

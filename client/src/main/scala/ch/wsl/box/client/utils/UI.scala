@@ -15,7 +15,6 @@ object UI {
 
   def load() = REST.ui().map { ui =>
     this.ui = ui
-    println(ui)
   }
 
   case class MenuEntry(name:String,url:String)
