@@ -30,6 +30,12 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
     }
   }
 
+  def boxAdmins = path("box-admins") {
+    get {
+      complete(BoxFormMetadataFactory().list)
+    }
+  }
+
   def createStub = pathPrefix("create-stub"){
     pathPrefix(Segment) { entity =>
       complete(StubMetadataFactory.forEntity(entity))
@@ -52,9 +58,12 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
 
 
 
+
+
   val route = Auth.onlyAdminstrator(session) { //need to be at the end or non administrator request are not resolved
     //access to box tables for administrator
     forms ~
+    boxAdmins ~
     createStub  ~
     file  ~
     entity   ~
