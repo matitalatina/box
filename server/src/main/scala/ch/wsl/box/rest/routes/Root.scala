@@ -109,7 +109,7 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
     ddl ~
     resetServer ~
     resetCache ~
-    cors(settings) {
+    cors() {
       ApiV1().route
     }
 
