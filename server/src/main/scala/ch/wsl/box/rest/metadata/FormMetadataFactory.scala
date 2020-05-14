@@ -56,7 +56,8 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
   }.map{_.map(_.name)}
 
   def of(id:Int, lang:String):Future[JSONMetadata] = {
-    FormMetadataFactory.cacheId.lift((up.name, id,lang)) match {
+    val cacheKey = (up.name, id,lang)
+    FormMetadataFactory.cacheId.lift(cacheKey) match {
       case Some(r) => r
       case None => {
         logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${FormMetadataFactory.cacheName}")
@@ -64,14 +65,20 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
           form <- Form.table if form.form_id === id
         } yield form
         val result = getForm(formQuery,lang)
-        if(BoxConf.enableCache) FormMetadataFactory.cacheId = FormMetadataFactory.cacheId ++ Map((up.name, id,lang) -> result)
+        if(BoxConf.enableCache) FormMetadataFactory.cacheId = FormMetadataFactory.cacheId ++ Map(cacheKey -> result)
+        result.onComplete{ x =>
+          if(x.isFailure) {
+            FormMetadataFactory.cacheId = FormMetadataFactory.cacheId.filterKeys(_ != cacheKey)
+          }
+        }
         result
       }
     }
   }
 
   def of(name:String, lang:String):Future[JSONMetadata] = {
-    FormMetadataFactory.cacheName.lift((up.name, name,lang)) match {
+    val cacheKey = (up.name, name,lang)
+    FormMetadataFactory.cacheName.lift(cacheKey) match {
       case Some(r) => r
       case None => {
         logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${FormMetadataFactory.cacheName}")
@@ -79,7 +86,12 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
           form <- Form.table if form.name === name
         } yield form
         val result = getForm(formQuery,lang)
-        if(BoxConf.enableCache) FormMetadataFactory.cacheName = FormMetadataFactory.cacheName ++ Map((up.name, name,lang) -> result)
+        if(BoxConf.enableCache) FormMetadataFactory.cacheName = FormMetadataFactory.cacheName ++ Map(cacheKey -> result)
+        result.onComplete{x =>
+          if(x.isFailure) {
+            FormMetadataFactory.cacheName = FormMetadataFactory.cacheName.filterKeys(_ != cacheKey)
+          }
+        }
         result
       }
     }

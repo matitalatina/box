@@ -137,6 +137,7 @@ object EntityMetadataFactory extends Logging {
 
         }.flatten
 
+        val cacheKey = (up.name, table, lang, lookupMaxRows)
 
         val result = for {
           c <- schema.columns
@@ -148,7 +149,12 @@ object EntityMetadataFactory extends Logging {
         }
         if(BoxConf.enableCache) {
           logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)
-          cacheTable = cacheTable ++ Map((up.name, table, lang, lookupMaxRows) -> result)
+          cacheTable = cacheTable ++ Map(cacheKey -> result)
+        }
+        result.onComplete{ x =>
+          if(x.isFailure) {
+            cacheTable = cacheTable.filterKeys(_ != cacheKey)
+          }
         }
         result
       }
@@ -167,6 +173,11 @@ object EntityMetadataFactory extends Logging {
         }
 
         if(BoxConf.enableCache) cacheKeys = cacheKeys ++ Map((table) -> result)
+        result.onComplete{x =>
+          if(x.isFailure) {
+            cacheKeys = cacheKeys.filterKeys(_ != table)
+          }
+        }
         result
       }
     }
@@ -206,7 +217,14 @@ object EntityMetadataFactory extends Logging {
           }.getOrElse(ColType("Unknown",false))
         }
 
-        if(BoxConf.enableCache) cacheFields = cacheFields ++ Map((table,field) -> result)
+        val cacheKey = (table,field)
+
+        if(BoxConf.enableCache) cacheFields = cacheFields ++ Map( cacheKey -> result)
+        result.onComplete{x =>
+          if(x.isFailure) {
+            cacheFields = cacheFields.filterKeys(_ != cacheKey)
+          }
+        }
         Await.result(result,20.seconds)
       }
     }

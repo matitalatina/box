@@ -56,7 +56,7 @@ object BoxConf extends Logging {
     val cookieName = Try(conf("cookie.name")).getOrElse("_boxsession_myapp")
     val maxAge = Try(conf("max-age")).getOrElse("2000")
     val serverSecret = Try(conf("server-secret")).getOrElse {
-      logger.warn("Set server secret in application.conf table, use the default value only for development")
+      logger.warn("Set server secret in application.test.conf table, use the default value only for development")
       "changeMe530573985739845704357308s70487s08970897403854s038954s38754s30894387048s09e8u408su5389s5"
     }
 
@@ -74,7 +74,7 @@ object BoxConf extends Logging {
 
   def host = Try(conf("host")).getOrElse("0.0.0.0")
   def port = Try(conf("port").toInt).getOrElse(8080)
-  def origins = Try(conf("origins")).map(_.split(",").toSeq).getOrElse(Seq[String]())
+  def origins = Try(conf("origins")).map(_.split(",").toSeq.map(_.trim)).getOrElse(Seq[String]())
 
   def loggerLevel = Try(conf("logger.level")).getOrElse("warn").toLowerCase match {
     case "trace" => Level.Trace
