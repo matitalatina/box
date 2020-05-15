@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.routes
 
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{HttpHeader, HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.headers.{HttpOrigin, HttpOriginRange, Origin, ResponseHeader, `Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`}
 import akka.http.scaladsl.server._
 
@@ -10,7 +10,7 @@ class CORSHandler(authHeaderName:String,_origins:Seq[String]) {
 
   val origins = _origins.map(o => HttpOrigin(o))
 
-  private def corsResponseHeaders(origin:HttpOrigin) = {
+  private def corsResponseHeaders(origin:HttpOrigin):List[HttpHeader] = {
     val origs = origins.contains(origin) match {
       case true => `Access-Control-Allow-Origin`(origin)
       case false => `Access-Control-Allow-Origin`.forRange(HttpOriginRange(origins:_*))
@@ -18,7 +18,8 @@ class CORSHandler(authHeaderName:String,_origins:Seq[String]) {
     List(
       origs,
       `Access-Control-Allow-Credentials`(true),
-      `Access-Control-Allow-Headers`("Content-Type",authHeaderName)
+      `Access-Control-Allow-Headers`("Content-Type",authHeaderName),
+      `Access-Control-Allow-Methods`(OPTIONS, POST, PUT, GET, DELETE)
     )
   }
 
@@ -32,8 +33,7 @@ class CORSHandler(authHeaderName:String,_origins:Seq[String]) {
 
   //this handles preflight OPTIONS requests.
   private def preflightRequestHandler: Route = options {
-    complete(HttpResponse(StatusCodes.OK).
-      withHeaders(`Access-Control-Allow-Methods`(OPTIONS, POST, PUT, GET, DELETE)))
+    complete(HttpResponse(StatusCodes.OK))
   }
 
   // Wrap the Route with this method to enable adding of CORS headers
