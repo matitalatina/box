@@ -38,7 +38,7 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
 
   lazy val sessionConfig = SessionConfig.fromConfig(akkaConf)
 
-  val authHeaderName = "X-Box-Auth"
+  val authHeaderName = "x-box-auth"
 
   val cors = new CORSHandler(authHeaderName,origins)
 

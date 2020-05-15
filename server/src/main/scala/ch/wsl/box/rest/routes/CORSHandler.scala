@@ -1,8 +1,12 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.model.{HttpHeader, HttpResponse, StatusCodes}
-import akka.http.scaladsl.model.headers.{HttpOrigin, HttpOriginRange, Origin, ResponseHeader, `Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`}
+import akka.http.scaladsl.model.headers.{HttpOrigin, HttpOriginRange, Origin, ResponseHeader, `Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`, `Access-Control-Expose-Headers`}
 import akka.http.scaladsl.server._
+
+object CORSHandler {
+  def all = new CORSHandler("no-header",Seq("*"))
+}
 
 class CORSHandler(authHeaderName:String,_origins:Seq[String]) {
   import Directives._
@@ -19,6 +23,7 @@ class CORSHandler(authHeaderName:String,_origins:Seq[String]) {
       origs,
       `Access-Control-Allow-Credentials`(true),
       `Access-Control-Allow-Headers`("Content-Type",authHeaderName),
+      `Access-Control-Expose-Headers`(authHeaderName),
       `Access-Control-Allow-Methods`(OPTIONS, POST, PUT, GET, DELETE)
     )
   }
