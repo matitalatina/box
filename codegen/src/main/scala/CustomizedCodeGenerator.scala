@@ -14,7 +14,8 @@ case class GeneratedFiles(
                        generatedRoutes: RoutesGenerator,
                        entityActionsRegistry: EntityActionsRegistryGenerator,
                        fileAccessGenerator: FileAccessGenerator,
-                       registry: RegistryGenerator
+                       registry: RegistryGenerator,
+                       fieldRegistry: FieldAccessGenerator
                          )
 
 object CustomizedCodeGenerator extends BaseCodeGenerator {
@@ -33,7 +34,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     })
 
     val calculatedViews = enabledViews.map(_.name.name).distinct
-    val calculatedTables= enabledTables.map(_.name.name).distinct
+    val calculatedTables = enabledTables.map(_.name.name).distinct
 
     GeneratedFiles(
       entities = EntitiesGenerator(modelWithoutFiles,dbConf),
@@ -41,7 +42,8 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       generatedRoutes = RoutesGenerator(calculatedViews,calculatedTables,dbModel),
       entityActionsRegistry = EntityActionsRegistryGenerator(calculatedViews,calculatedTables,dbModel),
       fileAccessGenerator = FileAccessGenerator(dbModel,dbConf),
-      registry = RegistryGenerator(dbModel)
+      registry = RegistryGenerator(dbModel),
+      fieldRegistry = FieldAccessGenerator(calculatedTables ++ calculatedViews,dbModel)
     )
 
   }
@@ -90,7 +92,11 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "FileTables"
     )
 
+    files.fieldRegistry.writeToFile(args(0),"ch.wsl.box.generated","GenFieldRegistry.scala","")
+
+
     files.registry.writeToFile(args(0),"ch.wsl.box.generated","","GenRegistry.scala")
+
 
 
 

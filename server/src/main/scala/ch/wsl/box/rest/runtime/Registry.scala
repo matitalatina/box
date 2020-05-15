@@ -9,12 +9,14 @@ trait RegistryInstance{
   def fileRoutes:GeneratedFileRoutes
   def routes: GeneratedRoutes
   def actions: ActionRegistry
+  def fields: FieldRegistry
 }
 
 case class GeneratedRegistry(
                    fileRoutes:GeneratedFileRoutes,
                    routes: GeneratedRoutes,
-                   actions: ActionRegistry
+                   actions: ActionRegistry,
+                   fields: FieldRegistry
                    ) extends RegistryInstance
 
 object Registry extends Logging {
@@ -73,6 +75,11 @@ object Registry extends Logging {
         modelPackages = "Entities"
       )
 
+      val fieldsCode =  files.fieldRegistry.generate(
+        pkg = "",
+        modelPackages = ""
+      )
+
       val source = s"""
                       |${dropPackage(entitiesCode)}
                       |
@@ -84,10 +91,13 @@ object Registry extends Logging {
                       |
                       |${dropPackage(actionsCode)}
                       |
+                      |${dropPackage(fieldsCode)}
+                      |
                       |ch.wsl.box.rest.runtime.GeneratedRegistry(
                       | routes = GenRoutes,
                       | fileRoutes = FileRoutes,
-                      | actions = EntityActionsRegistry
+                      | actions = EntityActionsRegistry,
+                      | fields = FieldAccessRegistry
                       |)
                       |""".stripMargin
 

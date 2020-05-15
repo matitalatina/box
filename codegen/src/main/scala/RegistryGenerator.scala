@@ -17,6 +17,7 @@ case class RegistryGenerator(model:Model) extends slick.codegen.SourceCodeGenera
        |    override val routes = GeneratedRoutes
        |    override val fileRoutes = FileRoutes
        |    override val actions = EntityActionsRegistry
+       |    override val fields = FieldAccessRegistry
        |
        |}
            """.stripMargin

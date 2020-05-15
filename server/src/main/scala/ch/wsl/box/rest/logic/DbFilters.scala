@@ -11,7 +11,7 @@ import ch.wsl.box.shared.utils.DateTimeFormatters
 import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.metadata.ColType
+import ch.wsl.box.rest.runtime.ColType
 
 import scala.util.{Failure, Try}
 
@@ -84,25 +84,25 @@ trait DBFiltersImpl extends DbFilters with Logging {
   //"USER-DEFINED" -> JSONFieldTypes.STRING
 
   def typ(myType:ColType):Int = myType match{
-    case ColType("smallint",true) => typOptSHORT
-    case ColType("double precision" | "real" | "numeric",true) => typOptDOUBLE
+    case ColType("Short",true) => typOptSHORT
+    case ColType("Double",true) => typOptDOUBLE
     //case "BigDecimal" | "scala.math.BigDecimal" => typBIGDECIMAL //when it's used?
-    case ColType("integer",true) => typOptINT
-    case ColType("bigint",true) => typOptLONG
-    case ColType("text" | "character varying" | "character",true) => typOptSTRING
-    case ColType("boolean",true) => typOptBOOLEAN
-    case ColType("timestamp without time zone",true) => typOptTIMESTAMP
-    case ColType("date",true) => typOptDATE
-    case ColType("time without time zone",true) => typOptTIME
-    case ColType("smallint",false) => typSHORT
-    case ColType("double precision" | "real" | "numeric",false) => typDOUBLE
-    case ColType("integer",false) => typINT
-    case ColType("bigint",false) => typLONG
-    case ColType("text" | "character varying" | "character",false) => typSTRING
-    case ColType("boolean",false) => typBOOLEAN
-    case ColType("timestamp without time zone",false) => typTIMESTAMP
-    case ColType("date",false) => typDATE
-    case ColType("time without time zone",false) => typTIME
+    case ColType("Int",true) => typOptINT
+    case ColType("Long",true) => typOptLONG
+    case ColType("String",true) => typOptSTRING
+    case ColType("Boolean",true) => typOptBOOLEAN
+    case ColType("java.sql.Timestamp",true) => typOptTIMESTAMP
+    case ColType("java.time.LocalDate",true) => typOptDATE
+    case ColType("java.time.LocalTime",true) => typOptTIME
+    case ColType("Short",false) => typSHORT
+    case ColType("Double",false) => typDOUBLE
+    case ColType("Int",false) => typINT
+    case ColType("Long",false) => typLONG
+    case ColType("String",false) => typSTRING
+    case ColType("Boolean",false) => typBOOLEAN
+    case ColType("java.sql.Timestamp",false) => typTIMESTAMP
+    case ColType("java.time.LocalDate",false) => typDATE
+    case ColType("java.time.LocalTime",false) => typTIME
     case _ => {
       logger.error("Type mapping for: " + myType + " not found")
       typError

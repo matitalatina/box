@@ -5,7 +5,8 @@ import slick.lifted.{AbstractTable, TableQuery}
 
 import scala.reflect.runtime.universe._
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.metadata.{ColType, EntityMetadataFactory}
+import ch.wsl.box.rest.metadata.EntityMetadataFactory
+import ch.wsl.box.rest.runtime.ColType
 
 import scala.concurrent.ExecutionContext
 

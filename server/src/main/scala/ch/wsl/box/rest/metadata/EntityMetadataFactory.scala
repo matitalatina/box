@@ -11,11 +11,11 @@ import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.runtime.Registry
+import ch.wsl.box.rest.runtime.{ColType, Registry}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-case class ColType(name:String,nullable:Boolean)
+
 
 object EntityMetadataFactory extends Logging {
 
@@ -27,12 +27,10 @@ object EntityMetadataFactory extends Logging {
 
   private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()   //  (up.name, table, lang,lookupMaxRows)
   private var cacheKeys = Map[String, Future[Seq[String]]]()                            //  (table)
-  private var cacheTableFields = Map[String, Future[Map[String,ColType]]]()             //  table
 
   def resetCache() = {
     cacheTable = Map()
     cacheKeys = Map()
-    cacheTableFields = Map()
   }
 
   def resetCacheForEntity(e:String) = {
@@ -198,37 +196,9 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def tableFields(table:String)(implicit ec:ExecutionContext):Future[Map[String,ColType]] = {
-    cacheTableFields.lift(table) match {
-      case Some(t) => t
-      case None => {
-        val result = for{
-          db <- new PgInformationSchema(table, Auth.adminDB, excludeFields).columns
-          box <- new PgInformationSchema(table, Auth.boxDB, excludeFields).columns
-        } yield {
-
-          def toColType(c:PgColumn) = ColType(
-            name = c.data_type,
-            nullable = c.nullable
-          )
-
-          (db ++ box).map(x => x.column_name -> toColType(x)).toMap
-        }
-
-        if(BoxConf.enableCache) cacheTableFields = cacheTableFields ++ Map( table -> result)
-        result.onComplete{x =>
-          if(x.isFailure) {
-            cacheTableFields = cacheTableFields.filterKeys(_ != table)
-          }
-        }
-        result
-      }
-    }
-  }
 
   def fieldType(table:String,field:String)(implicit ec:ExecutionContext):ColType = {
-    val t = Await.result(tableFields(table),20.seconds)
-    t.get(field).getOrElse(ColType("Unknown",true))
+    Registry().fields.field(table,field)
   }
 
 
