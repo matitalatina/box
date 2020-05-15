@@ -26,9 +26,7 @@ import com.typesafe.config.Config
 import scribe.Logging
 import ch.wsl.box.rest.Box
 import ch.wsl.box.rest.routes.v1.ApiV1
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import ch.megard.akka.http.cors.scaladsl.model.{HttpHeaderRange, HttpOriginMatcher}
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+
 
 import scala.util.{Failure, Success}
 
@@ -41,6 +39,8 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
   lazy val sessionConfig = SessionConfig.fromConfig(akkaConf)
 
   val authHeaderName = "X-Box-Auth"
+
+  val cors = new CORSHandler(authHeaderName,origins)
 
   implicit lazy val sessionManager = new SessionManager[BoxSession](sessionConfig.copy(sessionHeaderConfig = HeaderConfig(authHeaderName,authHeaderName)))
   implicit lazy val refreshTokenStorage = new InMemoryRefreshTokenStorage[BoxSession] {
@@ -97,19 +97,12 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
     }
   }
 
-
-  val settings = CorsSettings.defaultSettings
-    //.withAllowGenericHttpRequests(false)
-    .withAllowedHeaders(HttpHeaderRange(authHeaderName,"cache-control","content-type"))
-    .withAllowedOrigins(HttpOriginMatcher.strict(origins.map(x => HttpOrigin(x)):_*))
-    .withAllowedMethods(List(HttpMethods.GET,HttpMethods.POST,HttpMethods.PUT,HttpMethods.DELETE,HttpMethods.OPTIONS))
-
   val route:Route = UI.clientFiles ~
     status ~
     ddl ~
     resetServer ~
     resetCache ~
-    cors() {
+    cors.handle {
       ApiV1().route
     }
 
