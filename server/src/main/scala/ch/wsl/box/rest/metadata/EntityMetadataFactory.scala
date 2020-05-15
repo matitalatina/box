@@ -27,7 +27,7 @@ object EntityMetadataFactory extends Logging {
 
   private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()   //  (up.name, table, lang,lookupMaxRows)
   private var cacheKeys = Map[String, Future[Seq[String]]]()                            //  (table)
-  private var cacheFields = Map[(String,String), Future[ColType]]()                     //  (table,field)
+  private var cacheTableFields = Map[String, Future[Map[String,ColType]]]()             //  table
 
   def resetCache() = {
     cacheTable = Map()
@@ -214,8 +214,6 @@ object EntityMetadataFactory extends Logging {
 
           (db ++ box).map(x => x.column_name -> toColType(x)).toMap
         }
-
-        val cacheKey = (table,field)
 
         if(BoxConf.enableCache) cacheTableFields = cacheTableFields ++ Map( table -> result)
         result.onComplete{x =>
