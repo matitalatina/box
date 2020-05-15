@@ -56,7 +56,7 @@ object BoxConf extends Logging {
     val cookieName = Try(conf("cookie.name")).getOrElse("_boxsession_myapp")
     val maxAge = Try(conf("max-age")).getOrElse("2000")
     val serverSecret = Try(conf("server-secret")).getOrElse {
-      logger.warn("Set server secret in application.test.conf table, use the default value only for development")
+      logger.warn("Set server secret in box.conf table, use the default value only for development")
       "changeMe530573985739845704357308s70487s08970897403854s038954s38754s30894387048s09e8u408su5389s5"
     }
 
