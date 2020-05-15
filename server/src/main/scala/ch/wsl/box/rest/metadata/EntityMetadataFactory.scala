@@ -25,9 +25,9 @@ object EntityMetadataFactory extends Logging {
 //  private val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes")
   private val excludeFields:Seq[String] = dbConf.as[Seq[String]]("generator.excludeFields")
 
-  private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()
-  private var cacheKeys = Map[String, Future[Seq[String]]]()
-  private var cacheTableFields = Map[String, Future[Map[String,ColType]]]()
+  private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()   //  (up.name, table, lang,lookupMaxRows)
+  private var cacheKeys = Map[String, Future[Seq[String]]]()                            //  (table)
+  private var cacheFields = Map[(String,String), Future[ColType]]()                     //  (table,field)
 
   def resetCache() = {
     cacheTable = Map()
@@ -63,7 +63,7 @@ object EntityMetadataFactory extends Logging {
     cacheTable.lift((up.name, table, lang,lookupMaxRows)) match {
       case Some(r) => r
       case None => {
-        logger.info(s"Metadata table cache miss! cache key: ($table,$lang,$lookupMaxRows), cache: ${cacheTable}")
+        logger.info(s"Metadata table cache miss! cache key: ($table, $lang, $lookupMaxRows), cache: ${cacheTable}")
 
         val schema = new PgInformationSchema(table, db, excludeFields)
 
@@ -82,7 +82,7 @@ object EntityMetadataFactory extends Logging {
             fk match {
               case Some(fk) => {
                 val count = db.run(Registry().actions.tableActions(ec)(fk.referencingTable).count().map(_.count))
-                if (Await.result(count, 10 second) <= lookupMaxRows) {
+                if (Await.result(count, 30 second) <= lookupMaxRows) {
                   if (constraints.contains(fk.constraintName)) {
                     logger.info("error: " + fk.constraintName)
                     logger.info(field.column_name)
@@ -215,6 +215,7 @@ object EntityMetadataFactory extends Logging {
           (db ++ box).map(x => x.column_name -> toColType(x)).toMap
         }
 
+        val cacheKey = (table,field)
 
         if(BoxConf.enableCache) cacheTableFields = cacheTableFields ++ Map( table -> result)
         result.onComplete{x =>

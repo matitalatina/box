@@ -30,17 +30,17 @@ object FormMetadataFactory{
    *
    * cache should be resetted when an external field changes
    */
-  private var cacheName = Map[(String, String, String),Future[JSONMetadata]]()
-  private var cacheId = Map[(String, Int, String),Future[JSONMetadata]]()
+  private var cacheFormName = Map[(String, String, String),Future[JSONMetadata]]()   //(up.name, form id, lang)
+  private var cacheFormId = Map[(String, Int, String),Future[JSONMetadata]]()        //(up.name, from name, lang)
 
   def resetCache() = {
-    cacheName = Map()
-    cacheId = Map()
+    cacheFormName = Map()
+    cacheFormId = Map()
   }
 
   def resetCacheForEntity(e:String) = {
-    cacheId = cacheId.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
-    cacheName = cacheName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
+    cacheFormId = cacheFormId.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
+    cacheFormName = cacheFormName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
   }
 
 }
@@ -57,18 +57,18 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
   def of(id:Int, lang:String):Future[JSONMetadata] = {
     val cacheKey = (up.name, id,lang)
-    FormMetadataFactory.cacheId.lift(cacheKey) match {
+    FormMetadataFactory.cacheFormId.lift(cacheKey) match {
       case Some(r) => r
       case None => {
-        logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${FormMetadataFactory.cacheName}")
+        logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${FormMetadataFactory.cacheFormName}")
         val formQuery: Query[Form, Form_row, Seq] = for {
           form <- Form.table if form.form_id === id
         } yield form
         val result = getForm(formQuery,lang)
-        if(BoxConf.enableCache) FormMetadataFactory.cacheId = FormMetadataFactory.cacheId ++ Map(cacheKey -> result)
+        if(BoxConf.enableCache) FormMetadataFactory.cacheFormId = FormMetadataFactory.cacheFormId ++ Map(cacheKey -> result)
         result.onComplete{ x =>
           if(x.isFailure) {
-            FormMetadataFactory.cacheId = FormMetadataFactory.cacheId.filterKeys(_ != cacheKey)
+            FormMetadataFactory.cacheFormId = FormMetadataFactory.cacheFormId.filterKeys(_ != cacheKey)
           }
         }
         result
@@ -78,18 +78,18 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
   def of(name:String, lang:String):Future[JSONMetadata] = {
     val cacheKey = (up.name, name,lang)
-    FormMetadataFactory.cacheName.lift(cacheKey) match {
+    FormMetadataFactory.cacheFormName.lift(cacheKey) match {
       case Some(r) => r
       case None => {
-        logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${FormMetadataFactory.cacheName}")
+        logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${FormMetadataFactory.cacheFormName}")
         val formQuery: Query[Form, Form_row, Seq] = for {
           form <- Form.table if form.name === name
         } yield form
         val result = getForm(formQuery,lang)
-        if(BoxConf.enableCache) FormMetadataFactory.cacheName = FormMetadataFactory.cacheName ++ Map(cacheKey -> result)
+        if(BoxConf.enableCache) FormMetadataFactory.cacheFormName = FormMetadataFactory.cacheFormName ++ Map(cacheKey -> result)
         result.onComplete{x =>
           if(x.isFailure) {
-            FormMetadataFactory.cacheName = FormMetadataFactory.cacheName.filterKeys(_ != cacheKey)
+            FormMetadataFactory.cacheFormName = FormMetadataFactory.cacheFormName.filterKeys(_ != cacheKey)
           }
         }
         result

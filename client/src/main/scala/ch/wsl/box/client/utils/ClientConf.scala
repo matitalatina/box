@@ -41,6 +41,7 @@ object ClientConf {
   def displayIndexNews = Try(conf("display.index.news").toBoolean).getOrElse(false)
   def displayIndexHtml = Try(conf("display.index.html").toBoolean).getOrElse(false)
 
+  def menuSeparator = Try(conf("menu.separator")).getOrElse(" ")
 
   def colorMain = Try(conf("color.main")).getOrElse("#006268")
   def colorMainText = Try(conf("color.main.text")).getOrElse("#ffffff")
