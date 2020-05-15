@@ -27,12 +27,12 @@ object EntityMetadataFactory extends Logging {
 
   private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()
   private var cacheKeys = Map[String, Future[Seq[String]]]()
-  private var cacheFields = Map[(String,String), Future[ColType]]()
+  private var cacheTableFields = Map[String, Future[Map[String,ColType]]]()
 
   def resetCache() = {
     cacheTable = Map()
     cacheKeys = Map()
-    cacheFields = Map()
+    cacheTableFields = Map()
   }
 
   def resetCacheForEntity(e:String) = {
@@ -198,9 +198,9 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def fieldType(table:String,field:String)(implicit ec:ExecutionContext) = {
-    cacheFields.lift((table,field)) match {
-      case Some(t) => Await.result(t,20.seconds)
+  def tableFields(table:String)(implicit ec:ExecutionContext):Future[Map[String,ColType]] = {
+    cacheTableFields.lift(table) match {
+      case Some(t) => t
       case None => {
         val result = for{
           db <- new PgInformationSchema(table, Auth.adminDB, excludeFields).columns
@@ -212,23 +212,24 @@ object EntityMetadataFactory extends Logging {
             nullable = c.nullable
           )
 
-          db.find(_.column_name == field).map(toColType).orElse{
-            box.find(_.column_name == field).map(toColType)
-          }.getOrElse(ColType("Unknown",false))
+          (db ++ box).map(x => x.column_name -> toColType(x)).toMap
         }
 
-        val cacheKey = (table,field)
 
-        if(BoxConf.enableCache) cacheFields = cacheFields ++ Map( cacheKey -> result)
+        if(BoxConf.enableCache) cacheTableFields = cacheTableFields ++ Map( table -> result)
         result.onComplete{x =>
           if(x.isFailure) {
-            cacheFields = cacheFields.filterKeys(_ != cacheKey)
+            cacheTableFields = cacheTableFields.filterKeys(_ != table)
           }
         }
-        Await.result(result,20.seconds)
+        result
       }
     }
+  }
 
+  def fieldType(table:String,field:String)(implicit ec:ExecutionContext):ColType = {
+    val t = Await.result(tableFields(table),20.seconds)
+    t.get(field).getOrElse(ColType("Unknown",true))
   }
 
 
