@@ -11,6 +11,7 @@ import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.model.BoxFieldAccessRegistry
 import ch.wsl.box.rest.runtime.{ColType, Registry}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -198,7 +199,12 @@ object EntityMetadataFactory extends Logging {
 
 
   def fieldType(table:String,field:String)(implicit ec:ExecutionContext):ColType = {
-    Registry().fields.field(table,field)
+    val dbField = Registry().fields.field(table,field)
+    if(dbField.name != "Unknown") {
+      dbField
+    } else {
+      BoxFieldAccessRegistry.field(table,field)
+    }
   }
 
 
