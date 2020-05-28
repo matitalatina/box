@@ -42,7 +42,6 @@ class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[
   }
 
   def generateStub(entity:String) = {
-    println(entity)
     REST.generateStub(entity)
   }
 }

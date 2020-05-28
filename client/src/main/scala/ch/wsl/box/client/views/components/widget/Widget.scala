@@ -76,10 +76,7 @@ trait Widget extends Logging {
 
   protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Json] = Future.sequence(widgets.map(_.beforeSave(data,metadata))).map{ fields =>
     fields.foldRight(JsonObject.empty.asJson){ (a,result) =>
-      logger.info(s"merging $a into $result")
-      val r = a.deepMerge(result)
-      logger.info(s"result: $r")
-      r
+      a.deepMerge(result)
     }
   }
   protected def afterSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(data,metadata))).map(_ => Unit)
@@ -92,21 +89,19 @@ trait ComponentWidgetFactory{
   def create(id:Property[String], prop:Property[Json], field:JSONField):Widget
 }
 
+object ChildWidget {
+  final val childTag = "$child-element"
+}
 
 trait ChildWidget extends Widget with Logging {
 
-  private final val childTag = "$child-element"
 
   def data:Property[Json]
 
-  private val childId = UUID.randomUUID().toString
-
-  private def attachChild(js:Json):Json = js.deepMerge(Json.obj((childTag, childId.asJson)))
-
-  protected val dataWithChildId:Property[Json] = data.transform(attachChild, x => x)
 
   def isOf(js:Json) = {
-    val saved = js.get(childTag)
+    val saved = js.get(ChildWidget.childTag)
+    val childId = data.get.get(ChildWidget.childTag)
     logger.debug(s"cheking if result childId: $saved is equals to widgetId: $childId")
     saved == childId
   }

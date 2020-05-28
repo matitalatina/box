@@ -24,7 +24,6 @@ case class MonacoWidget(_id: Property[String], field: JSONField, prop: Property[
   })
 
   override protected def edit(): JsDom.all.Modifier = {
-    println(field.widget)
     val language = Try(field.widget.get.split("\\.").last).getOrElse("html")
     autoRelease(produce(_id) { _ =>
       val container = div(ClientConf.style.editor).render

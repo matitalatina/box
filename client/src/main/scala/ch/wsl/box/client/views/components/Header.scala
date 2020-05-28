@@ -63,8 +63,7 @@ object Header {
 
   def otherMenu:Seq[Modifier] = Seq(
     showIf(Session.logged) {
-      println(Session.logged.get)
-      frag(a(ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); Session.logout() } ),"Logout"), ClientConf.menuSeparator).render
+      frag(a(id := "logoutButton", ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); Session.logout() } ),"Logout"), ClientConf.menuSeparator).render
     },
     ClientConf.menuSeparator,
     Labels.header.lang + " ",

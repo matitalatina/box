@@ -62,3 +62,6 @@ js/*
 
 resources/application.conf
 resources/db.conf
+
+metals.*
+.bloop

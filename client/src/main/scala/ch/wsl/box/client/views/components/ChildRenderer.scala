@@ -1,5 +1,7 @@
 package ch.wsl.box.client.views.components
 
+import java.util.UUID
+
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{ClientConf, Labels, Session}
@@ -38,12 +40,11 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     import ch.wsl.box.shared.utils.JSONUtils._
 
     var childWidgets: Seq[ChildWidget] = Seq()
-    val entity: Property[Seq[Json]] = Property(Seq())
-    val entitySize: Property[Int] = Property(0)
+    val entity: SeqProperty[Json] = SeqProperty(Seq())
 
+    private def childId = UUID.randomUUID().toString
 
-
-
+    private def attachChild(js:Json):Json = js.deepMerge(Json.obj((ChildWidget.childTag, childId.asJson)))
 
 
     def splitJson(js: Json): Seq[Json] = {
@@ -54,13 +55,13 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       longJs.asJson
     }
 
-    def splitJsonRows(metadata: JSONMetadata, i: Int)(js: Seq[Json]): Json = js.lift(i).getOrElse(Json.Null)
-
-    def mergeJsonRows(entity: Property[Seq[Json]], metadata: JSONMetadata, i: Int)(longJs: Json): Seq[Json] = for {
-      (m, j) <- entity.get.zipWithIndex
-    } yield {
-      if (i == j) longJs else m
-    }
+//    def splitJsonRows(metadata: JSONMetadata, i: Int)(js: Seq[Json]): Json = js.lift(i).getOrElse(Json.Null)
+//
+//    def mergeJsonRows(entity: Property[Seq[Json]], metadata: JSONMetadata, i: Int)(longJs: Json): Seq[Json] = for {
+//      (m, j) <- entity.get.zipWithIndex
+//    } yield {
+//      if (i == j) longJs else m
+//    }
 
     def removeItem(itemToRemove: Json, child: Child) = {
       logger.info("removing item")
@@ -68,8 +69,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
         for {
           form <- children.find(_.objId == child.objId)
         } yield {
-          entity.set(entity.get.filterNot(_ == itemToRemove))
-          entitySize.set(entity.get.length)
+          entity.remove(itemToRemove)
         }
       }
     }
@@ -91,8 +91,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       //    println(placeholder)
 
 
-      entity.set(entity.get ++ Seq(placeholder.asJson))
-      entitySize.set(entity.get.length)
+      entity.append(attachChild(placeholder.asJson))
     }
 
     val metadata = children.find(_.objId == child.objId)
@@ -113,26 +112,24 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
 
       val out = Future.sequence(orderedFormData.zip(orderedWidgetData).map { case (childJson, widget) =>
-        logger.info(s"Propagate subform element: ${childMetadata.name} with data: $childJson")
         f(widget)(childJson, childMetadata).map{ r =>
-          logger.info(s"propagate result: $r")
           r
         }
       }).map{ o =>
 
-      logger.info(
-        s"""Propagate:
-           |from server ordered:
-           |${orderedFormData}
-           |with Ids:
-           |${orderedFormData.map(x => JSONID.fromData(x,childMetadata).map(_.asString))}
-           |client data ordered
-           |${orderedWidgetData.map(_.data.get)}
-           |with Ids:
-           |${orderedWidgetData.map(w => JSONID.fromData(w.data.get,childMetadata).map(_.asString))}
-           |with propagation
-           |$o
-         """.stripMargin)
+      // logger.info(
+      //   s"""Propagate:
+      //      |from server ordered:
+      //      |${orderedFormData}
+      //      |with Ids:
+      //      |${orderedFormData.map(x => JSONID.fromData(x,childMetadata).map(_.asString))}
+      //      |client data ordered
+      //      |${orderedWidgetData.map(_.data.get)}
+      //      |with Ids:
+      //      |${orderedWidgetData.map(w => JSONID.fromData(w.data.get,childMetadata).map(_.asString))}
+      //      |with propagation
+      //      |$o
+      //    """.stripMargin)
         o
       }
       //correct futures
@@ -183,38 +180,44 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     var out:Binding = null;
     var out2:Binding = null;
 
-    private def render(write: Boolean) = {
+    private def render(write: Boolean): JsDom.all.Modifier = {
 
       metadata match {
         case None => p("child not found")
         case Some(f) => {
 
           div(
-            {out = produce(id) { _ =>
-              out2 = produce(entitySize) { size =>
-                div(
-                  if (write || size > 0) label(f.label) else frag(),
-                  for {i <- 0 until size} yield {
-                    val subResults = entity.transform(splitJsonRows(f, i), mergeJsonRows(entity, f, i))
-                    val widget = findOrAdd(f, subResults, children)
-                    div(ClientConf.style.subform,
+            produce(id) { _ =>
+              div(
+                  repeat(entity.zipWithIndex) { e =>
+                    val sub = Property(e.get._1)
+
+                    val widget = findOrAdd(f,sub, children)
+                    val out = div(ClientConf.style.subform,
                       widget.render(write, Property(true)),
                       if (write) div(
                         BootstrapStyles.row,
                         div(BootstrapCol.md(12), ClientConf.style.block,
                           div(BootstrapStyles.pullRight,
-                            a(onclick :+= ((e: Event) => removeItem(entity.get(i), child)), Labels.subform.remove)
+                            a(onclick :+= ((_: Event) => removeItem(e.get._1, child)), Labels.subform.remove)
                           )
                         )
                       ) else frag()
                     ).render
+                    sub.listen { js =>
+                      if(!js.equals(e.get._1)) {
+                        entity.replace(e.get._2, 1, js)
+                        logger.info(entity.get.toString())
+                      }
+                    }
+                    out
                   }
                 ).render
-              }
-              div(out2).render
-            }; out},
-            if (write) a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add) else frag()
-          )
+
+              },
+              if (write) a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add) else frag()
+            ).render
+
         }
       }
     }
@@ -230,11 +233,11 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 //        out2.kill()
       }
 
+      childWidgets.foreach(_.killWidget())
       childWidgets = Seq()
 
       val seq = splitJson(prop.get)
-      entity.set(seq)
-      entitySize.set(seq.length)
+      entity.set(seq.map(attachChild))
       entity.clearListeners()
       entity.listen({ seq =>
         prop.set(mergeJson(seq))

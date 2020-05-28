@@ -39,9 +39,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     data.ID(metadata.keys).asString
   }
 
-  private val id: Property[String] = Property(getId(dataWithChildId.get))
+  private val id: Property[String] = Property(getId(data.get))
 
-  dataWithChildId.listen { data =>
+  data.listen { data =>
     val currentID = getId(data)
     if (currentID != id.get) {
       id.set(currentID)
@@ -53,10 +53,10 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
       case None => Property(true)
       case Some(condition) => {
 
-        val observedData = Property(dataWithChildId.get.js(condition.conditionFieldId))
+        val observedData = Property(data.get.js(condition.conditionFieldId))
 
 
-        dataWithChildId.listen{ d =>
+        data.listen{ d =>
           val newJs = d.js(condition.conditionFieldId)
           if( newJs != observedData.get) {
             observedData.set(newJs)
@@ -99,9 +99,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           field.child) match {
           //  TYPE, WIDGET NAME, LOOKUP, IS KEY NOT MANUAL EDITABLE, CHILDS
           case (_, Some(WidgetsNames.hidden), _, _, _)                => HiddenWidget
-          case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidthFactory(dataWithChildId)
-          case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidgetFactory(dataWithChildId)
-          case (_, _, Some(lookup), _, _)                             => SelectWidgetFactory(dataWithChildId)
+          case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidthFactory(data)
+          case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidgetFactory(data)
+          case (_, _, Some(lookup), _, _)                             => SelectWidgetFactory(data)
           case (_, _, _, true, _)                                     => InputWidgetFactory.TextDisabled
           case (BOOLEAN, _, _, _, _)                                  => CheckboxWidget
           case (NUMBER, Some(WidgetsNames.checkboxNumber), _, _, _)   => CheckboxNumberWidget
@@ -116,7 +116,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (DATETIME, Some(WidgetsNames.datetimePickerFullWidth), _, _, _) => DateTimeWidget.DateTimeFullWidth
           case (DATE, _, _, _, _) => DateTimeWidget.Date
           case (DATETIME, _, _, _, _) => DateTimeWidget.DateTime
-          case (CHILD, _, _, _, Some(child))                          => ChildRendererFactory(child,children,dataWithChildId)
+          case (CHILD, _, _, _, Some(child))                          => ChildRendererFactory(child,children,data)
           case (_, Some(WidgetsNames.nolabel), _, _, _)               => InputWidgetFactory.TextNoLabel
           case (_, Some(WidgetsNames.twoLines), _, _, _)              => InputWidgetFactory.TwoLines
           case (_, Some(WidgetsNames.textarea), _, _, _)              => InputWidgetFactory.TextArea
@@ -172,9 +172,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   } yield {
 
 
-    val fieldData = Property(dataWithChildId.get.js(field.name))
+    val fieldData = Property(data.get.js(field.name))
 
-    dataWithChildId.listen{ d =>
+    data.listen{ d =>
       val newJs = d.js(field.name)
       if( newJs != fieldData.get) {
         fieldData.set(newJs)
@@ -182,8 +182,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     }
 
     fieldData.listen{ fd =>
-      if(dataWithChildId.get.js(field.name) != fd) {
-        dataWithChildId.set(dataWithChildId.get.deepMerge(Json.obj((field.name,fd))))
+      if(data.get.js(field.name) != fd) {
+        data.set(data.get.deepMerge(Json.obj((field.name,fd))))
       }
     }
 

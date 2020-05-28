@@ -5,7 +5,6 @@ import scala.scalajs.js
 
 object Monaco {
   def load(el:HTMLElement,language:String, value:String,onChange:String => Unit) = {
-    println("Monaco.load")
     js.Dynamic.global.require(js.Array("vs/editor/editor.main"),{() => {
       val editor = js.Dynamic.global.monaco.editor.create(el,js.Dictionary(
         "value" -> value,

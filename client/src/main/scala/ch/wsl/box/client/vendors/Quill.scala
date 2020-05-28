@@ -19,7 +19,6 @@ object Quill {
    */
 
   def load(el:HTMLElement,value:String, placeholder:String, onChange:String => Unit) = {
-    println("Quill.load")
     js.Dynamic.global.console.log(el)
 
     js.Dynamic.global.require(js.Array("quill"),{Quill:js.Dynamic => {

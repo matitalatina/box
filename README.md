@@ -134,3 +134,6 @@ sbt clinet/packageJSDependencies
 
 Box framework is released with Apache 2.0 License
 
+
+
+`docker run --name postgres -v /DB/postgresql:/var/lib/postgresql/data -e POSTGRES_PASSWORD=postgres -d postgres:12`

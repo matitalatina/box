@@ -118,7 +118,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   import io.circe.syntax._
   import ch.wsl.box.client._
 
-  def save(action:String => Unit) = {
+  def save(action:JSONID => Unit) = {
 
     val m = model.get
     m.metadata.foreach{ metadata =>
@@ -131,36 +131,49 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       val data:Json = m.data
 
       def saveAction(data:Json) = {
+        logger.debug("saveAction")
         for {
           id <- JSONID.fromString(m.id.getOrElse("")) match {
             case Some (id) => REST.update (m.kind, Session.lang(), m.name, id, data).map(_ => id)
             case None => REST.insert (m.kind, Session.lang (), m.name, data)
           }
           result <- REST.get(m.kind, Session.lang(), m.name, id)
-        } yield result
+        } yield {
+          logger.debug("saveAction::Result")
+          result
+        }
 
       }
 
-      println(s"data: $data")
 
 
       {for{
         updatedData <- widget.beforeSave(data,metadata)
-        resultSaved <- saveAction(updatedData)
-        _ <- widget.afterSave(resultSaved,metadata)
+        resultBeforeAfterSave <- saveAction(updatedData)
+        _ <- widget.afterSave(resultBeforeAfterSave,metadata)
+        newId = JSONID.fromData(resultBeforeAfterSave,metadata)
+
+
       } yield {
-//        val newState =  Routes(m.kind,m.name).table()
-        val newId = JSONID.fromMap(metadata.keys.map(k => (k,resultSaved.js(k))))
-        model.subProp(_.id).set(Some(newId.asString))
-        model.subProp(_.data).set(resultSaved)
+
+
         enableGoAway
 
-        action(model.get.id.getOrElse(""))
+        action(newId.get)
 
       }}.recover{ case e =>
         e.getStackTrace.foreach(x => logger.error(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
         e.printStackTrace()
       }
+    }
+  }
+
+  def reload(id:JSONID): Unit = {
+    for{
+      resultSaved <- REST.get(model.get.kind, Session.lang(), model.get.name, id)
+    } yield {
+      model.subProp(_.id).set(Some(id.asString))
+      model.subProp(_.data).set(resultSaved)
     }
   }
 
@@ -362,10 +375,18 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
             div(
 
               //save and stay on same record
-              button(
-                ClientConf.style.boxButtonImportant,
-                onclick :+= ((ev: Event) => presenter.save(id => Navigate.to(Routes(model.get.kind, model.get.name).edit(id))), true)
-              )(Labels.form.save), " ",
+              showIf(model.transform(_.id.isDefined)) { // update
+                button(
+                  ClientConf.style.boxButtonImportant,
+                  onclick :+= ((ev: Event) => presenter.save(id => presenter.reload(id) ), true)
+                )(Labels.form.save).render
+              },
+              showIf(model.transform(!_.id.isDefined)) { // insert
+                button(
+                  ClientConf.style.boxButtonImportant,
+                  onclick :+= ((ev: Event) => presenter.save(id => Navigate.to(Routes(model.get.kind, model.get.name).edit(id.asString))), true)
+                )(Labels.form.save).render
+              }, " ",
               //save and go to table view
               button(
                 ClientConf.style.boxButton,ClientConf.style.noMobile,

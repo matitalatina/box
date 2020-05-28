@@ -1,3 +1,5 @@
+addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.0.11-0.6")
+
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.32")
 
 addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "4.0.2")
@@ -9,17 +11,6 @@ addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject"      % "0.6.1")
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.0")
 
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.9.0")
-
-addSbtPlugin("com.lihaoyi" % "workbench" % "0.4.1")
-
-
-//addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
-
-//addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.5.10")
-
-//libraryDependencies += "org.scala-js" %% "scalajs-env-selenium" % "0.1.3"   //for tests
-
-
-//uncomment to enable SASS compilation, you need sass
-//CSS precompiler http://sass-lang.com/ used in client/src/main/assets/style.scss to import material design CSS lib
-//addSbtPlugin("org.madoushi.sbt" % "sbt-sass" % "0.9.3")
+addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
+addSbtPlugin("com.typesafe.sbt" % "sbt-twirl" % "1.5.0")
+addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject"  % "1.0.0")

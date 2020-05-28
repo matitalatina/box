@@ -27,7 +27,6 @@ case class RichTextEditorWidget(_id: Property[String], field: JSONField, prop: P
 
   override protected def edit(): JsDom.all.Modifier = {
     produce(_id) { _ =>
-      println("reload RTEW")
       val container = div( height := 300.px).render
       val parent = div(container).render
       BrowserConsole.log(parent)

@@ -336,7 +336,9 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     val queryWithFK = encodeFk(fields,query())
 
 
-    val url = s"api/v1/$kind/${Session.lang()}/$modelName/csv?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
+    val url = Routes.apiV1(
+      s"/$kind/${Session.lang()}/$modelName/csv?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
+    )
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }

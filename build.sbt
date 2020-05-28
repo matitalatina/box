@@ -1,9 +1,6 @@
+// If you are using Scala.js 0.6.x, you need the following import:
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-//uncomment to enable SASS
-//import com.typesafe.sbt.web.SbtWeb
-
-import UDashBuild._
-import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
 /** codegen project containing the customized code generator */
 lazy val codegen  = (project in file("codegen")).settings(
@@ -15,16 +12,10 @@ lazy val codegen  = (project in file("codegen")).settings(
   resourceDirectory in Compile := baseDirectory.value / "../resources"
 )
 
-lazy val hello = taskKey[Unit]("Prints 'Hello World'")
-
-
-
-lazy val server: Project  = (project in file("server"))
+lazy val server: Project  = project
   .settings(
     name := "server",
     scalaVersion := Settings.versions.scala,
-    //resolvers += "nightlies" at "https://scala-ci.typesafe.com/artifactory/scala-release-temp/",
-    //scalaVersion := "2.12.5-bin-2791989",
     scalaBinaryVersion := "2.12",
     scalacOptions ++= Settings.scalacOptionsServer,
     libraryDependencies ++= Settings.jvmDependencies.value,
@@ -46,15 +37,24 @@ lazy val server: Project  = (project in file("server"))
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "boxInfo",
     buildInfoObject := "BoxBuildInfo",
+    scalaJSProjects := Seq(client),
+    pipelineStages in Assets := Seq(scalaJSPipeline),
+    compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
+    WebKeys.packagePrefix in Assets := "public/",
+    managedClasspath in Runtime += (packageBin in Assets).value,
   )
-  .enablePlugins(TomcatPlugin)
-  .enablePlugins(JavaAppPackaging)
-  .enablePlugins(DockerPlugin)
-  .enablePlugins(GitVersioning)
-  .enablePlugins(BuildInfoPlugin)
+  .enablePlugins(
+    TomcatPlugin,
+    JavaAppPackaging,
+    DockerPlugin,
+    GitVersioning,
+    BuildInfoPlugin,
+    SbtWeb,
+    SbtTwirl)
   //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)
   .dependsOn(codegen)
+
 
 lazy val client: Project = (project in file("client"))
   .settings(
@@ -75,114 +75,29 @@ lazy val client: Project = (project in file("client"))
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     // use uTest framework for tests
-    testFrameworks += new TestFramework("utest.runner.Framework"),
-    // Compile tests to JS using fast-optimisation
-    scalaJSStage in Test := FastOptStage,
-    fullClasspath in Test ~= { _.filter(_.data.exists) },
-    //scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) },
-    compile := ((compile in Compile).dependsOn(compileStatics)).value,
-    compileStatics := {
-      IO.copyDirectory(sourceDirectory.value / "main/assets/fonts", crossTarget.value / StaticFilesDir / WebContent / "assets/fonts")
-      IO.copyDirectory(sourceDirectory.value / "main/assets/images", crossTarget.value / StaticFilesDir / WebContent / "assets/images")
-      val statics = compileStaticsForRelease.value
-      (crossTarget.value / StaticFilesDir).get
-    },
-    //      artifactPath in(Compile, fastOptJS) :=
-    //        (crossTarget in(Compile, fastOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl-fast.js",
-    //      artifactPath in(Compile, fullOptJS) :=
-    //        (crossTarget in(Compile, fullOptJS)).value / StaticFilesDir / WebContent / "scripts" / "frontend-impl.js",
-    artifactPath in(Compile, packageJSDependencies) :=
-      (crossTarget in(Compile, packageJSDependencies)).value / "client-jsdeps.js",
-    artifactPath in(Compile, packageMinifiedJSDependencies) :=
-      (crossTarget in(Compile, packageMinifiedJSDependencies)).value / "client-jsdeps.js",
-    //      artifactPath in(Compile, packageScalaJSLauncher) :=
-    //        (crossTarget in(Compile, packageScalaJSLauncher)).value / StaticFilesDir / WebContent / "scripts" / "frontend-init.js"
-    workbenchStartMode := WorkbenchStartModes.Manual,
-    workbenchDefaultRootObject := Some(("resources/index-dev.html", "."))
+//    testFrameworks += new TestFramework("utest.runner.Framework"),
+//    // Compile tests to JS using fast-optimisation
+//    scalaJSStage in Test := FastOptStage,
+//    fullClasspath in Test ~= { _.filter(_.data.exists) },
+//    //scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) },
+//    compile := ((compile in Compile).dependsOn(compileStatics)).value,
+//    compileStatics := {
+//      IO.copyDirectory(sourceDirectory.value / "main/assets/fonts", crossTarget.value / StaticFilesDir / WebContent / "assets/fonts")
+//      IO.copyDirectory(sourceDirectory.value / "main/assets/images", crossTarget.value / StaticFilesDir / WebContent / "assets/images")
+//      val statics = compileStaticsForRelease.value
+//      (crossTarget.value / StaticFilesDir).get
+//    },
   )
-  .enablePlugins(ScalaJSPlugin)
-  .enablePlugins(WorkbenchPlugin)
-  //    .settings(workbenchSettings:_*)
-  //    .settings(
-  //      bootSnippet := "ch.wsl.box.client.Init().main();",
-  //      updatedJS := {
-  //        var files: List[String] = Nil
-  //        ((crossTarget in Compile).value / StaticFilesDir ** "*.js").get.foreach {
-  //          (x: File) =>
-  //            streams.value.log.info("workbench: Checking " + x.getName)
-  //            FileFunction.cached(streams.value.cacheDirectory / x.getName, FilesInfo.lastModified, FilesInfo.lastModified) {
-  //              (f: Set[File]) =>
-  //                val fsPath = f.head.getAbsolutePath.drop(new File("").getAbsolutePath.length)
-  //                files = "http://localhost:12345" + fsPath :: files
-  //                f
-  //            }(Set(x))
-  //        }
-  //        files
-  //      },
-  //      //// use either refreshBrowsers OR updateBrowsers
-  //      // refreshBrowsers <<= refreshBrowsers triggeredBy (compileStatics in Compile)
-  //      updateBrowsers <<= updateBrowsers triggeredBy (compileStatics in Compile)
-  //    )
-  //.enablePlugins(SbtWeb) uncomment to enable SASS
+  .enablePlugins(ScalaJSPlugin,ScalaJSWeb)
   .dependsOn(sharedJS)
 
 
 
 
-lazy val root: Project = (project in file("."))
-  .settings(
-    serve := Def.sequential(
-        cleanUi,
-        //cleanAll.value,
-        (fastOptJS in Compile in client).toTask,
-        copyUiFilesDev,
-        (compile in Compile in codegen),
-        (run in Compile in server).toTask("")
-      ).value,
-      cleanAll := {
-        (clean in Compile in client).toTask.value
-        (deleteSlick in Compile in server).toTask.value
-        (clean in Compile in server).toTask.value
-        (clean in Compile in codegen).toTask.value
-      },
-      box := Def.sequential(
-        cleanUi,
-        cleanAll,
-        (fullOptJS in Compile in client),
-        copyUiFiles,
-        (compile in Compile in codegen),
-        (packageBin in Universal in server)
-      ).value,
-      boxDocker := Def.sequential(
-        cleanUi,
-        cleanAll,
-        (fullOptJS in Compile in client),
-        copyUiFiles,
-        (compile in Compile in codegen),
-        (publishLocal in Docker in server)
-      ).value,
-    installBox := Def.sequential(
-      //cleanAll,
-      (compile in Compile in server).toTask,
-      Def.task{
-        (runMain in Compile in server).toTask(" ch.wsl.box.model.BuildBox").value
-      }
-    ).value,
-    dropBox := Def.sequential(
-      //cleanAll,
-      (compile in Compile in server).toTask,
-      Def.task{
-        (runMain in Compile in server).toTask(" ch.wsl.box.model.DropBox").value
-      }
-    ).value,
-  )
-
-// Client projects (just one in this case)
-lazy val clients = Seq(client)
-
 
 //CrossProject is a Project compiled with both java and javascript
-lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure) in file("shared"))
+lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
+  .in(file("shared"))
   .settings(
     name := "shared",
     scalaVersion := Settings.versions.scala,
@@ -191,25 +106,12 @@ lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
   )
   .jsSettings(
-//    libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.0"       //this doeas not have LocalDateTime implementation
     libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC5"
   )
 
 lazy val sharedJVM: Project = shared.jvm.settings(name := "sharedJVM")
 
 lazy val sharedJS: Project = shared.js.settings(name := "sharedJS")
-
-
-
-lazy val box = taskKey[Unit]("Package box")
-lazy val boxDocker = taskKey[Unit]("Package box in Docker")
-lazy val installBox = taskKey[Unit]("Install box")
-lazy val dropBox = taskKey[Unit]("Remove box tables")
-
-lazy val serve = taskKey[Unit]("start server")
-lazy val cleanAll = taskKey[Unit]("clean all projects")
-
-
 
 
 // code generation task that calls the customized code generator
@@ -239,29 +141,7 @@ lazy val deleteSlickTask = Def.task{
   ))
 }
 
-lazy val copyUiFiles = Def.task{
-  val mappings: Seq[(File,File)] = Seq(
-    file("client/target/scala-2.12/client-jsdeps.js") -> file("resources/js/deps.js"),
-    file("client/target/scala-2.12/client-opt.js") -> file("resources/js/app.js")
-  )
-  IO.copy(mappings)
-}
 
-lazy val cleanUi = Def.task{
-  IO.delete(Seq(
-    file("resources/js/deps.js"),
-    file("resources/js/app.js")
-  ))
-}
-
-lazy val copyUiFilesDev = Def.task{
-  val mappings: Seq[(File,File)] = Seq(
-    file("client/target/scala-2.12/client-jsdeps.js") -> file("resources/js/deps.js"),
-    file("client/target/scala-2.12/client-fastopt.js") -> file("resources/js/app.js"),
-    file("client/target/scala-2.12/client-fastopt.js.map") -> file("resources/js/app.js.map")
-  )
-  IO.copy(mappings)
-}
 
 
 

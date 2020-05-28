@@ -33,6 +33,12 @@ class Box(implicit val executionContext: ExecutionContext) {
     }
   }
 
+  def stop() = {
+    if(server != null) {
+      server.unbind().onComplete(_ => system.terminate())
+    }
+  }
+
 
 
   def start() =  {

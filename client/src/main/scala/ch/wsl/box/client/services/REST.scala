@@ -1,5 +1,6 @@
 package ch.wsl.box.client.services
 
+import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.REST.get
 import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
@@ -22,7 +23,7 @@ object REST {
   import ch.wsl.box.client.Context._
   import ch.wsl.box.model.shared.EntityKind._
 
-  private def client = HttpClient("api/v1")
+  private def client = HttpClient(Routes.apiV1())
 
   def version() = client.get[String]("/version")
   def validSession() = client.get[Boolean]("/validSession")
@@ -51,8 +52,6 @@ object REST {
     queryWithSubstitutions.as[JSONQuery] match {
       case Right(query) => client.post[JSONQuery,Seq[JSONLookup]](s"/entity/$lang/$lookupEntity/lookup/${map.textProperty}/${map.valueProperty}", query)
       case Left(fail) => {
-        println(queryWithSubstitutions)
-        println(fail.message)
         Future.successful(Seq())
       }
     }

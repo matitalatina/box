@@ -4,6 +4,8 @@ import akka.http.scaladsl.server.{Directives, Route}
 
 import akka.http.scaladsl.server.directives.ContentTypeResolver.Default
 
+import ch.wsl.box.rest.routes.enablers.twirl.Implicits._
+
 /**
   *
   * Simple route to serve UI-client files
@@ -15,18 +17,20 @@ object UI {
   import Directives._
 
   val clientFiles:Route =
-    path("") {
-      getFromResource("index.html")
-    } ~
-    pathPrefix("webjars") {
-      WebJarsSupport.webJars
-    } ~
-    pathPrefix("js") {
-      path(Segment) { file =>
-        getFromResource("js/"+file)
+    pathSingleSlash {
+      get {
+        complete {
+          ch.wsl.box.templates.html.index.render()
+        }
       }
     } ~
     pathPrefix("webjars") {
       WebJarsSupport.webJars
+    } ~ pathPrefix("assets" / Remaining) { file =>
+      // optionally compresses the response with Gzip or Deflate
+      // if the client accepts compressed responses
+      encodeResponse {
+        getFromResource("public/" + file)
+      }
     }
 }

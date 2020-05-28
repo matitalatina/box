@@ -22,7 +22,7 @@ class CORSHandler(authHeaderName:String,_origins:Seq[String]) {
     List(
       origs,
       `Access-Control-Allow-Credentials`(true),
-      `Access-Control-Allow-Headers`("Content-Type",authHeaderName),
+      `Access-Control-Allow-Headers`("Content-Type",authHeaderName,"cache-control"),
       `Access-Control-Expose-Headers`(authHeaderName),
       `Access-Control-Allow-Methods`(OPTIONS, POST, PUT, GET, DELETE)
     )

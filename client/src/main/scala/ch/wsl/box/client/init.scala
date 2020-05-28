@@ -29,7 +29,7 @@ object Init extends JSApp with Logging {
   @JSExport
   override def main(): Unit = {
 
-    Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Info)).replace()
+    Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
 
 
     logger.debug("Box started")
