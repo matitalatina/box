@@ -174,6 +174,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     } yield {
       model.subProp(_.id).set(Some(id.asString))
       model.subProp(_.data).set(resultSaved)
+      enableGoAway
     }
   }
 

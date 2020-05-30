@@ -35,6 +35,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   import io.udash.css.CssView._
 
 
+
   private def getId(data:Json): String = {
     data.ID(metadata.keys).asString
   }
@@ -172,20 +173,20 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   } yield {
 
 
-    val fieldData = Property(data.get.js(field.name))
+    val fieldData = data.transform(_.js(field.name),(fd:Json) => data.get.deepMerge(Json.obj((field.name,fd))))
 
-    data.listen{ d =>
-      val newJs = d.js(field.name)
-      if( newJs != fieldData.get) {
-        fieldData.set(newJs)
-      }
-    }
-
-    fieldData.listen{ fd =>
-      if(data.get.js(field.name) != fd) {
-        data.set(data.get.deepMerge(Json.obj((field.name,fd))))
-      }
-    }
+//    data.listen({ d =>
+//      val newJs = d.js(field.name)
+//      if( newJs != fieldData.get) {
+//        fieldData.set(newJs)
+//      }
+//    },true)
+//
+//    fieldData.listen{ fd =>
+//      if(data.get.js(field.name) != fd) {
+//        data.set(data.get.deepMerge(Json.obj((field.name,fd))))
+//      }
+//    }
 
     WidgetVisibility(widgetSelector(field, id, fieldData),checkCondition(field))
 

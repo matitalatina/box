@@ -16,7 +16,7 @@ import org.scalajs.dom.Event
 import scribe.Logging
 
 import scala.concurrent.Future
-import scala.util.Random
+import scala.util.{Random, Success}
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import scalatags.JsDom
@@ -24,6 +24,8 @@ import scalatags.JsDom
 /**
   * Created by andre on 6/1/2017.
   */
+
+case class ChildRow(widget:ChildWidget,id:String)
 
 case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterData:Property[Json]) extends ComponentWidgetFactory {
 
@@ -39,12 +41,55 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     import io.circe.syntax._
     import ch.wsl.box.shared.utils.JSONUtils._
 
-    var childWidgets: Seq[ChildWidget] = Seq()
-    val entity: SeqProperty[Json] = SeqProperty(Seq())
+    val childWidgets: scala.collection.mutable.ListBuffer[ChildRow] = scala.collection.mutable.ListBuffer()
+    val entity: SeqProperty[String] = SeqProperty(Seq())
+    val metadata = children.find(_.objId == child.objId)
+
+    private def add(data:Json): Unit = {
+      val id = childId
+      val d = attachChild(id,data)
+      val propData = Property(d)
+
+      logger.debug(d.toString())
+      logger.debug(metadata.get.toString)
+
+      val widget = JSONMetadataRenderer(metadata.get, propData, children)
+
+      childWidgets += ChildRow(widget,id)
+      entity.append(id)
+    }
 
     private def childId = UUID.randomUUID().toString
 
-    private def attachChild(js:Json):Json = js.deepMerge(Json.obj((ChildWidget.childTag, childId.asJson)))
+    private def attachChild(childId:String, js:Json):Json = js.deepMerge(Json.obj((ChildWidget.childTag, childId.asJson)))
+
+    private var touched = false
+    private val touchedJS = Json.obj(("$touched", true.asJson))
+    private def setTouched() = if(!touched) {
+      logger.debug(prop.get.toString())
+      prop.get.as[Seq[Json]] match {
+        case Right(js) => {
+          touched = true;
+          prop.set((js ++ Seq(touchedJS)).asJson)
+        }
+        case Left(value) => {}
+      }
+
+      logger.debug(prop.get.toString())
+    }
+
+    private def removeTouched() = if(touched){
+
+
+      prop.get.as[Seq[Json]] match {
+        case Right(js) => {
+          touched = false;
+          prop.set(js.filterNot(_ == touchedJS).asJson)
+        }
+        case Left(value) => {}
+      }
+      logger.debug(prop.get.toString())
+    }
 
 
     def splitJson(js: Json): Seq[Json] = {
@@ -63,14 +108,11 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 //      if (i == j) longJs else m
 //    }
 
-    def removeItem(itemToRemove: Json, child: Child) = {
+    def removeItem(itemToRemove: String) = {
       logger.info("removing item")
       if (org.scalajs.dom.window.confirm(Labels.messages.confirm)) {
-        for {
-          form <- children.find(_.objId == child.objId)
-        } yield {
-          entity.remove(itemToRemove)
-        }
+        entity.remove(itemToRemove)
+        childWidgets.remove(childWidgets.zipWithIndex.find(x => x._1.id == itemToRemove).get._2)
       }
     }
 
@@ -91,10 +133,10 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       //    println(placeholder)
 
 
-      entity.append(attachChild(placeholder.asJson))
+      add(placeholder.asJson)
     }
 
-    val metadata = children.find(_.objId == child.objId)
+
 
 
     private def propagate[T](data: Json, metadata: JSONMetadata, f: (Widget => ((Json, JSONMetadata) => Future[T]))): Future[Seq[T]] = {
@@ -106,9 +148,9 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       val orderedFormData = {existingFormData.sortBy(_._2.get)(childMetadata.order) ++ newFormData}.map(_._1)
 
 
-      val (alreadyExistentData,newClientData) = childWidgets.zip(childWidgets.map(w => JSONID.fromData(w.data.get,childMetadata))).partition(_._2.isDefined)
+      val (alreadyExistentData,newClientData) = childWidgets.zip(childWidgets.map(w => JSONID.fromData(w.widget.data.get,childMetadata))).partition(_._2.isDefined)
 
-      val orderedWidgetData: Seq[ChildWidget] = {alreadyExistentData.sortBy( x => x._2.get)(childMetadata.order) ++ newClientData}.map(_._1)
+      val orderedWidgetData: Seq[ChildWidget] = {alreadyExistentData.sortBy( x => x._2.get)(childMetadata.order) ++ newClientData}.map(_._1).map(_.widget)
 
 
       val out = Future.sequence(orderedFormData.zip(orderedWidgetData).map { case (childJson, widget) =>
@@ -141,17 +183,23 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       propagate(data, metadata, _.afterSave).map(_ => ())
     }
 
-    override def beforeSave(data: Json, metadata: JSONMetadata) = propagate(data, metadata, _.beforeSave).map{ jsChilds =>
-      Map(child.key -> jsChilds.asJson).asJson
+    override def beforeSave(data: Json, metadata: JSONMetadata) = {
+      removeTouched()
+      val js = mergeJson(childWidgets.map{ case w => w.widget.data.get })
+      val mergedData = data.deepMerge(Json.obj((field.name,js)))
+      logger.debug(mergedData.toString())
+      propagate(mergedData, metadata, _.beforeSave).map{ jsChilds =>
+        Map(child.key -> jsChilds.asJson).asJson
+      }
     }
 
     override def killWidget(): Unit = {
       super.killWidget()
-      childWidgets.foreach(_.killWidget())
+      childWidgets.foreach(_.widget.killWidget())
     }
 
 
-    override def afterRender(): Unit = childWidgets.foreach(_.killWidget())
+    override def afterRender(): Unit = childWidgets.foreach(_.widget.killWidget())
 
 
 
@@ -161,13 +209,25 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 //      widgetToKill.foreach(_.killWidget())
 //    }
 
-    def findOrAdd(f: JSONMetadata, childValues: Property[Json], children: Seq[JSONMetadata]) = {
-      childWidgets.find(_.isOf(childValues.get)).getOrElse {
-        val widget = JSONMetadataRenderer(f, childValues, children)
-        childWidgets = childWidgets ++ Seq(widget)
-        widget
-      }
-    }
+//    def findOrAdd(write: Boolean, f: JSONMetadata, childValues: Property[Json], children: Seq[JSONMetadata]) = {
+//      childWidgets.find(_._1.isOf(childValues.get)) match {
+//        case None => {
+//          val widget = JSONMetadataRenderer(f, childValues, children)
+//          val renderedWidget = widget.render(write, Property(true))
+//          val result = (widget, renderedWidget)
+//          childWidgets = childWidgets ++ Seq(result)
+//          result
+//        }
+//        case Some(cw) => {
+//          if(cw._1.data.get != childValues.get) {
+//            val newData  = cw._1.data.get.deepMerge(childValues.get)
+//            logger.debug(s"old: ${cw._1.data.get}, new: ${newData}")
+//            cw._1.data.set(newData)
+//          }
+//          cw
+//        }
+//      }
+//    }
 
 
 
@@ -189,27 +249,26 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
           div(
             produce(id) { _ =>
               div(
-                  repeat(entity.zipWithIndex) { e =>
-                    val sub = Property(e.get._1)
-
-                    val widget = findOrAdd(f,sub, children)
+                  repeat(entity) { e =>
+                    val widget = childWidgets.find(_.id == e.get)
                     val out = div(ClientConf.style.subform,
-                      widget.render(write, Property(true)),
+                    widget.get.widget.render(write, Property(true)),
                       if (write) div(
                         BootstrapStyles.row,
                         div(BootstrapCol.md(12), ClientConf.style.block,
                           div(BootstrapStyles.pullRight,
-                            a(onclick :+= ((_: Event) => removeItem(e.get._1, child)), Labels.subform.remove)
+                            a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
                           )
                         )
                       ) else frag()
                     ).render
-                    sub.listen { js =>
-                      if(!js.equals(e.get._1)) {
-                        entity.replace(e.get._2, 1, js)
-                        logger.info(entity.get.toString())
+                    widget.get.widget.data.listen({ js =>
+                      if(!js.equals(e)) {
+                        //entity.replace(e.get._2, 1, js)
+                        //logger.info(entity.get.toString())
+                        setTouched()
                       }
-                    }
+                    },true)
                     out
                   }
                 ).render
@@ -223,25 +282,15 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     }
 
 
-    var firstRun = true;
 
-    id.listen(_ => {
-      if(firstRun) {
-        firstRun = false;
-      } else {
-//        out.kill()
-//        out2.kill()
-      }
+    id.listen(i => {
 
-      childWidgets.foreach(_.killWidget())
-      childWidgets = Seq()
-
-      val seq = splitJson(prop.get)
-      entity.set(seq.map(attachChild))
-      entity.clearListeners()
-      entity.listen({ seq =>
-        prop.set(mergeJson(seq))
-      },true)
+      childWidgets.foreach(_.widget.killWidget())
+      childWidgets.clear()
+      entity.clear()
+      val entityData = splitJson(prop.get)
+      logger.debug(s"id changed with $i, new data $entityData")
+      entityData.foreach(add)
     },true)
 
 

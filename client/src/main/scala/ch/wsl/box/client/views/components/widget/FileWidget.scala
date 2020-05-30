@@ -41,19 +41,31 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   import ch.wsl.box.shared.utils.JSONUtils._
   import io.circe.syntax._
 
-  val urlProp:ReadableProperty[Option[String]] = id.transform{ idString =>
-    JSONID.fromString(idString).map{ id =>
+  val instanceId = UUID.randomUUID().toString
+  logger.info(s"Creating new FileWidget $instanceId")
+
+  val urlProp:Property[Option[String]] = Property(None)
+
+  val fileName:Property[String] = Property("")
+
+  id.listen({ idString =>
+    fileName.set(prop.get.string)
+    val newUrl = JSONID.fromString(idString).map{ id =>
       s"/file/${entity}.${field.file.get.file_field}/${idString}"
     }
-  }
+    if(urlProp.get != newUrl) {
+      logger.info(s"URL setting changed from ${urlProp.get} to $newUrl")
+      urlProp.set(newUrl)
+    }
+  },true)
 
-  logger.info("Creating new FileWidget")
+
 
 
   id.listen(_ => FileWidget.files.clear())
 
   override def afterSave(result:Json, metadata: JSONMetadata) = {
-    logger.info(s"File after save with result: $result with selected file: ${selectedFile.get.headOption.map(_.name)}, prop: ${prop.get}")
+    logger.info(s"File after save, instance $instanceId, with result: $result with selected file: ${selectedFile.get.headOption.map(_.name)}, prop: ${prop.get}")
     val jsonid = result.ID(metadata.keys)
     logger.info(s"jsonid = $jsonid")
     for{
@@ -63,7 +75,12 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       }
     } yield {
       logger.info("image saved")
-      id.set(jsonid.asString,true)
+      if(urlProp.get.isDefined) {
+        urlProp.touch()
+      } else {
+        urlProp.set(Some(s"/file/${entity}.${field.file.get.file_field}/${jsonid.asString}"))
+      }
+      fileName.set(result.get(field.name))
     }
   }
 
@@ -80,12 +97,12 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   private def showImage = {
     logger.debug("showImage")
     produceWithNested(urlProp) { (url,nested) =>
-      logger.info("rendering image")
       val randomString = UUID.randomUUID().toString
       url match {
         case Some(u) => div(
+          //need to understand why is been uploaded two times
           img(src := Routes.apiV1(s"${u}/thumb?$randomString"),ClientConf.style.imageThumb) ,br,
-          nested(produce(prop) { name => a(href := Routes.apiV1(u), name.string).render })
+          nested(produce(fileName) { name => a(href := Routes.apiV1(u), name).render })
         ).render
         case None => div().render
       }
@@ -99,9 +116,6 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   ).render
 
   override def edit() = {
-
-
-
     div(BootstrapCol.md(12),ClientConf.style.noPadding,
       WidgetUtils.toLabel(field),
       showImage,
