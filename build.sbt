@@ -141,6 +141,17 @@ lazy val deleteSlickTask = Def.task{
   ))
 }
 
+lazy val box = (project in file("."))
+  .settings(
+    boxDocker := boxDockerTask.value,
+  )
+
+lazy val boxDocker = taskKey[Unit]("Create docker release")
+lazy val boxDockerTask = Def.sequential(
+  (fullOptJS in Compile in client),
+  (compile in Compile in codegen),
+  (publishLocal in Docker in server)
+)
 
 
 
