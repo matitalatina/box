@@ -148,6 +148,7 @@ lazy val box = (project in file("."))
 
 lazy val boxDocker = taskKey[Unit]("Create docker release")
 lazy val boxDockerTask = Def.sequential(
+  (deleteSlick in server),
   (fullOptJS in Compile in client),
   (compile in Compile in codegen),
   (publishLocal in Docker in server)
