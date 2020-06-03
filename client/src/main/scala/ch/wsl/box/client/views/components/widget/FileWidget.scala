@@ -75,6 +75,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       }
     } yield {
       logger.info("image saved")
+      selectedFile.set(Seq())
       if(urlProp.get.isDefined) {
         urlProp.touch()
       } else {
@@ -86,7 +87,6 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
 
   val selectedFile: SeqProperty[File] = SeqProperty(Seq.empty[File])
-  val input = FileInput(selectedFile, Property(false))("file")
 
   selectedFile.listen{ files =>
     logger.info(s"selected file changed ${files.map(_.name)}")
@@ -112,14 +112,14 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),ClientConf.style.noPadding,
     label(field.title),
     showImage,
-    div(BootstrapStyles.Visibility.clearfix)
+    div(BootstrapStyles.Visibility.clearfix),
   ).render
 
   override def edit() = {
     div(BootstrapCol.md(12),ClientConf.style.noPadding,
       WidgetUtils.toLabel(field),
       showImage,
-      input,
+      produce(id) { _ => div(FileInput(selectedFile, Property(false))("file")).render },
       div(BootstrapStyles.Visibility.clearfix)
     ).render
   }

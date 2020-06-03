@@ -19,7 +19,7 @@ object Routes {
 
   def apiV1(path:String = ""):String = {
     dom.window.location.port == "12345" match {
-      case false => "/api/v1"+path
+      case false =>  dom.window.location.pathname + "api/v1"+path
       case true => "http://localhost:8080/api/v1" + path
     }
   }

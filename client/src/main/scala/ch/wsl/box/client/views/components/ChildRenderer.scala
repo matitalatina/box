@@ -63,42 +63,11 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
     private def attachChild(childId:String, js:Json):Json = js.deepMerge(Json.obj((ChildWidget.childTag, childId.asJson)))
 
-    private var touched = false
-    private val touchedJS = Json.obj(("$touched", true.asJson))
-    private def setTouched() = if(!touched) {
-      logger.debug(prop.get.toString())
-      prop.get.as[Seq[Json]] match {
-        case Right(js) => {
-          touched = true;
-          prop.set((js ++ Seq(touchedJS)).asJson)
-        }
-        case Left(value) => {}
-      }
-
-      logger.debug(prop.get.toString())
-    }
-
-    private def removeTouched() = if(touched){
-
-
-      prop.get.as[Seq[Json]] match {
-        case Right(js) => {
-          touched = false;
-          prop.set(js.filterNot(_ == touchedJS).asJson)
-        }
-        case Left(value) => {}
-      }
-      logger.debug(prop.get.toString())
-    }
-
 
     def splitJson(js: Json): Seq[Json] = {
       js.as[Seq[Json]].right.getOrElse(Seq()) //.map{ js => js.deepMerge(Json.obj((subformInjectedId,Random.alphanumeric.take(16).mkString.asJson)))}
     }
 
-    def mergeJson(longJs: Seq[Json]): Json = {
-      longJs.asJson
-    }
 
 //    def splitJsonRows(metadata: JSONMetadata, i: Int)(js: Seq[Json]): Json = js.lift(i).getOrElse(Json.Null)
 //
@@ -139,57 +108,35 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
 
 
-    private def propagate[T](data: Json, metadata: JSONMetadata, f: (Widget => ((Json, JSONMetadata) => Future[T]))): Future[Seq[T]] = {
+    private def propagate[T](data: Json,f: (Widget => ((Json, JSONMetadata) => Future[T]))): Future[Seq[T]] = {
 
       val childMetadata = children.find(_.objId == child.objId).get
 
-      val unorderedFormData = data.seq(child.key)
-      val (existingFormData,newFormData) = unorderedFormData.zip(unorderedFormData.map(x => JSONID.fromData(x,childMetadata))).partition(_._2.isDefined)
-      val orderedFormData = {existingFormData.sortBy(_._2.get)(childMetadata.order) ++ newFormData}.map(_._1)
+      val rows = data.seq(child.key)
 
 
-      val (alreadyExistentData,newClientData) = childWidgets.zip(childWidgets.map(w => JSONID.fromData(w.widget.data.get,childMetadata))).partition(_._2.isDefined)
+      val out = Future.sequence(childWidgets.zipWithIndex.map { case (cw,i) =>
 
-      val orderedWidgetData: Seq[ChildWidget] = {alreadyExistentData.sortBy( x => x._2.get)(childMetadata.order) ++ newClientData}.map(_._1).map(_.widget)
+        val d = rows.lift(i).getOrElse(Json.Null).deepMerge(cw.widget.data.get)
 
-
-      val out = Future.sequence(orderedFormData.zip(orderedWidgetData).map { case (childJson, widget) =>
-        f(widget)(childJson, childMetadata).map{ r =>
+        f(cw.widget)(d, childMetadata).map{ r =>
           r
         }
-      }).map{ o =>
-
-      // logger.info(
-      //   s"""Propagate:
-      //      |from server ordered:
-      //      |${orderedFormData}
-      //      |with Ids:
-      //      |${orderedFormData.map(x => JSONID.fromData(x,childMetadata).map(_.asString))}
-      //      |client data ordered
-      //      |${orderedWidgetData.map(_.data.get)}
-      //      |with Ids:
-      //      |${orderedWidgetData.map(w => JSONID.fromData(w.data.get,childMetadata).map(_.asString))}
-      //      |with propagation
-      //      |$o
-      //    """.stripMargin)
-        o
-      }
+      })
       //correct futures
       out
     }
 
     override def afterSave(data: Json, metadata: JSONMetadata): Future[Unit] = {
-      //println(s"Propagate subform: ${subform.key} with data: $result")
-      propagate(data, metadata, _.afterSave).map(_ => ())
+
+      propagate(data, _.afterSave).map(_ => ())
     }
 
     override def beforeSave(data: Json, metadata: JSONMetadata) = {
-      removeTouched()
-      val js = mergeJson(childWidgets.map{ case w => w.widget.data.get })
-      val mergedData = data.deepMerge(Json.obj((field.name,js)))
-      logger.debug(mergedData.toString())
-      propagate(mergedData, metadata, _.beforeSave).map{ jsChilds =>
-        Map(child.key -> jsChilds.asJson).asJson
+      val js = childWidgets.map{ case w => w.widget.data.get }.asJson
+      val dataWithoutThis = data.hcursor.downField(child.key).set(Json.Null).top.getOrElse(Json.Null)
+      propagate(data, _.beforeSave).map{ jsChilds =>
+        dataWithoutThis.deepMerge(Map(child.key -> jsChilds.asJson).asJson)
       }
     }
 
@@ -251,7 +198,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
               div(
                   repeat(entity) { e =>
                     val widget = childWidgets.find(_.id == e.get)
-                    val out = div(ClientConf.style.subform,
+                    div(ClientConf.style.subform,
                     widget.get.widget.render(write, Property(true)),
                       if (write) div(
                         BootstrapStyles.row,
@@ -262,14 +209,6 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
                         )
                       ) else frag()
                     ).render
-                    widget.get.widget.data.listen({ js =>
-                      if(!js.equals(e)) {
-                        //entity.replace(e.get._2, 1, js)
-                        //logger.info(entity.get.toString())
-                        setTouched()
-                      }
-                    },true)
-                    out
                   }
                 ).render
 
