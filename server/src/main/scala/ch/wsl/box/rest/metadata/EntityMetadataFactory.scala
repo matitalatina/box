@@ -77,11 +77,14 @@ object EntityMetadataFactory extends Logging {
               case Some(f) => firstNoPKField(f.referencingTable)
               case None => Future.successful(None)
             }
+            count <- fk match {
+              case Some(fk) => db.run(Registry().actions.tableActions(ec)(fk.referencingTable).count().map(_.count))
+              case None => Future.successful(0)
+            }
           } yield {
             fk match {
               case Some(fk) => {
-                val count = db.run(Registry().actions.tableActions(ec)(fk.referencingTable).count().map(_.count))
-                if (Await.result(count, 30 second) <= lookupMaxRows) {
+                if (count <= lookupMaxRows) {
                   if (constraints.contains(fk.constraintName)) {
                     logger.info("error: " + fk.constraintName)
                     logger.info(field.column_name)
@@ -98,7 +101,6 @@ object EntityMetadataFactory extends Logging {
 
                     import ch.wsl.box.shared.utils.JSONUtils._
                     for {
-                      keys <- keysOf(model)
                       lookupData <- db.run(Registry().actions.tableActions(ec)(model).find())
                     } yield {
                       val options = lookupData.map { lookupRow =>
