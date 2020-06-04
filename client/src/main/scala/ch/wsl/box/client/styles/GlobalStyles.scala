@@ -151,6 +151,11 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
     unsafeRoot("input[type=\"number\"]")(
       unsafeProp("-moz-appearance","textfield")
+    ),
+
+
+    unsafeRoot(".ql-editor p")(
+      marginBottom(10 px)
     )
 
 

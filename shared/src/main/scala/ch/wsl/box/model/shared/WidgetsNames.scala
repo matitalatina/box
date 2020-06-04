@@ -24,6 +24,7 @@ object WidgetsNames {
   val map = "map"
   val code = "code"
   val richTextEditor = "richTextEditor"
+  val richTextEditorFull = "richTextEditorFull"
 
   val all = Seq(
     textinput,
@@ -44,6 +45,7 @@ object WidgetsNames {
     mapPoint,
     map,
     code,
-    richTextEditor
+    richTextEditor,
+    richTextEditorFull
   ).sorted
 }

@@ -126,6 +126,8 @@ trait LookupWidget extends Widget {
     s
   }
 
+  private var lastQuery:Json = Json.Null
+
   for{
     look <- field.lookup
     query <- look.lookupQuery
@@ -143,10 +145,13 @@ trait LookupWidget extends Widget {
           }
           case Right(j) => j
         }
-        REST.lookup(look.lookupEntity, look.map, jsonQuery).map { lookups =>
-          val newLookup = toSeq(lookups)
-          if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
-            lookup.set(newLookup, true)
+        if(lastQuery != jsonQuery) {
+          lastQuery = jsonQuery
+          REST.lookup(look.lookupEntity, look.map, jsonQuery).map { lookups =>
+            val newLookup = toSeq(lookups)
+            if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
+              lookup.set(newLookup, true)
+            }
           }
         }
       }, true)
