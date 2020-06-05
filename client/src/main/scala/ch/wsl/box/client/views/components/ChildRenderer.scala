@@ -133,10 +133,8 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     }
 
     override def beforeSave(data: Json, metadata: JSONMetadata) = {
-      val js = childWidgets.map{ case w => w.widget.data.get }.asJson
-      val dataWithoutThis = data.hcursor.downField(child.key).set(Json.Null).top.getOrElse(Json.Null)
       propagate(data, _.beforeSave).map{ jsChilds =>
-        dataWithoutThis.deepMerge(Map(child.key -> jsChilds.asJson).asJson)
+        Map(child.key -> jsChilds.asJson).asJson
       }
     }
 
