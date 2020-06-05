@@ -74,9 +74,14 @@ trait Widget extends Logging {
   import io.udash.css.CssView._
 
 
-  protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Json] = Future.sequence(widgets.map(_.beforeSave(data,metadata))).map{ fields =>
-    fields.foldRight(JsonObject.empty.asJson){ (a,result) =>
-      a.deepMerge(result)
+  protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Json] = {
+    widgets.foldRight(Future.successful(data)){ (widget,result) =>
+      for{
+        r <- result
+        newResult <- widget.beforeSave(r,metadata)
+      } yield {
+        r.deepMerge(newResult)
+      }
     }
   }
   protected def afterSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(data,metadata))).map(_ => Unit)

@@ -134,6 +134,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
     override def beforeSave(data: Json, metadata: JSONMetadata) = {
       propagate(data, _.beforeSave).map{ jsChilds =>
+        logger.debug(Map(child.key -> jsChilds.asJson).asJson.toString())
         Map(child.key -> jsChilds.asJson).asJson
       }
     }

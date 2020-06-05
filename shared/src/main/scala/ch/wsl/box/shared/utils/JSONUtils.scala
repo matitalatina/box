@@ -38,7 +38,6 @@ object JSONUtils extends Logging {
 
     def seq(field:String):Seq[Json] = {
       val result = el.hcursor.get[Seq[Json]](field)
-      logger.info(s"getting seq of $field, result: $result")
       result.right.getOrElse(Seq())
     }
 

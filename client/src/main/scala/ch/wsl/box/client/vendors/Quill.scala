@@ -3,6 +3,8 @@ package ch.wsl.box.client.vendors
 import ch.wsl.box.client.views.components.widget.RichTextEditorWidget.{Full, Minimal, Mode}
 import scala.concurrent.duration._
 import org.scalajs.dom.raw.HTMLElement
+import scala.scalajs.js.timers._
+import scala.concurrent.duration._
 
 import scala.scalajs.js
 
@@ -52,10 +54,15 @@ object Quill {
           "toolbar" -> toolbar
         ),
         "placeholder" -> placeholder,
-        "theme" -> "snow"
+        "theme" -> "snow",
+        "debug" -> "debug"
       ))
-      val delta = quill.clipboard.convert(value)
-      quill.setContents(delta,"silent")
+
+
+      setTimeout(500.milli) {
+        val delta = quill.clipboard.convert(value)
+        quill.setContents(delta, "silent")
+      }
 
       quill.on("text-change",{ () => {
           onChange(quill.root.innerHTML.asInstanceOf[String])

@@ -42,7 +42,6 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   import io.circe.syntax._
 
   val instanceId = UUID.randomUUID().toString
-  logger.info(s"Creating new FileWidget $instanceId")
 
   val urlProp:Property[Option[String]] = Property(None)
 
@@ -54,7 +53,6 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       s"/file/${entity}.${field.file.get.file_field}/${idString}"
     }
     if(urlProp.get != newUrl) {
-      logger.info(s"URL setting changed from ${urlProp.get} to $newUrl")
       urlProp.set(newUrl)
     }
   },true)
@@ -65,9 +63,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
   id.listen(_ => FileWidget.files.clear())
 
   override def afterSave(result:Json, metadata: JSONMetadata) = {
-    logger.info(s"File after save, instance $instanceId, with result: $result with selected file: ${selectedFile.get.headOption.map(_.name)}, prop: ${prop.get}")
     val jsonid = result.ID(metadata.keys)
-    logger.info(s"jsonid = $jsonid")
     for{
       idfile <- Future.sequence{
         val r: Seq[Future[Int]] = selectedFile.get.map(REST.sendFile(_,jsonid,s"${metadata.entity}.${field.file.get.file_field}"))

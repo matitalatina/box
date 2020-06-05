@@ -44,12 +44,8 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
         case None => Json.Null
       }
     } else jsField
+    Map(field.name -> result).asJson
 
-    val js = data.asObject match {
-      case Some(obj) => obj.add(field.name,result).asJson
-      case None => Map(field.name -> result).asJson
-    }
-    js
   }
 
 
