@@ -21,10 +21,6 @@ import scala.concurrent.Future
 import scala.util.Random
 
 
-object FileWidget{
-  private var files:collection.mutable.Map[String,dom.File] = collection.mutable.Map()
-}
-
 /**
   *
   * @param id
@@ -43,26 +39,41 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 
   val instanceId = UUID.randomUUID().toString
 
-  val urlProp:Property[Option[String]] = Property(None)
+  def url(idString:String):Option[String] = {
+    JSONID.fromString(idString).map{ id =>
+      s"/file/${entity}.${field.file.get.file_field}/${idString}"
+    }
+  }
+
+  val urlProp:Property[Option[String]] = Property(url(id.get))
 
   val fileName:Property[String] = Property("")
 
-  id.listen({ idString =>
+  val selectedFile: SeqProperty[File] = SeqProperty(Seq.empty[File])
+
+  logger.debug(id.get)
+
+  autoRelease(id.listen({ idString =>
+    logger.info(idString)
+    selectedFile.set(Seq())
     fileName.set(prop.get.string)
-    val newUrl = JSONID.fromString(idString).map{ id =>
-      s"/file/${entity}.${field.file.get.file_field}/${idString}"
-    }
+    val newUrl = url(idString)
     if(urlProp.get != newUrl) {
       urlProp.set(newUrl)
     }
-  },true)
+  },true))
+
+  autoRelease(selectedFile.listen{ files =>
+    logger.info(s"selected file changed ${files.map(_.name)}")
+    prop.set(files.headOption.map(_.name).asJson)
+  })
 
 
 
 
-  id.listen(_ => FileWidget.files.clear())
 
   override def afterSave(result:Json, metadata: JSONMetadata) = {
+    logger.debug(s"FileWidget afterSave json: $result")
     val jsonid = result.ID(metadata.keys)
     for{
       idfile <- Future.sequence{
@@ -71,28 +82,20 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
       }
     } yield {
       logger.info("image saved")
-      selectedFile.set(Seq())
-      if(urlProp.get.isDefined) {
-        urlProp.touch()
-      } else {
-        urlProp.set(Some(s"/file/${entity}.${field.file.get.file_field}/${jsonid.asString}"))
-      }
-      fileName.set(result.get(field.name))
+      //id.touch()
+      result
     }
   }
 
 
-  val selectedFile: SeqProperty[File] = SeqProperty(Seq.empty[File])
 
-  selectedFile.listen{ files =>
-    logger.info(s"selected file changed ${files.map(_.name)}")
-    prop.set(files.headOption.map(_.name).asJson)
-  }
+
+
 
 
   private def showImage = {
     logger.debug("showImage")
-    produceWithNested(urlProp) { (url,nested) =>
+    autoRelease(produceWithNested(urlProp) { (url,nested) =>
       val randomString = UUID.randomUUID().toString
       url match {
         case Some(u) => div(
@@ -102,7 +105,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
         ).render
         case None => div().render
       }
-    }
+    })
   }
 
   override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),ClientConf.style.noPadding,
@@ -115,7 +118,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
     div(BootstrapCol.md(12),ClientConf.style.noPadding,
       WidgetUtils.toLabel(field),
       showImage,
-      produce(id) { _ => div(FileInput(selectedFile, Property(false))("file")).render },
+      autoRelease(produce(id) { _ => div(FileInput(selectedFile, Property(false))("file")).render }),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
   }

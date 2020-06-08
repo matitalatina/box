@@ -150,12 +150,13 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       {for{
         updatedData <- widget.beforeSave(data,metadata)
         resultBeforeAfterSave <- saveAction(updatedData)
-        _ <- widget.afterSave(resultBeforeAfterSave,metadata)
+        afterSaveResult <- widget.afterSave(resultBeforeAfterSave,metadata)
         newId = JSONID.fromData(resultBeforeAfterSave,metadata)
 
 
       } yield {
 
+        logger.debug(afterSaveResult.toString())
 
         enableGoAway
 
@@ -172,7 +173,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     for{
       resultSaved <- REST.get(model.get.kind, Session.lang(), model.get.name, id)
     } yield {
-      model.subProp(_.id).set(Some(id.asString))
+      reset()
+      model.subProp(_.id).set(Some(id.asString), true)
       model.subProp(_.data).set(resultSaved)
       enableGoAway
     }

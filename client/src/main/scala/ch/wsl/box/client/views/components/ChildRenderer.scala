@@ -127,16 +127,17 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       out
     }
 
-    override def afterSave(data: Json, metadata: JSONMetadata): Future[Unit] = {
+    def collectData(jsChilds:Seq[Json]) = {
+      logger.debug(Map(child.key -> jsChilds.asJson).asJson.toString())
+      Map(child.key -> jsChilds.asJson).asJson
+    }
 
-      propagate(data, _.afterSave).map(_ => ())
+    override def afterSave(data: Json, metadata: JSONMetadata): Future[Json] = {
+      propagate(data, _.afterSave).map(collectData)
     }
 
     override def beforeSave(data: Json, metadata: JSONMetadata) = {
-      propagate(data, _.beforeSave).map{ jsChilds =>
-        logger.debug(Map(child.key -> jsChilds.asJson).asJson.toString())
-        Map(child.key -> jsChilds.asJson).asJson
-      }
+      propagate(data, _.beforeSave).map(collectData)
     }
 
     override def killWidget(): Unit = {
@@ -148,43 +149,10 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     override def afterRender(): Unit = childWidgets.foreach(_.widget.killWidget())
 
 
-
-//    def cleanSubwidget() = {
-//      val widgetToKill = childWidgets.filterNot(w => entity.get.exists(js => w.isOf(js)))
-//      childWidgets = childWidgets.filter(w => entity.get.exists(js => w.isOf(js)))
-//      widgetToKill.foreach(_.killWidget())
-//    }
-
-//    def findOrAdd(write: Boolean, f: JSONMetadata, childValues: Property[Json], children: Seq[JSONMetadata]) = {
-//      childWidgets.find(_._1.isOf(childValues.get)) match {
-//        case None => {
-//          val widget = JSONMetadataRenderer(f, childValues, children)
-//          val renderedWidget = widget.render(write, Property(true))
-//          val result = (widget, renderedWidget)
-//          childWidgets = childWidgets ++ Seq(result)
-//          result
-//        }
-//        case Some(cw) => {
-//          if(cw._1.data.get != childValues.get) {
-//            val newData  = cw._1.data.get.deepMerge(childValues.get)
-//            logger.debug(s"old: ${cw._1.data.get}, new: ${newData}")
-//            cw._1.data.set(newData)
-//          }
-//          cw
-//        }
-//      }
-//    }
-
-
-
-
-
     override protected def show(): JsDom.all.Modifier = render(false)
 
     override protected def edit(): JsDom.all.Modifier = render(true)
 
-    var out:Binding = null;
-    var out2:Binding = null;
 
     private def render(write: Boolean): JsDom.all.Modifier = {
 
@@ -193,27 +161,24 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
         case Some(f) => {
 
           div(
-            produce(id) { _ =>
-              div(
-                  repeat(entity) { e =>
-                    val widget = childWidgets.find(_.id == e.get)
-                    div(ClientConf.style.subform,
-                    widget.get.widget.render(write, Property(true)),
-                      if (write) div(
-                        BootstrapStyles.row,
-                        div(BootstrapCol.md(12), ClientConf.style.block,
-                          div(BootstrapStyles.pullRight,
-                            a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
-                          )
-                        )
-                      ) else frag()
-                    ).render
-                  }
+            div(
+              autoRelease(repeat(entity) { e =>
+                val widget = childWidgets.find(_.id == e.get)
+                div(ClientConf.style.subform,
+                  widget.get.widget.render(write, Property(true)),
+                  if (write) div(
+                    BootstrapStyles.row,
+                    div(BootstrapCol.md(12), ClientConf.style.block,
+                      div(BootstrapStyles.pullRight,
+                        a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
+                      )
+                    )
+                  ) else frag()
                 ).render
-
-              },
-              if (write) a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add) else frag()
-            ).render
+              })
+            ).render,
+            if (write) a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add) else frag()
+          )
 
         }
       }
@@ -221,7 +186,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
 
 
-    id.listen(i => {
+    autoRelease(id.listen(i => {
 
       childWidgets.foreach(_.widget.killWidget())
       childWidgets.clear()
@@ -229,7 +194,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       val entityData = splitJson(prop.get)
       logger.debug(s"id changed with $i, new data $entityData")
       entityData.foreach(add)
-    },true)
+    },true))
 
 
 

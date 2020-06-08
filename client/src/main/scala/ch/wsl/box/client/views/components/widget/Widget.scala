@@ -54,18 +54,26 @@ trait Widget extends Logging {
   }
 
   def beforeSave(data:Json, metadata:JSONMetadata):Future[Json] = Future.successful(data)
-  def afterSave(data:Json, metadata:JSONMetadata):Future[Unit] = Future.successful(Unit)
+  def afterSave(data:Json, metadata:JSONMetadata):Future[Json] = Future.successful(data)
   def afterRender():Unit = {}
 
   def killWidget() = {
     bindings.foreach(_.kill())
+    registrations.foreach(_.cancel())
     bindings = List()
+    registrations = List()
   }
   private var bindings:List[Binding] = List()
+  private var registrations:List[Registration] = List()
 
   def autoRelease(b:Binding):Binding = {
     bindings = b :: bindings
     b
+  }
+
+  def autoRelease(r:Registration):Registration = {
+    registrations = r :: registrations
+    r
   }
 
 
@@ -74,17 +82,16 @@ trait Widget extends Logging {
   import io.udash.css.CssView._
 
 
-  protected def beforeSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Json] = {
+  protected def saveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget],widgetAction:Widget => (Json,JSONMetadata) => Future[Json])(implicit ec: ExecutionContext):Future[Json] = {
     widgets.foldRight(Future.successful(data)){ (widget,result) =>
       for{
         r <- result
-        newResult <- widget.beforeSave(r,metadata)
+        newResult <- widgetAction(widget)(r,metadata)
       } yield {
         r.deepMerge(newResult)
       }
     }
   }
-  protected def afterSaveAll(data:Json, metadata:JSONMetadata, widgets:Seq[Widget])(implicit ec: ExecutionContext):Future[Unit] = Future.sequence(widgets.map(_.afterSave(data,metadata))).map(_ => Unit)
 
 
 }

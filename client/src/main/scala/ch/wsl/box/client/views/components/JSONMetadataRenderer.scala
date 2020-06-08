@@ -150,7 +150,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     val widget = fieldsRenderer(block.fields, Stream.continually(block.fieldsWidth.toStream).flatten)
 
-    override def afterSave(data:Json,form:JSONMetadata): Future[Unit] = widget.afterSave(data,form)
+    override def afterSave(data:Json,form:JSONMetadata): Future[Json] = widget.afterSave(data,form)
     override def beforeSave(data:Json,form:JSONMetadata) = widget.beforeSave(data,form)
 
     override def killWidget(): Unit = widget.killWidget()
@@ -202,8 +202,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     }
     import io.circe.syntax._
 
-    override def afterSave(value:Json,metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,widgets.map(_.widget))
-    override def beforeSave(value:Json,metadata:JSONMetadata) = beforeSaveAll(value,metadata,widgets.map(_.widget))
+    override def afterSave(value:Json,metadata:JSONMetadata): Future[Json] = saveAll(value,metadata,widgets.map(_.widget),_.afterSave)
+    override def beforeSave(value:Json,metadata:JSONMetadata) = saveAll(value,metadata,widgets.map(_.widget),_.beforeSave)
 
     override def killWidget(): Unit = widgets.foreach(_.widget.killWidget())
 
@@ -234,8 +234,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
       )
     }
 
-    override def afterSave(value:Json, metadata:JSONMetadata): Future[Unit] = afterSaveAll(value,metadata,blocks.map(_._2))
-    override def beforeSave(value:Json, metadata:JSONMetadata) = beforeSaveAll(value,metadata,blocks.map(_._2))
+    override def afterSave(value:Json, metadata:JSONMetadata): Future[Json] = saveAll(value,metadata,blocks.map(_._2),_.afterSave)
+    override def beforeSave(value:Json, metadata:JSONMetadata) = saveAll(value,metadata,blocks.map(_._2),_.beforeSave)
 
   override def killWidget(): Unit = blocks.foreach(_._2.killWidget())
 

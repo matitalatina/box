@@ -3,12 +3,12 @@ package ch.wsl.box.rest
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.Http
-import akka.stream.{ActorMaterializer }
-import ch.wsl.box.rest.routes.{BoxRoutes, Preloading, Root}
+import akka.stream.ActorMaterializer
+import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
 import ch.wsl.box.rest.utils.{Auth, BoxConf}
-import com.typesafe.config.{Config}
+import com.typesafe.config.Config
 import scribe._
 import scribe.writer.ConsoleWriter
 
@@ -43,7 +43,7 @@ class Box(implicit val executionContext: ExecutionContext) {
 
   def start() =  {
 
-    implicit def handler: ExceptionHandler = BoxExceptionHandler()
+
 
     BoxConf.load()
 
@@ -53,6 +53,7 @@ class Box(implicit val executionContext: ExecutionContext) {
     val port = BoxConf.port
     val origins = BoxConf.origins
 
+    implicit def handler: ExceptionHandler = BoxExceptionHandler(origins).handler()
 
 
     val preloading: Future[Http.ServerBinding] = Http().bindAndHandle(Preloading.route, host, port)
