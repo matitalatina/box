@@ -144,7 +144,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
     }
 
 
-    override def afterRender(): Unit = childWidgets.foreach(_.widget.killWidget())
+    override def afterRender(): Unit = childWidgets.foreach(_.widget.afterRender())
 
 
     override protected def show(): JsDom.all.Modifier = render(false)
@@ -193,6 +193,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       logger.debug(s"id changed with $i")
       entityData.foreach(add)
     },true))
+
 
 
 

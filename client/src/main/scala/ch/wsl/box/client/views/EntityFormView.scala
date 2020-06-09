@@ -238,7 +238,6 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
 
   def navigate(n: ch.wsl.box.client.utils.Navigator => Future[Option[String]]) = {
-    widget.killWidget()
     n(nav).map(_.map(goTo))
   }
 
@@ -282,7 +281,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     Navigate.enable()
     model.subProp(_.changed).set(false)
     window.onbeforeunload = { (e:BeforeUnloadEvent) =>
-
+      widget.killWidget()
     }
   }
 
