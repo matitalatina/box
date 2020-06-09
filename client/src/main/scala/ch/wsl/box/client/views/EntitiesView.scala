@@ -46,7 +46,7 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
       model.subSeq(_.list).set(models)
       model.subSeq(_.filteredList).set(models)
     }
-    Session.resetQuery()
+
     if(state.currentEntity != "") {
       model.subProp(_.currentEntity).set(Some(state.currentEntity))
     } else {

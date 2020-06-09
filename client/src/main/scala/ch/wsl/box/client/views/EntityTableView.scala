@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Labels, Navigation, Session}
+import ch.wsl.box.client.utils.{ClientConf, Labels, Navigation, Session, SessionQuery}
 import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget, SelectWidgetFullWidth}
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
 import ch.wsl.box.model.shared.EntityKind.VIEW
@@ -129,8 +129,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       }
 
       query:JSONQuery = Session.getQuery() match {
-        case None => defaultQuery
-        case Some(jsonquery) => jsonquery      //in case a query is already stored in Session
+        case Some(SessionQuery(jsonquery,name)) if name == model.get.name => jsonquery      //in case a query is already stored in Session
+        case _ => defaultQuery
       }
 
       qEncoded = encodeFk(fields,query)
@@ -203,7 +203,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def saveIds(ids: IDs, query:JSONQuery) = {
-    Session.setQuery(query)
+    Session.setQuery(SessionQuery(query,model.get.name))
     Session.setIDs(ids)
   }
 

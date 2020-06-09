@@ -50,8 +50,6 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       val d = attachChild(id,data)
       val propData = Property(d)
 
-      logger.debug(d.toString())
-      logger.debug(metadata.get.toString)
 
       val widget = JSONMetadataRenderer(metadata.get, propData, children)
 
@@ -192,7 +190,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
       childWidgets.clear()
       entity.clear()
       val entityData = splitJson(prop.get)
-      logger.debug(s"id changed with $i, new data $entityData")
+      logger.debug(s"id changed with $i")
       entityData.foreach(add)
     },true))
 

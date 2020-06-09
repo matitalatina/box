@@ -13,6 +13,12 @@ import scala.util.Try
 /**
   * Created by andre on 5/24/2017.
   */
+
+case class SessionQuery(query:JSONQuery, entity:String)
+object SessionQuery{
+  def empty = SessionQuery(JSONQuery.empty,"")
+}
+
 object Session extends Logging {
 
   import ch.wsl.box.client.Context._
@@ -110,8 +116,8 @@ object Session extends Logging {
     }
   }
 
-  def getQuery():Option[JSONQuery] = get[JSONQuery](QUERY)
-  def setQuery(query: JSONQuery) = set(QUERY,query)
+  def getQuery():Option[SessionQuery] = get[SessionQuery](QUERY)
+  def setQuery(query: SessionQuery) = set(QUERY,query)
   def resetQuery() = set(QUERY, None)
 
 
