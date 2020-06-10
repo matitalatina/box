@@ -91,10 +91,10 @@
         };
 
         setInterval(() => {
-            fetch("/status",opts).then(r => r.text()).then(text => {
+            fetch(window.location.pathname + "/status",opts).then(r => r.text()).then(text => {
                 console.log(text)
                 if(text === 'RUNNING') {
-                    window.location = '/';
+                    window.location = window.location.pathname + '/';
                 }
             })
         },1000)

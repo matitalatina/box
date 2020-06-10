@@ -85,6 +85,9 @@ object JSONQuery{
   def sortWith(sort:JSONSort*) = empty.copy(sort = sort.toList)
 
   def sortByKeys(keys: Seq[String]) = empty.copy(sort = keys.map{k => JSONSort(k,Sort.ASC)}.toList)
+
+  def limit(l:Int) = empty.copy(paging = Some(JSONQueryPaging(currentPage = 1, pageLength = l)))
+
 }
 
 object Sort{

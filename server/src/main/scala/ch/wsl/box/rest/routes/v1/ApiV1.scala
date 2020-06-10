@@ -144,6 +144,7 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
       loginHeader ~
       ui ~
       uiFile ~
+      PublicArea().route ~
       PrivateArea().route
   }
 
