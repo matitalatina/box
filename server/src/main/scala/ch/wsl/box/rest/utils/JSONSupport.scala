@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.utils
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.util.Base64
 
 import io.circe._
 import io.circe.parser._
@@ -78,6 +79,18 @@ object JSONSupport extends GeoJsonSupport {
 
     override def apply(c: HCursor): Result[LocalTime] = Decoder.decodeString.map{s =>
       DateTimeFormatters.time.parse(s).get
+    }.apply(c)
+  }
+
+  implicit val FileFormat : Encoder[Array[Byte]] with Decoder[Array[Byte]] = new Encoder[Array[Byte]] with Decoder[Array[Byte]] {
+
+    override def apply(a: Array[Byte]): Json = Try {
+      Encoder.encodeString.apply(Base64.getEncoder.encodeToString(a))
+    }.getOrElse(Json.Null)
+
+
+    override def apply(c: HCursor): Result[Array[Byte]] = Decoder.decodeString.map{s =>
+      Base64.getDecoder.decode(s)
     }.apply(c)
   }
 
