@@ -26,9 +26,9 @@ trait DateTimeFormatters[T]{
   lazy val dateTimeFormats = formats.map(p => DateTimeFormatter.ofPattern(p)).+:(dateOnlyFormatter)
 
 
-  def parser(str:String,pattern:DateTimeFormatter):T
+  protected def parser(str:String,pattern:DateTimeFormatter):T
 
-  def toObject(dateStr: String): Option[T] = {
+  private def toObject(dateStr: String): Option[T] = {
 
 
     val trimmedDate = dateStr.trim
