@@ -14,7 +14,7 @@ trait DateTimeFormatters[T]{
 
   def format(dt:T,format:String = formats.last):String
 
-  def parse(str:String):Option[T] = toLocalDateTime(str).map(fromLocalDateTime)
+  def parse(str:String):Option[T] = toObject(str)
 
   //this is to format a timestamp with data only and add time to 00:00
   lazy val dateOnlyFormatter = new DateTimeFormatterBuilder().append(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
@@ -26,16 +26,16 @@ trait DateTimeFormatters[T]{
   lazy val dateTimeFormats = formats.map(p => DateTimeFormatter.ofPattern(p)).+:(dateOnlyFormatter)
 
 
-  def fromLocalDateTime(l:LocalDateTime):T
+  def parser(str:String,pattern:DateTimeFormatter):T
 
-  def toLocalDateTime(dateStr: String): Option[LocalDateTime] = {
+  def toObject(dateStr: String): Option[T] = {
 
 
     val trimmedDate = dateStr.trim
 
-    def normalize(patterns: Seq[DateTimeFormatter]): Try[LocalDateTime] = patterns match {
+    def normalize(patterns: Seq[DateTimeFormatter]): Try[T] = patterns match {
       case head::tail => {
-        val resultTry = Try(LocalDateTime.parse(trimmedDate, head))
+        val resultTry = Try(parser(trimmedDate, head))
 
 
         if(resultTry.isSuccess) resultTry else normalize(tail)
@@ -61,8 +61,8 @@ object DateTimeFormatters {
       "yyyy-MM-dd HH:mm"
     )
 
-    override def fromLocalDateTime(l:LocalDateTime): LocalDateTime = l
 
+    override def parser(str: String, pattern: DateTimeFormatter): LocalDateTime = LocalDateTime.parse(str,pattern)
 
     override def format(dt: LocalDateTime, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
   }
@@ -73,9 +73,10 @@ object DateTimeFormatters {
     )
 
 
+    override def parser(str: String, pattern: DateTimeFormatter): LocalDate = LocalDate.parse(str,pattern)
+
     override def format(dt: LocalDate, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
 
-    override def fromLocalDateTime(l:LocalDateTime): LocalDate = l.toLocalDate
   }
 
   val time = new DateTimeFormatters[LocalTime] {
@@ -85,10 +86,11 @@ object DateTimeFormatters {
       "HH:mm"
     )
 
+    override def parser(str: String, pattern: DateTimeFormatter): LocalTime = LocalTime.parse(str,pattern)
+
 
     override def format(dt: LocalTime, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
 
-    override def fromLocalDateTime(l:LocalDateTime): LocalTime = l.toLocalTime
   }
 
 
