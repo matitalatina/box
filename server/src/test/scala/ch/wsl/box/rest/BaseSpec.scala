@@ -2,7 +2,7 @@ package ch.wsl.box.rest
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import ch.wsl.box.rest.utils.{BoxConf, UserProfile}
+import ch.wsl.box.rest.utils.{BoxConfig, UserProfile}
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.concurrent.ScalaFutures
 

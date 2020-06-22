@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.metadata.box
 
-import ch.wsl.box.model.boxentities.Form
+import ch.wsl.box.model.boxentities.BoxForm
 import ch.wsl.box.model.shared._
 
 object FormUIDef {
@@ -53,7 +53,7 @@ object FormUIDef {
     exportFields = Seq()
   )
 
-  def field(forms:Seq[Form.Form_row]) = JSONMetadata(
+  def field(forms:Seq[BoxForm.BoxForm_row]) = JSONMetadata(
     objId = FORM_FIELD,
     name = "Field builder",
     label = "Field builder",

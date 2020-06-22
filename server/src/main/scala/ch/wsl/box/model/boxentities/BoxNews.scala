@@ -6,19 +6,19 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 import slick.model.ForeignKeyAction
 
 
-object News {
+object BoxNews {
 
 
 
 
-  case class News_row(news_id: Option[Int] = None, datetime: java.time.LocalDateTime, author:Option[String]=None)
+  case class BoxNews_row(news_id: Option[Int] = None, datetime: java.time.LocalDateTime, author:Option[String]=None)
   /** GetResult implicit for fetching Form_row objects using plain SQL queries */
 
   /** Table description of table form. Objects of this class serve as prototypes for rows in queries. */
-  class News(_tableTag: Tag) extends Table[News_row](_tableTag,"news") {
-    def * = (Rep.Some(news_id), datetime, author) <> (News_row.tupled, News_row.unapply)
+  class BoxNews(_tableTag: Tag) extends Table[BoxNews_row](_tableTag,"news") {
+    def * = (Rep.Some(news_id), datetime, author) <> (BoxNews_row.tupled, BoxNews_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(news_id), datetime, author).shaped.<>({ r=>import r._; _1.map(_=> News_row.tupled((_1, _2, _3)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(news_id), datetime, author).shaped.<>({ r=>import r._; _1.map(_=> BoxNews_row.tupled((_1, _2, _3)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
 
     val news_id: Rep[Int] = column[Int]("news_id", O.AutoInc, O.PrimaryKey)
@@ -30,7 +30,7 @@ object News {
 
   }
   /** Collection-like TableQuery object for table Form */
-  lazy val News = new TableQuery(tag => new News(tag))
+  lazy val BoxNews = new TableQuery(tag => new BoxNews(tag))
 
 
   /** Entity class storing rows of table Form_i18n
@@ -55,7 +55,7 @@ object News {
 
 
     /** Foreign key referencing Field (database name fkey_field) */
-    lazy val fieldFk = foreignKey("news_i18n_news_id_fkey", news_id, News)(r => r.news_id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val fieldFk = foreignKey("news_i18n_news_id_fkey", news_id, BoxNews)(r => r.news_id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
   }
   /** Collection-like TableQuery object for table Form_i18n */
   lazy val News_i18n = new TableQuery(tag => new News_i18n(tag))

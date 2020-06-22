@@ -20,14 +20,14 @@ object Functions extends Data {
 
   override def metadataFactory(implicit up: UserProfile, mat: Materializer, ec: ExecutionContext): DataMetadataFactory = FunctionMetadataFactory()
 
-  def functions = ch.wsl.box.model.boxentities.Function
+  def functions = ch.wsl.box.model.boxentities.BoxFunction
 
   override def data(function: String, params: Json, lang: String)(implicit up: UserProfile,  mat: Materializer, ec: ExecutionContext,system:ActorSystem): Future[Option[DataContainer]] = {
     implicit def db:Database = up.db
 
     for{
       functionDef <- Auth.boxDB.run{
-        functions.Function.filter(_.name === function).result
+        functions.BoxFunctionTable.filter(_.name === function).result
       }.map(_.headOption)
       result <- functionDef match {
         case None => Future.successful(None)

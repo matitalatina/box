@@ -5,7 +5,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 /**
   * Created by andre on 5/15/2017.
   */
-object PublicEntities {
+object BoxPublicEntities {
 
   val profile = ch.wsl.box.jdbc.PostgresProfile
 

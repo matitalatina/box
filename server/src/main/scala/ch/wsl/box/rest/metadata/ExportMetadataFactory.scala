@@ -1,8 +1,8 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
-import ch.wsl.box.model.boxentities.{Export, ExportField}
+import ch.wsl.box.model.boxentities.BoxExportField.{BoxExportField_i18n_row, BoxExportField_row}
+import ch.wsl.box.model.boxentities.{BoxExport, BoxExportField}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import io.circe.Json
@@ -21,7 +21,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
   implicit val db = up.db
 
   def list: Future[Seq[String]] = Auth.boxDB.run{
-    Export.Export.result
+    BoxExport.BoxExportTable.result
   }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
   def list(lang:String): Future[Seq[ExportDef]] = {
@@ -34,7 +34,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     def checkRole(roles:List[String], access_roles:List[String], accessLevel:Int) =  roles.intersect(access_roles).size>0 || access_roles.isEmpty || access_roles.contains(up.name) || accessLevel == 1000
 
     def query    = for {
-       (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
+       (e, ei18) <- BoxExport.BoxExportTable joinLeft(BoxExport.BoxExport_i18nTable.filter(_.lang === lang)) on(_.export_id === _.export_id)
 
     } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip), e.access_role)
 
@@ -58,7 +58,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
   def defOf(name:String, lang:String): Future[ExportDef] = {
     val query = for {
-      (e, ei18) <- Export.Export joinLeft(Export.Export_i18n.filter(_.lang === lang)) on(_.export_id === _.export_id)
+      (e, ei18) <- BoxExport.BoxExportTable joinLeft(BoxExport.BoxExport_i18nTable.filter(_.lang === lang)) on(_.export_id === _.export_id)
       if e.function === name
 
     } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
@@ -72,13 +72,13 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
   def of(name:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
-      (export, exportI18n) <- Export.Export joinLeft Export.Export_i18n.filter(_.lang === lang) on (_.export_id === _.export_id)
+      (export, exportI18n) <- BoxExport.BoxExportTable joinLeft BoxExport.BoxExport_i18nTable.filter(_.lang === lang) on (_.export_id === _.export_id)
       if export.function === name
 
     } yield (export,exportI18n)
 
     def queryField(exportId:Int) = for{
-      (f, fi18n) <- ExportField.ExportField joinLeft ExportField.ExportField_i18n.filter(_.lang === lang) on (_.field_id === _.field_id)
+      (f, fi18n) <- BoxExportField.BoxExportFieldTable joinLeft BoxExportField.BoxExportField_i18nTable.filter(_.lang === lang) on (_.field_id === _.field_id)
                 if f.export_id === exportId
     } yield (f, fi18n)
 
@@ -113,7 +113,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     }
   }
 
-  private def fieldsMetadata(lang:String)(el:(ExportField_row, Option[ExportField_i18n_row])):Future[JSONField] = {
+  private def fieldsMetadata(lang:String)(el:(BoxExportField_row, Option[BoxExportField_i18n_row])):Future[JSONField] = {
     import ch.wsl.box.shared.utils.JSONUtils._
 
     val (field,fieldI18n) = el

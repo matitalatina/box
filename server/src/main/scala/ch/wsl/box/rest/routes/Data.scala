@@ -48,7 +48,7 @@ trait Data extends Logging {
   def data(function:String,params:Json,lang:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext, system:ActorSystem):Future[Option[DataContainer]]
 
   def render(function:String,params:Json,lang:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext, system:ActorSystem) = {
-     import ch.wsl.box.model.boxentities.Function._
+     import ch.wsl.box.model.boxentities.BoxFunction._
 
     onSuccess(data(function,params,lang)) {
       case Some(dc) if dc.mode == FunctionKind.Modes.TABLE  =>

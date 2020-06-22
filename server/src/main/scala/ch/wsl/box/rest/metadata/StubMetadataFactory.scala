@@ -1,11 +1,11 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.boxentities.Field.{Field_i18n_row, Field_row}
-import ch.wsl.box.model.boxentities.{Field, Form}
-import ch.wsl.box.model.boxentities.Form.{Form_i18n_row, Form_row}
+import ch.wsl.box.model.boxentities.BoxField.{BoxField_i18n_row, BoxField_row}
+import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
+import ch.wsl.box.model.boxentities.BoxForm.{BoxForm_i18n_row, BoxForm_row}
 import ch.wsl.box.model.shared.{Layout, LayoutBlock}
-import ch.wsl.box.rest.utils.{BoxConf, UserProfile}
+import ch.wsl.box.rest.utils.{BoxConfig, UserProfile}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,12 +20,12 @@ object StubMetadataFactory {
   def forEntity(entity:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[Boolean] = {
 
     for{
-      langs <- Future.sequence(BoxConf.langs.map{ lang =>
+      langs <- Future.sequence(BoxConfig.langs.map{ lang =>
         EntityMetadataFactory.of(entity,lang).map(x => (lang,x))
       })
       metadata = langs.head._2
       form <- {
-        val newForm = Form_row(
+        val newForm = BoxForm_row(
           form_id = None,
           name = entity,
           description = None,
@@ -37,21 +37,21 @@ object StubMetadataFactory {
         )
 
         up.boxDb.run{
-          (Form.table.returning(Form.table) += newForm).transactionally
+          (BoxForm.BoxFormTable.returning(BoxForm.BoxFormTable) += newForm).transactionally
         }
       }
       formI18n <- Future.sequence(langs.map{ lang =>
-        val newFormI18n = Form_i18n_row(
+        val newFormI18n = BoxForm_i18n_row(
           form_id = form.form_id,
           lang = Some(lang._1),
           label = Some(entity)
         )
         up.boxDb.run{
-          (Form.Form_i18n.returning(Form.Form_i18n) += newFormI18n).transactionally
+          (BoxForm.BoxForm_i18nTable.returning(BoxForm.BoxForm_i18nTable) += newFormI18n).transactionally
         }
       })
       fields <- Future.sequence(metadata.fields.map{ field =>
-        val newField = Field_row(
+        val newField = BoxField_row(
           form_id = form.form_id.get,
           `type` = field.`type`,
           name = field.name,
@@ -62,16 +62,16 @@ object StubMetadataFactory {
         )
 
         up.boxDb.run{
-          (Field.table.returning(Field.table) += newField).transactionally
+          (BoxField.BoxFieldTable.returning(BoxField.BoxFieldTable) += newField).transactionally
         }
       })
       fieldsI18n <- {
-        val t1: Future[Seq[Seq[Field_i18n_row]]] = Future.sequence(langs.map{ lang =>
-          val t: Future[Seq[Field_i18n_row]] = Future.sequence(lang._2.fields.map{ case jsonField =>
+        val t1: Future[Seq[Seq[BoxField_i18n_row]]] = Future.sequence(langs.map{ lang =>
+          val t: Future[Seq[BoxField_i18n_row]] = Future.sequence(lang._2.fields.map{ case jsonField =>
 
             val field = fields.find(_.name == jsonField.name ).get
 
-            val newFieldI18n = Field_i18n_row(
+            val newFieldI18n = BoxField_i18n_row(
               field_id = field.field_id,
               lang = Some(lang._1),
               label = jsonField.label,
@@ -81,7 +81,7 @@ object StubMetadataFactory {
             )
 
             up.boxDb.run{
-              (Field.Field_i18n.returning(Field.Field_i18n) += newFieldI18n).transactionally
+              (BoxField.BoxField_i18nTable.returning(BoxField.BoxField_i18nTable) += newFieldI18n).transactionally
             }
 
           })

@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.model.boxentities.Labels
+import ch.wsl.box.model.boxentities.BoxLabels
 import ch.wsl.box.rest.utils.Auth
 import ch.wsl.box.jdbc.PostgresProfile.api._
 
@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class LangHelper(lang:String)(implicit ec:ExecutionContext) {
   def translationTable:Future[Map[String,String]] = {
     val query = for{
-      label <- Labels.table if label.lang === lang
+      label <- BoxLabels.BoxLabelsTable if label.lang === lang
     } yield label
     Auth.boxDB.run(query.result).map{_.map{ row =>
       row.key -> row.label.getOrElse("")

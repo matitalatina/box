@@ -1,9 +1,9 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.boxentities.ExportField.{ExportField_i18n_row, ExportField_row}
-import ch.wsl.box.model.boxentities.Function.{FunctionField_i18n_row, FunctionField_row}
-import ch.wsl.box.model.boxentities.{Export, ExportField}
+import ch.wsl.box.model.boxentities.BoxExportField.{BoxExportField_i18n_row, BoxExportField_row}
+import ch.wsl.box.model.boxentities.BoxFunction.{BoxFunctionField_i18n_row, BoxFunctionField_row}
+import ch.wsl.box.model.boxentities.{BoxExport, BoxExportField}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import io.circe.Json
@@ -21,10 +21,10 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
 
   implicit val db = up.db
 
-  def functions = ch.wsl.box.model.boxentities.Function
+  def functions = ch.wsl.box.model.boxentities.BoxFunction
 
   def list: Future[Seq[String]] = Auth.boxDB.run{
-    functions.Function.result
+    functions.BoxFunctionTable.result
   }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
   def list(lang:String): Future[Seq[ExportDef]] = {
@@ -37,7 +37,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     def checkRole(roles:List[String], access_roles:List[String], accessLevel:Int) =  roles.intersect(access_roles).size>0 || access_roles.isEmpty || access_roles.contains(up.name) || accessLevel == 1000
 
     def query    = for {
-      (e, ei18) <- functions.Function joinLeft(functions.Function_i18n.filter(_.lang === lang)) on(_.function_id === _.function_id)
+      (e, ei18) <- functions.BoxFunctionTable joinLeft(functions.BoxFunction_i18nTable.filter(_.lang === lang)) on(_.function_id === _.function_id)
 
     } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip), e.access_role, e.mode)
 
@@ -60,7 +60,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
 
   def defOf(name:String, lang:String): Future[ExportDef] = {
     val query = for {
-      (e, ei18) <- functions.Function joinLeft(functions.Function_i18n.filter(_.lang === lang)) on(_.function_id === _.function_id)
+      (e, ei18) <- functions.BoxFunctionTable joinLeft(functions.BoxFunction_i18nTable.filter(_.lang === lang)) on(_.function_id === _.function_id)
       if e.name === name
 
     } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip),e.mode)
@@ -74,13 +74,13 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
 
   def of(name:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
-      (func, functionI18n) <- functions.Function joinLeft functions.Function_i18n.filter(_.lang === lang) on (_.function_id === _.function_id)
+      (func, functionI18n) <- functions.BoxFunctionTable joinLeft functions.BoxFunction_i18nTable.filter(_.lang === lang) on (_.function_id === _.function_id)
       if func.name === name
 
     } yield (func,functionI18n)
 
     def queryField(functionId:Int) = for{
-      (f, fi18n) <- functions.FunctionField joinLeft functions.FunctionField_i18n.filter(_.lang === lang) on (_.field_id === _.field_id)
+      (f, fi18n) <- functions.BoxFunctionFieldTable joinLeft functions.BoxFunctionField_i18nTable.filter(_.lang === lang) on (_.field_id === _.field_id)
       if f.function_id === functionId
     } yield (f, fi18n)
 
@@ -107,7 +107,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     }
   }
 
-  private def fieldsMetadata(lang:String)(el:(FunctionField_row, Option[FunctionField_i18n_row])):Future[JSONField] = {
+  private def fieldsMetadata(lang:String)(el:(BoxFunctionField_row, Option[BoxFunctionField_i18n_row])):Future[JSONField] = {
     import ch.wsl.box.shared.utils.JSONUtils._
 
     val (field,fieldI18n) = el

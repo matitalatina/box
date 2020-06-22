@@ -1,7 +1,7 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.boxentities.Form
+import ch.wsl.box.model.boxentities.BoxForm
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.routes.Table
 import ch.wsl.box.rest.utils.UserProfile
@@ -37,9 +37,9 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
     FunctionUIDef.functionI18n,
   )
 
-  def getForms():Future[Seq[Form.Form_row]] = {
+  def getForms():Future[Seq[BoxForm.BoxForm_row]] = {
     up.boxDb.run{
-      Form.table.result
+      BoxForm.BoxFormTable.result
     }
   }
 
