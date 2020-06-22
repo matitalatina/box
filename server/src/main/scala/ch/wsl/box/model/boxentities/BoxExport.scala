@@ -5,20 +5,20 @@ import slick.model.ForeignKeyAction
 import ch.wsl.box.jdbc.PostgresProfile.api._
 
 
-object Export {
+object BoxExport {
 
 
 
 
-  case class Export_row(export_id: Option[Int] = None, name: String, function:String, description: Option[String] = None, layout: Option[String] = None,
-                        parameters: Option[String] = None, order: Option[Double], access_role:Option[List[String]])
+  case class BoxExport_row(export_id: Option[Int] = None, name: String, function:String, description: Option[String] = None, layout: Option[String] = None,
+                           parameters: Option[String] = None, order: Option[Double], access_role:Option[List[String]])
   /** GetResult implicit for fetching Form_row objects using plain SQL queries */
 
   /** Table description of table form. Objects of this class serve as prototypes for rows in queries. */
-  class Export(_tableTag: Tag) extends Table[Export_row](_tableTag, "export") {
-    def * = (Rep.Some(export_id), name, function, description, layout, parameters, order ,access_role) <> (Export_row.tupled, Export_row.unapply)
+  class BoxExport(_tableTag: Tag) extends Table[BoxExport_row](_tableTag, "export") {
+    def * = (Rep.Some(export_id), name, function, description, layout, parameters, order ,access_role) <> (BoxExport_row.tupled, BoxExport_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(export_id), name, function, description, layout, parameters, order, access_role).shaped.<>({ r=>import r._; _1.map(_=> Export_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(export_id), name, function, description, layout, parameters, order, access_role).shaped.<>({ r=>import r._; _1.map(_=> BoxExport_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val export_id: Rep[Int] = column[Int]("export_id", O.AutoInc, O.PrimaryKey)
@@ -40,7 +40,7 @@ object Export {
 
   }
   /** Collection-like TableQuery object for table Form */
-  lazy val Export = new TableQuery(tag => new Export(tag))
+  lazy val BoxExportTable = new TableQuery(tag => new BoxExport(tag))
 
 
   /** Entity class storing rows of table Form_i18n
@@ -49,16 +49,16 @@ object Export {
     *  @param label Database column title SqlType(text), Default(None)
     *  @param tooltip Database column tooltip SqlType(text), Default(None)
     *  @param hint Database column hint SqlType(text), Default(None)*/
-  case class Export_i18n_row(id: Option[Int] = None, export_id: Option[Int] = None,
-                           lang: Option[String] = None, label: Option[String] = None,
-                           tooltip: Option[String] = None, hint: Option[String] = None, function: Option[String] = None)
+  case class BoxExport_i18n_row(id: Option[Int] = None, export_id: Option[Int] = None,
+                                lang: Option[String] = None, label: Option[String] = None,
+                                tooltip: Option[String] = None, hint: Option[String] = None, function: Option[String] = None)
   /** GetResult implicit for fetching Form_i18n_row objects using plain SQL queries */
 
   /** Table description of table form_i18n. Objects of this class serve as prototypes for rows in queries. */
-  class Export_i18n(_tableTag: Tag) extends Table[Export_i18n_row](_tableTag, "export_i18n") {
-    def * = (Rep.Some(id), export_id, lang, label, tooltip, hint, function) <> (Export_i18n_row.tupled, Export_i18n_row.unapply)
+  class BoxExport_i18n(_tableTag: Tag) extends Table[BoxExport_i18n_row](_tableTag, "export_i18n") {
+    def * = (Rep.Some(id), export_id, lang, label, tooltip, hint, function) <> (BoxExport_i18n_row.tupled, BoxExport_i18n_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), export_id, lang, label, tooltip, hint, function).shaped.<>({ r=>import r._; _1.map(_=> Export_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), export_id, lang, label, tooltip, hint, function).shaped.<>({ r=>import r._; _1.map(_=> BoxExport_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -77,8 +77,8 @@ object Export {
 
 
     /** Foreign key referencing Field (database name fkey_field) */
-    lazy val fieldFk = foreignKey("fkey_export", export_id, Export)(r => Rep.Some(r.export_id), onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val fieldFk = foreignKey("fkey_export", export_id, BoxExportTable)(r => Rep.Some(r.export_id), onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
   }
   /** Collection-like TableQuery object for table Form_i18n */
-  lazy val Export_i18n = new TableQuery(tag => new Export_i18n(tag))
+  lazy val BoxExport_i18nTable = new TableQuery(tag => new BoxExport_i18n(tag))
 }

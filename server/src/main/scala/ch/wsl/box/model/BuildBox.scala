@@ -22,49 +22,49 @@ object BuildBox extends App {
   val install =
     for{
       _ <- Auth.boxDB.run(Schema.box.create)
-      _ <- Auth.boxDB.run(AccessLevel.table.insertOrUpdateAll(Seq(
-        AccessLevel.AccessLevel_row(-1,"Not logged user"),
-        AccessLevel.AccessLevel_row(1,"Read-Only User"),
-        AccessLevel.AccessLevel_row(10,"Regular User"),
-        AccessLevel.AccessLevel_row(100,"Power User"),
-        AccessLevel.AccessLevel_row(1000,"Administrator")
+      _ <- Auth.boxDB.run(BoxAccessLevel.BoxAccessLevelTable.insertOrUpdateAll(Seq(
+        BoxAccessLevel.BoxAccessLevel_row(-1,"Not logged user"),
+        BoxAccessLevel.BoxAccessLevel_row(1,"Read-Only User"),
+        BoxAccessLevel.BoxAccessLevel_row(10,"Regular User"),
+        BoxAccessLevel.BoxAccessLevel_row(100,"Power User"),
+        BoxAccessLevel.BoxAccessLevel_row(1000,"Administrator")
       )))
-      _ <- Auth.boxDB.run(Conf.table ++= Seq(
-        Conf.Conf_row(key = "host", value = Some("0.0.0.0")),
-        Conf.Conf_row(key = "port", value = Some("8080")),
-        Conf.Conf_row(key = "server-secret", value = Some("changeMe-sadf-09fd65465443554345654e565e45653445se554d6554d65r54d65r54d65r546d5r5dasdfiasdf897sdf-as-s9d8fd9f8s09fku")),
-        Conf.Conf_row(key = "cookie.name", value = Some("_boxsession_myapp")),
-        Conf.Conf_row(key = "langs", value = Some("en")),
-        Conf.Conf_row(key = "pks.edit", value = Some("false")),
-        Conf.Conf_row(key = "fks.lookup.labels", value = Some("default = firstNoPKField")),
-        Conf.Conf_row(key = "fks.lookup.rowsLimit", value = Some("50")),
-        Conf.Conf_row(key = "display.index.news", value = Some("false")),
-        Conf.Conf_row(key = "display.index.html", value = Some("false")),
-        Conf.Conf_row(key = "filter.precision.datetime", value = Some("DATETIME")),
-        Conf.Conf_row(key = "filter.precision.double", value = Some("1")),
-        Conf.Conf_row(key = "page.length", value = Some("30")),
-        Conf.Conf_row(key = "notification.timeout", value = Some("6")),
-        Conf.Conf_row(key = "cache.enable", value = Some("true")),
-        Conf.Conf_row(key = "color.main", value = Some("#343C4B")),
-        Conf.Conf_row(key = "color.link", value = Some("#7C8277")),
-        Conf.Conf_row(key = "color.danger", value = Some("#C54E13")),
-        Conf.Conf_row(key = "color.warning", value = Some("#EB883E"))
+      _ <- Auth.boxDB.run(BoxConf.BoxConfTable ++= Seq(
+        BoxConf.BoxConf_row(key = "host", value = Some("0.0.0.0")),
+        BoxConf.BoxConf_row(key = "port", value = Some("8080")),
+        BoxConf.BoxConf_row(key = "server-secret", value = Some("changeMe-sadf-09fd65465443554345654e565e45653445se554d6554d65r54d65r54d65r546d5r5dasdfiasdf897sdf-as-s9d8fd9f8s09fku")),
+        BoxConf.BoxConf_row(key = "cookie.name", value = Some("_boxsession_myapp")),
+        BoxConf.BoxConf_row(key = "langs", value = Some("en")),
+        BoxConf.BoxConf_row(key = "pks.edit", value = Some("false")),
+        BoxConf.BoxConf_row(key = "fks.lookup.labels", value = Some("default = firstNoPKField")),
+        BoxConf.BoxConf_row(key = "fks.lookup.rowsLimit", value = Some("50")),
+        BoxConf.BoxConf_row(key = "display.index.news", value = Some("false")),
+        BoxConf.BoxConf_row(key = "display.index.html", value = Some("false")),
+        BoxConf.BoxConf_row(key = "filter.precision.datetime", value = Some("DATETIME")),
+        BoxConf.BoxConf_row(key = "filter.precision.double", value = Some("1")),
+        BoxConf.BoxConf_row(key = "page.length", value = Some("30")),
+        BoxConf.BoxConf_row(key = "notification.timeout", value = Some("6")),
+        BoxConf.BoxConf_row(key = "cache.enable", value = Some("true")),
+        BoxConf.BoxConf_row(key = "color.main", value = Some("#343C4B")),
+        BoxConf.BoxConf_row(key = "color.link", value = Some("#7C8277")),
+        BoxConf.BoxConf_row(key = "color.danger", value = Some("#C54E13")),
+        BoxConf.BoxConf_row(key = "color.warning", value = Some("#EB883E"))
       ))
-      _ <- Auth.boxDB.run(UIsrcTable.table += UIsrcTable.UIsrc_row(file = Some(Base64.getDecoder.decode(logo)),mime = Some("image/png"),name = Some("logo"),accessLevel = -1))
-      _ <- Auth.boxDB.run(UITable.table ++= Seq(
-        UITable.UI_row(key = "title", value = "Box Framework", accessLevel = -1),
-        UITable.UI_row(key = "footerCopyright", value = "Box framework", accessLevel = -1),
-        UITable.UI_row(key = "enableAllTables", value = "false", accessLevel = 1),
-        UITable.UI_row(key = "enableAllTables", value = "true", accessLevel = 1000),
-        UITable.UI_row(key = "showEntitiesSidebar", value = "false", accessLevel = 1),
-        UITable.UI_row(key = "showEntitiesSidebar", value = "true", accessLevel = 1000),
-        UITable.UI_row(key = "menu", value = "[]", accessLevel = 1),
-        UITable.UI_row(key = "debug", value = "false", accessLevel = 1),
-        UITable.UI_row(key = "logo", value = "api/v1/uiFile/logo", accessLevel = -1),
-        UITable.UI_row(key = "info", value = "ui.info", accessLevel = 1),
+      _ <- Auth.boxDB.run(BoxUIsrcTable.BoxUIsrcTable += BoxUIsrcTable.BoxUIsrc_row(file = Some(Base64.getDecoder.decode(logo)),mime = Some("image/png"),name = Some("logo"),accessLevel = -1))
+      _ <- Auth.boxDB.run(BoxUITable.BoxUITable ++= Seq(
+        BoxUITable.BoxUI_row(key = "title", value = "Box Framework", accessLevel = -1),
+        BoxUITable.BoxUI_row(key = "footerCopyright", value = "Box framework", accessLevel = -1),
+        BoxUITable.BoxUI_row(key = "enableAllTables", value = "false", accessLevel = 1),
+        BoxUITable.BoxUI_row(key = "enableAllTables", value = "true", accessLevel = 1000),
+        BoxUITable.BoxUI_row(key = "showEntitiesSidebar", value = "false", accessLevel = 1),
+        BoxUITable.BoxUI_row(key = "showEntitiesSidebar", value = "true", accessLevel = 1000),
+        BoxUITable.BoxUI_row(key = "menu", value = "[]", accessLevel = 1),
+        BoxUITable.BoxUI_row(key = "debug", value = "false", accessLevel = 1),
+        BoxUITable.BoxUI_row(key = "logo", value = "api/v1/uiFile/logo", accessLevel = -1),
+        BoxUITable.BoxUI_row(key = "info", value = "ui.info", accessLevel = 1),
       ))
-      _ <- Auth.boxDB.run(User.table += User.User_row(Auth.dbConf.as[String]("user"),1000))
-      _ <- Auth.boxDB.run(Labels.table ++= DefaultLabels.labels)
+      _ <- Auth.boxDB.run(BoxUser.BoxUserTable += BoxUser.BoxUser_row(Auth.dbConf.as[String]("user"),1000))
+      _ <- Auth.boxDB.run(BoxLabels.BoxLabelsTable ++= DefaultLabels.labels)
 
       _ <- Auth.boxDB.run{sql"""CREATE OR REPLACE VIEW "box"."v_roles" AS
                           SELECT r.rolname,
@@ -346,8 +346,8 @@ object DefaultLabels {
       |de	ui.index.title	<h1>BOX database</h1> Wilkommen zur BOX.      |
     """.stripMargin
 
-  val labels:Seq[Labels.Labels_row] = rawLabels.lines.map(_.split("\\t")).filterNot(_.length < 3).map{ line =>
+  val labels:Seq[BoxLabels.BoxLabels_row] = rawLabels.lines.map(_.split("\\t")).filterNot(_.length < 3).map{ line =>
     println(line.toSeq)
-    Labels.Labels_row(lang = line(0), key = line(1), label = Some(line.drop(2).mkString(" ")))
+    BoxLabels.BoxLabels_row(lang = line(0), key = line(1), label = Some(line.drop(2).mkString(" ")))
   }.toSeq
 }

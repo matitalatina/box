@@ -15,14 +15,14 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 
 
 
-object BoxConf extends Logging {
+object BoxConfig extends Logging {
 
   private var conf: Map[String, String] = Map()
 
   def load()(implicit ec: ExecutionContext) = {
 
     val query = for {
-      row <- ch.wsl.box.model.boxentities.Conf.table
+      row <- ch.wsl.box.model.boxentities.BoxConf.BoxConfTable
     } yield row
 
     conf = Await.result(Auth.boxDB.run(query.result).map {

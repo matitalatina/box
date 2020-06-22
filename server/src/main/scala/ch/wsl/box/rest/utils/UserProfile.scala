@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.utils
 
-import ch.wsl.box.model.boxentities.User
+import ch.wsl.box.model.boxentities.BoxUser
 //import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.jdbc.PostgresProfile.plainAPI._
 import com.github.tminglei.slickpg.utils.PlainSQLUtils._
@@ -17,7 +17,7 @@ case class UserProfile(name: String, db: Database, boxDb:Database) {
   }.recover{case _ => false}
 
   def accessLevel(implicit ec:ExecutionContext):Future[Int] = Auth.boxDB.run{
-    User.table.filter(_.username === name).result
+    BoxUser.BoxUserTable.filter(_.username === name).result
   }.map(_.headOption.map(_.access_level_id).getOrElse(-1))
 
   def boxUserProfile = UserProfile(name, boxDb, boxDb)   //todo : do it less ugly

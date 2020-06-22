@@ -6,7 +6,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 /**
   * Created by andre on 5/15/2017.
   */
-object UIsrcTable {
+object BoxUIsrcTable {
 
   val profile = ch.wsl.box.jdbc.PostgresProfile
   import slick.model.ForeignKeyAction
@@ -19,12 +19,12 @@ object UIsrcTable {
 //  @deprecated("Use .schema instead of .ddl", "3.0")
 //  def ddl = schema
 
-  case class UIsrc_row(id: Option[Int] = None, file: Option[Array[Byte]], mime:Option[String], name:Option[String], accessLevel:Int)
+  case class BoxUIsrc_row(id: Option[Int] = None, file: Option[Array[Byte]], mime:Option[String], name:Option[String], accessLevel:Int)
 
-  class UIsrc(_tableTag: Tag) extends profile.api.Table[UIsrc_row](_tableTag, "ui_src") {
-    def * = (Rep.Some(id), file, mime, name, accessLevel) <> (UIsrc_row.tupled, UIsrc_row.unapply)
+  class BoxUIsrc(_tableTag: Tag) extends profile.api.Table[BoxUIsrc_row](_tableTag, "ui_src") {
+    def * = (Rep.Some(id), file, mime, name, accessLevel) <> (BoxUIsrc_row.tupled, BoxUIsrc_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id),  file, mime, name, accessLevel).shaped.<>({r=>import r._; _1.map(_=> UIsrc_row.tupled((_1, _2, _3, _4, _5)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id),  file, mime, name, accessLevel).shaped.<>({r=>import r._; _1.map(_=> BoxUIsrc_row.tupled((_1, _2, _3, _4, _5)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
     val file: Rep[Option[Array[Byte]]] = column[Option[Array[Byte]]]("file")
@@ -34,6 +34,6 @@ object UIsrcTable {
 
   }
   /** Collection-like TableQuery object for table Form */
-  lazy val table = new TableQuery(tag => new UIsrc(tag))
+  lazy val BoxUIsrcTable = new TableQuery(tag => new BoxUIsrc(tag))
 
 }

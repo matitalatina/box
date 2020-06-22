@@ -1,5 +1,6 @@
 package ch.wsl.box.codegen
 
+import ch.wsl.box.jdbc.TypeMapping
 import slick.model.Model
 
 
@@ -16,7 +17,8 @@ case class FieldAccessGenerator(entityList:Seq[String], model:Model) extends sli
   }
 
   def mapField(table:Table):Seq[String] = table.columns.map{ c =>
-    s"""      "${c.model.name}" -> ColType("${c.model.tpe}",${c.model.nullable})"""
+    val scalaType = TypeMapping(c.model).getOrElse(c.model.tpe)
+    s"""      "${c.model.name}" -> ColType("${scalaType}",${c.model.nullable})"""
   }
 
 

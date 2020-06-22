@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
-import ch.wsl.box.rest.utils.{Auth, BoxConf}
+import ch.wsl.box.rest.utils.{Auth, BoxConfig}
 import com.typesafe.config.Config
 import scribe._
 import scribe.writer.ConsoleWriter
@@ -45,13 +45,13 @@ class Box(implicit val executionContext: ExecutionContext) {
 
 
 
-    BoxConf.load()
+    BoxConfig.load()
 
-    val akkaConf: Config = BoxConf.akkaHttpSession
+    val akkaConf: Config = BoxConfig.akkaHttpSession
 
-    val host = BoxConf.host
-    val port = BoxConf.port
-    val origins = BoxConf.origins
+    val host = BoxConfig.host
+    val port = BoxConfig.port
+    val origins = BoxConfig.origins
 
     implicit def handler: ExceptionHandler = BoxExceptionHandler(origins).handler()
 
@@ -60,11 +60,11 @@ class Box(implicit val executionContext: ExecutionContext) {
 
     Registry.load()
 
-    val loggerWriter = BoxConf.logDB match  {
+    val loggerWriter = BoxConfig.logDB match  {
       case false => ConsoleWriter
       case true => new DbWriter(Auth.boxDB)
     }
-    Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConf.loggerLevel), writer = loggerWriter).replace()
+    Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConfig.loggerLevel), writer = loggerWriter).replace()
 
 
     //TODO need to be reworked now it's based on an hack, it call generated root to populate models

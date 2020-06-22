@@ -8,8 +8,8 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.model.BoxActionsRegistry
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.model.boxentities.{Conf, Schema, UITable}
-import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
+import ch.wsl.box.model.boxentities.{BoxConf, Schema, BoxUITable}
+import ch.wsl.box.rest.utils.{BoxConfig, BoxSession}
 import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -90,7 +90,7 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
       FormMetadataFactory.resetCache()
       EntityMetadataFactory.resetCache()
       RuntimeFunction.resetCache()
-      BoxConf.load()
+      BoxConfig.load()
       complete(
         HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"reset cache"))
       )

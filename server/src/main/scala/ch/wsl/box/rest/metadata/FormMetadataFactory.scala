@@ -1,14 +1,14 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.boxentities.Field.{FieldFile_row, Field_i18n_row, Field_row}
-import ch.wsl.box.model.boxentities.Form.{Form, Form_i18n, Form_row}
-import ch.wsl.box.model.boxentities.{Field, Form}
+import ch.wsl.box.model.boxentities.BoxField.{BoxFieldFile_row, BoxField_i18n_row, BoxField_row}
+import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_row}
+import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.runtime.Registry
-import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, BoxConfig, UserProfile}
 import io.circe._
 import io.circe.parser._
 import scribe.Logging
@@ -52,7 +52,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
   implicit val db = up.db
 
   def list: Future[Seq[String]] = Auth.boxDB.run{
-    Form.table.result
+    BoxForm.BoxFormTable.result
   }.map{_.map(_.name)}
 
   def of(id:Int, lang:String):Future[JSONMetadata] = {
@@ -61,11 +61,11 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
       case Some(r) => r
       case None => {
         logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${FormMetadataFactory.cacheFormName}")
-        val formQuery: Query[Form, Form_row, Seq] = for {
-          form <- Form.table if form.form_id === id
+        val formQuery: Query[BoxForm.BoxForm, BoxForm_row, Seq] = for {
+          form <- BoxForm.BoxFormTable if form.form_id === id
         } yield form
         val result = getForm(formQuery,lang)
-        if(BoxConf.enableCache) FormMetadataFactory.cacheFormId = FormMetadataFactory.cacheFormId ++ Map(cacheKey -> result)
+        if(BoxConfig.enableCache) FormMetadataFactory.cacheFormId = FormMetadataFactory.cacheFormId ++ Map(cacheKey -> result)
         result.onComplete{ x =>
           if(x.isFailure) {
             FormMetadataFactory.cacheFormId = FormMetadataFactory.cacheFormId.filterKeys(_ != cacheKey)
@@ -82,11 +82,11 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
       case Some(r) => r
       case None => {
         logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${FormMetadataFactory.cacheFormName}")
-        val formQuery: Query[Form, Form_row, Seq] = for {
-          form <- Form.table if form.name === name
+        val formQuery: Query[BoxForm.BoxForm, BoxForm_row, Seq] = for {
+          form <- BoxForm.BoxFormTable if form.name === name
         } yield form
         val result = getForm(formQuery,lang)
-        if(BoxConf.enableCache) FormMetadataFactory.cacheFormName = FormMetadataFactory.cacheFormName ++ Map(cacheKey -> result)
+        if(BoxConfig.enableCache) FormMetadataFactory.cacheFormName = FormMetadataFactory.cacheFormName ++ Map(cacheKey -> result)
         result.onComplete{x =>
           if(x.isFailure) {
             FormMetadataFactory.cacheFormName = FormMetadataFactory.cacheFormName.filterKeys(_ != cacheKey)
@@ -115,15 +115,15 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
   }
 
-  private def getForm(formQuery: Query[Form,Form_row,Seq],lang:String) = {
+  private def getForm(formQuery: Query[BoxForm.BoxForm,BoxForm_row,Seq], lang:String) = {
 
     import io.circe.generic.auto._
 
     def fieldQuery(formId:Int) = for{
-      (field,fieldI18n) <- Field.table joinLeft Field.Field_i18n.filter(_.lang === lang) on(_.field_id === _.field_id) if field.form_id === formId
+      (field,fieldI18n) <- BoxField.BoxFieldTable joinLeft BoxField.BoxField_i18nTable.filter(_.lang === lang) on(_.field_id === _.field_id) if field.form_id === formId
     } yield (field,fieldI18n)
 
-    val fQuery = formQuery joinLeft Form.Form_i18n.filter(_.lang === lang) on (_.form_id === _.form_id)
+    val fQuery = formQuery joinLeft BoxForm.BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id)
 
 
     for{
@@ -131,7 +131,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
       fields <- Auth.boxDB.run{fieldQuery(form.form_id.get).result}
       fieldsFile <- Future.sequence(fields.map { case (f, _) =>
         Auth.boxDB.run {
-          Field.FieldFile.filter(_.field_id === f.field_id).result
+          BoxField.BoxFieldFileTable.filter(_.field_id === f.field_id).result
         }.map(_.headOption)
       })
       columns <- Future.sequence(fields.map(f => columns(form,f._1)))
@@ -179,14 +179,14 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
   }
 
 
-  private def columns(form:Form_row,field:Field_row): Future[Option[PgColumn]] = {
+  private def columns(form:BoxForm_row, field:BoxField_row): Future[Option[PgColumn]] = {
     val pgColumns = TableQuery[PgColumns]
     Auth.adminDB.run{
       pgColumns.filter(row => row.column_name === field.name && row.table_name === form.entity).result
     }.map(_.headOption)
   }
 
-  private def fieldsToJsonFields(fields:Seq[(((Field_row,Option[Field_i18n_row]),Option[FieldFile_row]),Option[PgColumn])],lang:String): Future[Seq[JSONField]] = {
+  private def fieldsToJsonFields(fields:Seq[(((BoxField_row,Option[BoxField_i18n_row]),Option[BoxFieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
 
     val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
 
@@ -254,7 +254,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
           case Some(subformId) => Auth.boxDB.run{
             {
               for{
-                (form,formI18n) <- Form.table joinLeft Form_i18n.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId
+                (form,formI18n) <- BoxForm.BoxFormTable joinLeft BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId
               } yield (formI18n,form)
             }.result.map{x => x.head._1.flatMap(_.label).getOrElse(x.head._2.name)}
           }

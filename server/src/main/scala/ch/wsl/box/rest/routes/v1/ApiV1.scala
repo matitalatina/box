@@ -10,15 +10,15 @@ import ch.wsl.box.rest.logic.{LangHelper, NewsLoader, TableAccess, UIProvider}
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, StubMetadataFactory}
 import ch.wsl.box.rest.routes._
 import ch.wsl.box.rest.runtime.Registry
-import ch.wsl.box.rest.utils.{BoxConf, BoxSession}
+import ch.wsl.box.rest.utils.{BoxConfig, BoxSession}
 import com.softwaremill.session.SessionDirectives.{invalidateSession, optionalSession, setSession, touchRequiredSession}
 import com.softwaremill.session.SessionManager
 import com.softwaremill.session.SessionOptions._
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
-
 import boxInfo.BoxBuildInfo
+import ch.wsl.box.model.boxentities.BoxUser
 
 
 case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem) {
@@ -42,7 +42,7 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
 
   def conf = path("conf") {
     get {
-      complete(BoxConf.clientConf)
+      complete(BoxConfig.clientConf)
     }
   }
 

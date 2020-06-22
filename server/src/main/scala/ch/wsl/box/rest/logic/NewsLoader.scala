@@ -1,7 +1,7 @@
 package ch.wsl.box.rest.logic
 
 import ch.wsl.box.model.shared.NewsEntry
-import ch.wsl.box.model.boxentities.News
+import ch.wsl.box.model.boxentities.BoxNews
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import ch.wsl.box.shared.utils.DateTimeFormatters
 import ch.wsl.box.jdbc.PostgresProfile.api._
@@ -12,8 +12,8 @@ object NewsLoader {
 
   def get(lang:String)(implicit userProfile: UserProfile, ec:ExecutionContext): Future[Seq[NewsEntry]] = {
     val q = for{
-      news <- News.News
-      news_i18n <- News.News_i18n if news_i18n.lang === lang && news.news_id === news_i18n.news_id
+      news <- BoxNews.BoxNews
+      news_i18n <- BoxNews.News_i18n if news_i18n.lang === lang && news.news_id === news_i18n.news_id
     } yield (news.datetime,news_i18n.title,news_i18n.text,news.author)
 
     Auth.adminUserProfile.boxDb.run{

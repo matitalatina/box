@@ -21,12 +21,12 @@ object BoxRoutes {
     import io.circe.generic.auto._
     implicit val db = up.db
     
-    Table[Conf.Conf,Conf.Conf_row]("conf",Conf.table,isBoxTable = true).route ~
-    Table[Field.Field,Field.Field_row]("field",Field.table,isBoxTable = true).route ~
-    Table[Field.Field_i18n,Field.Field_i18n_row]("field_i18n",Field.Field_i18n,isBoxTable = true).route ~
-    Table[ch.wsl.box.model.boxentities.Form.Form,ch.wsl.box.model.boxentities.Form.Form_row]("form",ch.wsl.box.model.boxentities.Form.table,isBoxTable = true).route ~
-    Table[Labels.Labels,Labels.Labels_row]("labels",Labels.table,isBoxTable = true).route ~
-    Table[UITable.UI,UITable.UI_row]("ui",UITable.table,isBoxTable = true).route
+    Table[BoxConf.BoxConf,BoxConf.BoxConf_row]("conf",BoxConf.BoxConfTable,isBoxTable = true).route ~
+    Table[BoxField.BoxField,BoxField.BoxField_row]("field",BoxField.BoxFieldTable,isBoxTable = true).route ~
+    Table[BoxField.BoxField_i18n,BoxField.BoxField_i18n_row]("field_i18n",BoxField.BoxField_i18nTable,isBoxTable = true).route ~
+    Table[ch.wsl.box.model.boxentities.BoxForm.BoxForm,ch.wsl.box.model.boxentities.BoxForm.BoxForm_row]("form",ch.wsl.box.model.boxentities.BoxForm.BoxFormTable,isBoxTable = true).route ~
+    Table[BoxLabels.BoxLabels,BoxLabels.BoxLabels_row]("labels",BoxLabels.BoxLabelsTable,isBoxTable = true).route ~
+    Table[BoxUITable.BoxUI,BoxUITable.BoxUI_row]("ui",BoxUITable.BoxUITable,isBoxTable = true).route
 
   }
 }

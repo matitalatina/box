@@ -1,5 +1,6 @@
 package ch.wsl.box.codegen
 
+import ch.wsl.box.jdbc.TypeMapping
 import com.typesafe.config.Config
 import slick.model.Model
 import slick.ast.ColumnOption
@@ -120,12 +121,7 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
       // customize Scala column names
       override def rawName = model.name
 
-      override def rawType: String = model.tpe match {
-        case "java.sql.Date" => "java.time.LocalDate"
-        case "java.sql.Time" => "java.time.LocalTime"
-        case "java.sql.Timestamp" => "java.time.LocalDateTime"
-        case _ => super.rawType
-      }
+      override def rawType: String =  TypeMapping(model).getOrElse(super.rawType)
 
 
       private def primaryKey = {

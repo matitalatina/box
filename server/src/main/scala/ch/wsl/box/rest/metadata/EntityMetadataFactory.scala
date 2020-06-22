@@ -3,7 +3,7 @@ package ch.wsl.box.rest.metadata
 import akka.stream.Materializer
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic.{PgColumn, PgInformationSchema}
-import ch.wsl.box.rest.utils.{Auth, BoxConf, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, BoxConfig, UserProfile}
 import ch.wsl.box.shared.utils.JSONUtils
 import com.typesafe.config.Config
 import scribe.Logging
@@ -40,7 +40,7 @@ object EntityMetadataFactory extends Logging {
 
   def lookupField(referencingTable:String,lang:String, firstNoPK:Option[String]):String = {
 
-    val lookupLabelFields = BoxConf.fksLookupLabels
+    val lookupLabelFields = BoxConfig.fksLookupLabels
 
     val default = lookupLabelFields.as[Option[String]]("default").getOrElse("name")
 
@@ -148,7 +148,7 @@ object EntityMetadataFactory extends Logging {
           val fieldList = fields.map(_.name)
           JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fieldList, keys, None, fieldList)//, table)
         }
-        if(BoxConf.enableCache) {
+        if(BoxConfig.enableCache) {
           logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)
           cacheTable = cacheTable ++ Map(cacheKey -> result)
         }
@@ -173,7 +173,7 @@ object EntityMetadataFactory extends Logging {
           pk.boxKeys
         }
 
-        if(BoxConf.enableCache) cacheKeys = cacheKeys ++ Map((table) -> result)
+        if(BoxConfig.enableCache) cacheKeys = cacheKeys ++ Map((table) -> result)
         result.onComplete{x =>
           if(x.isFailure) {
             cacheKeys = cacheKeys.filterKeys(_ != table)

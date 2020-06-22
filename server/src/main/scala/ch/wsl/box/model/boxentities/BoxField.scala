@@ -8,7 +8,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 /**
   * Created by andre on 5/15/2017.
   */
-object Field {
+object BoxField {
 
 
   /** Entity class storing rows of table Field
@@ -20,18 +20,18 @@ object Field {
     *  @param lookupEntity Database column refModel SqlType(text), Default(None)
     *  @param lookupValueField Database column refValueProperty SqlType(text), Default(None)
     *  @param child_form_id Database column subform SqlType(int4), Default(None) */
-  case class Field_row(field_id: Option[Int] = None, form_id: Int, `type`: String, name: String, widget: Option[String] = None,
-                       lookupEntity: Option[String] = None, lookupValueField: Option[String] = None, lookupQuery:Option[String] = None,
-                       child_form_id: Option[Int] = None, masterFields:Option[String] = None, childFields:Option[String] = None, childQuery:Option[String] = None,
-                       default:Option[String] = None, conditionFieldId:Option[String] = None, conditionValues:Option[String] = None)
+  case class BoxField_row(field_id: Option[Int] = None, form_id: Int, `type`: String, name: String, widget: Option[String] = None,
+                          lookupEntity: Option[String] = None, lookupValueField: Option[String] = None, lookupQuery:Option[String] = None,
+                          child_form_id: Option[Int] = None, masterFields:Option[String] = None, childFields:Option[String] = None, childQuery:Option[String] = None,
+                          default:Option[String] = None, conditionFieldId:Option[String] = None, conditionValues:Option[String] = None)
   /** GetResult implicit for fetching Field_row objects using plain SQL queries */
 
   /** Table description of table field. Objects of this class serve as prototypes for rows in queries.
     *  NOTE: The following names collided with Scala keywords and were escaped: type */
-  class Field(_tableTag: Tag) extends Table[Field_row](_tableTag, "field") {
-    def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues) <> (Field_row.tupled, Field_row.unapply)
+  class BoxField(_tableTag: Tag) extends Table[BoxField_row](_tableTag, "field") {
+    def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues) <> (BoxField_row.tupled, BoxField_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(field_id), Rep.Some(form_id), Rep.Some(`type`),  name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues).shaped.<>({ r=>import r._; _1.map(_=> Field_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11,_12,_13,_14, _15)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(field_id), Rep.Some(form_id), Rep.Some(`type`),  name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues).shaped.<>({ r=>import r._; _1.map(_=> BoxField_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11,_12,_13,_14, _15)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val field_id: Rep[Int] = column[Int]("field_id", O.AutoInc, O.PrimaryKey)
@@ -59,10 +59,10 @@ object Field {
     val conditionValues: Rep[Option[String]] = column[Option[String]]("conditionValues", O.Default(None))
 
     /** Foreign key referencing Form (database name fkey_form) */
-    lazy val formFk = foreignKey("fkey_form", form_id, Form.table)(r => r.form_id, onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
+    lazy val formFk = foreignKey("fkey_form", form_id, BoxForm.BoxFormTable)(r => r.form_id, onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
   }
   /** Collection-like TableQuery object for table Field */
-  lazy val table = new TableQuery(tag => new Field(tag))
+  lazy val BoxFieldTable = new TableQuery(tag => new BoxField(tag))
 
   /** Entity class storing rows of table Field_i18n
     *  @param id Database column id SqlType(serial), AutoInc, PrimaryKey
@@ -73,16 +73,16 @@ object Field {
     *  @param tooltip Database column tooltip SqlType(text), Default(None)
     *  @param hint Database column hint SqlType(text), Default(None)
     *  @param lookupTextField Database column refTextProperty SqlType(text), Default(None) */
-  case class Field_i18n_row(id: Option[Int] = None, field_id: Option[Int] = None, lang: Option[String] = None, label: Option[String] = None,
-                            placeholder: Option[String] = None, tooltip: Option[String] = None, hint: Option[String] = None,
-                            lookupTextField: Option[String] = None)
+  case class BoxField_i18n_row(id: Option[Int] = None, field_id: Option[Int] = None, lang: Option[String] = None, label: Option[String] = None,
+                               placeholder: Option[String] = None, tooltip: Option[String] = None, hint: Option[String] = None,
+                               lookupTextField: Option[String] = None)
   /** GetResult implicit for fetching Field_i18n_row objects using plain SQL queries */
 
   /** Table description of table field_i18n. Objects of this class serve as prototypes for rows in queries. */
-  class Field_i18n(_tableTag: Tag) extends Table[Field_i18n_row](_tableTag, "field_i18n") {
-    def * = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField) <> (Field_i18n_row.tupled, Field_i18n_row.unapply)
+  class BoxField_i18n(_tableTag: Tag) extends Table[BoxField_i18n_row](_tableTag, "field_i18n") {
+    def * = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField) <> (BoxField_i18n_row.tupled, BoxField_i18n_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField).shaped.<>({ r=>import r._; _1.map(_=> Field_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField).shaped.<>({ r=>import r._; _1.map(_=> BoxField_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -102,18 +102,18 @@ object Field {
     val lookupTextField: Rep[Option[String]] = column[Option[String]]("lookupTextField", O.Default(None))
 
     /** Foreign key referencing Field (database name fkey_field) */
-    lazy val fieldFk = foreignKey("fkey_field", field_id, table)(r => Rep.Some(r.field_id), onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
+    lazy val fieldFk = foreignKey("fkey_field", field_id, BoxFieldTable)(r => Rep.Some(r.field_id), onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
   }
   /** Collection-like TableQuery object for table Field_i18n */
-  lazy val Field_i18n = new TableQuery(tag => new Field_i18n(tag))
+  lazy val BoxField_i18nTable = new TableQuery(tag => new BoxField_i18n(tag))
 
 
 
-  case class FieldFile_row(field_id: Int, file_field: String, thumbnail_field: Option[String] = None, name_field: String)
+  case class BoxFieldFile_row(field_id: Int, file_field: String, thumbnail_field: Option[String] = None, name_field: String)
 
 
-  class FieldFile(_tableTag: Tag) extends Table[FieldFile_row](_tableTag, "field_file") {
-    def * = (field_id,file_field,thumbnail_field,name_field) <> (FieldFile_row.tupled, FieldFile_row.unapply)
+  class BoxFieldFile(_tableTag: Tag) extends Table[BoxFieldFile_row](_tableTag, "field_file") {
+    def * = (field_id,file_field,thumbnail_field,name_field) <> (BoxFieldFile_row.tupled, BoxFieldFile_row.unapply)
 
     val field_id: Rep[Int] = column[Int]("field_id", O.PrimaryKey)
     val file_field: Rep[String] = column[String]("file_field")
@@ -122,9 +122,9 @@ object Field {
 
 
     /** Foreign key referencing Form (database name fkey_form) */
-    lazy val formFk = foreignKey("field_file_fielf_id_fk", field_id, table)(r => r.field_id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
+    lazy val formFk = foreignKey("field_file_fielf_id_fk", field_id, BoxFieldTable)(r => r.field_id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
   }
   /** Collection-like TableQuery object for table Field */
-  lazy val FieldFile = new TableQuery(tag => new FieldFile(tag))
+  lazy val BoxFieldFileTable = new TableQuery(tag => new BoxFieldFile(tag))
 
 }

@@ -2,8 +2,8 @@ package ch.wsl.box.rest.jdbc
 
 import java.sql._
 
-import ch.wsl.box.model.boxentities.ExportField
-import ch.wsl.box.model.boxentities.ExportField.ExportHeader_i18n_row
+import ch.wsl.box.model.boxentities.BoxExportField
+import ch.wsl.box.model.boxentities.BoxExportField.BoxExportHeader_i18n_row
 import ch.wsl.box.rest.utils.Auth
 import io.circe.Json
 import scribe.Logging
@@ -59,7 +59,7 @@ object JdbcConnect extends Logging {
   // TODO @boris, could we user the default labels table instead creating a new one just for the export?
   private def useI18nHeader(lang:String,keys: Seq[String])(implicit ec:ExecutionContext):Future[Seq[String]] = Future.sequence{
     keys.map{ key =>
-      Auth.boxDB.run(ExportField.ExportHeader_i18n.filter(e => e.key === key && e.lang === lang).result).map { label =>
+      Auth.boxDB.run(BoxExportField.BoxExportHeader_i18nTable.filter(e => e.key === key && e.lang === lang).result).map { label =>
         if(label.isEmpty) logger.warn(s"No translation for $key in $lang, insert translation in table export_header_i18n")
         label.headOption.map(_.label).getOrElse(key)
       }

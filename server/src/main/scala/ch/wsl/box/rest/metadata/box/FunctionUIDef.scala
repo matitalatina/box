@@ -1,6 +1,6 @@
 package ch.wsl.box.rest.metadata.box
 
-import ch.wsl.box.model.boxentities.Form
+import ch.wsl.box.model.boxentities.BoxForm
 import ch.wsl.box.model.shared._
 
 object FunctionUIDef {

@@ -11,7 +11,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONTableActions, Lookup}
-import ch.wsl.box.rest.utils.{BoxConf, JSONSupport, UserProfile}
+import ch.wsl.box.rest.utils.{BoxConfig, JSONSupport, UserProfile}
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
@@ -63,7 +63,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
 
     val dbActions = new DbActions[T,M](table)
     val jsonActions = JSONTableActions[T,M](table)
-    val limitLookupFromFk: Int = BoxConf.fksLookupRowsLimit
+    val limitLookupFromFk: Int = BoxConfig.fksLookupRowsLimit
 
     import JSONSupport._
     import akka.http.scaladsl.model._
