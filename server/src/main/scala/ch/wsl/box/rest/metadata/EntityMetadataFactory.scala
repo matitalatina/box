@@ -236,6 +236,7 @@ object EntityMetadataFactory extends Logging {
     "geometry" -> JSONFieldTypes.GEOMETRY
   )
 
+
   val defaultWidgetMapping = Map(
     "integer" -> None,
     "bigint" -> None,
@@ -246,7 +247,7 @@ object EntityMetadataFactory extends Logging {
     "character varying" -> Some(WidgetsNames.textinput),
     "character" -> Some(WidgetsNames.textinput),
     "boolean" -> None,
-    "bytea" -> None,
+    "bytea" -> Some(WidgetsNames.simpleFile),
     "numeric" -> None,
     "timestamp without time zone" -> Some(WidgetsNames.datetimePicker),
     "time without time zone" -> Some(WidgetsNames.timepicker),

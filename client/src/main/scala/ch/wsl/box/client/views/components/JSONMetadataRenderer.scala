@@ -121,6 +121,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (_, Some(WidgetsNames.nolabel), _, _, _)               => InputWidgetFactory.TextNoLabel
           case (_, Some(WidgetsNames.twoLines), _, _, _)              => InputWidgetFactory.TwoLines
           case (_, Some(WidgetsNames.textarea), _, _, _)              => InputWidgetFactory.TextArea
+          case (FILE, Some(WidgetsNames.simpleFile), _, _, _)         => FileSimpleWidgetFactory(metadata.entity)
           case (FILE, _, _, _, _)                                     => FileWidgetFactory(metadata.entity)
           case (_,Some(WidgetsNames.mapPoint),_,_,_)                  => MapPointWidget
           case (_,Some(WidgetsNames.map),_,_,_)                       => MapWidget
