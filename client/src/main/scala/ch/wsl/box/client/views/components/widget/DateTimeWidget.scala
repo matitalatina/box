@@ -11,6 +11,7 @@ import ch.wsl.box.client.Context._
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
+import io.udash.bootstrap.datepicker.UdashDatePicker.Placement
 import io.udash.properties.single.Property
 import scalacss.internal.StyleA
 import scalatags.JsDom
@@ -101,7 +102,8 @@ trait DateTimeWidget extends Widget  with Logging{
       showClear = true,
       useStrict = false,
       sideBySide = true,
-      useCurrent = false
+      useCurrent = false,
+      widgetPositioning = Some((Placement.RightPlacement,Placement.BottomPlacement))
 //      maxDate =
     ))
 
@@ -115,7 +117,9 @@ trait DateTimeWidget extends Widget  with Logging{
     div(
       if (field.title.length > 0) WidgetUtils.toLabel(field, false) else {},
       tooltip(div(style,if(field.nullable) {} else ClientConf.style.notNullable,
-        picker.render
+        div(
+          picker.render
+        ).render
       ).render),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
