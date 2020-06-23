@@ -14,12 +14,6 @@ object Preloading extends Logging {
       }
     } ~
     path("") {
-      extractRequestContext { ctx =>
-        logger.info(ctx.request.toString())
-        redirect(ctx.request.uri.toString() + "preloading", StatusCodes.TemporaryRedirect)
-      }
-    } ~
-    path("preloading") {
       getFromResource("preloading.html")
     }
 }
