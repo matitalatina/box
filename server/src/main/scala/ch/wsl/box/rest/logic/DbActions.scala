@@ -15,15 +15,20 @@ import slick.sql.FixedSqlStreamingAction
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.runtime.Registry
+import ch.wsl.box.rest.utils.UserProfile
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](entity:TableQuery[T])(implicit ec:ExecutionContext) extends TableActions[M] with DBFiltersImpl with Logging {
-  import ch.wsl.box.jdbc.PostgresProfile.api._
+class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](entity:ch.wsl.box.jdbc.PostgresProfile.api.TableQuery[T])(implicit ec:ExecutionContext) extends TableActions[M] with DBFiltersImpl with Logging {
+
   import ch.wsl.box.rest.logic.EnhancedTable._ //import col select
 
+
   implicit class QueryBuilder(base:Query[T,M,Seq]) {
+
 
     def where(filters: Seq[JSONQueryFilter]): Query[T, M, Seq] = {
       filters.foldRight[Query[T, M, Seq]](base) { case (jsFilter, query) =>
@@ -32,14 +37,11 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       }
     }
 
-    def sort(sorting: Seq[JSONSort]): Query[T, M, Seq] = {
-      sorting.foldRight[Query[T, M, Seq]](base) { case (sort, query) =>
-        query.sortBy { x =>
-          val c: Rep[_] = x.col(sort.column).rep
-          sort.order.toLowerCase() match {
-            case Sort.ASC => ColumnOrdered(c, new slick.ast.Ordering)
-            case Sort.DESC => ColumnOrdered(c, new slick.ast.Ordering(direction = slick.ast.Ordering.Desc))
-          }
+    def sort(sorting: Seq[JSONSort], lang:String)(implicit up:UserProfile, mat: Materializer): Future[Query[T, M, Seq]] = {
+      sorting.foldRight[Future[Query[T, M, Seq]]](Future.successful(base)) { case (sort, query) =>
+        val tre = Registry().tables.table(entity.shaped.value.tableName)
+        query.flatMap{ q =>
+          tre.sort(sort,lang,q.asInstanceOf[Query[Table[tre.MT], tre.MT, Seq]]).map(_.asInstanceOf[Query[T, M, Seq]])
         }
       }
     }
@@ -71,6 +73,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
 
   def findStreamed(query:JSONQuery)(implicit db:Database): DatabasePublisher[M] = {
+
     val q = entity.where(query.filter).sort(query.sort)
     val qPaged = q.page(query.paging).result
       .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html

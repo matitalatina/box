@@ -200,7 +200,7 @@ object EntityMetadataFactory extends Logging {
   }
 
 
-  def fieldType(table:String,field:String)(implicit ec:ExecutionContext):ColType = {
+  def fieldType(table:String,field:String):ColType = {
     val dbField = Registry().fields.field(table,field)
     if(dbField.name != "Unknown") {
       dbField

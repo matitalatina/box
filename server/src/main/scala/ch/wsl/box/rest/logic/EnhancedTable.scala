@@ -1,12 +1,15 @@
 package ch.wsl.box.rest.logic
 
+import akka.stream.Materializer
 import scribe.Logging
-import slick.lifted.{AbstractTable, TableQuery}
+import slick.lifted.{AbstractTable, ColumnOrdered, TableQuery}
 
 import scala.reflect.runtime.universe._
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.model.shared.{JSONSort, Sort}
 import ch.wsl.box.rest.metadata.EntityMetadataFactory
-import ch.wsl.box.rest.runtime.ColType
+import ch.wsl.box.rest.runtime.{ColType, Registry}
+import ch.wsl.box.rest.utils.UserProfile
 
 import scala.concurrent.ExecutionContext
 
@@ -25,6 +28,7 @@ object EnhancedTable extends Logging {
 
   implicit class EnTable[T](t: Table[_]) {
 
+    val table = t
 
     private val rm = scala.reflect.runtime.currentMirror
 
@@ -43,12 +47,16 @@ object EnhancedTable extends Logging {
       }
 
 
-    def col(field: String)(implicit ec:ExecutionContext):Col = Col(
-      rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[ch.wsl.box.jdbc.PostgresProfile.api.Rep[_]],
-      typ(field)
-    )
+    private def rep(field:String) = rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[ch.wsl.box.jdbc.PostgresProfile.api.Rep[_]]
 
-    def typ(field:String)(implicit ec:ExecutionContext) = {
+    def col(field: String)(implicit ec:ExecutionContext):Col = {
+      Col(
+        rep(field),
+        typ(field)
+      )
+    }
+
+    def typ(field:String) = {
       EntityMetadataFactory.fieldType(t.tableName,field)
     }
 

@@ -9,6 +9,7 @@ import scala.concurrent.Future
 import akka.stream.scaladsl.Source
 
 trait ViewActions[T] {
+
   def find(query: JSONQuery=JSONQuery.empty)(implicit db: Database, mat:Materializer): DBIO[Seq[T]]
 
   def findStreamed(query: JSONQuery=JSONQuery.empty)(implicit db: Database): DatabasePublisher[T]

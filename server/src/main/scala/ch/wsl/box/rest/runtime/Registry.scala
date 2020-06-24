@@ -10,6 +10,7 @@ trait RegistryInstance{
   def routes: GeneratedRoutes
   def actions: ActionRegistry
   def fields: FieldRegistry
+  def tables: TableRegistry
 }
 
 case class GeneratedRegistry(
