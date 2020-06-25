@@ -8,7 +8,7 @@ import ch.wsl.box.rest.metadata.{EntityMetadataFactory, FormMetadataFactory}
 import scribe.Logging
 import slick.ast.Node
 import slick.basic.DatabasePublisher
-import slick.dbio.Effect
+import slick.dbio.{DBIOAction, Effect}
 import slick.jdbc.{ResultSetConcurrency, ResultSetType}
 import slick.lifted.{ColumnOrdered, TableQuery}
 import slick.sql.FixedSqlStreamingAction
@@ -37,7 +37,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       }
     }
 
-    def sort(sorting: Seq[JSONSort], lang:String)(implicit up:UserProfile, mat: Materializer): Future[Query[T, M, Seq]] = {
+    def sort(sorting: Seq[JSONSort], lang:String)(implicit db:Database): Future[Query[T, M, Seq]] = {
       sorting.foldRight[Future[Query[T, M, Seq]]](Future.successful(base)) { case (sort, query) =>
         val tre = Registry().tables.table(entity.shaped.value.tableName)
         query.flatMap{ q =>
@@ -74,22 +74,21 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def findStreamed(query:JSONQuery)(implicit db:Database): DatabasePublisher[M] = {
 
-    val q = entity.where(query.filter).sort(query.sort)
-    val qPaged = q.page(query.paging).result
-      .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
-      .transactionally
+    val dbio = DBIO.from(entity.where(query.filter).sort(query.sort, query.lang)).flatMap { q =>
+      q.page(query.paging).result
+        .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
+    }
 
-
-    db.stream(qPaged)
+    db.stream(dbio.transactionally)
 
   }
 
   override def find(query:JSONQuery)(implicit db:Database, mat: Materializer): DBIO[Seq[M]] = {
 
-    val q = entity.where(query.filter).sort(query.sort)
-    val qPaged = q.page(query.paging).result
+    DBIO.from( entity.where(query.filter).sort(query.sort, query.lang)).flatMap { q =>
+      q.page(query.paging).result
+    }
 
-    qPaged.transactionally
   }
 
   def keys(): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(EntityMetadataFactory.keysOf(entity.baseTableRow.tableName))

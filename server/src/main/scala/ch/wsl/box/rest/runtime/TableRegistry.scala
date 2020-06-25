@@ -20,9 +20,8 @@ trait TableRegistryEntry extends Logging {
   import ch.wsl.box.rest.logic.EnhancedTable._
 
 
-  def sort(sort: JSONSort, lang: String, query: Query[Table[MT], MT, Seq])(implicit ec: ExecutionContext, up: UserProfile, mat: Materializer): Future[Query[Table[MT], MT, Seq]] = {
-    EntityMetadataFactory.of(name, lang).map {
-      _.fields.find(_.name == sort.column).flatMap(_.lookup) match {
+  def sort(sort: JSONSort, lang: String, query: Query[Table[MT], MT, Seq])(implicit db:Database, ec: ExecutionContext): Future[Query[Table[MT], MT, Seq]] = {
+    EntityMetadataFactory.lookup(name,sort.column, lang).map {
         case None => query.sortBy { x =>
           sort.order match {
             case Sort.ASC => ColumnOrdered(x.col(sort.column).rep, new slick.ast.Ordering)
@@ -40,7 +39,7 @@ trait TableRegistryEntry extends Logging {
             .map{ case (m,j) => m }
 
         }
-      }
+
     }
 
   }
