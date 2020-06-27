@@ -34,9 +34,15 @@ trait TableRegistryEntry extends Logging {
 
           val externalTable = Registry().tables.table(lookup.lookupEntity)
           query
-            .joinLeft(externalTable.tableQuery)
-            .on { case (m, c) => EnTable(c).col(lookup.map.valueProperty).rep.asInstanceOf[Rep[Int]] === m.col(sort.column).asInstanceOf[Rep[Int]] }
-            .map{ case (m,j) => m }
+            .join(externalTable.tableQuery)
+            .on { case (m, c) => EnTable(c).col(lookup.map.valueProperty).rep.asInstanceOf[Rep[Int]] === m.col(sort.column).rep.asInstanceOf[Rep[Int]] }
+            .sortBy{ case (_,c) =>
+              sort.order match {
+                case Sort.ASC => ColumnOrdered(EnTable(c).col(lookup.map.textProperty).rep, new slick.ast.Ordering)
+                case Sort.DESC => ColumnOrdered(EnTable(c).col(lookup.map.textProperty).rep, new slick.ast.Ordering(direction = slick.ast.Ordering.Desc))
+              }
+            }
+            .map{ case (m,_) => m }
 
         }
 

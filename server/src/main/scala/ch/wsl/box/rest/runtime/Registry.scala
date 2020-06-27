@@ -17,7 +17,8 @@ case class GeneratedRegistry(
                    fileRoutes:GeneratedFileRoutes,
                    routes: GeneratedRoutes,
                    actions: ActionRegistry,
-                   fields: FieldRegistry
+                   fields: FieldRegistry,
+                   tables: TableRegistry
                    ) extends RegistryInstance
 
 object Registry extends Logging {
