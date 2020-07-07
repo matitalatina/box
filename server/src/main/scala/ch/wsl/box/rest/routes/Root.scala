@@ -2,13 +2,14 @@ package ch.wsl.box.rest.routes
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.coding.Gzip
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, HttpOrigin, `Content-Disposition`}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.Materializer
 import ch.wsl.box.model.BoxActionsRegistry
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.model.boxentities.{BoxConf, Schema, BoxUITable}
+import ch.wsl.box.model.boxentities.{BoxConf, BoxUITable, Schema}
 import ch.wsl.box.rest.utils.{BoxConfig, BoxSession}
 import ch.wsl.box.jdbc.PostgresProfile.api._
 
@@ -26,7 +27,6 @@ import com.typesafe.config.Config
 import scribe.Logging
 import ch.wsl.box.rest.Box
 import ch.wsl.box.rest.routes.v1.ApiV1
-
 
 import scala.util.{Failure, Success}
 
@@ -98,12 +98,14 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
   }
 
   val route:Route = UI.clientFiles ~
-    status ~
-    ddl ~
-    resetServer ~
-    resetCache ~
-    cors.handle {
-      ApiV1().route
+    encodeResponseWith(Gzip.withLevel(6)) {
+      status ~
+        ddl ~
+        resetServer ~
+        resetCache ~
+        cors.handle {
+          ApiV1().route
+        }
     }
 
 
