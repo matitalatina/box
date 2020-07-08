@@ -108,6 +108,7 @@ object Labels {
     def delete = get("table.delete")
     def confirmDelete = get("table.confirmDelete")
     def csv = get ("table.csv")
+    def xls = get ("table.xls")
   }
 
   object header{

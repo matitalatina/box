@@ -141,6 +141,7 @@ object Settings {
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3",
     "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.2.0",
     "com.vmunier" %% "scalajs-scripts" % "1.1.4",
+    "com.norbitltd" %% "spoiwo" % "1.7.0"
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))

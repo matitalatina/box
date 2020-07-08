@@ -326,7 +326,11 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     }
   }
 
-  def downloadCSV() = {
+
+  def downloadCSV() = download("csv")
+  def downloadXLS() = download("xlsx")
+
+  private def download(format:String) = {
 
     val kind = EntityKind(model.subProp(_.kind).get).entityOrForm
     val modelName =  model.subProp(_.name).get
@@ -337,11 +341,13 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
 
     val url = Routes.apiV1(
-      s"/$kind/${Session.lang()}/$modelName/csv?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
+      s"/$kind/${Session.lang()}/$modelName/$format?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
     )
     logger.info(s"downloading: $url")
     dom.window.open(url)
   }
+
+
 }
 
 case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:EntityTablePresenter, routes:Routes) extends View with Logging {
@@ -363,12 +369,22 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
 
     def label = (id:String) => id match {
-      case Filter.FK_NOT => StringFrag("not")
-      case Filter.FK_EQUALS => StringFrag("=")
-      case Filter.FK_LIKE => StringFrag("contains")
-      case Filter.FK_DISLIKE => StringFrag("without")
-      case Filter.LIKE => StringFrag("contains")
-      case Filter.DISLIKE => StringFrag("without")
+      case Filter.FK_NOT => StringFrag(Labels("table.filter.not"))
+      case Filter.FK_EQUALS => StringFrag(Labels("table.filter.equals"))
+      case Filter.FK_LIKE => StringFrag(Labels("table.filter.contains"))
+      case Filter.FK_DISLIKE => StringFrag(Labels("table.filter.without"))
+      case Filter.LIKE => StringFrag(Labels("table.filter.contains"))
+      case Filter.DISLIKE => StringFrag(Labels("table.filter.without"))
+      case Filter.BETWEEN => StringFrag(Labels("table.filter.between"))
+      case Filter.< => StringFrag(Labels("table.filter.lt"))
+      case Filter.> => StringFrag(Labels("table.filter.gt"))
+      case Filter.<= => StringFrag(Labels("table.filter.lte"))
+      case Filter.>= => StringFrag(Labels("table.filter.gte"))
+      case Filter.EQUALS => StringFrag(Labels("table.filter.equals"))
+      case Filter.IN => StringFrag(Labels("table.filter.in"))
+      case Filter.NONE => StringFrag(Labels("table.filter.none"))
+      case Filter.NOTIN => StringFrag(Labels("table.filter.notin"))
+      case Filter.NOT => StringFrag(Labels("table.filter.not"))
       case _ => StringFrag(id)
     }
 
@@ -471,19 +487,19 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             val hasKey = model.get.metadata.exists(_.keys.nonEmpty)
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
 
-            tr((`class` := "info").attrIf(selected), onclick :+= ((e:Event) => presenter.selected(el.get),true),
+            tr((`class` := "info").attrIf(selected), ClientConf.style.rowStyle, onclick :+= ((e:Event) => presenter.selected(el.get),true),
               td(ClientConf.style.smallCells)(
                 (hasKey,model.get.write) match{
                   case (false,_) => p(color := "grey")(Labels.entity.no_action)
                   case (true,false) => a(
-                    cls := "primary",
+                    cls := "primary action",
                     onclick :+= ((ev: Event) => presenter.show(el.get), true)
                   )(Labels.entity.show)
                   case (true,true) => Seq(a(
-                    cls := "primary",
+                    cls := "primary action",
                     onclick :+= ((ev: Event) => presenter.edit(el.get), true)
                   )(Labels.entity.edit),span(" "),a(
-                    cls := "danger",
+                    cls := "danger action",
                     onclick :+= ((ev: Event) => presenter.delete(el.get), true)
                   )(Labels.entity.delete))
                 }
@@ -505,6 +521,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
         ).render,
 
         button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadCSV()),ClientConf.style.boxButton, Labels.entity.csv),
+        button(`type` := "button", onclick :+= ((e:Event) => presenter.downloadXLS()),ClientConf.style.boxButton, Labels.entity.xls),
         showIf(model.subProp(_.fieldQueries).transform(_.size == 0)){ p("loading...").render },
         br,br
       ),

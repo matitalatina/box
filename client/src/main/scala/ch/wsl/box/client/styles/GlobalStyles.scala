@@ -174,12 +174,31 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val smallCells = style(
-    padding(3 px).important,
+    padding.horizontal(3 px),
+    padding.vertical(15 px),
     fontSize(conf.smallCellsSize px),
     unsafeRoot("p")(
       margin(0 px)
     )
   )
+
+  val rowStyle = style(
+
+    unsafeChild("a.action") (
+      color(Color("#ccc")),
+      fontSize(11 px)
+    ),
+
+    &.hover(
+      backgroundColor(rgba(250,248,250,1)),
+      borderLeft(4 px,solid,black),
+      unsafeChild("a.action") (
+        color(Color("#333")),
+      )
+    )
+  )
+
+
 
   val numberCells = style(
     textAlign.right,

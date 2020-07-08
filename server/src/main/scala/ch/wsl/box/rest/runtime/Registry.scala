@@ -105,9 +105,15 @@ object Registry extends Logging {
 
       import scala.tools.reflect.ToolBox
       try {
-        val toolbox = currentMirror.mkToolBox()
+        val dirName = "runtime-target"
+        val dir = new java.io.File(dirName)
+        if(!dir.exists()) {
+          dir.mkdir()
+        }
+        val toolbox = currentMirror.mkToolBox(options = s"-d $dirName")
         val tree = toolbox.parse(source)
-        _registry = toolbox.eval(tree).asInstanceOf[GeneratedRegistry]
+        val out = toolbox.eval(tree)
+        _registry = out.asInstanceOf[GeneratedRegistry]
       } catch { case e:Throwable =>
         e.printStackTrace()
         reflect.io.File("ErroredRuntimeCompile.scala").writeAll(source)

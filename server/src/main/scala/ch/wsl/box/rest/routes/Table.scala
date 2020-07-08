@@ -1,16 +1,20 @@
 package ch.wsl.box.rest.routes
 
+import java.io.ByteArrayOutputStream
+
 import akka.http.scaladsl.common.EntityStreamingSupport
 import akka.http.scaladsl.marshalling.{Marshaller, Marshalling, ToEntityMarshaller, ToResponseMarshaller}
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
+import akka.http.scaladsl.server.Directives.entity
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromRequestUnmarshaller, Unmarshaller}
 import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Source, StreamConverters}
+import akka.util.ByteString
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
-import ch.wsl.box.rest.logic.{DbActions, JSONTableActions, Lookup}
+import ch.wsl.box.rest.logic.{DbActions, FormActions, JSONTableActions, Lookup}
 import ch.wsl.box.rest.utils.{BoxConfig, JSONSupport, UserProfile}
 import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -18,6 +22,7 @@ import scribe.Logging
 import slick.lifted.TableQuery
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.EntityMetadataFactory
+import ch.wsl.box.rest.services.{XLSExport, XLSTable}
 import io.circe.parser.decode
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}
@@ -76,6 +81,33 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
     import JSONData._
 
 
+  def xls:Route = path("xlsx") {
+    respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$name.xlsx"))) {
+      get {
+        parameters('q) { q =>
+          val query = parse(q).right.get.as[JSONQuery].right.get
+          complete {
+            for {
+              metadata <- EntityMetadataFactory.of(name, lang, limitLookupFromFk)
+              fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
+              data <- db.run(jsonActions.find(query))
+            } yield {
+              val table = XLSTable(
+                title = name,
+                header = metadata.fields.map(_.name),
+                rows = data.map(row => metadata.exportFields.map(cell => row.get(cell)))
+              )
+              val os = new ByteArrayOutputStream()
+              XLSExport(table, os)
+              os.flush()
+              os.close()
+              HttpResponse(entity = HttpEntity(MediaTypes.`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, os.toByteArray))
+            }
+          }
+        }
+      }
+    }
+  }
 
 
   def route:Route = pathPrefix(name) {
@@ -165,6 +197,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
           }
         }
       } ~
+      xls ~
       path("csv") {           //all values in csv format according to JSONQuery
           post {
             entity(as[JSONQuery]) { query =>

@@ -1,8 +1,12 @@
 package ch.wsl.box.rest.routes
 
+import java.io.ByteArrayOutputStream
+
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
+import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Source, StreamConverters}
+import akka.util.ByteString
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.utils.{JSONSupport, Timer, UserProfile}
@@ -12,6 +16,7 @@ import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, MetadataFactory}
+import ch.wsl.box.rest.services.{XLSExport, XLSTable}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -51,6 +56,35 @@ case class Form(
 
 
     val metadata: Future[JSONMetadata] = metadataFactory.of(name,lang)
+
+    def xls:Route = path("xlsx") {
+      respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$name.csv"))) {
+        get {
+          parameters('q) { q =>
+            val query = parse(q).right.get.as[JSONQuery].right.get
+            complete {
+              for {
+                metadata <- tabularMetadata()
+                formActions = FormActions(metadata, jsonActions, metadataFactory)
+                fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
+                data <- formActions.list(query, fkValues)
+              } yield {
+                val table = XLSTable(
+                  title = name,
+                  header = metadata.exportFields.map(ef => metadata.fields.find(_.name == ef).map(_.title).getOrElse(ef)),
+                  rows = data.map(row => metadata.exportFields.map(cell => row.get(cell)))
+                )
+                val os = new ByteArrayOutputStream()
+                XLSExport(table, os)
+                os.flush()
+                os.close()
+                HttpResponse(entity = HttpEntity(MediaTypes.`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, os.toByteArray))
+              }
+            }
+          }
+        }
+      }
+    }
 
     def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.map{ f =>
       val filteredFields = fields match {
@@ -167,6 +201,7 @@ case class Form(
         }
       }
     } ~
+    xls ~
     path("csv") {
       post {
         entity(as[JSONQuery]) { query =>

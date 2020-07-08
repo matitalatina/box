@@ -43,8 +43,18 @@ case class FormActions(metadata:JSONMetadata,
   }
 
   private def streamSeq(query:JSONQuery):Source[Json,NotUsed] = {
+
+    val q:JSONQuery = metadata.query.map{ defaultQuery =>
+        JSONQuery(
+          filter = defaultQuery.filter ++ query.filter,
+          sort = defaultQuery.sort ++ query.sort,
+          paging = defaultQuery.paging.orElse(query.paging)
+        )
+    }.getOrElse(query)
+
+
     Source
-      .fromPublisher(jsonAction.findStreamed(query))
+      .fromPublisher(jsonAction.findStreamed(q))
       .flatMapConcat( json => Source.fromFuture(db.run{ expandJson(json) }))
   }
 
