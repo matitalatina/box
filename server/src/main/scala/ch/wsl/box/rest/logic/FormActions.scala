@@ -54,7 +54,7 @@ case class FormActions(metadata:JSONMetadata,
 
 
     Source
-      .fromPublisher(jsonAction.findStreamed(q))
+      .fromPublisher(jsonAction.findStreamed(q.copy(fields = Some(metadata.fields.filterNot(_.`type` == "child").map(_.name)))))
       .flatMapConcat( json => Source.fromFuture(db.run{ expandJson(json) }))
   }
 

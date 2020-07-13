@@ -188,6 +188,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       color(Color("#ccc")),
       fontSize(11 px)
     ),
+    borderLeft(4 px,solid,rgba(0,0,0,0)),
 
     &.hover(
       backgroundColor(rgba(250,248,250,1)),

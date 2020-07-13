@@ -29,6 +29,8 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
        |
        |      import profile._
        |
+       |      import ch.wsl.box.model.JsonMapping._
+       |
        |          ${indent(code)}
        |}
      """.stripMargin.trim
@@ -109,6 +111,8 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
 
     override def TableClass = new TableClassDef {
       override def optionEnabled = columns.size <= 22 && mappingEnabled && columns.exists(c => !c.model.nullable)
+
+
     }
 
     def tableModel = model
@@ -120,6 +124,12 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
     override def Column = new Column(_){
       // customize Scala column names
       override def rawName = model.name
+
+      override def code: String =
+        s"""
+           |${super.code}
+           |val json$name: Rep[Option[JsonMapped]] = column[Option[JsonMapped]]("${model.name}",O.Default(None))
+           |""".stripMargin
 
       override def rawType: String =  TypeMapping(model).getOrElse(super.rawType)
 

@@ -10,7 +10,7 @@ trait PostgresProfile extends ExPostgresProfile
   with PgDate2Support
   //  with PgRangeSupport
   //  with PgHStoreSupport
-  //  with PgPlayJsonSupport
+  with PgCirceJsonSupport
   with PgSearchSupport
   with PgPostGISSupport
   //  with PgNetSupport
@@ -26,7 +26,7 @@ trait PostgresProfile extends ExPostgresProfile
 
   object MyAPI extends API with ArrayImplicits
     with DateTimeImplicits
-    //    with JsonImplicits
+    with JsonImplicits
     //    with NetImplicits
     //    with LTreeImplicits
     //    with RangeImplicits
@@ -52,7 +52,6 @@ trait PostgresProfile extends ExPostgresProfile
     with SimpleArrayPlainImplicits
     with Date2DateTimePlainImplicits
     with PostGISPlainImplicits
-    //    with SimpleJsonPlainImplicits
     //    with SimpleNetPlainImplicits
     //    with SimpleLTreePlainImplicits
     //    with SimpleRangePlainImplicits

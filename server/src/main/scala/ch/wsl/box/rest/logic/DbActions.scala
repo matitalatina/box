@@ -5,6 +5,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import ch.wsl.box.jdbc.PostgresProfile
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, FormMetadataFactory}
+import io.circe.Json
 import scribe.Logging
 import slick.ast.Node
 import slick.basic.DatabasePublisher

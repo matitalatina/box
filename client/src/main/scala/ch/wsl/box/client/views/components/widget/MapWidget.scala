@@ -57,6 +57,7 @@ case class MapWidget(id: Property[String], field: JSONField, prop: Property[Json
 
       val map = Leaflet.map(mapDiv,new MapOptionsEditable {
         override val editable = true
+
       }).asInstanceOf[MapEditable]
 
       map.setView(LatLng(46.57591, 7.84956),8)
@@ -65,17 +66,17 @@ case class MapWidget(id: Property[String], field: JSONField, prop: Property[Json
 
       val swisstopo1000:WMS = Leaflet.asInstanceOf[js.Dynamic].tileLayer.wms("https://wms.geo.admin.ch/?", js.Dictionary(
         "layers" -> "ch.swisstopo.pixelkarte-farbe-pk1000.noscale",
-        "crs" -> Leaflet.asInstanceOf[js.Dynamic].CRS.EPSG3857,
+        "crs" -> Leaflet.asInstanceOf[js.Dynamic].CRS.EPSG2056,
       )).asInstanceOf[WMS]
 
       val swisstopo25:WMS = Leaflet.asInstanceOf[js.Dynamic].tileLayer.wms("https://wms.geo.admin.ch/?", js.Dictionary(
         "layers" -> "ch.swisstopo.pixelkarte-farbe-pk25.noscale",
-        "crs" -> Leaflet.asInstanceOf[js.Dynamic].CRS.EPSG3857,
+        "crs" -> Leaflet.asInstanceOf[js.Dynamic].CRS.EPSG2056,
       )).asInstanceOf[WMS]
 
       val forrest:WMS = Leaflet.asInstanceOf[js.Dynamic].tileLayer.wms("https://wms.geo.admin.ch/?", js.Dictionary(
         "layers" -> "ch.bafu.waldreservate",
-        "crs" -> Leaflet.asInstanceOf[js.Dynamic].CRS.EPSG3857,
+        "crs" -> Leaflet.asInstanceOf[js.Dynamic].CRS.EPSG2056,
         "transparent" -> true,
         "format" -> "image/png",
         "opacity" -> 0.5
@@ -168,11 +169,11 @@ case class MapWidget(id: Property[String], field: JSONField, prop: Property[Json
     editable = true
     div(
       div(label(field.title)),
-      div(addPolygon,Checkbox(forrestEnable)(),"Show waldreservate", RadioButtons(baseMap,SeqProperty("osm","swisstopo1000","swisstopo25"))(
-        (els: Seq[(Input, String)]) => span(els.map {
-          case (i: Input, l: String) => label(i, l)
-        }).render
-      ).render),
+//      div(addPolygon,Checkbox(forrestEnable)(),"Show waldreservate", RadioButtons(baseMap,SeqProperty("osm","swisstopo1000","swisstopo25"))(
+//        (els: Seq[(Input, String)]) => span(els.map {
+//          case (i: Input, l: String) => label(i, l)
+//        }).render
+//      ).render),
       mapDiv
     )
   }

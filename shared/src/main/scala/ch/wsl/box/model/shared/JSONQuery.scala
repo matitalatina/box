@@ -11,7 +11,8 @@ package ch.wsl.box.model.shared
 case class JSONQuery(
                       filter:List[JSONQueryFilter],
                       sort:List[JSONSort],
-                      paging:Option[JSONQueryPaging]
+                      paging:Option[JSONQueryPaging],
+                      fields: Option[Seq[String]] = None
                     ){
 
   def filterWith(filter:JSONQueryFilter*) = this.copy(filter = filter.toList)

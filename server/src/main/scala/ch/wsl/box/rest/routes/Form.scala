@@ -58,7 +58,7 @@ case class Form(
     val metadata: Future[JSONMetadata] = metadataFactory.of(name,lang)
 
     def xls:Route = path("xlsx") {
-      respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$name.csv"))) {
+      respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$name.xlsx"))) {
         get {
           parameters('q) { q =>
             val query = parse(q).right.get.as[JSONQuery].right.get

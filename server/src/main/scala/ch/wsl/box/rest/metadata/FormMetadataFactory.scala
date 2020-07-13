@@ -256,7 +256,16 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
               for{
                 (form,formI18n) <- BoxForm.BoxFormTable joinLeft BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId
               } yield (formI18n,form)
-            }.result.map{x => x.head._1.flatMap(_.label).getOrElse(x.head._2.name)}
+            }.result.map{x =>
+
+              x.headOption match {
+                case Some(h) => h._1.flatMap(_.label).getOrElse(h._2.name)
+                case None => throw new Exception(s"Field not found")
+              }
+
+
+
+            }
           }
         }
       }
