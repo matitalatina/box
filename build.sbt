@@ -50,7 +50,9 @@ lazy val server: Project  = project
     GitVersioning,
     BuildInfoPlugin,
     SbtWeb,
-    SbtTwirl)
+    SbtTwirl,
+    NewRelic
+  )
   //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)
   .dependsOn(codegen)
