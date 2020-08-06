@@ -42,6 +42,8 @@ lazy val server: Project  = project
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
     WebKeys.packagePrefix in Assets := "public/",
     managedClasspath in Runtime += (packageBin in Assets).value,
+    newrelicVersion := "5.14.0",
+    newrelicIncludeApi := true
   )
   .enablePlugins(
     TomcatPlugin,
