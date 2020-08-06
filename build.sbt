@@ -53,7 +53,7 @@ lazy val server: Project  = project
     BuildInfoPlugin,
     SbtWeb,
     SbtTwirl,
-    //NewRelic
+    NewRelic
   )
   //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)

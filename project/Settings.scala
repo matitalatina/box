@@ -32,7 +32,7 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.12.11"
+    val scala = "2.12.12"
     val ficus = "1.4.7"
 
     //HTTP actors
