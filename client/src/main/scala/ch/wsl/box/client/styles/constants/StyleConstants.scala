@@ -42,6 +42,7 @@ object StyleConstants extends StyleSheet.Inline{
     val link = Color(linkColor) //default "#fbf0b2"
 
     val warning = Color(warningColor) //defualt "#ffa500"
+
   }
 
   object Colors{

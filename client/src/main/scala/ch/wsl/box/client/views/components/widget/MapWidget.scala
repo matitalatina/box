@@ -84,16 +84,16 @@ case class MapWidget(id: Property[String], field: JSONField, prop: Property[Json
 
       osm.addTo(map)
 
-      baseMap.listen({ x =>
-        map.removeLayer(swisstopo25)
-        map.removeLayer(swisstopo1000)
-        map.removeLayer(osm)
-        x match {
-          case "osm" => osm.addTo(map)
-          case "swisstopo25" => swisstopo25.addTo(map)
-          case "swisstopo1000" => swisstopo1000.addTo(map)
-        }
-      })
+//      baseMap.listen({ x =>
+//        map.removeLayer(swisstopo25)
+//        map.removeLayer(swisstopo1000)
+//        map.removeLayer(osm)
+//        x match {
+//          case "osm" => osm.addTo(map)
+//          case "swisstopo25" => swisstopo25.addTo(map)
+//          case "swisstopo1000" => swisstopo1000.addTo(map)
+//        }
+//      })
 
       forrestEnable.listen({
         case true => forrest.addTo(map)
@@ -168,11 +168,7 @@ case class MapWidget(id: Property[String], field: JSONField, prop: Property[Json
     editable = true
     div(
       div(label(field.title)),
-      div(addPolygon,Checkbox(forrestEnable)(),"Show waldreservate", RadioButtons(baseMap,SeqProperty("osm","swisstopo1000","swisstopo25"))(
-        (els: Seq[(Input, String)]) => span(els.map {
-          case (i: Input, l: String) => label(i, l)
-        }).render
-      ).render),
+      div(addPolygon),
       mapDiv
     )
   }

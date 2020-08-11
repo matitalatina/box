@@ -37,11 +37,12 @@ object Registry extends Logging {
   def set(r:RegistryInstance) = _registry = r
 
   def load() = {
+
   try {
     _registry = Class.forName("ch.wsl.box.generated.GenRegistry")
                       .newInstance()
                       .asInstanceOf[RegistryInstance]
-    logger.warn("Using generated registry, use only in development!")
+    //logger.warn("Using generated registry, use only in development!")
   } catch { case t:Throwable =>
 
       val files = CustomizedCodeGenerator.generatedFiles()
@@ -107,9 +108,16 @@ object Registry extends Logging {
 
       import scala.tools.reflect.ToolBox
       try {
+//        val dirName = "runtime-target"
+//        val dir = new java.io.File(dirName)
+//        if(!dir.exists()) {
+//          dir.mkdir()
+//        }
+//        val toolbox = currentMirror.mkToolBox(options = s"-d $dirName")
         val toolbox = currentMirror.mkToolBox()
         val tree = toolbox.parse(source)
-        _registry = toolbox.eval(tree).asInstanceOf[GeneratedRegistry]
+        val out = toolbox.eval(tree)
+        _registry = out.asInstanceOf[GeneratedRegistry]
       } catch { case e:Throwable =>
         e.printStackTrace()
         reflect.io.File("ErroredRuntimeCompile.scala").writeAll(source)

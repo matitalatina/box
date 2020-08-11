@@ -28,6 +28,12 @@ trait BaseCodeGenerator {
 
   private val tablesAndViews = tables ++ views
 
+  println(
+    s"""
+       |Running BOX Code generation
+       |DB: $dbPath Schema: $dbSchema
+       |""".stripMargin)
+
   val enabledTables = Await.result(db.run{
     MTable.getTables(None, None, None, Some(Seq("TABLE")))   //slick method to retrieve db structure
   }, 200 seconds)

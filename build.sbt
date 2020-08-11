@@ -4,17 +4,27 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 /** codegen project containing the customized code generator */
 lazy val codegen  = (project in file("codegen")).settings(
-  name := "codegen",
+  organization := "boxframework",
+  name := "box-codegen",
+  bintrayRepository := "maven",
+  bintrayOrganization := Some("waveinch"),
+  publishMavenStyle := true,
+  licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
   scalaVersion := Settings.versions.scala,
   libraryDependencies ++= Settings.codegenDependecies.value,
   resolvers += Resolver.jcenterRepo,
   resolvers += Resolver.bintrayRepo("waveinch","maven"),
-  resourceDirectory in Compile := baseDirectory.value / "../resources"
+  resourceDirectory in Compile := baseDirectory.value / "../resources",
 )
 
 lazy val server: Project  = project
   .settings(
-    name := "server",
+    organization := "boxframework",
+    name := "box-server",
+    bintrayRepository := "maven",
+    bintrayOrganization := Some("waveinch"),
+    publishMavenStyle := true,
+    licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
     scalaVersion := Settings.versions.scala,
     scalaBinaryVersion := "2.12",
     scalacOptions ++= Settings.scalacOptionsServer,
@@ -23,14 +33,10 @@ lazy val server: Project  = project
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
     slick := slickCodeGenTask.value , // register manual sbt command
     deleteSlick := deleteSlickTask.value,
-    resourceDirectory in Compile := baseDirectory.value / "../resources",
     testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html"),
     mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
     mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot"),
-    dockerExposedPorts ++= Seq(8080),
-    packageName in Docker := "boxframework/box-framework",
-    dockerUpdateLatest := true,
-    dockerEntrypoint := Seq("/opt/docker/bin/boot","-Dconfig.file=/application.conf"),
+    resourceDirectory in Compile := baseDirectory.value / "../resources",
     git.gitTagToVersionNumber := { tag:String =>
       Some(tag)
     },
@@ -41,16 +47,14 @@ lazy val server: Project  = project
     pipelineStages in Assets := Seq(scalaJSPipeline),
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
     WebKeys.packagePrefix in Assets := "public/",
-    managedClasspath in Runtime += (packageBin in Assets).value,
+    managedClasspath in Runtime += (packageBin in Assets).value
   )
   .enablePlugins(
-    TomcatPlugin,
-    JavaAppPackaging,
-    DockerPlugin,
     GitVersioning,
     BuildInfoPlugin,
     SbtWeb,
-    SbtTwirl)
+    SbtTwirl
+  )
   //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)
   .dependsOn(codegen)
@@ -99,8 +103,12 @@ lazy val client: Project = (project in file("client"))
 lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .in(file("shared"))
   .settings(
-    name := "shared",
+    organization := "boxframework",
+    name := "box-shared",
     scalaVersion := Settings.versions.scala,
+    bintrayRepository := "maven",
+    bintrayOrganization := Some("waveinch"),
+    licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
     libraryDependencies ++= Settings.sharedJVMJSDependencies.value,
     resolvers += Resolver.jcenterRepo,
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
@@ -109,9 +117,9 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure
     libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC5"
   )
 
-lazy val sharedJVM: Project = shared.jvm.settings(name := "sharedJVM")
+lazy val sharedJVM: Project = shared.jvm.settings(name := "box-shared-jvm")
 
-lazy val sharedJS: Project = shared.js.settings(name := "sharedJS")
+lazy val sharedJS: Project = shared.js.settings(name := "box-shared-js")
 
 
 // code generation task that calls the customized code generator
@@ -143,34 +151,26 @@ lazy val deleteSlickTask = Def.task{
 
 lazy val box = (project in file("."))
   .settings(
-    boxDocker := boxDockerTask.value,
-    boxPackage := boxTask.value,
+    publishAll := publishAllTask.value,
     installBox := installBoxTask.value,
     dropBox := dropBoxTask.value,
   )
 
-lazy val boxPackage = taskKey[Unit]("Package box")
-lazy val boxTask = Def.sequential(
-  (deleteSlick in server),
-  (clean in client),
-  (clean in server),
-  (clean in codegen),
-  (fullOptJS in Compile in client),
-  (compile in Compile in codegen),
-  (packageBin in Universal in server)
-)
 
 
-lazy val boxDocker = taskKey[Unit]("Create docker release")
-lazy val boxDockerTask = Def.sequential(
-  (deleteSlick in server),
-  (clean in client),
-  (clean in server),
-  (clean in codegen),
-  (fullOptJS in Compile in client),
-  (compile in Compile in codegen),
-  (publishLocal in Docker in server)
-)
+lazy val publishAll = taskKey[Unit]("Publish all modules")
+lazy val publishAllTask = {
+  Def.sequential(
+    (clean in client),
+    (clean in server),
+    (clean in codegen),
+    (fullOptJS in Compile in client),
+    (compile in Compile in codegen),
+    (publish in sharedJVM),
+    (publish in codegen),
+    (publish in server)
+  )
+}
 
 lazy val installBox = taskKey[Unit]("Install box schema")
 lazy val installBoxTask = Def.sequential(

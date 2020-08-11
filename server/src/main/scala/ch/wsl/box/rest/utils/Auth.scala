@@ -19,7 +19,7 @@ import scala.util.Try
 object Auth {
 
 
-  val executor = AsyncExecutor("public-executor",50,50,1000,50)
+  val executor = AsyncExecutor("public-executor",50,50,10000,50)
 
   val dbConf: Config = ConfigFactory.load().as[Config]("db")
   val dbPath = dbConf.as[String]("url")
@@ -28,6 +28,10 @@ object Auth {
   val boxDbConf: Config = ConfigFactory.load().as[Config]("box.db")
   val boxDbPath = boxDbConf.as[String]("url")
   val boxDbSchema = boxDbConf.as[String]("schema")
+
+  println(s"DB: $dbPath")
+  println(s"Box DB: $boxDbPath")
+
   /**
     * Admin DB connection, useful for quering the information Schema
  *
@@ -86,6 +90,7 @@ object Auth {
       user=name,
       password=password,
       executor = executor)
+
 
 
       UserProfile(name,db,boxDb)
