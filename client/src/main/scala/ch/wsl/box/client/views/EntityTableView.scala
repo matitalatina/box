@@ -8,7 +8,7 @@ import ch.wsl.box.client.utils.{ClientConf, Labels, Navigation, Session, Session
 import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget, SelectWidgetFullWidth}
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
 import ch.wsl.box.model.shared.EntityKind.VIEW
-import ch.wsl.box.model.shared._
+import ch.wsl.box.model.shared.{JSONQuery, _}
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -40,7 +40,7 @@ object IDsVMFactory{
 
 case class Row(data: Seq[String])
 
-case class FieldQuery(field:JSONField, sort:String, filterValue:String, filterOperator:String)
+case class FieldQuery(field:JSONField, sort:String, sortOrder:Option[Int], filterValue:String, filterOperator:String)
 
 case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQueries:Seq[FieldQuery],
                             metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDsVM, pages:Int, write:Boolean)
@@ -155,6 +155,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
           FieldQuery(
             field = field,
             sort = query.sort.find(_.column == field.name).map(_.order).getOrElse(Sort.IGNORE),
+            sortOrder = query.sort.zipWithIndex.find(_._1.column == field.name).map(_._2 + 1),
             filterValue = rawValue,
             filterOperator = operator
           )
@@ -248,7 +249,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   private def query():JSONQuery = {
     val fieldQueries = model.subProp(_.fieldQueries).get
 
-    val sort = fieldQueries.filter(_.sort != Sort.IGNORE).map(s => JSONSort(s.field.name, s.sort)).toList
+    val sort = fieldQueries.filter(_.sort != Sort.IGNORE).sortBy(_.sortOrder.getOrElse(-1)).map(s => JSONSort(s.field.name, s.sort)).toList
 
     val filter = fieldQueries.filter(_.filterValue != "").map{ f =>
       JSONQueryFilter(f.field.name,Some(f.filterOperator),f.filterValue)
@@ -301,12 +302,34 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
   def sort(fieldQuery: FieldQuery) = {
 
-    val newFieldQueries = model.subProp(_.fieldQueries).get.map{ m =>
+    val next = Sort.next(fieldQuery.sort)
+
+    val fieldQueries = model.subProp(_.fieldQueries).get
+
+    val newFieldQueries = fieldQueries.map{ m =>
+
+      next match {
+        case Sort.IGNORE => // drop order
+        case Sort.ASC => // add order
+        case _ => // keep order
+      }
+
+
       m.field.name == fieldQuery.field.name match {
-        case false => m
-        case true => m.copy(sort = Sort.next(m.sort))
+        case false => next match {
+          case Sort.IGNORE if m.sortOrder.isDefined && fieldQuery.sortOrder.isDefined && m.sortOrder.get > fieldQuery.sortOrder.get => m.copy(sortOrder = m.sortOrder.map(_ - 1))
+          case _ => m
+        }
+        case true => {
+          next match {
+            case Sort.IGNORE => m.copy(sort = next, sortOrder = None) // drop order
+            case Sort.ASC => m.copy(sort = next, sortOrder = Some(fieldQueries.map(_.sortOrder.getOrElse(0)).max + 1)) // add order
+            case _ =>  m.copy(sort = next)// keep order
+          }
+        }
       }
     }
+
     model.subProp(_.fieldQueries).set(newFieldQueries)
   }
 
@@ -465,12 +488,13 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                       val title: String = fieldQuery.get.field.label.getOrElse(fieldQuery.get.field.name)
                       val filterValue = fieldQuery.asModel.subProp(_.filterValue)
                       val sort = fieldQuery.asModel.subProp(_.sort)
+                      val order = fieldQuery.asModel.subProp(_.sortOrder).get.map(_.toString).getOrElse("")
 
                     th(ClientConf.style.smallCells)(
                       a(
                         onclick :+= ((ev: Event) => presenter.sort(fieldQuery.get), true),
                         title," ",
-                        Labels(Sort.label(sort.get))
+                        Labels(Sort.label(sort.get))," ",order
                       ),br,
                       filterOptions(fieldQuery.asModel),
                       produce(fieldQuery.asModel.subProp(_.filterOperator)) { ft =>
