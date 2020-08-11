@@ -113,8 +113,12 @@ lazy val client: Project = (project in file("client"))
 lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .in(file("shared"))
   .settings(
+    organization := "boxframework",
     name := "box-shared",
     scalaVersion := Settings.versions.scala,
+    bintrayRepository := "maven",
+    bintrayOrganization := Some("waveinch"),
+    licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
     libraryDependencies ++= Settings.sharedJVMJSDependencies.value,
     resolvers += Resolver.jcenterRepo,
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
@@ -123,9 +127,9 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure
     libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC5"
   )
 
-lazy val sharedJVM: Project = shared.jvm.settings(name := "sharedJVM")
+lazy val sharedJVM: Project = shared.jvm.settings(name := "box-shared-jvm")
 
-lazy val sharedJS: Project = shared.js.settings(name := "sharedJS")
+lazy val sharedJS: Project = shared.js.settings(name := "box-shared-js")
 
 
 // code generation task that calls the customized code generator
@@ -157,10 +161,7 @@ lazy val deleteSlickTask = Def.task{
 
 lazy val box = (project in file("."))
   .settings(
-    boxDocker := boxDockerTask.value,
-    boxPackage := boxTask.value,
-    installBox := installBoxTask.value,
-    dropBox := dropBoxTask.value,
+    publishAll := publishAllTask.value
   )
 
 lazy val boxPackage = taskKey[Unit]("Package box")
@@ -172,6 +173,18 @@ lazy val boxTask = Def.sequential(
   (fullOptJS in Compile in client),
   (compile in Compile in codegen),
   (packageBin in Universal in server)
+)
+
+lazy val publishAll = taskKey[Unit]("Publish all modules")
+lazy val publishAllTask = Def.sequential(
+  (clean in client),
+  (clean in server),
+  (clean in codegen),
+  (fullOptJS in Compile in client),
+  (compile in Compile in codegen),
+  (publish in sharedJVM),
+  (publish in codegen),
+  (publish in server)
 )
 
 
