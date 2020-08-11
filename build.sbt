@@ -4,7 +4,12 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 /** codegen project containing the customized code generator */
 lazy val codegen  = (project in file("codegen")).settings(
-  name := "codegen",
+  organization := "boxframework",
+  name := "box-codegen",
+  bintrayRepository := "maven",
+  bintrayOrganization := Some("waveinch"),
+  publishMavenStyle := true,
+  licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
   scalaVersion := Settings.versions.scala,
   libraryDependencies ++= Settings.codegenDependecies.value,
   resolvers += Resolver.jcenterRepo,
@@ -14,7 +19,12 @@ lazy val codegen  = (project in file("codegen")).settings(
 
 lazy val server: Project  = project
   .settings(
-    name := "server",
+    organization := "boxframework",
+    name := "box-server",
+    bintrayRepository := "maven",
+    bintrayOrganization := Some("waveinch"),
+    publishMavenStyle := true,
+    licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
     scalaVersion := Settings.versions.scala,
     scalaBinaryVersion := "2.12",
     scalacOptions ++= Settings.scalacOptionsServer,
@@ -28,7 +38,7 @@ lazy val server: Project  = project
     mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
     mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot"),
     dockerExposedPorts ++= Seq(8080),
-    packageName in Docker := "boxframework/box-framework",
+    packageName in Docker := "minettiandrea/box-framework-festival",
     dockerUpdateLatest := true,
     dockerEntrypoint := Seq("/opt/docker/bin/boot","-Dconfig.file=/application.conf"),
     git.gitTagToVersionNumber := { tag:String =>
@@ -46,7 +56,7 @@ lazy val server: Project  = project
     newrelicIncludeApi := true
   )
   .enablePlugins(
-    TomcatPlugin,
+    //TomcatPlugin,
     JavaAppPackaging,
     DockerPlugin,
     GitVersioning,
@@ -103,7 +113,7 @@ lazy val client: Project = (project in file("client"))
 lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .in(file("shared"))
   .settings(
-    name := "shared",
+    name := "box-shared",
     scalaVersion := Settings.versions.scala,
     libraryDependencies ++= Settings.sharedJVMJSDependencies.value,
     resolvers += Resolver.jcenterRepo,
@@ -167,7 +177,6 @@ lazy val boxTask = Def.sequential(
 
 lazy val boxDocker = taskKey[Unit]("Create docker release")
 lazy val boxDockerTask = Def.sequential(
-  (deleteSlick in server),
   (clean in client),
   (clean in server),
   (clean in codegen),

@@ -35,11 +35,12 @@ object Registry extends Logging {
   def set(r:RegistryInstance) = _registry = r
 
   def load() = {
+
   try {
     _registry = Class.forName("ch.wsl.box.generated.GenRegistry")
                       .newInstance()
                       .asInstanceOf[RegistryInstance]
-    logger.warn("Using generated registry, use only in development!")
+    //logger.warn("Using generated registry, use only in development!")
   } catch { case t:Throwable =>
 
       val files = CustomizedCodeGenerator.generatedFiles()

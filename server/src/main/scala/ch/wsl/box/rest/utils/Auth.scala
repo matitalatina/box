@@ -28,6 +28,10 @@ object Auth {
   val boxDbConf: Config = ConfigFactory.load().as[Config]("box.db")
   val boxDbPath = boxDbConf.as[String]("url")
   val boxDbSchema = boxDbConf.as[String]("schema")
+
+  println(s"DB: $dbPath")
+  println(s"Box DB: $boxDbPath")
+
   /**
     * Admin DB connection, useful for quering the information Schema
  *
