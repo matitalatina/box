@@ -14,7 +14,7 @@ lazy val codegen  = (project in file("codegen")).settings(
   libraryDependencies ++= Settings.codegenDependecies.value,
   resolvers += Resolver.jcenterRepo,
   resolvers += Resolver.bintrayRepo("waveinch","maven"),
-  resourceDirectory in Compile := baseDirectory.value / "../resources"
+  resourceDirectory in Compile := baseDirectory.value / "../resources",
 )
 
 lazy val server: Project  = project
@@ -33,14 +33,10 @@ lazy val server: Project  = project
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
     slick := slickCodeGenTask.value , // register manual sbt command
     deleteSlick := deleteSlickTask.value,
-    resourceDirectory in Compile := baseDirectory.value / "../resources",
     testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "html"),
     mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
     mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot"),
-    dockerExposedPorts ++= Seq(8080),
-    packageName in Docker := "minettiandrea/box-framework-festival",
-    dockerUpdateLatest := true,
-    dockerEntrypoint := Seq("/opt/docker/bin/boot","-Dconfig.file=/application.conf"),
+    resourceDirectory in Compile := baseDirectory.value / "../resources",
     git.gitTagToVersionNumber := { tag:String =>
       Some(tag)
     },
@@ -51,19 +47,13 @@ lazy val server: Project  = project
     pipelineStages in Assets := Seq(scalaJSPipeline),
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
     WebKeys.packagePrefix in Assets := "public/",
-    managedClasspath in Runtime += (packageBin in Assets).value,
-    newrelicVersion := "5.14.0",
-    newrelicIncludeApi := true
+    managedClasspath in Runtime += (packageBin in Assets).value
   )
   .enablePlugins(
-    //TomcatPlugin,
-    JavaAppPackaging,
-    DockerPlugin,
     GitVersioning,
     BuildInfoPlugin,
     SbtWeb,
-    SbtTwirl,
-    NewRelic
+    SbtTwirl
   )
   //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)
@@ -161,42 +151,26 @@ lazy val deleteSlickTask = Def.task{
 
 lazy val box = (project in file("."))
   .settings(
-    publishAll := publishAllTask.value
+    publishAll := publishAllTask.value,
+    installBox := installBoxTask.value,
+    dropBox := dropBoxTask.value,
   )
 
-lazy val boxPackage = taskKey[Unit]("Package box")
-lazy val boxTask = Def.sequential(
-  (deleteSlick in server),
-  (clean in client),
-  (clean in server),
-  (clean in codegen),
-  (fullOptJS in Compile in client),
-  (compile in Compile in codegen),
-  (packageBin in Universal in server)
-)
+
 
 lazy val publishAll = taskKey[Unit]("Publish all modules")
-lazy val publishAllTask = Def.sequential(
-  (clean in client),
-  (clean in server),
-  (clean in codegen),
-  (fullOptJS in Compile in client),
-  (compile in Compile in codegen),
-  (publish in sharedJVM),
-  (publish in codegen),
-  (publish in server)
-)
-
-
-lazy val boxDocker = taskKey[Unit]("Create docker release")
-lazy val boxDockerTask = Def.sequential(
-  (clean in client),
-  (clean in server),
-  (clean in codegen),
-  (fullOptJS in Compile in client),
-  (compile in Compile in codegen),
-  (publishLocal in Docker in server)
-)
+lazy val publishAllTask = {
+  Def.sequential(
+    (clean in client),
+    (clean in server),
+    (clean in codegen),
+    (fullOptJS in Compile in client),
+    (compile in Compile in codegen),
+    (publish in sharedJVM),
+    (publish in codegen),
+    (publish in server)
+  )
+}
 
 lazy val installBox = taskKey[Unit]("Install box schema")
 lazy val installBoxTask = Def.sequential(
