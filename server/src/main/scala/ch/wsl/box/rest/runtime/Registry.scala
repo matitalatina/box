@@ -10,13 +10,15 @@ trait RegistryInstance{
   def routes: GeneratedRoutes
   def actions: ActionRegistry
   def fields: FieldRegistry
+  def tables: TableRegistry
 }
 
 case class GeneratedRegistry(
                    fileRoutes:GeneratedFileRoutes,
                    routes: GeneratedRoutes,
                    actions: ActionRegistry,
-                   fields: FieldRegistry
+                   fields: FieldRegistry,
+                   tables: TableRegistry
                    ) extends RegistryInstance
 
 object Registry extends Logging {

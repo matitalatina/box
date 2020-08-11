@@ -53,6 +53,32 @@ object EntityMetadataFactory extends Logging {
     lookupLabelFields.as[Option[String]](referencingTable).getOrElse(myDefaultTableLookupLabelField)
   }
 
+
+  def lookup(table:String, column:String, lang:String)(implicit db:Database,  ec:ExecutionContext):Future[Option[JSONFieldLookup]] = {
+
+
+    val schema = new PgInformationSchema(table, db, excludeFields)
+
+    for {
+      fkOpt <- schema.findFk(column)
+      firstNoPK <- fkOpt match {
+        case Some(f) => firstNoPKField(f.referencingTable)
+        case None => Future.successful(None)
+      }
+    } yield {
+      for{
+        fk <- fkOpt
+      } yield {
+        val text = lookupField(fk.referencingTable, lang, firstNoPK)
+        val model = fk.referencingTable
+        val value = fk.referencingKeys.head //todo verify for multiple key
+
+        JSONFieldLookup(model, JSONFieldMap(value, text), Seq())
+
+      }
+    }
+  }
+
   def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
 
     implicit val db = up.db
@@ -161,6 +187,7 @@ object EntityMetadataFactory extends Logging {
       }
     }
   }
+
   def keysOf(table:String)(implicit ec:ExecutionContext):Future[Seq[String]] = {
     logger.info("Getting " + table + " keys")
     cacheKeys.lift((table)) match {
@@ -184,7 +211,7 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def firstNoPKField(table:String)(implicit db:Database, mat:Materializer, ec:ExecutionContext):Future[Option[String]] = {
+  def firstNoPKField(table:String)(implicit db:Database, ec:ExecutionContext):Future[Option[String]] = {
     logger.info("Getting first field of " + table + " that is not PK")
     val schema = new PgInformationSchema(table, Auth.adminDB, excludeFields)
     for {
@@ -200,7 +227,7 @@ object EntityMetadataFactory extends Logging {
   }
 
 
-  def fieldType(table:String,field:String)(implicit ec:ExecutionContext):ColType = {
+  def fieldType(table:String,field:String):ColType = {
     val dbField = Registry().fields.field(table,field)
     if(dbField.name != "Unknown") {
       dbField

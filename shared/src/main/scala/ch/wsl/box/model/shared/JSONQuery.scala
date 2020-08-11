@@ -11,7 +11,8 @@ package ch.wsl.box.model.shared
 case class JSONQuery(
                       filter:List[JSONQueryFilter],
                       sort:List[JSONSort],
-                      paging:Option[JSONQueryPaging]
+                      paging:Option[JSONQueryPaging],
+                      lang:String
                     ){
 
   def filterWith(filter:JSONQueryFilter*) = this.copy(filter = filter.toList)
@@ -70,15 +71,16 @@ case class JSONSort(column:String,order:String)
   */
 object JSONQuery{
 
-  def apply(filter:List[JSONQueryFilter], sort:List[JSONSort], pages:Int, currentPage:Int ):JSONQuery =
-    JSONQuery(filter, sort, paging = Some(JSONQueryPaging(pageLength = pages, currentPage = currentPage)))
+  def apply(filter:List[JSONQueryFilter], sort:List[JSONSort], pages:Int, currentPage:Int, lang:String = "en"):JSONQuery =
+    JSONQuery(filter, sort, paging = Some(JSONQueryPaging(pageLength = pages, currentPage = currentPage)),lang)
   /**
     * Generic query
     */
   val empty = JSONQuery(
     filter = List(),
     sort = List(),
-    paging = Some(JSONQueryPaging(1000))
+    paging = Some(JSONQueryPaging(1000)),
+    lang = "en"
   )
 
   def filterWith(filter:JSONQueryFilter*) = empty.copy(filter = filter.toList)
