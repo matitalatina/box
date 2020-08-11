@@ -13,10 +13,10 @@ case class TableRegistryGenerator(entityList:Seq[String], model:Model) extends s
   def mapEntity(tableName:String):Option[String] = tables.find(_.model.name.table == tableName).map{ table =>
     s"""      case "${table.model.name.table}" => new TableRegistryEntry{
        |
-       |         type MT = ${table.TableClass.name}
+       |         type MT = Entities.${table.TableClass.name}
        |
        |         override val name = "${table.model.name.table}"
-       |         override val tableQuery = ${table.TableValue.name}.asInstanceOf[TableQuery[Table[MT]]]
+       |         override val tableQuery = Entities.${table.TableValue.name}.asInstanceOf[TableQuery[Table[MT]]]
        |
        |
        |      }""".stripMargin
@@ -34,7 +34,6 @@ case class TableRegistryGenerator(entityList:Seq[String], model:Model) extends s
        |
        |object TableAccessRegistry extends TableRegistry {
        |
-       |  import Entities._
        |
        |  def table(name:String):TableRegistryEntry = {
        |
