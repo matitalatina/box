@@ -135,7 +135,7 @@ case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) ext
         headerFactory = Some(() => {
           tr(
             repeat(model.subSeq(_.headers)) { header =>
-              th(ClientConf.style.smallCells)(bind(header)).render
+              td(ClientConf.style.smallCells)(bind(header)).render
             }
           ).render
         }),

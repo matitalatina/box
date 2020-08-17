@@ -47,12 +47,19 @@ lazy val server: Project  = project
     pipelineStages in Assets := Seq(scalaJSPipeline),
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
     WebKeys.packagePrefix in Assets := "public/",
-    managedClasspath in Runtime += (packageBin in Assets).value
+    managedClasspath in Runtime += (packageBin in Assets).value,
+    scalaJSProjects := Seq(client),
+    pipelineStages in Assets := Seq(scalaJSPipeline),
+    Seq("jquery","eonasdan-bootstrap-datetimepicker","ol","bootstrap").map{ p =>
+      npmAssets ++= NpmAssets.ofProject(client) { nodeModules =>
+        (nodeModules / p).allPaths
+      }.value
+    }
   )
   .enablePlugins(
     GitVersioning,
     BuildInfoPlugin,
-    SbtWeb,
+    WebScalaJSBundlerPlugin,
     SbtTwirl
   )
   //.aggregate(clients.map(projectToRef): _*)
@@ -74,10 +81,24 @@ lazy val client: Project = (project in file("client"))
     // use Scala.js provided launcher code to start the client app
     scalaJSUseMainModuleInitializer := true,
     scalaJSUseMainModuleInitializer in Test := false,
+    Compile / npmDependencies ++= Seq(
+      "ol" -> "6.3.1",
+      "@types/ol" -> "6.3.1",
+      "proj4" -> "2.5.0",
+      "@types/proj4" -> "2.5.0",
+      "jquery" -> "3.3.1",
+      "@types/jquery" -> "3.3.1",
+      "bootstrap" -> "3.3.7",
+      "@types/bootstrap" -> "3.3.33",
+      "moment" -> "2.27.0",
+      "eonasdan-bootstrap-datetimepicker" -> "4.17.47",
+      "@types/eonasdan-bootstrap-datetimepicker" -> "4.17.27",
+    ),
     fork in fastOptJS := true,
     fork in fullOptJS := true,
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
+    scalaJSUseMainModuleInitializer := true
     // use uTest framework for tests
 //    testFrameworks += new TestFramework("utest.runner.Framework"),
 //    // Compile tests to JS using fast-optimisation
@@ -92,7 +113,10 @@ lazy val client: Project = (project in file("client"))
 //      (crossTarget.value / StaticFilesDir).get
 //    },
   )
-  .enablePlugins(ScalaJSPlugin,ScalaJSWeb)
+  .enablePlugins(
+    ScalaJSPlugin,
+    ScalablyTypedConverterPlugin
+  )
   .dependsOn(sharedJS)
 
 

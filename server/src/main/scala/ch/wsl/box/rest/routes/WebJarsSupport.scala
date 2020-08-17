@@ -21,10 +21,14 @@ object WebJarsSupport extends Logging {
           logger.info("found")
           getFromResource(fullPath)
         }
-        case Failure(_: IllegalArgumentException) =>
+        case Failure(e: IllegalArgumentException) => {
+          e.printStackTrace()
           reject
-        case Failure(e) =>
+        }
+        case Failure(e) => {
+          e.printStackTrace()
           failWith(e)
+        }
       }
     }
   }

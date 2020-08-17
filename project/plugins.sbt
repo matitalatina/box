@@ -14,3 +14,8 @@ addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject"  % "1.0.0")
 
 
 addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.6")
+
+resolvers += Resolver.bintrayRepo("oyvindberg", "converter")
+
+addSbtPlugin("org.scalablytyped.converter" % "sbt-converter06" % "1.0.0-beta24")
+addSbtPlugin("ch.epfl.scala" % "sbt-web-scalajs-bundler-sjs06" % "0.18.0")

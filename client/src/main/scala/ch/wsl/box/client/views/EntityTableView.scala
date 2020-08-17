@@ -483,14 +483,14 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
           headerFactory = Some(() => {
               tr(
-                th(ClientConf.style.smallCells)(Labels.entity.actions),
+                td(ClientConf.style.smallCells)(Labels.entity.actions),
                   repeat(model.subSeq(_.fieldQueries)) { fieldQuery =>
                       val title: String = fieldQuery.get.field.label.getOrElse(fieldQuery.get.field.name)
                       val filterValue = fieldQuery.asModel.subProp(_.filterValue)
                       val sort = fieldQuery.asModel.subProp(_.sort)
                       val order = fieldQuery.asModel.subProp(_.sortOrder).get.map(_.toString).getOrElse("")
 
-                    th(ClientConf.style.smallCells)(
+                    td(ClientConf.style.smallCells)(
                       a(
                         onclick :+= ((ev: Event) => presenter.sort(fieldQuery.get), true),
                         title," ",

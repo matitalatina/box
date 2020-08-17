@@ -18,6 +18,7 @@ import io.circe.scalajs._
 import io.udash.Registration
 import io.udash.bindings.inputs.{Checkbox, RadioButtons}
 
+
 import scala.scalajs.js.UndefOr
 
 case class MapWidget(id: Property[String], field: JSONField, prop: Property[Json]) extends Widget with Logging {
@@ -54,23 +55,44 @@ case class MapWidget(id: Property[String], field: JSONField, prop: Property[Json
       logger.info("Map point after render")
 
 
-
-      val map = Leaflet.map(mapDiv,new MapOptionsEditable {
+      val options = new MapOptionsEditable {
         override val editable = true
-      }).asInstanceOf[MapEditable]
+      }
 
-      map.setView(LatLng(46.57591, 7.84956),8)
+      options.crs = Leaflet.CRS.EPSG2056
+//      options.maxBounds = Leaflet.latLngBounds(
+//        southWest = Leaflet.latLng(2485000, 1075000),
+//        northEast = Leaflet.latLng(2835000, 1295000)
+//      )
+//      options.center = LatLng(2716829.428, 1095885.438)
+//      options.zoom = 8.0
 
-      val osm = Leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+      val map = Leaflet.map(mapDiv,options).asInstanceOf[MapEditable]
 
-      val swisstopo1000:WMS = Leaflet.asInstanceOf[js.Dynamic].tileLayer.wms("https://wms.geo.admin.ch/?", js.Dictionary(
-        "layers" -> "ch.swisstopo.pixelkarte-farbe-pk1000.noscale",
-        "crs" -> Leaflet.asInstanceOf[js.Dynamic].CRS.EPSG3857,
-      )).asInstanceOf[WMS]
+      map.setView(LatLng(1154240.0, 2689920.0),16)
+
+      val osm = Leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", new TileLayerOptions {
+
+      })
+
+      val popup = Leaflet.popup()
+      map.on("click",{case e:LeafletEvent =>
+        val latlng = e.asInstanceOf[js.Dynamic].latlng.asInstanceOf[LatLng]
+        popup
+          .setLatLng(latlng)
+          .setContent("You clicked the map at " + latlng.toString())
+          .openOn(map)
+      })
+
+      val wmsOptions = new WMSOptions {}
+      wmsOptions.crs = Leaflet.CRS.EPSG2056
+      wmsOptions.layers = "ch.swisstopo.pixelkarte-farbe-pk1000.noscale"
+      val swisstopo1000:WMS = Leaflet.tileLayer.wms("https://wms.geo.admin.ch/?",wmsOptions)
+
 
       val swisstopo25:WMS = Leaflet.asInstanceOf[js.Dynamic].tileLayer.wms("https://wms.geo.admin.ch/?", js.Dictionary(
         "layers" -> "ch.swisstopo.pixelkarte-farbe-pk25.noscale",
-        "crs" -> Leaflet.asInstanceOf[js.Dynamic].CRS.EPSG3857,
+        "crs" -> Leaflet.CRS.EPSG3857,
       )).asInstanceOf[WMS]
 
       val forrest:WMS = Leaflet.asInstanceOf[js.Dynamic].tileLayer.wms("https://wms.geo.admin.ch/?", js.Dictionary(
@@ -82,7 +104,7 @@ case class MapWidget(id: Property[String], field: JSONField, prop: Property[Json
       )).asInstanceOf[WMS]
 
 
-      osm.addTo(map)
+      swisstopo1000.addTo(map)
 
 //      baseMap.listen({ x =>
 //        map.removeLayer(swisstopo25)

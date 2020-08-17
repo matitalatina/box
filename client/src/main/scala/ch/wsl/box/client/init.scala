@@ -12,6 +12,7 @@ import scalatags.Text.TypedTag
 import scribe.{Level, Logger, Logging}
 
 import scala.concurrent.Future
+import scala.scalajs.js
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
 
@@ -29,6 +30,9 @@ object Init extends JSApp with Logging {
   @JSExport
   override def main(): Unit = {
 
+    //loads datetime picker
+    typings.eonasdanBootstrapDatetimepicker.eonasdanBootstrapDatetimepickerRequire
+
     Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
 
 
@@ -39,6 +43,7 @@ object Init extends JSApp with Logging {
       _ <- Labels.load(Session.lang())
       _ <- UI.load()
     } yield {
+
       jQ(document).ready((_: Element) => {
         jQ("title").html(UI.title.getOrElse(s"Box").toString)
         val appRoot = jQ("#application").get(0)
