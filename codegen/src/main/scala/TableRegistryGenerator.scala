@@ -31,6 +31,7 @@ case class TableRegistryGenerator(entityList:Seq[String], model:Model) extends s
     s"""package ${pkg}
        |
        |import ch.wsl.box.rest.runtime._
+       |import ch.wsl.box.model.BoxTableRegistry
        |
        |object TableAccessRegistry extends TableRegistry {
        |
@@ -41,6 +42,7 @@ case class TableRegistryGenerator(entityList:Seq[String], model:Model) extends s
        |
        |    name match {
        |${entityList.flatMap(mapEntity).mkString("\n")}
+       |      case _ => BoxTableRegistry.table(name)
        |    }
        |
        |  }
