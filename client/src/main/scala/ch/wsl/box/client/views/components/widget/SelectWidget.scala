@@ -52,7 +52,7 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       lab(field.title),
-      div(BootstrapStyles.pullRight, bind(selectModel)),
+      div(BootstrapStyles.Float.right(), bind(selectModel)),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
   })
@@ -85,11 +85,11 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
     })
 
 
-    val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.pullRight)++modifiers++WidgetUtils.toNullable(field.nullable)
+    val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.Float.right())++modifiers++WidgetUtils.toNullable(field.nullable)
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
-    div(BootstrapCol.md(12),ClientConf.style.noPadding)(
+    div(BootstrapCol.md(12),ClientConf.style.noPadding, ClientConf.style.smallBottomMargin)(
       WidgetUtils.toLabel(field),
       tooltip(Select[JSONLookup](model,lookup)((s:JSONLookup) => StringFrag(s.value),m:_*).render),
       div(BootstrapStyles.Visibility.clearfix)

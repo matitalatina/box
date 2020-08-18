@@ -8,11 +8,12 @@ import scala.util.{Failure, Try}
 
 trait DateTimeFormatters[T]{
 
-  protected val formats:Seq[String]
+  protected val parsers:Seq[String]
+  protected val stringFormatter:String
 
 
 
-  def format(dt:T,format:String = formats.last):String
+  def format(dt:T,format:String = stringFormatter):String
 
   def parse(str:String):Option[T] = toObject(str)
 
@@ -23,7 +24,7 @@ trait DateTimeFormatters[T]{
     .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
     .toFormatter();
 
-  lazy val dateTimeFormats = formats.map(p => DateTimeFormatter.ofPattern(p)).+:(dateOnlyFormatter)
+  lazy val dateTimeFormats = parsers.map(p => DateTimeFormatter.ofPattern(p))//.+:(dateOnlyFormatter)
 
 
   protected def parser(str:String,pattern:DateTimeFormatter):T
@@ -55,12 +56,17 @@ object DateTimeFormatters {
 
 
   val timestamp = new DateTimeFormatters[LocalDateTime] {
-    override protected val formats: Seq[String] = Seq(
+    override protected val parsers: Seq[String] = Seq(
       "yyyy-MM-dd HH:mm:ss.S",
       "yyyy-MM-dd HH:mm:ss",
-      "yyyy-MM-dd HH:mm"
+      "yyyy-MM-dd HH:mm",
+      "yyyy-MM-dd",
+      "yyyy-MM",
+      "yyyy",
     )
 
+
+    override protected val stringFormatter: String = "yyyy-MM-dd HH:mm"
 
     override def parser(str: String, pattern: DateTimeFormatter): LocalDateTime = LocalDateTime.parse(str,pattern)
 
@@ -68,10 +74,14 @@ object DateTimeFormatters {
   }
 
   val date = new DateTimeFormatters[LocalDate] {
-    override protected val formats: Seq[String] = Seq(
-      "yyyy-MM-dd"
+    override protected val parsers: Seq[String] = Seq(
+      "yyyy-MM-dd",
+      "yyyy-MM",
+      "yyyy",
     )
 
+
+    override protected val stringFormatter: String = "yyyy-MM-dd"
 
     override def parser(str: String, pattern: DateTimeFormatter): LocalDate = LocalDate.parse(str,pattern)
 
@@ -80,11 +90,14 @@ object DateTimeFormatters {
   }
 
   val time = new DateTimeFormatters[LocalTime] {
-    override protected val formats: Seq[String] = Seq(
+    override protected val parsers: Seq[String] = Seq(
       "HH:mm:ss.S",
       "HH:mm:ss",
       "HH:mm"
     )
+
+
+    override protected val stringFormatter: String = "HH:mm"
 
     override def parser(str: String, pattern: DateTimeFormatter): LocalTime = LocalTime.parse(str,pattern)
 

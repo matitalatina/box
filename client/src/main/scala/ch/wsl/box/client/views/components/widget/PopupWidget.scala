@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Labels}
+import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels}
 import ch.wsl.box.model.shared._
 import io.circe._
 import io.circe.syntax._
@@ -8,15 +8,19 @@ import io.udash._
 import io.udash.properties.single.Property
 import org.scalajs.dom.Event
 import ch.wsl.box.shared.utils.JSONUtils._
+import io.udash.bindings.modifiers.Binding.NestedInterceptor
 import io.udash.bootstrap.BootstrapStyles
-import io.udash.bootstrap.button.{ButtonStyle, UdashButton, UdashButtonGroup}
-import io.udash.bootstrap.modal.UdashModal.ModalHiddenEvent
-import io.udash.bootstrap.modal.{ModalSize, UdashModal}
+import io.udash.bootstrap.button.{UdashButton, UdashButtonGroup}
+import io.udash.bootstrap.datepicker.UdashDatePicker.DatePickerEvent.Hide
+import io.udash.bootstrap.modal.UdashModal
+import io.udash.bootstrap.modal.UdashModal.ModalEvent
+import io.udash.bootstrap.utils.BootstrapStyles.Size
 import org.scalajs.dom
 import scalatags.JsDom
 import scribe.Logging
 
 import scala.concurrent.duration._
+import scala.scalajs.js
 
 
 
@@ -40,7 +44,7 @@ import ch.wsl.box.client.Context._
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin)(
       label(field.title),
-      div(BootstrapStyles.pullRight, ClientConf.style.largeButton,
+      div(BootstrapStyles.Float.right(), ClientConf.style.popupButton,
         bind(selectedItem)
       ),
       div(BootstrapStyles.Visibility.clearfix)
@@ -60,13 +64,13 @@ import ch.wsl.box.client.Context._
 
     val selectedItem: Property[String] = data.transform(value2Label,label2Value)
 
-    val optionList:Modifier = div(
+    def optionList(nested:NestedInterceptor):Modifier = div(
       lab(Labels.popup.search),br,
       TextInput(searchProp,500.milliseconds)(),br,br,
-      autoRelease(showIf(modalStatus.transform(_ == Status.Open)) {
-        div(autoRelease(produce(searchProp) { searchTerm =>
+      nested(showIf(modalStatus.transform(_ == Status.Open)) {
+        div(nested(produce(searchProp) { searchTerm =>
           div(
-            autoRelease(produce(lookup) { lu =>
+            nested(produce(lookup) { lu =>
               div(
                 lu.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
                   div(a(value, onclick :+= ((e: Event) => {
@@ -81,31 +85,38 @@ import ch.wsl.box.client.Context._
       }
     ))
 
-    val header = () => div(
-      label,
-      UdashButton()(
-        UdashModal.CloseButtonAttr,
+    var modal:UdashModal = null
+
+    val header = (x:NestedInterceptor) => div(
+      field.title,
+      UdashButton()( _ => Seq[Modifier](
+        onclick :+= ((e:Event) => modalStatus.set(Status.Closed)),
         BootstrapStyles.close, "×"
-      ).render
+      )).render
     ).render
 
-    val body = () => div(
+    val body = (x:NestedInterceptor) => div(
       div(
-        optionList
+        optionList(x)
       )
     ).render
 
-    val footer = () => div(
-      button(onclick :+= ((e:Event) => modalStatus.set(Status.Closed),true), Labels.popup.close)
+    val footer = (x:NestedInterceptor) => div(
+      button(onclick :+= ((e:Event) => modal.hide(),true), Labels.popup.close)
     ).render
 
-    val modal:UdashModal = UdashModal(modalSize = ModalSize.Large)(
+    modal = UdashModal(modalSize = Some(Size.Large).toProperty)(
       headerFactory = Some(header),
       bodyFactory = Some(body),
       footerFactory = Some(footer)
     )
 
-    modal.listen { case ev:ModalHiddenEvent => modalStatus.set(Status.Closed) }
+    modal.listen { case ev:ModalEvent =>
+      ev.tpe match {
+        case ModalEvent.EventType.Hide | ModalEvent.EventType.Hidden => modalStatus.set(Status.Closed)
+        case _ => {}
+      }
+    }
 
     modalStatus.listen{ state =>
       logger.info(s"State changed to:$state")
@@ -116,11 +127,12 @@ import ch.wsl.box.client.Context._
     }
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
-    div(BootstrapCol.md(12),ClientConf.style.noPadding, ClientConf.style.smallBottomMargin)(
+    div(BootstrapCol.md(12),ClientConf.style.noPadding, ClientConf.style.smallBottomMargin,
+      BootstrapStyles.Display.flex(),BootstrapStyles.Flex.justifyContent(BootstrapStyles.FlexContentJustification.Between))(
       WidgetUtils.toLabel(field),
-      tooltip(button(BootstrapStyles.pullRight, ClientConf.style.largeButton, onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render),
-      modal.render,
-      div(BootstrapStyles.Visibility.clearfix)
+      tooltip(button(ClientConf.style.popupButton, onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render),
+      modal.render
+
     )
   }
 }

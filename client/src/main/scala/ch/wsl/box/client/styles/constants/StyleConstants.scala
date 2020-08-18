@@ -37,6 +37,7 @@ object StyleConstants extends StyleSheet.Inline{
     val danger:Color = Color(dangerColor) //default "#4c1c24"
 
     val main = Color(mainColor) //default "#006268"
+
     val mainText = Color(mainTextColor)
     val mainLink = Color(mainLinkColor)
     val link = Color(linkColor) //default "#fbf0b2"

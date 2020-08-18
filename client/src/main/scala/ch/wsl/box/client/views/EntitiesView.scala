@@ -86,7 +86,8 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
 
   private def sidebar: Element = if(UI.showEntitiesSidebar) {
     div(sidebarGrid)(
-      UdashForm.textInput()(Labels.entities.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
+      div(Labels.entities.search),
+      TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
       produceWithNested(model.subProp(_.search)) { (q,releaser) =>
         ul(ClientConf.style.noBullet,
           releaser(repeat(model.subSeq(_.filteredList)){m =>
@@ -97,7 +98,7 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
     ).render
   } else div().render
 
-  override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.row)(
+  override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.Grid.row)(
     sidebar,
     div(contentGrid)(
       produce(model)( m =>

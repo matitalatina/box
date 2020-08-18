@@ -3,7 +3,6 @@ package ch.wsl.box.client
 import ch.wsl.box.client.styles.constants.StyleConstants.Colors
 import ch.wsl.box.client.utils._
 import io.udash._
-import io.udash.bootstrap.datepicker.UdashDatePicker
 import io.udash.properties.PropertyCreator
 import io.udash.wrappers.jquery._
 import org.scalajs.dom
@@ -31,7 +30,7 @@ object Init extends JSApp with Logging {
   override def main(): Unit = {
 
     //loads datetime picker
-    typings.eonasdanBootstrapDatetimepicker.eonasdanBootstrapDatetimepickerRequire
+    typings.bootstrap.bootstrapRequire
 
     Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
 

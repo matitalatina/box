@@ -165,9 +165,9 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
                 div(ClientConf.style.subform,
                   widget.get.widget.render(write, Property(true)),
                   if (write) div(
-                    BootstrapStyles.row,
+                    BootstrapStyles.Grid.row,
                     div(BootstrapCol.md(12), ClientConf.style.block,
-                      div(BootstrapStyles.pullRight,
+                      div(BootstrapStyles.Float.right(),
                         a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
                       )
                     )

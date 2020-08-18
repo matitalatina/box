@@ -35,22 +35,36 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     unsafeRoot("select")(
       inputDefaultWidth,
       borderStyle.solid,
-      borderWidth(1 px),
+      borderWidth(0 px,0 px,1 px,0 px),
       borderRadius.`0`,
       borderColor(rgb(169, 169, 169)),
-      height(21 px)
+      height(23 px),
+      backgroundColor.transparent,
+      &.focus(
+        borderWidth(0 px,0 px,1 px,0 px),
+        borderColor(conf.colors.main),
+        backgroundColor(c"#f5f5f5"),
+        outlineWidth.`0`
+      )
     ),
 
     unsafeRoot("input")(
       inputDefaultWidth,
       borderStyle.solid,
-      borderWidth(1 px),
+      borderWidth(0 px,0 px,1 px,0 px),
       borderRadius.`0`,
       backgroundColor.white,
       borderColor(rgb(169, 169, 169)),
-      height(21 px),
+      height(23 px),
       paddingLeft(5 px),
       paddingRight(5 px),
+      backgroundColor.transparent,
+      &.focus(
+        borderWidth(0 px,0 px,1 px,0 px),
+        borderColor(conf.colors.main),
+        backgroundColor(c"#f5f5f5"),
+        outlineWidth.`0`
+      )
     ),
 
     unsafeRoot("input[type='checkbox']")(
@@ -101,7 +115,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       borderTop(conf.colors.main,5 px,solid),
       backgroundColor.white,
       overflow.hidden,
-      fontSize(1.2 rem),
+      fontSize(11 px),
       color.darkgray,
       padding(15 px),
       height(55 px)
@@ -133,9 +147,11 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
     unsafeRoot("a")(
       &.hover(
+        textDecorationLine.underline.important,
         color(conf.colors.mainLink)
       ),
-      color(conf.colors.mainLink)
+      color(conf.colors.mainLink),
+      cursor.pointer
     ),
 
     unsafeRoot("#box-table table")(
@@ -188,6 +204,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       color(Color("#ccc")),
       fontSize(11 px)
     ),
+    borderLeft(4 px,solid,transparent),
 
     &.hover(
       backgroundColor(rgba(250,248,250,1)),
@@ -354,8 +371,21 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     )
   )
 
-  val largeButton = style(
-    inputDefaultWidth
+  val popupButton = style(
+    inputDefaultWidth,
+    borderStyle.solid,
+    borderWidth(0 px,0 px,1 px,0 px),
+    borderRadius.`0`,
+    borderColor(rgb(169, 169, 169)),
+    minHeight(23 px),
+    backgroundColor.transparent,
+    cursor.pointer,
+    &.focus(
+      borderWidth(0 px,0 px,1 px,0 px),
+      borderColor(conf.colors.main),
+      backgroundColor(c"#f5f5f5"),
+      outlineWidth.`0`
+    )
   )
 
   val fullWidth = style(
@@ -374,7 +404,9 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val noBullet = style(
-    listStyleType := "none"
+    listStyleType := "none",
+    paddingLeft.`0`,
+    fontSize(12 px)
   )
 
   val navigationArea = style(

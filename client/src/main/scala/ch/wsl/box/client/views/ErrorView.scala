@@ -12,7 +12,7 @@ class ErrorView extends View {
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
 
-  private val content = div(BootstrapStyles.row) (
+  private val content = div(BootstrapStyles.Grid.row) (
     h3(
       Labels.error.notfound
     )

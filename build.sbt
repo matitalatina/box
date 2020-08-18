@@ -43,14 +43,14 @@ lazy val server: Project  = project
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "boxInfo",
     buildInfoObject := "BoxBuildInfo",
-    scalaJSProjects := Seq(client),
     pipelineStages in Assets := Seq(scalaJSPipeline),
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
     WebKeys.packagePrefix in Assets := "public/",
     managedClasspath in Runtime += (packageBin in Assets).value,
+    //Comment this to avoid errors in importing project, i.e. when changing libraries
     scalaJSProjects := Seq(client),
     pipelineStages in Assets := Seq(scalaJSPipeline),
-    Seq("jquery","eonasdan-bootstrap-datetimepicker","ol","bootstrap").map{ p =>
+    Seq("jquery","ol","bootstrap","flatpickr").map{ p =>
       npmAssets ++= NpmAssets.ofProject(client) { nodeModules =>
         (nodeModules / p).allPaths
       }.value
@@ -62,7 +62,6 @@ lazy val server: Project  = project
     WebScalaJSBundlerPlugin,
     SbtTwirl
   )
-  //.aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJVM)
   .dependsOn(codegen)
 
@@ -87,12 +86,11 @@ lazy val client: Project = (project in file("client"))
       "proj4" -> "2.5.0",
       "@types/proj4" -> "2.5.0",
       "jquery" -> "3.3.1",
+      "popper.js" -> "1.16.1",
       "@types/jquery" -> "3.3.1",
-      "bootstrap" -> "3.3.7",
-      "@types/bootstrap" -> "3.3.33",
-      "moment" -> "2.27.0",
-      "eonasdan-bootstrap-datetimepicker" -> "4.17.47",
-      "@types/eonasdan-bootstrap-datetimepicker" -> "4.17.27",
+      "bootstrap" -> "4.1.3",
+      "@types/bootstrap" -> "4.1.3",
+      "flatpickr" -> "4.6.6"
     ),
     fork in fastOptJS := true,
     fork in fullOptJS := true,

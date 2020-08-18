@@ -26,13 +26,13 @@ object WidgetUtils extends Logging{
     case p:Json =>  f(p)
   }
 
-  def addTooltip(tooltip:Option[String],placement:UdashTooltip.Placement = UdashTooltip.BottomPlacement)(el:dom.Node) = {
+  def addTooltip(tooltip:Option[String],placement:UdashTooltip.Placement = UdashTooltip.Placement.Bottom)(el:dom.Node) = {
     tooltip match {
       case Some(tip) => UdashTooltip(
-        trigger = Seq(UdashTooltip.HoverTrigger),
+        trigger = Seq(UdashTooltip.Trigger.Hover),
         delay = UdashTooltip.Delay(500 millis, 250 millis),
-        placement = (_, _) => Seq(placement),
-        title = (_) => tip
+        placement = placement,
+        title = tip
       )(el)
       case _ => {}
     }

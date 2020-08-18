@@ -4,7 +4,7 @@ import io.udash._
 import ch.wsl.box.client._
 import ch.wsl.box.client.services.REST
 import org.scalajs.dom.{Element, Event}
-import ch.wsl.box.client.styles.GlobalStyles
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{ClientConf, Session, UI}
 import ch.wsl.box.model.shared.{JSONQuery, JSONSort, NewsEntry, Sort}
 import io.circe.Json
@@ -52,13 +52,13 @@ class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
   import org.scalajs.dom.File
 
 
-  private val content = div(BootstrapStyles.row)(
-    div(raw(UI.indexTitle)),
+  private val content = div(BootstrapStyles.Grid.row)(
+    div(BootstrapCol.md(12),raw(UI.indexTitle)),
     if(ClientConf.displayIndexHtml){
-      div(raw(UI.indexHtml))
+      div(BootstrapCol.md(12),raw(UI.indexHtml))
     } else div(),
     if(ClientConf.displayIndexNews) {
-      div(h2("News"),
+      div(BootstrapCol.md(12),h2("News"),
         Debug(viewModel, name = "indexView"),
         repeat(viewModel.subSeq(_.news)) { news =>
           div(

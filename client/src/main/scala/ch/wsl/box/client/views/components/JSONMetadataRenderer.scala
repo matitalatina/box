@@ -260,14 +260,15 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
       ).render
     }
 
-    div(UdashForm(
-      Debug(data,autoRelease, "data"),
-      div(BootstrapStyles.row)(
-        blocks.map{ case (block,widget) =>
-          div(BootstrapCol.md(block.width), ClientConf.style.block)(
-            renderer(block,widget)
-          )
-        }
+    div(UdashForm()( factory => Seq(
+        Debug(data,autoRelease, "data"),
+        div(BootstrapStyles.Grid.row)(
+          blocks.map{ case (block,widget) =>
+            div(BootstrapCol.md(block.width), ClientConf.style.block)(
+              renderer(block,widget)
+            )
+          }
+        )
       )
     ).render)
   }

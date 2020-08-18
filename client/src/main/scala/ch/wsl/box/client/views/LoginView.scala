@@ -54,13 +54,13 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
 
   override def getTemplate = div(
     div(BootstrapStyles.container)(
-      div(BootstrapStyles.Panel.panelDefault)(
-        div(BootstrapStyles.Panel.panelHeading)(
-          h3(BootstrapStyles.Panel.panelTitle)(
+      div(BootstrapStyles.Card.card)(
+        div(BootstrapStyles.Card.header)(
+          h3(BootstrapStyles.Card.title)(
             strong(Labels.login.title)
           )
         ),
-        div(BootstrapStyles.Panel.panelBody)(
+        div(BootstrapStyles.Card.body)(
           form(
             onsubmit :+= ((e:Event) => {
               e.preventDefault()

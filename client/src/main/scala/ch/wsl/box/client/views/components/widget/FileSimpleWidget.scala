@@ -65,7 +65,7 @@ case class FileSimpleWidget(id:Property[String], prop:Property[Json], field:JSON
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       WidgetUtils.toLabel(field),
-      button("Download",ClientConf.style.boxButton,BootstrapStyles.pullRight, onclick :+= ((e:Event) => downloadFile()) ),
+      button("Download",ClientConf.style.boxButton,BootstrapStyles.Float.right(), onclick :+= ((e:Event) => downloadFile()) ),
       div(BootstrapStyles.Visibility.clearfix)
     )
   }

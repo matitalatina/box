@@ -58,11 +58,11 @@ class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresente
 
   private val entityForStub = Property("")
 
-  private val content = div(BootstrapStyles.row)(
+  private val content = div(BootstrapStyles.Grid.row)(
     div(BootstrapCol.md(12),h2("Admin")),
     div(BootstrapCol.md(3),h3("Forms"),
       a("Interface builder", Navigate.click(EntityTableState(EntityKind.BOX.kind,"Interface builder"))),
-      div(BootstrapStyles.Well.well,
+      div(BootstrapStyles.Card.card,
         label("Generate STUB for"),br,
         Select( entityForStub, viewModel.subSeq(_.entities))(Select.defaultLabel).render,
         br,

@@ -67,7 +67,7 @@ object InputWidget {
   //used in read-only mode
   private def showMe(prop:Property[Json], field:JSONField, withLabel:Boolean, modifiers:Seq[Modifier] = Seq()):Binding = WidgetUtils.showNotNull(prop){ p =>
 
-    val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
+    val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.Float.right())
 
     def reallyWithLabel = withLabel & (field.title.length > 0)
 
@@ -85,7 +85,7 @@ object InputWidget {
 
   private def editMe(field:JSONField, withLabel:Boolean, skipRequiredInfo:Boolean=false, modifiers:Seq[Modifier] = Seq())(inputRenderer:(Seq[Modifier]) => Node):Modifier = {
 
-    val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.pullRight)
+    val inputRendererDefaultModifiers:Seq[Modifier] = Seq(BootstrapStyles.Float.right())
 
     def reallyWithLabel = withLabel & (field.title.length > 0)
 

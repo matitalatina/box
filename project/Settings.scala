@@ -136,7 +136,8 @@ object Settings {
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3",
     "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.2.0",
     "com.vmunier" %% "scalajs-scripts" % "1.1.4",
-    "com.norbitltd" %% "spoiwo" % "1.7.0"
+    "com.norbitltd" %% "spoiwo" % "1.7.0",
+    "io.github.cquiroz" %% "scala-java-time" % "2.0.0-RC3"
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))
@@ -145,14 +146,15 @@ object Settings {
   val scalajsDependencies = Def.setting(Seq(
     "io.udash" %%% "udash-core" % versions.udash,
     "io.udash" %%% "udash-rpc" % versions.udash,
-    "io.udash" %%% "udash-bootstrap" % versions.udash,
+    "io.udash" %%% "udash-bootstrap4" % versions.udash,
     "io.udash" %%% "udash-jquery" % versions.udashJQuery,
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
     "org.scala-js" %%% "scalajs-dom" % "0.9.8",
-    "ch.wavein" %%% "scala-js-leaflet" % "0.3.0-SNAPSHOT"
+    "ch.wavein" %%% "scala-js-leaflet" % "0.3.0-SNAPSHOT",
+    "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

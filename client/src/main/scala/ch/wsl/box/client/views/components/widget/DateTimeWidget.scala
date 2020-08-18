@@ -1,5 +1,7 @@
 package ch.wsl.box.client.views.components.widget
 
+import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
+
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.datepicker.UdashDatePicker
@@ -8,15 +10,18 @@ import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.client.Context._
-import ch.wsl.box.client.styles.GlobalStyles
-import ch.wsl.box.client.utils.ClientConf
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.client.utils.{BrowserConsole, ClientConf}
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
+import ch.wsl.box.shared.utils.DateTimeFormatters
 import io.udash.bootstrap.datepicker.UdashDatePicker.Placement
 import io.udash.properties.single.Property
 import scalacss.internal.StyleA
 import scalatags.JsDom
 import scribe.Logging
+import typings.flatpickr.optionsMod.Hook
 
+import scala.scalajs.js
 import scala.util.Try
 
 trait DateTimeWidget extends Widget  with Logging{
@@ -27,102 +32,121 @@ trait DateTimeWidget extends Widget  with Logging{
 
   final val dateTimePickerFormat = "YYYY-MM-DD HH:mm"
   final val datePickerFormat = "YYYY-MM-DD"
+  final val yearPickerFormat = "YYYY"
+  final val yearMonthPickerFormat = "YYYY-MM"
   final val timePickerFormat = "HH:mm"
 
-  protected def toDate(format:String)(jsonDate:Json):Option[java.util.Date] = {
+  protected def toDate(jsonDate:Json):Option[java.util.Date] = {
+    logger.info(s"toDate $jsonDate")
     if(jsonDate == Json.Null) return None
     val str = jsonDate.string.trim
     if(str == "") return None
-    Some(format match {
-      case `timePickerFormat` => {
-        val year = 1970
-        val month = 1
-        val day = 1
-        val timeTokens = str.split(":")
-        val hours =  timeTokens(0).toInt
-        val minutes = timeTokens(1).toInt
-        new java.util.Date(year-1900,month-1,day,hours,minutes)
-      }
-      case `dateTimePickerFormat` => {
-        val tokens = str.split(" ")
-        val dateTokens = tokens(0).split("-")
-        val timeTokens = tokens(1).split(":")
-        val year = dateTokens(0).toInt
-        val month = dateTokens(1).toInt
-        val day = dateTokens(2).toInt
-        val hours = timeTokens(0).toInt
-        val minutes = timeTokens(1).toInt
-        new java.util.Date(year-1900,month-1,day,hours,minutes)
-      }
-      case `datePickerFormat` => {
-        val dateTokens = str.split("-")
-        val year = dateTokens(0).toInt
-        val month = dateTokens(1).toInt
-        val day = dateTokens(2).toInt
-        new java.util.Date(year-1900,month-1,day)
-      }
-    })
 
-  }//.toOption
+    val result = DateTimeFormatters.timestamp.parse(str).map(d => new java.util.Date(d.toInstant(ZoneOffset.UTC).toEpochMilli))
+
+    println(result)
+
+    result
+
+  }
 
   protected def fromDate(format:String)(dt:Option[java.util.Date]):Json = {
+    logger.info(s"fromDate $format date $dt")
     Try{
       if (dt.isEmpty)
         Json.Null
       else {
-        val date = new scala.scalajs.js.Date(dt.get.getTime)
-        if (date.getFullYear() == 1970 && date.getMonth() == 0 && date.getDate() == 1) return Json.Null  //todo ?????
+        val instant = Instant.ofEpochMilli(dt.get.getTime).atZone(ZoneOffset.UTC)
         val result = format match {
-          case `dateTimePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate()) + " " +
-                                                                    "%02d".format(date.getHours()) + ":" + "%02d".format(date.getMinutes()) + ":" + "%02d".format(date.getSeconds())
-          case `datePickerFormat` => date.getFullYear() + "-" + "%02d".format(date.getMonth() + 1) + "-" + "%02d".format(date.getDate())
-          case `timePickerFormat` => "%02d".format(date.getHours()) + ":" + "%02d".format(date.getMinutes())
+          case `dateTimePickerFormat` => DateTimeFormatters.timestamp.format(instant.toLocalDateTime)
+          case `datePickerFormat` => DateTimeFormatters.date.format(instant.toLocalDate)
+          case `timePickerFormat` => DateTimeFormatters.time.format(instant.toLocalTime)
         }
+        println(result)
         result.asJson
       }
-    }.getOrElse(Json.Null)
+    }.recover{case e =>
+      e.printStackTrace()
+      Json.Null
+    }.get
+  }
+
+  override def afterRender(): Unit = {
+
   }
 
 
   protected def showMe(modelLabel:String, model:Property[Json]):Modifier = autoRelease(WidgetUtils.showNotNull(model){ p =>
     div(if (modelLabel.length > 0) label(modelLabel) else {},
-      div(BootstrapStyles.pullRight, bind(model.transform(_.string))),
+      div(BootstrapStyles.Float.right(), bind(model.transform(_.string))),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
   })
 
   protected def editMe(id:Property[String], field:JSONField, model:Property[Json], format:String, style:StyleA):Modifier = {
 
-    val date = model.transform(toDate(format),fromDate(format))
+    val date:Property[Option[java.util.Date]] = Property(None)
 
 
-    val pickerOptions:Property[UdashDatePicker.DatePickerOptions] = ModelProperty(new UdashDatePicker.DatePickerOptions(
-      format = format,
-      locale = Some("en_GB"),
-      showClear = true,
-      useStrict = false,
-      sideBySide = true,
-      useCurrent = false,
-      widgetPositioning = Some((Placement.RightPlacement,Placement.BottomPlacement))
-//      maxDate =
-    ))
+
+    date.listen({d =>
+      logger.info(s"Changed date to $d")
+      if(d.isDefined) {
+        model.set(fromDate(format)(d))
+      }
+    },false)
+
+
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
 
-//    logger.info(s"refreshing date picker with ${model.get.toString()}")
+    val picker = input(style,if(field.nullable) {} else ClientConf.style.notNullable).render
+    var changeListener:Registration = null
+    def setListener(immediate: Boolean, flatpicker:typings.flatpickr.instanceMod.Instance) = {
+      changeListener = model.listen({ d =>
+        logger.info(s"Changed model to $d")
+        toDate(d).foreach( date => flatpicker.setDate(date.getTime.toDouble))
+      },immediate)
+    }
 
 
-    val picker: UdashDatePicker = UdashDatePicker()(date, pickerOptions)
-    div(
+    val result = div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin,
       if (field.title.length > 0) WidgetUtils.toLabel(field, false) else {},
-      tooltip(div(style,if(field.nullable) {} else ClientConf.style.notNullable,
-        div(
-          picker.render
-        ).render
-      ).render),
+      tooltip(picker),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
+
+    val onChange:Hook = (
+                          selectedDates:js.Array[typings.flatpickr.globalsMod.global.Date],
+                          dateStr:String,
+                          instance: typings.flatpickr.instanceMod.Instance,
+                          data:js.UndefOr[js.Any]) => {
+      changeListener.cancel()
+      model.set(dateStr.asJson)
+      setListener(false, instance)
+    }
+
+    val options = typings.flatpickr.optionsMod.Options()
+      .setAllowInput(true)
+      .setOnChange(onChange)
+
+    format match {
+      case `dateTimePickerFormat` => options.setEnableTime(true).setTime_24hr(true)
+      case `datePickerFormat` => {}
+      case `timePickerFormat` => options.setEnableTime(true).setTime_24hr(true).setNoCalendar(true).setDateFormat("H:i")
+    }
+
+    val flatpicker = typings.flatpickr.mod.default(picker,options)
+    BrowserConsole.log(flatpicker)
+
+
+
+
+    setListener(true,flatpicker)
+
+
+    result
 
   }
 }

@@ -9,9 +9,10 @@ import ch.wsl.box.client.views.components.widget.Widget
 import ch.wsl.box.client.views.components.{Debug, JSONMetadataRenderer}
 import ch.wsl.box.model.shared._
 import io.circe.Json
+import io.udash.bootstrap.badge.UdashBadge
+import io.udash.bootstrap.utils.BootstrapStyles.Color
 import io.udash.{showIf, _}
 import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
-import io.udash.bootstrap.label.UdashLabel
 import io.udash.component.ComponentId
 import io.udash.core.Presenter
 import io.udash.properties.single.Property
@@ -310,8 +311,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
       div(
         div(ClientConf.style.boxNavigationLabel,
-          Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.firstPage,Labels.navigation.firstPage,_.pullLeft),
-          Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.prevPage,Labels.navigation.previousPage,_.pullLeft),
+          Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.firstPage,Labels.navigation.firstPage,_.Float.left()),
+          Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.prevPage,Labels.navigation.previousPage,_.Float.left()),
           span(
             ClientConf.style.boxNavigationLabel,
             " " + Labels.navigation.page + " ",
@@ -320,13 +321,13 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
             bind(model.subProp(_.navigation.pages)),
             " "
           ),
-          Navigation.button(navigation.subProp(_.hasNextPage),presenter.lastPage,Labels.navigation.lastPage,_.pullRight),
-          Navigation.button(navigation.subProp(_.hasNextPage),presenter.nextPage,Labels.navigation.nextPage,_.pullRight)
+          Navigation.button(navigation.subProp(_.hasNextPage),presenter.lastPage,Labels.navigation.lastPage,_.Float.right()),
+          Navigation.button(navigation.subProp(_.hasNextPage),presenter.nextPage,Labels.navigation.nextPage,_.Float.right())
         ),
         div(BootstrapStyles.Visibility.clearfix),
         div(ClientConf.style.boxNavigationLabel,
-          Navigation.button(navigation.subProp(_.hasPrevious),presenter.first,Labels.navigation.first,_.pullLeft),
-          Navigation.button(navigation.subProp(_.hasPrevious),presenter.prev,Labels.navigation.previous,_.pullLeft),
+          Navigation.button(navigation.subProp(_.hasPrevious),presenter.first,Labels.navigation.first,_.Float.left()),
+          Navigation.button(navigation.subProp(_.hasPrevious),presenter.prev,Labels.navigation.previous,_.Float.left()),
           span(
             " " + Labels.navigation.record + " ",
             bind(model.subModel(_.navigation).subProp(_.currentIndex)),
@@ -334,15 +335,15 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
             bind(model.subModel(_.navigation).subProp(_.count)),
             " "
           ),
-          Navigation.button(navigation.subProp(_.hasNext),presenter.last,Labels.navigation.last,_.pullRight),
-          Navigation.button(navigation.subProp(_.hasNext),presenter.next,Labels.navigation.next,_.pullRight)
+          Navigation.button(navigation.subProp(_.hasNext),presenter.last,Labels.navigation.last,_.Float.right()),
+          Navigation.button(navigation.subProp(_.hasNext),presenter.next,Labels.navigation.next,_.Float.right())
         )
       )
     }
 
 
     div(
-      div(BootstrapStyles.pullLeft,
+      div(BootstrapStyles.Float.left(),
         h3(
           ClientConf.style.noMargin,
           labelTitle,
@@ -359,10 +360,10 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
         )
       ),
-      div(BootstrapStyles.pullRight,ClientConf.style.navigatorArea) (
+      div(BootstrapStyles.Float.right(),ClientConf.style.navigatorArea) (
         recordNavigation
       ),
-      div(BootstrapStyles.pullRight,ClientConf.style.navigatorArea) (
+      div(BootstrapStyles.Float.right(),ClientConf.style.navigatorArea) (
         produceWithNested(model.subProp(_.name)) { (m,release) =>
           div(
             button(ClientConf.style.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", release(labelTitle))," "
@@ -372,7 +373,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       div(BootstrapStyles.Visibility.clearfix),
       produceWithNested(model.subProp(_.write)) { (w,realeser) =>
         if(!w) Seq() else
-        div(BootstrapStyles.pullLeft)(
+        div(BootstrapStyles.Float.left())(
           realeser(produce(model.subProp(_.name)) { m =>
             div(
 
@@ -413,7 +414,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       produce(model.subProp(_.error)){ error =>
         div(
           if(error.length > 0) {
-            UdashLabel.danger(ComponentId.newId(), error).render
+            UdashBadge(badgeStyle = Color.Danger.toProperty)(_ => error).render
           } else {
 
           }

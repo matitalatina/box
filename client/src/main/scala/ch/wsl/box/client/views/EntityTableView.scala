@@ -14,7 +14,6 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import io.udash._
 import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
-import io.udash.bootstrap.label.UdashLabel
 import io.udash.bootstrap.table.UdashTable
 import io.udash.properties.single.Property
 import org.scalajs.dom
@@ -417,6 +416,8 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
   def filterField(filterValue: Property[String], fieldQuery: FieldQuery, filterOperator:String):Modifier = {
 
+    filterValue.listen(v => logger.info(s"Filter for ${fieldQuery.field.name} changed in: $v"))
+
     fieldQuery.field.`type` match {
       case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
       case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
@@ -442,8 +443,8 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     val pagination = {
 
       div(ClientConf.style.boxNavigationLabel,
-        Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(1),Labels.navigation.first,_.pullLeft),
-        Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1),Labels.navigation.previous,_.pullLeft),
+        Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(1),Labels.navigation.first,_.Float.left()),
+        Navigation.button(model.subProp(_.ids.currentPage).transform(_ != 1),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get -1),Labels.navigation.previous,_.Float.left()),
         span(
           " " + Labels.navigation.page + " ",
           bind(model.subProp(_.ids.currentPage)),
@@ -451,24 +452,24 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           bind(model.subProp(_.pages)),
           " "
         ),
-        Navigation.button(model.subModel(_.ids).subProp(_.isLastPage).transform(!_),() => presenter.reloadRows(model.subProp(_.pages).get),Labels.navigation.last,_.pullRight),
-        Navigation.button(model.subModel(_.ids).subProp(_.isLastPage).transform(!_),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1),Labels.navigation.next,_.pullRight),
+        Navigation.button(model.subModel(_.ids).subProp(_.isLastPage).transform(!_),() => presenter.reloadRows(model.subProp(_.pages).get),Labels.navigation.last,_.Float.right()),
+        Navigation.button(model.subModel(_.ids).subProp(_.isLastPage).transform(!_),() => presenter.reloadRows(model.subProp(_.ids.currentPage).get + 1),Labels.navigation.next,_.Float.right()),
         div(Labels.navigation.recordFound," ",bind(model.subProp(_.ids.count)))
       )
     }
 
 
     div(
-      div(BootstrapStyles.pullLeft,
+      div(BootstrapStyles.Float.left(),
         h3(ClientConf.style.noMargin,labelTitle)
       ),
-      div(BootstrapStyles.pullRight,ClientConf.style.navigatorArea,
+      div(BootstrapStyles.Float.right(),ClientConf.style.navigatorArea,
         pagination.render
       ),
       div(BootstrapStyles.Visibility.clearfix),
       produceWithNested(model.subProp(_.write)) { (w,realeser) =>
         if(!w) Seq() else
-          div(BootstrapStyles.pullLeft)(
+          div(BootstrapStyles.Float.left())(
             realeser(produce(model.subProp(_.name)) { m =>
               div(
                 button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`)
@@ -479,9 +480,9 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       div(BootstrapStyles.Visibility.clearfix),
       hr(ClientConf.style.hrThin),
       div(id := "box-table", ClientConf.style.fullHeightMax,
-        UdashTable()(model.subSeq(_.rows))(
+        UdashTable(model.subSeq(_.rows))(
 
-          headerFactory = Some(() => {
+          headerFactory = Some(_ => {
               tr(
                 td(ClientConf.style.smallCells)(Labels.entity.actions),
                   repeat(model.subSeq(_.fieldQueries)) { fieldQuery =>
@@ -498,7 +499,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
                       ),br,
                       filterOptions(fieldQuery.asModel),
                       produce(fieldQuery.asModel.subProp(_.filterOperator)) { ft =>
-                        span(filterField(filterValue, fieldQuery.get, ft)).render
+                        div(position.relative,filterField(filterValue, fieldQuery.get, ft)).render
                       }
                     ).render
 
@@ -506,7 +507,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
               ).render
           }),
 
-          rowFactory = (el) => {
+          rowFactory = (el,nested) => {
             val key = presenter.ids(el.get)
             val hasKey = model.get.metadata.exists(_.keys.nonEmpty)
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))

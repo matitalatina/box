@@ -88,7 +88,8 @@ class DataListView(model:ModelProperty[DataList], presenter: DataListPresenter) 
   private val content: Element = div().render
 
   private def sidebar: Element = div(sidebarGrid)(
-      UdashForm.textInput()(Labels.exports.search)(model.subProp(_.search),onkeyup :+= ((ev: Event) => presenter.updateExportsList(), true)),
+    Labels.exports.search,
+    TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => presenter.updateExportsList(), true)),
       produce(model.subProp(_.search)) { q =>
         ul(ClientConf.style.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>
@@ -100,7 +101,7 @@ class DataListView(model:ModelProperty[DataList], presenter: DataListPresenter) 
       }
     ).render
 
-  override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.row)(
+  override def getTemplate: scalatags.generic.Modifier[Element] = div(BootstrapStyles.Grid.row)(
     sidebar,
     div(contentGrid)(
       div(h1(Labels.exports.title)).render,

@@ -13,7 +13,6 @@ import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash.{showIf, _}
 import io.udash.bootstrap.{BootstrapStyles, UdashBootstrap}
-import io.udash.bootstrap.label.UdashLabel
 import io.udash.bootstrap.table.UdashTable
 import io.udash.core.Presenter
 import io.udash.properties.single.Property
@@ -131,21 +130,21 @@ case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) ext
     showIf(table) { button(Labels.exports.csv,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton).render },
     showIf(pdf) { button(Labels.exports.pdf,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton).render },
     showIf(html) { button(Labels.exports.html,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton).render },
-      UdashTable()(model.subSeq(_.data))(
-        headerFactory = Some(() => {
+      UdashTable(model.subSeq(_.data))(
+        headerFactory = Some(_ => {
           tr(
             repeat(model.subSeq(_.headers)) { header =>
               td(ClientConf.style.smallCells)(bind(header)).render
             }
           ).render
         }),
-        rowFactory = (el) => {
+        rowFactory = (el,nested) => {
           tr(
-            produce(el) { cell =>
+            nested(produce(el) { cell =>
               cell.map { c =>
                 td(ClientConf.style.smallCells)(c).render
               }
-            }
+            })
           ).render
         }
       ).render,

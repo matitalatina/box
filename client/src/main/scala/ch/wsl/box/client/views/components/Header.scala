@@ -11,7 +11,6 @@ import ch.wsl.box.client.services.Navigate
 import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.dropdown.UdashDropdown
-import io.udash.bootstrap.navs.{UdashNav, UdashNavbar}
 import io.udash.properties.seq.SeqProperty
 import io.udash._
 import java.io
@@ -83,11 +82,11 @@ object Header {
 
   def navbar(title:Option[String]) = produce(Session.logged) { x =>
     header(
-      div(BootstrapStyles.pullLeft)(b(title), small(ClientConf.style.noMobile,user.map("   -   " + _))),
-      div(BootstrapStyles.pullRight,ClientConf.style.noMobile) (
+      div(BootstrapStyles.Float.left())(b(title), small(ClientConf.style.noMobile,user.map("   -   " + _))),
+      div(BootstrapStyles.Float.right(),ClientConf.style.noMobile) (
         menu
       ),
-      div(BootstrapStyles.pullRight,ClientConf.style.mobileOnly)(
+      div(BootstrapStyles.Float.right(),ClientConf.style.mobileOnly)(
         a(ClientConf.style.linkHeaderFooter,
           produce(showMenu){ if(_) span("❌").render else span("☰").render},
           onclick :+= ((e:Event) => showMenu.set(!showMenu.get))

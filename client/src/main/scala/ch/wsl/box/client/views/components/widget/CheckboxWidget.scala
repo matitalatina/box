@@ -19,7 +19,7 @@ case class CheckboxWidget(field:JSONField, prop: Property[Json]) extends Widget 
     def jsToBool(json:Json):Boolean = json.asBoolean.getOrElse(false)
     def boolToJson(v:Boolean):Json = v.asJson
 
-    val tooltip = WidgetUtils.addTooltip(field.tooltip,UdashTooltip.RightPlacement) _
+    val tooltip = WidgetUtils.addTooltip(field.tooltip,UdashTooltip.Placement.Right) _
 
     val booleanModel = prop.transform[Boolean](jsToBool _ ,boolToJson _)
     div(
