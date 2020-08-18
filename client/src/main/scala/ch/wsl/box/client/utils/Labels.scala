@@ -101,6 +101,7 @@ object Labels {
   }
 
   object entity{
+    def filters = get("table.filters")
     def actions = get("table.actions")
     def show = get("table.show")
     def edit = get("table.edit")

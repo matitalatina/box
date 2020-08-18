@@ -53,28 +53,33 @@ case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) ex
 
 
   override def getTemplate = div(
-    div(BootstrapStyles.container)(
-      div(BootstrapStyles.Card.card)(
-        div(BootstrapStyles.Card.header)(
-          h3(BootstrapStyles.Card.title)(
-            strong(Labels.login.title)
-          )
-        ),
-        div(BootstrapStyles.Card.body)(
-          form(
-            onsubmit :+= ((e:Event) => {
-              e.preventDefault()
-              presenter.login()
-              false
-            }),
-            ClientConf.style.contentMinHeight,
-            strong(bind(model.subProp(_.message))),
-            br,
-            label(Labels.login.username),br,
-            TextInput(model.subProp(_.username))(),br,
-            label(Labels.login.password),br,
-            PasswordInput(model.subProp(_.password))(),br,br,
-            button(`type` := "submit",Labels.login.button)
+    div(BootstrapStyles.container, height := 400.px)(
+      div(BootstrapStyles.Grid.row,
+          BootstrapStyles.Flex.justifyContent(BootstrapStyles.FlexContentJustification.Center),
+          BootstrapStyles.Flex.alignItems(BootstrapStyles.FlexAlign.Center),
+        height := 100.pct
+      )(
+        div(BootstrapStyles.Card.card,BootstrapStyles.Flex.autoMargin(BootstrapStyles.Side.All))(
+          div(BootstrapStyles.Card.header)(
+            h3(BootstrapStyles.Card.title)(
+              strong(Labels.login.title)
+            )
+          ),
+          div(BootstrapStyles.Card.body)(
+            form(
+              onsubmit :+= ((e:Event) => {
+                e.preventDefault()
+                presenter.login()
+                false
+              }),
+              strong(bind(model.subProp(_.message))),
+              br,
+              label(Labels.login.username),br,
+              TextInput(model.subProp(_.username))(width := 300.px),br,br,
+              label(Labels.login.password),br,
+              PasswordInput(model.subProp(_.password))(width := 300.px),br,br,
+              button(BootstrapStyles.Float.right(),ClientConf.style.boxButton,`type` := "submit",Labels.login.button)
+            )
           )
         )
       )

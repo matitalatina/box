@@ -410,7 +410,7 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case _ => StringFrag(id)
     }
 
-    Select(fieldQuery.subProp(_.filterOperator), Filter.options(fieldQuery.get.field).toSeqProperty)(label,ClientConf.style.fullWidth)
+    Select(fieldQuery.subProp(_.filterOperator), Filter.options(fieldQuery.get.field).toSeqProperty)(label,ClientConf.style.fullWidth,ClientConf.style.filterTableSelect)
 
   }
 
@@ -428,12 +428,12 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && !Seq(Filter.BETWEEN, Filter.IN, Filter.NOTIN).contains(filterOperator) => {
         if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
 //        TextInput.debounced(filterValue,cls := "form-control")      //to allow comma separated values, ranges, ...
-        NumberInput(filterValue)(cls := "form-control")
+        NumberInput(filterValue)(ClientConf.style.fullWidth)
       }
 //      case JSONFieldTypes.BOOLEAN => {
 //        Select(filterValue, cls := "form-control")
 //      }
-      case _ => TextInput(filterValue)(cls := "form-control")
+      case _ => TextInput(filterValue)(ClientConf.style.fullWidth)
     }
 
   }
@@ -478,35 +478,43 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
           ).render
       },
       div(BootstrapStyles.Visibility.clearfix),
-      hr(ClientConf.style.hrThin),
       div(id := "box-table", ClientConf.style.fullHeightMax,
         UdashTable(model.subSeq(_.rows))(
 
           headerFactory = Some(_ => {
+            frag(
               tr(
-                td(ClientConf.style.smallCells)(Labels.entity.actions),
-                  repeat(model.subSeq(_.fieldQueries)) { fieldQuery =>
-                      val title: String = fieldQuery.get.field.label.getOrElse(fieldQuery.get.field.name)
-                      val filterValue = fieldQuery.asModel.subProp(_.filterValue)
-                      val sort = fieldQuery.asModel.subProp(_.sort)
-                      val order = fieldQuery.asModel.subProp(_.sortOrder).get.map(_.toString).getOrElse("")
+                td(ClientConf.style.smallCells)(),
+                repeat(model.subSeq(_.fieldQueries)) { fieldQuery =>
+                  val title: String = fieldQuery.get.field.label.getOrElse(fieldQuery.get.field.name)
+                  val sort = fieldQuery.asModel.subProp(_.sort)
+                  val order = fieldQuery.asModel.subProp(_.sortOrder).get.map(_.toString).getOrElse("")
 
-                    td(ClientConf.style.smallCells)(
-                      a(
-                        onclick :+= ((ev: Event) => presenter.sort(fieldQuery.get), true),
-                        title," ",
-                        Labels(Sort.label(sort.get))," ",order
-                      ),br,
-                      filterOptions(fieldQuery.asModel),
-                      produce(fieldQuery.asModel.subProp(_.filterOperator)) { ft =>
-                        div(position.relative,filterField(filterValue, fieldQuery.get, ft)).render
-                      }
-                    ).render
+                  td(ClientConf.style.smallCells)(
+                    a(
+                      onclick :+= ((ev: Event) => presenter.sort(fieldQuery.get), true),
+                      span(title, ClientConf.style.tableHeader), " ",
+                      Labels(Sort.label(sort.get)), " ", order
+                    )
+                  ).render
+                }
+              ),
+              tr(
+                td(ClientConf.style.smallCells)(Labels.entity.filters),
+                repeat(model.subSeq(_.fieldQueries)) { fieldQuery =>
+                  val filterValue = fieldQuery.asModel.subProp(_.filterValue)
+
+                  td(ClientConf.style.smallCells)(
+                    filterOptions(fieldQuery.asModel),
+                    produce(fieldQuery.asModel.subProp(_.filterOperator)) { ft =>
+                      div(position.relative, filterField(filterValue, fieldQuery.get, ft)).render
+                    }
+                  ).render
 
                 }
-              ).render
+              )
+            ).render
           }),
-
           rowFactory = (el,nested) => {
             val key = presenter.ids(el.get)
             val hasKey = model.get.metadata.exists(_.keys.nonEmpty)

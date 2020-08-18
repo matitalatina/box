@@ -215,6 +215,11 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     )
   )
 
+  val tableHeader = style(
+    fontSize(14 px),
+    fontWeight.bold
+  )
+
 
 
   val numberCells = style(
@@ -286,10 +291,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     cursor.pointer
   )
 
-  val contentMinHeight = style(
-    minHeight(400 px),
-    marginTop.`0`
-  )
+
 
   val fullHeightMax = style(
     height :=! "calc(100vh - 206px)",
@@ -335,7 +337,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val boxNavigationLabel = style(
     textAlign.center,
-    lineHeight(26 px)
+    lineHeight(26 px),
+    fontSize(12 px)
   )
 
 
@@ -394,6 +397,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val maxFullWidth = style(
     maxWidth(100 %%).important
+  )
+
+  val filterTableSelect = style(
+    border.`0`
   )
 
 
