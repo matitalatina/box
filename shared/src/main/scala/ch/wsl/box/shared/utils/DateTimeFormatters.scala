@@ -1,7 +1,7 @@
 package ch.wsl.box.shared.utils
 
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
-import java.time.temporal.ChronoField
+import java.time.temporal.{ChronoField, TemporalAccessor, TemporalField}
 import java.time._
 
 import scala.util.{Failure, Try}
@@ -54,8 +54,19 @@ trait DateTimeFormatters[T]{
 
 object DateTimeFormatters {
 
+  def intervalParser[T](parser:String => Option[T],s:String):List[T] =  {
+    val tokens = s.split(" to ").map(_.trim)
+    if(tokens.length > 1) {
+      tokens.flatMap(x => parser(x)).toList
+    } else {
+      parser(s).toList
+    }
+  }
+  def toTimestamp(s:String):List[LocalDateTime] = intervalParser(timestamp.parse,s)
+  def toDate(s:String):List[LocalDate] = intervalParser(date.parse,s)
 
-  val timestamp = new DateTimeFormatters[LocalDateTime] {
+
+  object timestamp extends DateTimeFormatters[LocalDateTime] {
     override protected val parsers: Seq[String] = Seq(
       "yyyy-MM-dd HH:mm:ss.S",
       "yyyy-MM-dd HH:mm:ss",
@@ -68,12 +79,22 @@ object DateTimeFormatters {
 
     override protected val stringFormatter: String = "yyyy-MM-dd HH:mm"
 
-    override def parser(str: String, pattern: DateTimeFormatter): LocalDateTime = LocalDateTime.parse(str,pattern)
+    override def parser(str: String, pattern: DateTimeFormatter): LocalDateTime = {
+      val parsed = pattern.parse(str)
+      LocalDateTime.of(
+        parsed.get(ChronoField.YEAR),
+        Try(parsed.get(ChronoField.MONTH_OF_YEAR)).getOrElse(1),
+        Try(parsed.get(ChronoField.DAY_OF_MONTH)).getOrElse(1),
+        Try(parsed.get(ChronoField.HOUR_OF_DAY)).getOrElse(0),
+        Try(parsed.get(ChronoField.MINUTE_OF_HOUR)).getOrElse(0),
+        Try(parsed.get(ChronoField.SECOND_OF_MINUTE)).getOrElse(0)
+      )
+    }
 
     override def format(dt: LocalDateTime, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
   }
 
-  val date = new DateTimeFormatters[LocalDate] {
+  object date extends DateTimeFormatters[LocalDate] {
     override protected val parsers: Seq[String] = Seq(
       "yyyy-MM-dd",
       "yyyy-MM",
@@ -83,13 +104,21 @@ object DateTimeFormatters {
 
     override protected val stringFormatter: String = "yyyy-MM-dd"
 
-    override def parser(str: String, pattern: DateTimeFormatter): LocalDate = LocalDate.parse(str,pattern)
+    override def parser(str: String, pattern: DateTimeFormatter): LocalDate = {
+      val parsed = pattern.parse(str)
+      LocalDate.of(
+        parsed.get(ChronoField.YEAR),
+        Try(parsed.get(ChronoField.MONTH_OF_YEAR)).getOrElse(1),
+        Try(parsed.get(ChronoField.DAY_OF_MONTH)).getOrElse(1)
+      )
+    }
+
 
     override def format(dt: LocalDate, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
 
   }
 
-  val time = new DateTimeFormatters[LocalTime] {
+  object time extends DateTimeFormatters[LocalTime] {
     override protected val parsers: Seq[String] = Seq(
       "HH:mm:ss.S",
       "HH:mm:ss",
@@ -99,7 +128,14 @@ object DateTimeFormatters {
 
     override protected val stringFormatter: String = "HH:mm"
 
-    override def parser(str: String, pattern: DateTimeFormatter): LocalTime = LocalTime.parse(str,pattern)
+    override def parser(str: String, pattern: DateTimeFormatter): LocalTime = {
+      val parsed = pattern.parse(str)
+      LocalTime.of(
+        Try(parsed.get(ChronoField.HOUR_OF_DAY)).getOrElse(0),
+        Try(parsed.get(ChronoField.MINUTE_OF_HOUR)).getOrElse(0),
+        Try(parsed.get(ChronoField.SECOND_OF_MINUTE)).getOrElse(0)
+      )
+    }
 
 
     override def format(dt: LocalTime, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))

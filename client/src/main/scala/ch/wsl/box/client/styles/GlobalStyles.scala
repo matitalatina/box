@@ -76,6 +76,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       textAlign.right
     ),
 
+    unsafeRoot(".flatpickr-time input[type='number']")(
+      textAlign.center
+    ),
+
     unsafeRoot("input[type='file']")(
       width(100 %%),
       height.auto,

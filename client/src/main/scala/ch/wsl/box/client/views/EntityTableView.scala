@@ -420,10 +420,10 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
     fieldQuery.field.`type` match {
       case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
+      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
       case JSONFieldTypes.DATETIME => ClientConf.filterPrecisionDatetime match{
-        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
-        case _ => DateTimeWidget.DateTimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
+        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
+        case _ => DateTimeWidget.DateTimeFullWidth(Property(""),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
       }
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && !Seq(Filter.BETWEEN, Filter.IN, Filter.NOTIN).contains(filterOperator) => {
         if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
