@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+      - name: Build bundle
+        run: sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m client/fullOptJS::webpack
       - name: Publish to bintray
-        #run: sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:MaxPermSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m  -Dbintray.user=minettiandrea -Dbintray.pass=${{ secrets.BINTRAY_PASSWORD  }} publishAll
-        # I need to start sbt Using java or I get an error of webpack
-        run: java -Xms2G -Xmx4G -Xss10M -XX:+CMSClassUnloadingEnabled -Dbintray.user=minettiandrea -Dbintray.pass=${{ secrets.BINTRAY_PASSWORD  }} -classpath /usr/share/sbt/bin/sbt-launch.jar xsbt.boot.Boot publishAll
+        run: sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m  -Dbintray.user=minettiandrea -Dbintray.pass=${{ secrets.BINTRAY_PASSWORD  }} publishAll
