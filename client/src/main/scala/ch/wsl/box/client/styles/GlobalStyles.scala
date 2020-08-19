@@ -26,6 +26,13 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val inputDefaultWidth = width(50 %%)
 
+  val inputHighlight = style(
+    borderWidth(0 px,0 px,1 px,0 px),
+    borderColor(conf.colors.main),
+    backgroundColor(c"#f5f5f5"),
+    outlineWidth.`0`
+  )
+
   val global = style(
 
     unsafeRoot("body") (
@@ -41,10 +48,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       height(23 px),
       backgroundColor.transparent,
       &.focus(
-        borderWidth(0 px,0 px,1 px,0 px),
-        borderColor(conf.colors.main),
-        backgroundColor(c"#f5f5f5"),
-        outlineWidth.`0`
+        inputHighlight
+      ),
+      &.hover(
+        inputHighlight
       )
     ),
 
@@ -60,10 +67,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       paddingRight(5 px),
       backgroundColor.transparent,
       &.focus(
-        borderWidth(0 px,0 px,1 px,0 px),
-        borderColor(conf.colors.main),
-        backgroundColor(c"#f5f5f5"),
-        outlineWidth.`0`
+        inputHighlight
+      ),
+      &.hover(
+        inputHighlight
       )
     ),
 
@@ -388,10 +395,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     backgroundColor.transparent,
     cursor.pointer,
     &.focus(
-      borderWidth(0 px,0 px,1 px,0 px),
-      borderColor(conf.colors.main),
-      backgroundColor(c"#f5f5f5"),
-      outlineWidth.`0`
+      inputHighlight
+    ),
+    &.hover(
+      inputHighlight
     )
   )
 
