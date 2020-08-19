@@ -123,7 +123,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (_, Some(WidgetsNames.textarea), _, _, _)              => InputWidgetFactory.TextArea
           case (FILE, Some(WidgetsNames.simpleFile), _, _, _)         => FileSimpleWidgetFactory(metadata.entity)
           case (FILE, _, _, _, _)                                     => FileWidgetFactory(metadata.entity)
-          case (_,Some(WidgetsNames.mapPoint),_,_,_)                  => MapPointWidget
+          case (_,Some(WidgetsNames.mapPoint),_,_,_)                  => OlMapWidget
           case (_,Some(WidgetsNames.map),_,_,_)                       => OlMapWidget
           case (_,Some(c),_,_,_) if c.startsWith(WidgetsNames.code)   => MonacoWidget
           case (_,Some(c),_,_,_) if c == WidgetsNames.richTextEditor  => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)

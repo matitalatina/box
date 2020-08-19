@@ -153,7 +153,6 @@ object Settings {
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
     "org.scala-js" %%% "scalajs-dom" % "0.9.8",
-    "ch.wavein" %%% "scala-js-leaflet" % "0.3.0-SNAPSHOT",
     "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
   ))
 
