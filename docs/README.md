@@ -21,7 +21,7 @@ but test are done only in Linux
     * Row level access, every user can access only to the row of the tables that he is allowed 
 * Automatic mask generation for tables and views
 * Custom database masks generation with support of child tables
-* Data exports in CSV
+* Data exports in CSV and XLS
 * Reports in HTML and PDF
 * Multi language support
 * Role management, customize user interface for each role

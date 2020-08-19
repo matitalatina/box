@@ -186,7 +186,7 @@ lazy val publishAllTask = {
     (clean in client),
     (clean in server),
     (clean in codegen),
-    (fullOptJS in Compile in client),
+    (webpack in fullOptJS in Compile in client),
     (compile in Compile in codegen),
     (publish in sharedJVM),
     (publish in codegen),

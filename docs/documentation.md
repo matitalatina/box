@@ -1,7 +1,7 @@
 ---
 title: Documentation
 permalink: /documentation/
-nav_order: 1
+nav_order: 2
 ---
 
 # Documentation
