@@ -20,4 +20,4 @@ jobs:
         with:
           java-version: 1.8
       - name: Publish to bintray
-        run: sbt -Xms2048M -Xmx4024M -Xss10M -XX:+CMSClassUnloadingEnabled  -Dbintray.user=minettiandrea -Dbintray.pass=${{ secrets.BINTRAY_PASSWORD  }} publishAll
+        run: sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:MaxPermSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m  -Dbintray.user=minettiandrea -Dbintray.pass=${{ secrets.BINTRAY_PASSWORD  }} publishAll
