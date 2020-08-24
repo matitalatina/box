@@ -119,7 +119,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       lineHeight(29 px),
       borderBottom(1 px,solid,black),
       color(conf.colors.mainText),
-      backgroundColor(conf.colors.main)
+      backgroundColor(conf.colors.main),
+      fontSize(0.8.rem)
     ),
 
     unsafeRoot("footer")(
@@ -298,8 +299,9 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     ),
     color(conf.colors.link),
     textTransform.uppercase,
-    fontWeight.bold,
-    cursor.pointer
+    fontWeight._600,
+    cursor.pointer,
+    padding.horizontal(2.px)
   )
 
 
@@ -311,7 +313,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val fullHeight = style(
     height :=! "calc(100vh - 105px)",
-    overflow.auto
+    overflow.auto,
+    width(100.%%)
   )
 
   val noMargin = style(
