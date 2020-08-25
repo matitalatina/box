@@ -2,6 +2,7 @@ package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.styles.Icons
 import ch.wsl.box.client.styles.Icons.Icon
+import ch.wsl.box.client.utils.GeoJson.FeatureCollection
 import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels}
 import ch.wsl.box.client.vendors.{DrawHole, DrawHoleOptions}
 import ch.wsl.box.model.shared.JSONField
@@ -18,9 +19,14 @@ import org.scalajs.dom.Event
 import typings.geojson.mod.Geometry
 import typings.ol.mod.Feature
 import typings.ol.selectMod.SelectEvent
+import io.circe._
+import io.circe.syntax._
 
 import scala.scalajs.js
 import org.scalajs.dom._
+import typings.ol.drawMod.DrawEvent
+import typings.ol.modifyMod.ModifyEvent
+import typings.ol.translateMod.TranslateEvent
 
 
 
@@ -110,7 +116,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       .setStyle(vectorStyle)
     )
 
-    val controls = controlMod.defaults().extend(js.Array(new controlMod.ScaleLine()))
+    val controls = controlMod.defaults()//.extend(js.Array(new controlMod.ScaleLine()))
 
 
     val view = new viewMod.default(viewMod.ViewOptions()
@@ -128,36 +134,60 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       .setView(view)
     )
 
+    var listener:Registration = null
 
-    prop.listen({ geoData =>
-      vectorSource.getFeatures().foreach(f => vectorSource.removeFeature(f))
-      val point = new geoJSONMod.default().readFeature(convertJsonToJs(geoData).asInstanceOf[js.Object])
-      vectorSource.addFeature(point.asInstanceOf[olFeatureMod.default[geometryMod.default]])
-      view.setCenter(point.asInstanceOf[js.Dynamic].getGeometry().getCoordinates().asInstanceOf[js.Array[Double]])
-    },initUpdate = true)
+    def registerListener(immediate:Boolean) = {
+      listener = prop.listen({ geoData =>
+        vectorSource.getFeatures().foreach(f => vectorSource.removeFeature(f))
+        val point = new geoJSONMod.default().readFeature(convertJsonToJs(geoData).asInstanceOf[js.Object]).asInstanceOf[olFeatureMod.default[geometryMod.default]]
+        val center = extentMod.getCenter(point.getGeometry().getExtent())
+        vectorSource.addFeature(point)
+        view.setCenter(center)
+      }, immediate)
+    }
 
+    registerListener(true)
 
+    def changedFeatures() = {
+      listener.cancel()
+      val geoJson = new geoJSONMod.default().writeFeaturesObject(vectorSource.getFeatures())
+      BrowserConsole.log(geoJson)
+      convertJsToJson(geoJson).flatMap(FeatureCollection.decode).foreach{ collection =>
+        println(collection)
+        collection.features.headOption.map(_.geometry).foreach { geom =>
+          prop.set(geom.asJson)
+        }
+      }
+      registerListener(false)
+
+    }
 
     val modify = new modifyMod.default(modifyMod.Options()
       .setSource(vectorSource)
       .setStyle(simpleStyle)
     )
+    modify.on_modifyend(olStrings.modifyend,(e:ModifyEvent) => changedFeatures())
+
     val drawPoint = new drawMod.default(drawMod.Options(geometryTypeMod.default.POINT)
       .setSource(vectorSource)
       .setStyle(vectorStyle)
     )
+    drawPoint.on_change(olStrings.change,e => changedFeatures())
+
     val drawLineString = new drawMod.default(drawMod.Options(geometryTypeMod.default.LINE_STRING)
       .setSource(vectorSource)
       .setStyle(simpleStyle)
     )
+    drawLineString.on_change(olStrings.change,e => changedFeatures())
+
     val drawPolygon = new drawMod.default(drawMod.Options(geometryTypeMod.default.POLYGON)
       .setSource(vectorSource)
       .setStyle(simpleStyle)
-
     )
+    drawPolygon.on_change(olStrings.change,e => changedFeatures())
 
     val drag = new translateMod.default(translateMod.Options())
-
+    drag.on_translateend(olStrings.translateend, (e:TranslateEvent) => changedFeatures())
 
 
     val snap = new snapMod.default(snapMod.Options().setSource(vectorSource))
@@ -167,6 +197,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     delete.on_select(olStrings.select,(e:SelectEvent) => {
       if(window.confirm(Labels.form.removeMap)) {
         e.selected.foreach(x => vectorSource.removeFeature(x))
+        changedFeatures()
       }
     })
 
@@ -228,6 +259,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       }
 
     }, true)
+
+
 
 
   }

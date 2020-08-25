@@ -1,0 +1,68 @@
+package ch.wsl.box.client.utils
+
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.parser._
+import io.circe.syntax._
+
+object GeoJson {
+
+  case class Feature(geometry: Geometry)
+
+  case class FeatureCollection(features: Seq[Feature])
+
+  object FeatureCollection{
+    def decode(j:Json) = j.as[FeatureCollection]
+  }
+
+  case class Coordinates(x: Double, y: Double)
+
+
+
+  implicit val decoderCoordinates: Decoder[Coordinates] = Decoder[(Double, Double)].map(p => Coordinates(p._1, p._2))
+  implicit val encoderCoordinates: Encoder[Coordinates] = Encoder.instance( e => Json.arr(e.x.asJson,e.y.asJson) )
+
+
+
+  sealed trait Geometry
+
+  case class Point(coordinates: Coordinates) extends Geometry
+
+  case class LineString(coordinates: List[Coordinates]) extends Geometry
+
+  case class MultiPoint(coordinates: List[Coordinates]) extends Geometry
+
+  case class MultiLineString(coordinates: List[List[Coordinates]]) extends Geometry
+
+  case class Polygon(coordinates: List[List[Coordinates]]) extends Geometry
+
+  case class MultiPolygon(coordinates: List[List[List[Coordinates]]]) extends Geometry
+
+  case class GeometryCollection(geometries: List[Geometry]) extends Geometry
+
+  object Geometry {
+
+    implicit val encoder: Encoder[Geometry] = Encoder.instance {
+        case j:Point => Json.obj("type" -> "Point".asJson, "coordinates" -> j.coordinates.asJson  )
+        case j:LineString => Json.obj("type" -> "LineString".asJson, "coordinates" -> j.coordinates.asJson  )
+        case j:MultiPoint => Json.obj("type" -> "MultiPoint".asJson, "coordinates" -> j.coordinates.asJson  )
+        case j:MultiLineString => Json.obj("type" -> "MultiLineString".asJson, "coordinates" -> j.coordinates.asJson  )
+        case j:Polygon => Json.obj("type" -> "Polygon".asJson, "coordinates" -> j.coordinates.asJson  )
+        case j:MultiPolygon => Json.obj("type" -> "MultiPolygon".asJson, "coordinates" -> j.coordinates.asJson  )
+        case j:GeometryCollection => Json.obj("type" -> "GeometryCollection".asJson, "coordinates" -> j.geometries.asJson  )
+    }
+
+    implicit val decoder: Decoder[Geometry] = Decoder.instance { c =>
+      c.downField("type").as[String].map(_.toLowerCase).flatMap {
+        case "point" => c.as[Point]
+        case "linestring" => c.as[LineString]
+        case "multipoint" => c.as[MultiPoint]
+        case "multilinestring" => c.as[MultiLineString]
+        case "polygon" => c.as[Polygon]
+        case "multipolygon" => c.as[MultiPolygon]
+        case "geometrycollection" => c.as[GeometryCollection]
+      }
+    }
+  }
+
+}
