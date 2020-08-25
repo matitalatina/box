@@ -3,6 +3,7 @@ package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.Icons
 import ch.wsl.box.client.styles.Icons.Icon
 import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels}
+import ch.wsl.box.client.vendors.{DrawHole, DrawHoleOptions}
 import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash._
@@ -77,21 +78,36 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     val vectorSource = new sourceMod.Vector[geometryMod.default](sourceVectorMod.Options())
 
 
+    //red #ed1c24
+
+    val simpleStyle = new styleMod.Style(styleStyleMod.Options()
+      .setFill(new styleMod.Fill(fillMod.Options().setColor("rgb(237, 28, 36,0.2)")))
+      .setStroke(new styleMod.Stroke(strokeMod.Options().setColor("#ed1c24").setWidth(2)))
+      .setImage(
+        new styleMod.Circle(styleCircleMod.Options(3)
+          .setFill(
+            new styleMod.Fill(fillMod.Options().setColor("rgba(237, 28, 36)"))
+          )
+        )
+      )
+    )
+
+    val vectorStyle:js.Array[typings.ol.styleStyleMod.Style] = js.Array(
+      simpleStyle,
+      new styleMod.Style(styleStyleMod.Options()
+        .setImage(
+          new styleMod.Circle(styleCircleMod.Options(8)
+            .setStroke(
+              new styleMod.Stroke(strokeMod.Options().setColor("#ed1c24").setWidth(2))
+            )
+          )
+        )
+      )
+    )
+
     val vector = new layerMod.Vector(baseVectorMod.Options()
       .setSource(vectorSource)
-//      .setStyle(
-//        new styleMod.Style(styleStyleMod.Options()
-//          .setFill(new styleMod.Fill(fillMod.Options().setColor("rgba(255, 255, 255, 0.2)")))
-//          .setStroke(new styleMod.Stroke(strokeMod.Options().setColor("#ffcc33").setWidth(2)))
-//          .setImage(
-//            new styleMod.Circle(styleCircleMod.Options(7)
-//              .setFill(
-//                new styleMod.Fill(fillMod.Options().setColor("rgba(255, 255, 255, 0.2)"))
-//              )
-//            )
-//          )
-//        )
-//      )
+      .setStyle(vectorStyle)
     )
 
     val controls = controlMod.defaults().extend(js.Array(new controlMod.ScaleLine()))
@@ -122,15 +138,22 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
 
 
-    val modify = new modifyMod.default(modifyMod.Options().setSource(vectorSource))
+    val modify = new modifyMod.default(modifyMod.Options()
+      .setSource(vectorSource)
+      .setStyle(simpleStyle)
+    )
     val drawPoint = new drawMod.default(drawMod.Options(geometryTypeMod.default.POINT)
       .setSource(vectorSource)
+      .setStyle(vectorStyle)
     )
     val drawLineString = new drawMod.default(drawMod.Options(geometryTypeMod.default.LINE_STRING)
       .setSource(vectorSource)
+      .setStyle(simpleStyle)
     )
     val drawPolygon = new drawMod.default(drawMod.Options(geometryTypeMod.default.POLYGON)
       .setSource(vectorSource)
+      .setStyle(simpleStyle)
+
     )
 
     val drag = new translateMod.default(translateMod.Options())
@@ -147,6 +170,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       }
     })
 
+    val drawHole = new DrawHole(DrawHoleOptions().setStyle(simpleStyle))
+
     val dynamicInteraction = Seq(
       modify,
       drawPoint,
@@ -154,39 +179,50 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       drawPolygon,
       snap,
       drag,
-      delete
+      delete,
+      drawHole
     )
 
+    dynamicInteraction.foreach(x => {
+      map.addInteraction(x)
+      x.setActive(false)
+    })
+
     activeControl.listen({section =>
-      dynamicInteraction.foreach(x => map.removeInteraction(x))
+      dynamicInteraction.foreach(x => x.setActive(false))
 
       section match {
         case Control.EDIT => {
-          map.addInteraction(modify)
-          map.addInteraction(snap)
+          modify.setActive(true)
+          snap.setActive(true)
         }
         case Control.POINT => {
-          map.addInteraction(drawPoint)
-          map.addInteraction(modify)
-          map.addInteraction(snap)
+          drawPoint.setActive(true)
+          modify.setActive(true)
+          snap.setActive(true)
         }
         case Control.LINESTRING => {
-          map.addInteraction(drawLineString)
-          map.addInteraction(modify)
-          map.addInteraction(snap)
+          drawLineString.setActive(true)
+          modify.setActive(true)
+          snap.setActive(true)
         }
         case Control.POLYGON => {
-          map.addInteraction(drawPolygon)
-          map.addInteraction(modify)
-          map.addInteraction(snap)
+          drawPolygon.setActive(true)
+          modify.setActive(true)
+          snap.setActive(true)
+        }
+        case Control.POLYGON_HOLE => {
+          drawHole.setActive(true)
+          modify.setActive(true)
+          snap.setActive(true)
         }
         case Control.MOVE => {
-          map.addInteraction(drag)
-          map.addInteraction(snap)
+          drag.setActive(true)
+          snap.setActive(true)
         }
         case Control.DELETE => {
-          map.addInteraction(delete)
-          map.addInteraction(snap)
+          delete.setActive(true)
+          snap.setActive(true)
         }
         case _ => {}
       }
@@ -210,6 +246,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     case object POINT extends Section
     case object LINESTRING extends Section
     case object POLYGON extends Section
+    case object POLYGON_HOLE extends Section
     case object MOVE extends Section
     case object DELETE extends Section
   }
@@ -240,6 +277,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
         controlButton(Icons.point,"Add Point",Control.POINT),
         controlButton(Icons.line,"Add Linestring",Control.LINESTRING),
         controlButton(Icons.polygon,"Add Polygon",Control.POLYGON),
+        controlButton(Icons.hole,"Add Polygon",Control.POLYGON_HOLE),
         controlButton(Icons.move,"Move",Control.MOVE),
         controlButton(Icons.trash,"Delete",Control.DELETE),
       ),

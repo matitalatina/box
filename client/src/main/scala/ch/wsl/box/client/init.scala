@@ -1,5 +1,6 @@
 package ch.wsl.box.client
 
+import ch.wsl.box.client.styles.OpenLayersStyles
 import ch.wsl.box.client.styles.constants.StyleConstants.Colors
 import ch.wsl.box.client.utils._
 import io.udash._
@@ -56,6 +57,7 @@ object Init extends JSApp with Logging {
 
 
           jQ(s"<style>${ClientConf.style.render(cssStringRenderer,cssEnv)}</style>").insertBefore(appRoot.get)
+          jQ(s"<style>${OpenLayersStyles.render(cssStringRenderer,cssEnv)}</style>").insertBefore(appRoot.get)
         }
       })
     }

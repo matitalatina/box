@@ -85,6 +85,7 @@ lazy val client: Project = (project in file("client"))
       "@types/ol" -> "6.3.1",
       "proj4" -> "2.5.0",
       "@types/proj4" -> "2.5.0",
+      "ol-ext" -> "3.1.14",
       "jquery" -> "3.3.1",
       "popper.js" -> "1.16.1",
       "@types/jquery" -> "3.3.1",
@@ -92,6 +93,7 @@ lazy val client: Project = (project in file("client"))
       "@types/bootstrap" -> "4.1.3",
       "flatpickr" -> "4.6.6"
     ),
+    stIgnore += "ol-ext",
     fork in fastOptJS := true,
     fork in fullOptJS := true,
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
