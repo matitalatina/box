@@ -75,6 +75,7 @@ object Labels {
     def addDate = get("form.add_date")
     def removeDate = get("form.remove_date")
     def changed = get("form.changed")
+    def removeMap = get("form.remove-map")
   }
 
   object lookup{

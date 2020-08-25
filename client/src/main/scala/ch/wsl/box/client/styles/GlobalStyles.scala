@@ -501,6 +501,15 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     borderColor(rgb(169, 169, 169)),
   )
 
+  val controlButtons = style(
+    display.block,
+    width(100.%%),
+    backgroundColor(c"#6c757d"),
+    unsafeRoot("svg") {
+      marginTop(-2.px)
+    }
+  )
+
 //  val fixedHeader = style(
 //    unsafeRoot("tbody")(
 ////    display.block,

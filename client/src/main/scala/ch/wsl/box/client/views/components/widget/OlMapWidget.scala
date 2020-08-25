@@ -1,5 +1,8 @@
 package ch.wsl.box.client.views.components.widget
 
+import ch.wsl.box.client.styles.Icons
+import ch.wsl.box.client.styles.Icons.Icon
+import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels}
 import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash._
@@ -9,14 +12,23 @@ import scalatags.JsDom.all._
 import scribe.Logging
 import typings.ol._
 import io.circe.scalajs._
+import io.udash.bootstrap.utils.BootstrapStyles
+import org.scalajs.dom.Event
 import typings.geojson.mod.Geometry
 import typings.ol.mod.Feature
+import typings.ol.selectMod.SelectEvent
 
 import scala.scalajs.js
+import org.scalajs.dom._
+
 
 
 
 case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Json]) extends Widget with Logging {
+
+  import scalacss.ScalatagsCss._
+
+  import io.udash.css.CssView._
 
   val mapDiv = div(height := 400).render
 
@@ -110,18 +122,78 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
 
 
-//    val modify = new modifyMod.default(modifyMod.Options().setSource(vectorSource))
-//    map.addInteraction(modify)
-//
-//    val draw = new drawMod.default(drawMod.Options(geometryTypeMod.default.POINT)
-//      .setSource(vectorSource)
-//    )
-//
-//    map.addInteraction(draw)
-//
-//    val snap = new snapMod.default(snapMod.Options().setSource(vectorSource))
-//
-//    map.addInteraction(snap)
+    val modify = new modifyMod.default(modifyMod.Options().setSource(vectorSource))
+    val drawPoint = new drawMod.default(drawMod.Options(geometryTypeMod.default.POINT)
+      .setSource(vectorSource)
+    )
+    val drawLineString = new drawMod.default(drawMod.Options(geometryTypeMod.default.LINE_STRING)
+      .setSource(vectorSource)
+    )
+    val drawPolygon = new drawMod.default(drawMod.Options(geometryTypeMod.default.POLYGON)
+      .setSource(vectorSource)
+    )
+
+    val drag = new translateMod.default(translateMod.Options())
+
+
+
+    val snap = new snapMod.default(snapMod.Options().setSource(vectorSource))
+
+    val delete = new selectMod.default(selectMod.Options())
+
+    delete.on_select(olStrings.select,(e:SelectEvent) => {
+      if(window.confirm(Labels.form.removeMap)) {
+        e.selected.foreach(x => vectorSource.removeFeature(x))
+      }
+    })
+
+    val dynamicInteraction = Seq(
+      modify,
+      drawPoint,
+      drawLineString,
+      drawPolygon,
+      snap,
+      drag,
+      delete
+    )
+
+    activeControl.listen({section =>
+      dynamicInteraction.foreach(x => map.removeInteraction(x))
+
+      section match {
+        case Control.EDIT => {
+          map.addInteraction(modify)
+          map.addInteraction(snap)
+        }
+        case Control.POINT => {
+          map.addInteraction(drawPoint)
+          map.addInteraction(modify)
+          map.addInteraction(snap)
+        }
+        case Control.LINESTRING => {
+          map.addInteraction(drawLineString)
+          map.addInteraction(modify)
+          map.addInteraction(snap)
+        }
+        case Control.POLYGON => {
+          map.addInteraction(drawPolygon)
+          map.addInteraction(modify)
+          map.addInteraction(snap)
+        }
+        case Control.MOVE => {
+          map.addInteraction(drag)
+          map.addInteraction(snap)
+        }
+        case Control.DELETE => {
+          map.addInteraction(delete)
+          map.addInteraction(snap)
+        }
+        case _ => {}
+      }
+
+    }, true)
+
+
   }
 
   override protected def show(): JsDom.all.Modifier = {
@@ -131,9 +203,46 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     )
   }
 
+  object Control {
+
+    sealed trait Section
+    case object EDIT extends Section
+    case object POINT extends Section
+    case object LINESTRING extends Section
+    case object POLYGON extends Section
+    case object MOVE extends Section
+    case object DELETE extends Section
+  }
+  val activeControl:Property[Control.Section] = Property(Control.EDIT)
+
+  def controlButton(icon:Icon,title:String,section:Control.Section) = {
+    produce(activeControl) { c =>
+      val isActive = if(c == section) "active" else ""
+      button(
+        cls := isActive,
+        BootstrapStyles.Button.btn,
+        BootstrapStyles.Button.color()
+      )(
+       onclick :+= ((e:Event) => activeControl.set(section) )
+      )(icon).render //modify
+    }
+  }
+
   override protected def edit(): JsDom.all.Modifier = {
     div(
       label(field.title),
+      div(
+        BootstrapStyles.Button.group,
+        BootstrapStyles.Button.groupSize(BootstrapStyles.Size.Small),
+        ClientConf.style.controlButtons
+      )(//controls
+        controlButton(Icons.pencil,"Edit",Control.EDIT),
+        controlButton(Icons.point,"Add Point",Control.POINT),
+        controlButton(Icons.line,"Add Linestring",Control.LINESTRING),
+        controlButton(Icons.polygon,"Add Polygon",Control.POLYGON),
+        controlButton(Icons.move,"Move",Control.MOVE),
+        controlButton(Icons.trash,"Delete",Control.DELETE),
+      ),
       mapDiv
     )
   }
