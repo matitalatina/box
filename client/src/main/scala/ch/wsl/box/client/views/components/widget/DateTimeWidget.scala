@@ -100,10 +100,6 @@ trait DateTimeWidget extends Widget  with Logging{
     }.get
   }
 
-  override def afterRender(): Unit = {
-
-  }
-
 
   protected def showMe(modelLabel:String, model:Property[Json]):Modifier = autoRelease(WidgetUtils.showNotNull(model){ p =>
     div(if (modelLabel.length > 0) label(modelLabel) else {},

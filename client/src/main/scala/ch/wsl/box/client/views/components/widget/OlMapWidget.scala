@@ -5,7 +5,7 @@ import ch.wsl.box.client.styles.Icons.Icon
 import ch.wsl.box.client.utils.GeoJson.{FeatureCollection, GeometryCollection}
 import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels}
 import ch.wsl.box.client.vendors.{DrawHole, DrawHoleOptions}
-import ch.wsl.box.model.shared.JSONField
+import ch.wsl.box.model.shared.{JSONField, JSONMetadata}
 import io.circe.Json
 import io.udash._
 import org.scalablytyped.runtime.StringDictionary
@@ -24,10 +24,13 @@ import io.circe.syntax._
 
 import scala.scalajs.js
 import org.scalajs.dom._
+import org.scalajs.dom.html.Div
 import typings.ol.drawMod.DrawEvent
 import typings.ol.modifyMod.ModifyEvent
 import typings.ol.sourceVectorMod.VectorSourceEvent
 import typings.ol.translateMod.TranslateEvent
+
+import scala.concurrent.Future
 
 
 
@@ -38,12 +41,19 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
   import io.udash.css.CssView._
 
-  val mapDiv = div(height := 400).render
+
+  var map:mod.Map = null
+
 
 
   override def afterRender(): Unit = {
+    map.updateSize()
+    prop.touch()
+  }
 
-    println("After render")
+  def loadMap(mapDiv:Div): Unit = {
+
+    println("Load Map")
 
     //typings error need to map it manually
     typings.proj4.mod.^.asInstanceOf[js.Dynamic].default.defs(
@@ -129,12 +139,15 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
 
 
-    val map = new mod.Map(pluggableMapMod.MapOptions()
+    map = new mod.Map(pluggableMapMod.MapOptions()
       .setLayers(js.Array[baseMod.default](raster,vector))
       .setTarget(mapDiv)
       .setControls(controls.getArray())
       .setView(view)
     )
+
+    BrowserConsole.log(map)
+    BrowserConsole.log(mapDiv)
 
     var listener:Registration = null
 
@@ -157,7 +170,6 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     def changedFeatures() = {
       listener.cancel()
       val geoJson = new geoJSONMod.default().writeFeaturesObject(vectorSource.getFeatures())
-      BrowserConsole.log(geoJson)
       convertJsToJson(geoJson).flatMap(FeatureCollection.decode).foreach{ collection =>
         import ch.wsl.box.client.utils.GeoJson.Geometry._
         val geometries = collection.features.map(_.geometry)
@@ -283,6 +295,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   }
 
   override protected def show(): JsDom.all.Modifier = {
+    val mapDiv = div(height := 400).render
+
     div(
       label(field.title),
       mapDiv
@@ -316,6 +330,12 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   }
 
   override protected def edit(): JsDom.all.Modifier = {
+    println("Calling OLMapWidget edit")
+
+    val mapDiv: Div = div(height := 400).render
+
+    loadMap(mapDiv)
+
     div(
       label(field.title),
       div(

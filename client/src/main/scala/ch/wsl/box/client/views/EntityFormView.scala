@@ -163,6 +163,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
         action(newId.get)
 
+
       }}.recover{ case e =>
         e.getStackTrace.foreach(x => logger.error(s"file ${x.getFileName}.${x.getMethodName}:${x.getLineNumber}"))
         e.printStackTrace()
@@ -178,6 +179,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       model.subProp(_.id).set(Some(id.asString), true)
       model.subProp(_.data).set(resultSaved)
       enableGoAway
+      widget.afterRender()
     }
   }
 
