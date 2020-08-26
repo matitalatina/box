@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.styles.Icons
 import ch.wsl.box.client.styles.Icons.Icon
-import ch.wsl.box.client.utils.GeoJson.FeatureCollection
+import ch.wsl.box.client.utils.GeoJson.{FeatureCollection, GeometryCollection}
 import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels}
 import ch.wsl.box.client.vendors.{DrawHole, DrawHoleOptions}
 import ch.wsl.box.model.shared.JSONField
@@ -26,6 +26,7 @@ import scala.scalajs.js
 import org.scalajs.dom._
 import typings.ol.drawMod.DrawEvent
 import typings.ol.modifyMod.ModifyEvent
+import typings.ol.sourceVectorMod.VectorSourceEvent
 import typings.ol.translateMod.TranslateEvent
 
 
@@ -116,6 +117,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       .setStyle(vectorStyle)
     )
 
+
     val controls = controlMod.defaults()//.extend(js.Array(new controlMod.ScaleLine()))
 
 
@@ -136,58 +138,73 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
     var listener:Registration = null
 
+    var onAddFeature:js.Function1[VectorSourceEvent[typings.ol.geometryMod.default], Unit] = null
+
     def registerListener(immediate:Boolean) = {
       listener = prop.listen({ geoData =>
+        vectorSource.removeEventListener("addfeature",onAddFeature.asInstanceOf[eventsMod.Listener])
         vectorSource.getFeatures().foreach(f => vectorSource.removeFeature(f))
         val point = new geoJSONMod.default().readFeature(convertJsonToJs(geoData).asInstanceOf[js.Object]).asInstanceOf[olFeatureMod.default[geometryMod.default]]
         val center = extentMod.getCenter(point.getGeometry().getExtent())
         vectorSource.addFeature(point)
         view.setCenter(center)
+        vectorSource.on_addfeature(olStrings.addfeature,onAddFeature)
       }, immediate)
     }
 
-    registerListener(true)
+
 
     def changedFeatures() = {
       listener.cancel()
       val geoJson = new geoJSONMod.default().writeFeaturesObject(vectorSource.getFeatures())
       BrowserConsole.log(geoJson)
       convertJsToJson(geoJson).flatMap(FeatureCollection.decode).foreach{ collection =>
-        println(collection)
-        collection.features.headOption.map(_.geometry).foreach { geom =>
-          prop.set(geom.asJson)
+        import ch.wsl.box.client.utils.GeoJson.Geometry._
+        val geometries = collection.features.map(_.geometry)
+        geometries.length match {
+          case 0 => prop.set(Json.Null)
+          case 1 => prop.set(geometries.head.asJson)
+          case _ => prop.set(GeometryCollection(geometries).asJson)
         }
       }
       registerListener(false)
 
     }
 
+    onAddFeature = (e:VectorSourceEvent[geometryMod.default]) => changedFeatures()
+
+    registerListener(true)
+
+
+    vectorSource.on_changefeature(olStrings.changefeature,(e:VectorSourceEvent[geometryMod.default]) => changedFeatures())
+
+
     val modify = new modifyMod.default(modifyMod.Options()
       .setSource(vectorSource)
       .setStyle(simpleStyle)
     )
-    modify.on_modifyend(olStrings.modifyend,(e:ModifyEvent) => changedFeatures())
+    //modify.on_modifyend(olStrings.modifyend,(e:ModifyEvent) => changedFeatures())
 
     val drawPoint = new drawMod.default(drawMod.Options(geometryTypeMod.default.POINT)
       .setSource(vectorSource)
       .setStyle(vectorStyle)
     )
-    drawPoint.on_change(olStrings.change,e => changedFeatures())
+    //drawPoint.on_change(olStrings.change,e => changedFeatures())
 
     val drawLineString = new drawMod.default(drawMod.Options(geometryTypeMod.default.LINE_STRING)
       .setSource(vectorSource)
       .setStyle(simpleStyle)
     )
-    drawLineString.on_change(olStrings.change,e => changedFeatures())
+    //drawLineString.on_change(olStrings.change,e => changedFeatures())
 
     val drawPolygon = new drawMod.default(drawMod.Options(geometryTypeMod.default.POLYGON)
       .setSource(vectorSource)
       .setStyle(simpleStyle)
     )
-    drawPolygon.on_change(olStrings.change,e => changedFeatures())
+    //drawPolygon.on_change(olStrings.change,e => changedFeatures())
 
     val drag = new translateMod.default(translateMod.Options())
-    drag.on_translateend(olStrings.translateend, (e:TranslateEvent) => changedFeatures())
+    //drag.on_translateend(olStrings.translateend, (e:TranslateEvent) => changedFeatures())
 
 
     val snap = new snapMod.default(snapMod.Options().setSource(vectorSource))

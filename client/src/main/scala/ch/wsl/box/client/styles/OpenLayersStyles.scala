@@ -12,6 +12,12 @@ object OpenLayersStyles extends StyleSheet.Inline {
       &.hover(
         backgroundColor(c"#5a6268"),
       )
+    ),
+    unsafeRoot(".ol-attribution")(
+      lineHeight(1),
+      unsafeRoot("li") (
+        fontSize(11.px)
+      )
     )
   )
 }

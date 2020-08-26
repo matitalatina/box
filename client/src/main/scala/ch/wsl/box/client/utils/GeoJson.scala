@@ -28,28 +28,30 @@ object GeoJson {
 
   case class Point(coordinates: Coordinates) extends Geometry
 
-  case class LineString(coordinates: List[Coordinates]) extends Geometry
+  case class LineString(coordinates: Seq[Coordinates]) extends Geometry
 
-  case class MultiPoint(coordinates: List[Coordinates]) extends Geometry
+  case class MultiPoint(coordinates: Seq[Coordinates]) extends Geometry
 
-  case class MultiLineString(coordinates: List[List[Coordinates]]) extends Geometry
+  case class MultiLineString(coordinates: Seq[Seq[Coordinates]]) extends Geometry
 
-  case class Polygon(coordinates: List[List[Coordinates]]) extends Geometry
+  case class Polygon(coordinates: Seq[Seq[Coordinates]]) extends Geometry
 
-  case class MultiPolygon(coordinates: List[List[List[Coordinates]]]) extends Geometry
+  case class MultiPolygon(coordinates: Seq[Seq[Seq[Coordinates]]]) extends Geometry
 
-  case class GeometryCollection(geometries: List[Geometry]) extends Geometry
+  case class GeometryCollection(geometries: Seq[Geometry]) extends Geometry
 
   object Geometry {
 
+    implicit val encoderGeometryCollection: Encoder[GeometryCollection] = Encoder.instance(j => Json.obj("type" -> "GeometryCollection".asJson, "geometries" -> j.geometries.asJson  ))
+
     implicit val encoder: Encoder[Geometry] = Encoder.instance {
+        case j:GeometryCollection => Json.obj("type" -> "GeometryCollection".asJson, "geometries" -> j.geometries.asJson  )
         case j:Point => Json.obj("type" -> "Point".asJson, "coordinates" -> j.coordinates.asJson  )
         case j:LineString => Json.obj("type" -> "LineString".asJson, "coordinates" -> j.coordinates.asJson  )
         case j:MultiPoint => Json.obj("type" -> "MultiPoint".asJson, "coordinates" -> j.coordinates.asJson  )
         case j:MultiLineString => Json.obj("type" -> "MultiLineString".asJson, "coordinates" -> j.coordinates.asJson  )
         case j:Polygon => Json.obj("type" -> "Polygon".asJson, "coordinates" -> j.coordinates.asJson  )
         case j:MultiPolygon => Json.obj("type" -> "MultiPolygon".asJson, "coordinates" -> j.coordinates.asJson  )
-        case j:GeometryCollection => Json.obj("type" -> "GeometryCollection".asJson, "coordinates" -> j.geometries.asJson  )
     }
 
     implicit val decoder: Decoder[Geometry] = Decoder.instance { c =>
