@@ -47,7 +47,9 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
 
   override def afterRender(): Unit = {
-    map.updateSize()
+    if(map != null) {
+      map.updateSize()
+    }
     prop.touch()
   }
 
@@ -134,7 +136,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     val view = new viewMod.default(viewMod.ViewOptions()
       .setZoom(3)
       .setProjection(projectionLV03)
-      .setCenter(js.Array(676813.12, 245983.95))
+      .setCenter(extentMod.getCenter(projectionLV03.getExtent()))
     )
 
 
@@ -157,10 +159,14 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       listener = prop.listen({ geoData =>
         vectorSource.removeEventListener("addfeature",onAddFeature.asInstanceOf[eventsMod.Listener])
         vectorSource.getFeatures().foreach(f => vectorSource.removeFeature(f))
-        val point = new geoJSONMod.default().readFeature(convertJsonToJs(geoData).asInstanceOf[js.Object]).asInstanceOf[olFeatureMod.default[geometryMod.default]]
-        val center = extentMod.getCenter(point.getGeometry().getExtent())
-        vectorSource.addFeature(point)
-        view.setCenter(center)
+
+        if(!geoData.isNull) {
+          val geom = new geoJSONMod.default().readFeature(convertJsonToJs(geoData).asInstanceOf[js.Object]).asInstanceOf[olFeatureMod.default[geometryMod.default]]
+          vectorSource.addFeature(geom)
+          val center = extentMod.getCenter(geom.getGeometry().getExtent())
+          view.setCenter(center)
+        }
+
         vectorSource.on_addfeature(olStrings.addfeature,onAddFeature)
       }, immediate)
     }

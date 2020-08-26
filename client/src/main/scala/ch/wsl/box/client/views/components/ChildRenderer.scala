@@ -55,6 +55,7 @@ case class ChildRendererFactory(child:Child, children:Seq[JSONMetadata], masterD
 
       childWidgets += ChildRow(widget,id)
       entity.append(id)
+      widget.afterRender()
     }
 
     private def childId = UUID.randomUUID().toString

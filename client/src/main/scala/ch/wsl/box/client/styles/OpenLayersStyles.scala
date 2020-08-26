@@ -15,7 +15,7 @@ object OpenLayersStyles extends StyleSheet.Inline {
     ),
     unsafeRoot(".ol-attribution")(
       lineHeight(1),
-      unsafeRoot("li") (
+      unsafeChild("li") (
         fontSize(11.px)
       )
     )
