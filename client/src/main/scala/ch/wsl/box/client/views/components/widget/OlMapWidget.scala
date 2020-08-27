@@ -55,7 +55,6 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
   def loadMap(mapDiv:Div): Unit = {
 
-    println("Load Map")
 
     //typings error need to map it manually
     typings.proj4.mod.^.asInstanceOf[js.Dynamic].default.defs(
@@ -129,8 +128,13 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       .setStyle(vectorStyle)
     )
 
+    val mousePosition = new mousePositionMod.default(mousePositionMod.Options()
+        .setCoordinateFormat(coordinateMod.createStringXY())
+        .setProjection(projectionLV03)
+    )
 
-    val controls = controlMod.defaults()//.extend(js.Array(new controlMod.ScaleLine()))
+
+    val controls = controlMod.defaults().extend(js.Array(mousePosition))//new controlMod.ScaleLine()))
 
 
     val view = new viewMod.default(viewMod.ViewOptions()
@@ -280,7 +284,6 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
         case Control.POLYGON_HOLE => {
           drawHole.setActive(true)
           modify.setActive(true)
-          snap.setActive(true)
         }
         case Control.MOVE => {
           drag.setActive(true)
@@ -301,7 +304,10 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   }
 
   override protected def show(): JsDom.all.Modifier = {
-    val mapDiv = div(height := 400).render
+
+    val mapDiv: Div = div(height := 400).render
+
+    loadMap(mapDiv)
 
     div(
       label(field.title),
@@ -312,6 +318,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   object Control {
 
     sealed trait Section
+    case object VIEW extends Section
     case object EDIT extends Section
     case object POINT extends Section
     case object LINESTRING extends Section
@@ -320,7 +327,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     case object MOVE extends Section
     case object DELETE extends Section
   }
-  val activeControl:Property[Control.Section] = Property(Control.EDIT)
+  val activeControl:Property[Control.Section] = Property(Control.VIEW)
 
   def controlButton(icon:Icon,title:String,section:Control.Section) = {
     produce(activeControl) { c =>
@@ -336,7 +343,6 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   }
 
   override protected def edit(): JsDom.all.Modifier = {
-    println("Calling OLMapWidget edit")
 
     val mapDiv: Div = div(height := 400).render
 
@@ -349,6 +355,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
         BootstrapStyles.Button.groupSize(BootstrapStyles.Size.Small),
         ClientConf.style.controlButtons
       )(//controls
+        controlButton(Icons.hand,"Pan & Zoom",Control.VIEW),
         controlButton(Icons.pencil,"Edit",Control.EDIT),
         controlButton(Icons.point,"Add Point",Control.POINT),
         controlButton(Icons.line,"Add Linestring",Control.LINESTRING),

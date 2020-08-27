@@ -18,6 +18,18 @@ object OpenLayersStyles extends StyleSheet.Inline {
       unsafeChild("li") (
         fontSize(11.px)
       )
+    ),
+    unsafeRoot(".ol-mouse-position")(
+      lineHeight(1.8),
+      fontSize(11.px),
+      position.absolute,
+      bottom.`0`,
+      left.`0`,
+      right.auto,
+      top.auto,
+      padding.horizontal(5.px),
+      backgroundColor(c"rgba(255,255,255,0.8)"),
+      borderTopRightRadius(4.px)
     )
   )
 }
