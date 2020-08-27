@@ -254,7 +254,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       JSONQueryFilter(f.field.name,Some(f.filterOperator),f.filterValue)
     }.toList
 
-    JSONQuery(filter, sort, None, Session.lang())
+    JSONQuery(filter, sort, None, Some(Session.lang()))
   }
 
   def reloadRows(page:Int): Future[Unit] = {

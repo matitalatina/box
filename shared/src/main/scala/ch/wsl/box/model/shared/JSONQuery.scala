@@ -12,7 +12,7 @@ case class JSONQuery(
                       filter:List[JSONQueryFilter],
                       sort:List[JSONSort],
                       paging:Option[JSONQueryPaging],
-                      lang:String
+                      lang:Option[String]
                     ){
 
   def filterWith(filter:JSONQueryFilter*) = this.copy(filter = filter.toList)
@@ -71,8 +71,8 @@ case class JSONSort(column:String,order:String)
   */
 object JSONQuery{
 
-  def apply(filter:List[JSONQueryFilter], sort:List[JSONSort], pages:Int, currentPage:Int, lang:String = "en"):JSONQuery =
-    JSONQuery(filter, sort, paging = Some(JSONQueryPaging(pageLength = pages, currentPage = currentPage)),lang)
+  def apply(filter:List[JSONQueryFilter], sort:List[JSONSort], pages:Int, currentPage:Int, lang:Option[String]):JSONQuery =
+    JSONQuery(filter, sort, paging = Some(JSONQueryPaging(pageLength = pages, currentPage = currentPage)),None)
   /**
     * Generic query
     */
@@ -80,7 +80,7 @@ object JSONQuery{
     filter = List(),
     sort = List(),
     paging = Some(JSONQueryPaging(1000)),
-    lang = "en"
+    lang = None
   )
 
   def filterWith(filter:JSONQueryFilter*) = empty.copy(filter = filter.toList)
