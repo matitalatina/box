@@ -16,6 +16,7 @@ import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, MetadataFactory}
+import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.services.{XLSExport, XLSTable}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -58,7 +59,7 @@ case class Form(
     val metadata: Future[JSONMetadata] = metadataFactory.of(name,lang)
 
     def xls:Route = path("xlsx") {
-      respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$name.csv"))) {
+      respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$name.xlsx"))) {
         get {
           parameters('q) { q =>
             val query = parse(q).right.get.as[JSONQuery].right.get
@@ -86,12 +87,24 @@ case class Form(
       }
     }
 
-    def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.map{ f =>
-      val filteredFields = fields match {
-        case Some(fields) => f.fields.filter(field => fields.contains(field.name))
-        case None => f.fields.filter(field => f.tabularFields.contains(field.name))
+    private def _tabMetadata(fields:Option[Seq[String]] = None,m:JSONMetadata): Seq[JSONField] = {
+        fields match {
+          case Some(fields) => m.fields.filter(field => fields.contains(field.name))
+          case None => m.fields.filter(field => m.tabularFields.contains(field.name))
+        }
+
+    }
+
+    def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.flatMap{ m =>
+      val filteredFields = m.view match {
+        case None => Future.successful(_tabMetadata(fields,m))
+        case Some(view) => EntityMetadataFactory.of(view,lang).map{ em =>
+          _tabMetadata(Some(fields.getOrElse(m.tabularFields)),em)
+        }
       }
-      f.copy(fields = filteredFields)
+
+      filteredFields.map( ff => m.copy(fields = ff ))
+
     }
 
     def route = pathPrefix("id") {
@@ -142,6 +155,13 @@ case class Form(
         }
       }
     } ~
+    path("tabularMetadata") {
+      get {
+        complete {
+          tabularMetadata()
+        }
+      }
+    } ~
     path("schema") {
       get {
         complete {
@@ -168,8 +188,9 @@ case class Form(
         entity(as[JSONQuery]) { query =>
           complete {
             for{
-              f <- metadata
-              data <- db.run(jsonActions(f.entity).ids(query))
+              metadata <- tabularMetadata()
+              formActions = FormActions(metadata, jsonActions, metadataFactory)
+              data <- db.run(formActions.ids(query))
             } yield data
           }
         }

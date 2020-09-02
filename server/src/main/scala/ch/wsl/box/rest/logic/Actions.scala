@@ -17,6 +17,7 @@ trait ViewActions[T] {
   def getById(id: JSONID=JSONID.empty)(implicit db: Database):DBIO[Option[T]]
 
   def count()(implicit db: Database): DBIO[JSONCount]
+  def count(query: JSONQuery)(implicit db: Database): DBIO[Int]
 
   def ids(query: JSONQuery)(implicit db: Database, mat:Materializer): DBIO[IDs]
 }

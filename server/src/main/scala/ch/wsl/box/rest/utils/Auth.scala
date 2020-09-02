@@ -23,10 +23,12 @@ object Auth {
 
   val dbConf: Config = ConfigFactory.load().as[Config]("db")
   val dbPath = dbConf.as[String]("url")
+  val dbPassword = dbConf.as[String]("password")
   val dbSchema = dbConf.as[String]("schema")
 
   val boxDbConf: Config = ConfigFactory.load().as[Config]("box.db")
   val boxDbPath = boxDbConf.as[String]("url")
+  val boxDbPassword = boxDbConf.as[String]("password")
   val boxDbSchema = boxDbConf.as[String]("schema")
 
   println(s"DB: $dbPath")

@@ -67,7 +67,8 @@ object FunctionUIDef {
     tabularFields = Seq("function_id","name","description"),
     keys = Seq("function_id"),
     query = None,
-    exportFields = Seq()
+    exportFields = Seq(),
+    view = None
   )
 
   val field = JSONMetadata(
@@ -115,7 +116,8 @@ object FunctionUIDef {
     tabularFields = Seq("field_id","function_id","name","widget"),
     keys = Seq("field_id"),
     query = None,
-    exportFields = Seq()
+    exportFields = Seq(),
+    view = None
   )
 
   val fieldI18n = JSONMetadata(
@@ -143,7 +145,8 @@ object FunctionUIDef {
     tabularFields = Seq("field_id","id","lang","label"),
     keys = Seq("id"),
     query = None,
-    exportFields = Seq()
+    exportFields = Seq(),
+    view = None
   )
 
   val functionI18n = JSONMetadata(
@@ -169,7 +172,8 @@ object FunctionUIDef {
     tabularFields = Seq("function_id","id","lang","label"),
     keys = Seq("id"),
     query = None,
-    exportFields = Seq()
+    exportFields = Seq(),
+    view = None
   )
 
 

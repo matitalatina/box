@@ -172,7 +172,20 @@ object EntityMetadataFactory extends Logging {
           keys <- EntityMetadataFactory.keysOf(table)
         } yield {
           val fieldList = fields.map(_.name)
-          JSONMetadata(1, table, table, fields, Layout.fromFields(fields), table, lang, fieldList, keys, None, fieldList)//, table)
+          JSONMetadata(
+            1,
+            table,
+            table,
+            fields,
+            Layout.fromFields(fields),
+            table,
+            lang,
+            fieldList,
+            keys,
+            None,
+            fieldList,
+            None
+          )
         }
         if(BoxConfig.enableCache) {
           logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)

@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
+import ch.wsl.box.model.Migrate
 import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
@@ -44,8 +45,8 @@ class Box(implicit val executionContext: ExecutionContext) {
   def start() =  {
 
 
-
     BoxConfig.load()
+
 
     val akkaConf: Config = BoxConfig.akkaHttpSession
 
@@ -89,6 +90,8 @@ class Box(implicit val executionContext: ExecutionContext) {
 }
 
 object Boot extends App  {
+
+  Migrate.all()
 
   val executionContext = ExecutionContext.fromExecutor(
     new java.util.concurrent.ForkJoinPool(Runtime.getRuntime.availableProcessors())

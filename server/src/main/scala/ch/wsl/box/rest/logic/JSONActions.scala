@@ -2,6 +2,7 @@ package ch.wsl.box.rest.logic
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import ch.wsl.box
 import ch.wsl.box.jdbc
 import ch.wsl.box.model.shared._
 import io.circe._
@@ -30,6 +31,7 @@ class JSONViewActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Pro
   override def getById(id: JSONID=JSONID.empty)(implicit db:Database):DBIO[Option[Json]] = dbActions.getById(id).map(_.map(_.asJson))
 
   override def count()(implicit db:Database) = dbActions.count()
+  override def count(query: JSONQuery)(implicit db: Database) = dbActions.count(query)
 
   override def ids(query:JSONQuery)(implicit db:Database, mat:Materializer):DBIO[IDs] = {
     for{

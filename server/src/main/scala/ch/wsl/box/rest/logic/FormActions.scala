@@ -3,6 +3,7 @@ package ch.wsl.box.rest.logic
 import akka.NotUsed
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import ch.wsl.box
 import ch.wsl.box.jdbc
 import ch.wsl.box.jdbc.PostgresProfile
 import io.circe._
@@ -17,6 +18,7 @@ import slick.basic.DatabasePublisher
 import slick.lifted.Query
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.MetadataFactory
+import ch.wsl.box.rest.runtime.Registry
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -60,7 +62,14 @@ case class FormActions(metadata:JSONMetadata,
   }
 
 
-  def list(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):Future[Seq[Json]] = streamSeq(query).runFold(Seq[Json]()){(acc, row) =>
+  private def _list(query:JSONQuery): Source[Json, NotUsed] = {
+    metadata.view.flatMap(Registry().actions.actions) match {
+      case None => streamSeq(query)
+      case Some(v) => Source.fromPublisher(v.findStreamed(query))
+    }
+  }
+
+  def list(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):Future[Seq[Json]] = _list(query).runFold(Seq[Json]()){(acc, row) =>
 
     val lookup = Lookup.valueExtractor(lookupElements, metadata) _
 
@@ -71,6 +80,19 @@ case class FormActions(metadata:JSONMetadata,
     acc ++ Seq(js)
   }
 
+  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {
+
+    val lookup = Lookup.valueExtractor(lookupElements, metadata) _
+
+    _list(query).map { json =>
+      val row = fields(metadata).map { field =>
+        lookup(field,json.get(field)).getOrElse(json.get(field))
+      }
+      CSV.writeRow(row)
+    }
+
+  }
+
   def get(query:JSONQuery):Future[Option[Json]] = streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x =>
       if(x.length >1){
         throw new Exception("Multiple rows retrieved with single id")
@@ -78,18 +100,7 @@ case class FormActions(metadata:JSONMetadata,
         x.headOption.map(_.asJson)
       })
 
-  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {
 
-      val lookup = Lookup.valueExtractor(lookupElements, metadata) _
-
-      streamSeq(query).map { json =>
-        val row = fields(metadata).map { field =>
-          lookup(field,json.get(field)).getOrElse(json.get(field))
-        }
-        CSV.writeRow(row)
-      }
-
-  }
 
   /**
    * When default `arrayIndex` is specified the value of the field is substituted with
@@ -243,6 +254,26 @@ case class FormActions(metadata:JSONMetadata,
   override def find(query: JSONQuery)(implicit db: jdbc.PostgresProfile.api.Database, mat: Materializer): DBIO[Seq[Json]] = jsonAction.find(query)
 
   override def count()(implicit db: PostgresProfile.api.Database) = jsonAction.count()
+  override def count(query: JSONQuery)(implicit db: box.jdbc.PostgresProfile.api.Database) = jsonAction.count(query)
 
-  override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer) = jsonAction.ids(query)
+  override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer) = {
+    metadata.view.flatMap(Registry().actions.actions) match {
+      case None => jsonAction.ids(query)
+      case Some(v) => for {
+        data <- v.find(query)
+        n <- v.count(query)
+      } yield {
+        val last = query.paging match {
+          case None => true
+          case Some(paging) => (paging.currentPage * paging.pageLength) >= n
+        }
+        IDs(
+          last,
+          query.paging.map(_.currentPage).getOrElse(1),
+          data.flatMap { x => JSONID.fromData(x, metadata).map(_.asString) },
+          n
+        )
+      }
+    }
+  }
 }

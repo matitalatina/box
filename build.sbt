@@ -15,6 +15,7 @@ lazy val codegen  = (project in file("codegen")).settings(
   resolvers += Resolver.jcenterRepo,
   resolvers += Resolver.bintrayRepo("waveinch","maven"),
   resourceDirectory in Compile := baseDirectory.value / "../resources",
+  unmanagedResourceDirectories in Compile += baseDirectory.value / "../db"
 )
 
 lazy val server: Project  = project

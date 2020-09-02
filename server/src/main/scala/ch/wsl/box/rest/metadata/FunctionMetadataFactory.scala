@@ -103,7 +103,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       val layout = Layout.fromString(func.layout).getOrElse(Layout.fromFields(jsonFields))
 
 
-      JSONMetadata(func.function_id.get,func.name,functionI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,"function",lang,Seq(),Seq(),None,Seq())//,"")
+      JSONMetadata(func.function_id.get,func.name,functionI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,"function",lang,Seq(),Seq(),None,Seq(),None)//,"")
     }
   }
 

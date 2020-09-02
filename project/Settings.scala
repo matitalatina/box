@@ -54,7 +54,7 @@ object Settings {
 
     //database
     val postgres = "42.2.11"
-    val slick = "3.2.3"
+    val slick = "3.3.2"
     val slickPg = "0.19.0"
 
     //frontend
@@ -137,7 +137,8 @@ object Settings {
     "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.2.0",
     "com.vmunier" %% "scalajs-scripts" % "1.1.4",
     "com.norbitltd" %% "spoiwo" % "1.7.0",
-    "io.github.cquiroz" %% "scala-java-time" % "2.0.0-RC3"
+    "io.github.cquiroz" %% "scala-java-time" % "2.0.0-RC3",
+    "org.flywaydb" % "flyway-core" % "6.5.5"
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))

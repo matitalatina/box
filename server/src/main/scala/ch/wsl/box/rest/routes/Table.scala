@@ -164,6 +164,11 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
           complete{ EntityMetadataFactory.of(name, lang, limitLookupFromFk) }   //can set "en" hardcoded, since base table JSONForm do not change with language
         }
       } ~
+      path("tabularMetadata") {
+        get {
+          complete{ EntityMetadataFactory.of(name, lang, limitLookupFromFk) }   //can set "en" hardcoded, since base table JSONForm do not change with language
+        }
+      } ~
       path("keys") {   //returns key fields names
         get {
           complete{ EntityMetadataFactory.keysOf(name) }

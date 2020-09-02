@@ -118,7 +118,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
 
     {for{
-      emptyFieldsForm <- REST.metadata(state.kind,Session.lang(),state.entity)
+      emptyFieldsForm <- REST.tabularMetadata(state.kind,Session.lang(),state.entity)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
       form = emptyFieldsForm.copy(fields = fields)
 

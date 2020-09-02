@@ -109,7 +109,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
       val parameters = export.parameters.toSeq.flatMap(_.split(","))
 
-      JSONMetadata(export.export_id.get,export.function,exportI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq())//,"")
+      JSONMetadata(export.export_id.get,export.function,exportI18n.flatMap(_.label).getOrElse(name),jsonFields,layout,exportI18n.flatMap(_.function).getOrElse(export.function),lang,parameters,Seq(),None,Seq(),None)//,"")
     }
   }
 

@@ -116,6 +116,11 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
             complete{ EntityMetadataFactory.of(name, lang) }
           }
         } ~
+        path("tabularMetadata") {
+            get {
+              complete{ EntityMetadataFactory.of(name, lang) }
+            }
+        } ~
         path("keys") {   //returns key fields names
           get {
             complete{ Seq[String]()} //JSONSchemas.keysOf(name)
