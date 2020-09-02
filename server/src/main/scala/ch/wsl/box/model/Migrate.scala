@@ -27,7 +27,7 @@ object Migrate {
       .baselineOnMigrate(true)
       .schemas(Auth.boxDbSchema,Auth.dbSchema)
       .defaultSchema(Auth.dbSchema)
-      .table("box.flyway_schema_history")
+      .table("flyway_schema_history")
       .locations("migrations")
       .dataSource(Auth.dbPath, Auth.adminUserProfile.name, Auth.dbPassword)
       .load()
