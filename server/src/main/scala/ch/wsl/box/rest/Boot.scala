@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 
-class Box(implicit val executionContext: ExecutionContext) {
+class Box(name:String,version:String)(implicit val executionContext: ExecutionContext) {
   private var server:Http.ServerBinding = null
 
   implicit val system: ActorSystem = ActorSystem()
@@ -76,7 +76,7 @@ class Box(implicit val executionContext: ExecutionContext) {
     for{
       pl <- preloading
       _ <- pl.terminate(1.seconds)
-      b <- Http().bindAndHandle(Root(akkaConf,() => this.restart(), origins).route, host, port) //attach the root route
+      b <- Http().bindAndHandle(Root(s"$name $version",akkaConf,() => this.restart(), origins).route, host, port) //attach the root route
     } yield {
       println("Stopped preloading server and started box")
       server = b
@@ -91,13 +91,18 @@ class Box(implicit val executionContext: ExecutionContext) {
 
 object Boot extends App  {
 
+  val (name,app_version) = args.length match {
+    case 2 => (args(0),args(1))
+    case _ => ("Standalone","DEV")
+  }
+
   Migrate.all()
 
   val executionContext = ExecutionContext.fromExecutor(
     new java.util.concurrent.ForkJoinPool(Runtime.getRuntime.availableProcessors())
   )
 
-  val server = new Box()(executionContext)
+  val server = new Box(name,app_version)(executionContext)
 
   server.start()
 }

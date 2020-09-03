@@ -33,7 +33,7 @@ import scala.util.{Failure, Success}
 /**
   * Created by andreaminetti on 15/03/16.
   */
-case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(implicit materializer:Materializer,executionContext:ExecutionContext,system: ActorSystem) extends Logging {
+case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:Seq[String])(implicit materializer:Materializer,executionContext:ExecutionContext,system: ActorSystem) extends Logging {
 
 
   lazy val sessionConfig = SessionConfig.fromConfig(akkaConf)
@@ -104,7 +104,7 @@ case class Root(akkaConf:Config, restart: () => Unit, origins:Seq[String])(impli
         resetServer ~
         resetCache ~
         cors.handle {
-          ApiV1().route
+          ApiV1(appVersion).route
         }
     }
 

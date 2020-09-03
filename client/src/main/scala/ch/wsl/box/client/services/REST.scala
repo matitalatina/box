@@ -26,6 +26,7 @@ object REST {
   private def client = HttpClient(Routes.apiV1())
 
   def version() = client.get[String]("/version")
+  def appVersion() = client.get[String]("/app_version")
   def validSession() = client.get[Boolean]("/validSession")
   def cacheReset() = HttpClient("").get[String]("cache/reset")
   def serverReset() = HttpClient("").get[String]("server/reset")

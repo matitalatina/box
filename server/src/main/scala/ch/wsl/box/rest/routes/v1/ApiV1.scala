@@ -21,7 +21,7 @@ import boxInfo.BoxBuildInfo
 import ch.wsl.box.model.boxentities.BoxUser
 
 
-case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem) {
+case class ApiV1(appVersion:String)(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem) {
 
   import Directives._
   import ch.wsl.box.rest.utils.Auth
@@ -123,6 +123,14 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
     }
   }
 
+  def app_version = path("app_version") {
+    get {
+      complete(
+        appVersion
+      )
+    }
+  }
+
   def validSession = path("validSession") {
     get{
       optionalSession(oneOff, usingCookiesOrHeaders) {
@@ -136,6 +144,7 @@ case class ApiV1(implicit ec:ExecutionContext, sessionManager: SessionManager[Bo
   //Serving REST-API
   val route:Route = pathPrefix("api" / "v1") {
       version ~
+      app_version ~
       validSession ~
       labels ~
       conf ~

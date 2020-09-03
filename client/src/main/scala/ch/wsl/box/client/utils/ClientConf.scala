@@ -21,16 +21,20 @@ object ClientConf {
 
   private var conf:Map[String,String] = Map()
   private var _version:String = ""
+  private var _appVersion:String = ""
 
   def load() = for{
     table <- REST.conf()
     version <- REST.version()
+    appVersion <- REST.appVersion()
   } yield {
     conf = table
     _version = version
+    _appVersion = appVersion
   }
 
   def version = _version
+  def appVersion = _appVersion
 
   def pageLength  = Try(conf("page_length").toInt).getOrElse(30)
 //  def lookupMaxRows  = Try(conf("fk_rows").toInt).getOrElse(30)

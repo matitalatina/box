@@ -8,7 +8,7 @@ import io.udash.css.CssView._
 
 object Footer {
 
-  def copyright = p(UI.footerCopyright, " - ", a(href := "https://github.com/Insubric/box","Box Framework"), " - ", ClientConf.version)
+  def copyright = p(UI.footerCopyright, " - ", a(href := "https://github.com/Insubric/box","Box Framework"), " - ", ClientConf.version, " - ", ClientConf.appVersion)
 
   def template(logo:Option[String]) = footer(
     div(BootstrapStyles.Float.left(), ClientConf.style.noMobile)(copyright),
