@@ -37,11 +37,13 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       }
     }
 
-    def sort(sorting: Seq[JSONSort], lang:String)(implicit db:Database): Future[Query[T, M, Seq]] = {
-      sorting.foldRight[Future[Query[T, M, Seq]]](Future.successful(base)) { case (sort, query) =>
-        val tre = Registry().tables.table(entity.shaped.value.tableName)
-        query.flatMap{ q =>
-          tre.sort(sort,lang,q.asInstanceOf[Query[Table[tre.MT], tre.MT, Seq]]).map(_.asInstanceOf[Query[T, M, Seq]])
+    def sort(sorting: Seq[JSONSort], lang:String)(implicit db:Database): Query[T, M, Seq] = {
+      sorting.foldRight[Query[T, M, Seq]](base) { case (sort, query) =>
+        query.sortBy { x =>
+          sort.order match {
+            case Sort.ASC => ColumnOrdered(x.col(sort.column).rep, new slick.ast.Ordering)
+            case Sort.DESC => ColumnOrdered(x.col(sort.column).rep, new slick.ast.Ordering(direction = slick.ast.Ordering.Desc))
+          }
         }
       }
     }
@@ -74,21 +76,18 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def findStreamed(query:JSONQuery)(implicit db:Database): DatabasePublisher[M] = {
 
-    val dbio = DBIO.from(entity.where(query.filter).sort(query.sort, query.lang.getOrElse("en"))).flatMap { q =>
-      q.page(query.paging).result
-        .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
-    }
+    val q = entity.where(query.filter).sort(query.sort, query.lang.getOrElse("en"))
+    q.page(query.paging).result
+      .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
 
-    db.stream(dbio.transactionally)
+
+    db.stream(q.result.transactionally)
 
   }
 
   override def find(query:JSONQuery)(implicit db:Database, mat: Materializer): DBIO[Seq[M]] = {
-
-    DBIO.from( entity.where(query.filter).sort(query.sort, query.lang.getOrElse("en"))).flatMap { q =>
-      q.page(query.paging).result
-    }
-
+    val q = entity.where(query.filter).sort(query.sort, query.lang.getOrElse("en"))
+    q.page(query.paging).result
   }
 
   def keys(): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(EntityMetadataFactory.keysOf(entity.baseTableRow.tableName))
