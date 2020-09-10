@@ -92,9 +92,10 @@ lazy val client: Project = (project in file("client"))
       "@types/jquery" -> "3.3.1",
       "bootstrap" -> "4.1.3",
       "@types/bootstrap" -> "4.1.3",
-      "flatpickr" -> "4.6.6"
+      "flatpickr" -> "4.6.6",
     ),
     stIgnore += "ol-ext",
+    stIgnore += "roboto-fontface",
     fork in fastOptJS := true,
     fork in fullOptJS := true,
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",

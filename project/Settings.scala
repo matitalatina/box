@@ -124,6 +124,7 @@ object Settings {
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp  % "test",
     "org.webjars.npm"          % "monaco-editor"     % "0.18.1",
     "org.webjars.npm" % "quill" % "1.3.7",
+    "org.webjars.npm" % "roboto-fontface" % "0.10.0",
     "com.outr"                 %% "scribe"           % versions.scribe,
     "com.outr"                 %% "scribe-slf4j"     % versions.scribe,
     "nz.co.rossphillips"       %% "scala-thumbnailer" % "0.5.SNAPSHOT",

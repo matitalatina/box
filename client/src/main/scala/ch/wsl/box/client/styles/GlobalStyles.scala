@@ -8,7 +8,7 @@ import ch.wsl.box.client.styles.utils.MediaQueries
 
 import scala.language.postfixOps
 import scalacss.ProdDefaults._
-import scalacss.internal.{AV, CanIUse}
+import scalacss.internal.{AV, CanIUse, FontFace}
 import scalacss.internal.CanIUse.Agent
 import scalacss.internal.LengthUnit.px
 import scalatags.JsDom
