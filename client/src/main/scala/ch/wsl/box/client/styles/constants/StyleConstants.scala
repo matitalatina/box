@@ -1,5 +1,6 @@
 package ch.wsl.box.client.styles.constants
 import scalacss.Defaults._
+import scalacss.internal.AV
 import scalacss.internal.Macros.Color
 
 object StyleConstants extends StyleSheet.Inline{

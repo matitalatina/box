@@ -2,9 +2,9 @@ package ch.wsl.box.client.styles
 
 
 
-import ch.wsl.box.client.styles.constants.StyleConstants
+import ch.wsl.box.client.styles.constants.{Font, StyleConstants}
 import ch.wsl.box.client.styles.constants.StyleConstants.Colors
-import ch.wsl.box.client.styles.utils.MediaQueries
+import ch.wsl.box.client.styles.utils.{MediaQueries, StyleUtils}
 
 import scala.language.postfixOps
 import scalacss.ProdDefaults._
@@ -20,7 +20,6 @@ case class StyleConf(colors:Colors, smallCellsSize:Int)
 
 case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
-  private def unsafeProp(key:String,value:String) = AV(scalacss.internal.Attr.real(key),value)
 
   import dsl._
 
@@ -36,7 +35,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   val global = style(
 
     unsafeRoot("body") (
-      backgroundColor.white
+      backgroundColor.white,
+      Font.regular
     ),
 
     unsafeRoot("select")(
@@ -173,12 +173,12 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
     //hide up/down arrow for input
     unsafeRoot("input[type=\"number\"]::-webkit-outer-spin-button,\n  input[type=\"number\"]::-webkit-inner-spin-button")(
-      unsafeProp("-webkit-appearance","none"),
+      StyleUtils.unsafeProp("-webkit-appearance","none"),
       margin.`0`
     ),
 
     unsafeRoot("input[type=\"number\"]")(
-      unsafeProp("-moz-appearance","textfield")
+      StyleUtils.unsafeProp("-moz-appearance","textfield")
     ),
 
 
@@ -229,7 +229,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val tableHeader = style(
     fontSize(14 px),
-    fontWeight.bold
+    Font.bold
   )
 
 
@@ -299,7 +299,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     ),
     color(conf.colors.link),
     textTransform.uppercase,
-    fontWeight._600,
+    Font.bold,
     cursor.pointer,
     padding.horizontal(2.px)
   )
@@ -475,7 +475,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val labelRequired = style(
-    fontWeight.bolder
+    fontWeight.bold,
+    Font.bold
   )
 
   val notNullable = style(
@@ -490,7 +491,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val labelNonRequred = style(
-    fontWeight.bold
+    Font.bold
   )
 
   val editor = style(
