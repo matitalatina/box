@@ -29,6 +29,7 @@ import typings.ol.drawMod.DrawEvent
 import typings.ol.modifyMod.ModifyEvent
 import typings.ol.sourceVectorMod.VectorSourceEvent
 import typings.ol.translateMod.TranslateEvent
+import typings.ol.viewMod.FitOptions
 
 import scala.concurrent.Future
 
@@ -53,7 +54,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     prop.touch()
   }
 
-  def loadMap(mapDiv:Div): Unit = {
+  def loadMap(mapDiv:Div) = {
 
 
     //typings error need to map it manually
@@ -167,8 +168,9 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
         if(!geoData.isNull) {
           val geom = new geoJSONMod.default().readFeature(convertJsonToJs(geoData).asInstanceOf[js.Object]).asInstanceOf[olFeatureMod.default[geometryMod.default]]
           vectorSource.addFeature(geom)
-          val center = extentMod.getCenter(geom.getGeometry().getExtent())
-          view.setCenter(center)
+          view.fit(geom.getGeometry().getExtent(),FitOptions().setPaddingVarargs(150,50,50,150).setMinResolution(2))
+        } else {
+          view.fit(projectionLV03.getExtent())
         }
 
         vectorSource.on_addfeature(olStrings.addfeature,onAddFeature)
@@ -299,7 +301,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     }, true)
 
 
-
+    (map,vectorSource)
 
   }
 
@@ -346,7 +348,9 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
     val mapDiv: Div = div(height := 400).render
 
-    loadMap(mapDiv)
+    val (map,vectorSource) = loadMap(mapDiv)
+
+    vectorSource.getExtent()
 
     div(
       label(field.title),
@@ -363,6 +367,9 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
         controlButton(Icons.hole,"Add Polygon",Control.POLYGON_HOLE),
         controlButton(Icons.move,"Move",Control.MOVE),
         controlButton(Icons.trash,"Delete",Control.DELETE),
+        button(BootstrapStyles.Button.btn, BootstrapStyles.Button.color())(
+          onclick :+= ((e:Event) => map.getView().fit(vectorSource.getExtent(),FitOptions().setPaddingVarargs(10,10,10,10).setMinResolution(0.5)) )
+        )(Icons.search).render
       ),
       mapDiv
     )
