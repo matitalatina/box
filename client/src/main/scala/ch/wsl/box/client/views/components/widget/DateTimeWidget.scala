@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 
-import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneOffset}
 
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
@@ -28,35 +28,45 @@ import scala.util.Try
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
 
-trait DateTimeWidget extends Widget  with Logging{
+object FieldTypes {
+  sealed trait FieldType
+  case object DateTime extends FieldType
+  case object Date extends FieldType
+  case object Time extends FieldType
+}
+
+trait DateTimeWidget[T] extends Widget  with Logging{
 
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
   import scalacss.ScalatagsCss._
 
-  final val dateTimePickerFormat = "YYYY-MM-DD HH:mm"
-  final val datePickerFormat = "YYYY-MM-DD"
-  final val yearPickerFormat = "YYYY"
-  final val yearMonthPickerFormat = "YYYY-MM"
-  final val timePickerFormat = "HH:mm"
 
-  private def strToTime(s:String,r:Boolean) = {
-    DateTimeFormatters.timestamp.parse(s).toArray.flatMap{ parsed =>
-      def toDouble(d:LocalDateTime):DateOption = d.toInstant(ZoneOffset.UTC).toEpochMilli.toDouble
-      (r,s.length) match {
-        case (false, _) => Array(toDouble(parsed))
-        case (true, x) if x > 7 => Array(toDouble(parsed))
-        case (true, x) if x > 4 => { //month interval
+  val fieldType:FieldTypes.FieldType
+  val dateTimeFormatters:DateTimeFormatters[T]
+
+
+  private def strToTime(s:String,r:Boolean): Array[String] = {
+
+    dateTimeFormatters.parse(s).toSeq.flatMap{ parsed =>
+      val timestamp = dateTimeFormatters.format(parsed)
+      (r,s.length,fieldType) match {
+        case (_,_,FieldTypes.Time) => Array(timestamp)
+        case (false, _,_) => Array(timestamp)
+        case (true, x,_) if x > 7 => Array(timestamp)
+        case (true, x,_) if x > 4 => { //month interval
           logger.info(s"Expand month")
-          Array(toDouble(parsed),toDouble(parsed.plusMonths(1)))
+          val nextMonth = dateTimeFormatters.format(dateTimeFormatters.nextMonth(parsed))
+          Array(timestamp,nextMonth)
         }
-        case (true, x) => { //year interval
+        case (true, x,_) => { //year interval
           logger.info(s"Expand year")
-          Array(toDouble(parsed),toDouble(parsed.plusYears(1)))
+          val nextYear = dateTimeFormatters.format(dateTimeFormatters.nextYear(parsed))
+          Array(timestamp,nextYear)
         }
       }
     }
-  }
+  }.toArray //cannot do toArray directly because array need the typetag to be constructed
 
   protected def toDate(jsonDate:Json,range:Boolean):Array[DateOption] = {
     logger.info(s"toDate $jsonDate")
@@ -65,8 +75,9 @@ trait DateTimeWidget extends Widget  with Logging{
     if(str == "") return Array()
 
 
+    def toDateOption(d:String):DateOption = d
 
-    if(range) {
+    val result = if(range) {
       val tokens = str.split("to").map(_.trim)
       if(tokens.length > 1)
         tokens.flatMap(t => strToTime(t,false))
@@ -76,28 +87,9 @@ trait DateTimeWidget extends Widget  with Logging{
       strToTime(str,false)
     }
 
+    result.map(toDateOption)
 
-  }
 
-  protected def fromDate(format:String)(dt:Option[java.util.Date]):Json = {
-    logger.info(s"fromDate $format date $dt")
-    Try{
-      if (dt.isEmpty)
-        Json.Null
-      else {
-        val instant = Instant.ofEpochMilli(dt.get.getTime).atZone(ZoneOffset.UTC)
-        val result = format match {
-          case `dateTimePickerFormat` => DateTimeFormatters.timestamp.format(instant.toLocalDateTime)
-          case `datePickerFormat` => DateTimeFormatters.date.format(instant.toLocalDate)
-          case `timePickerFormat` => DateTimeFormatters.time.format(instant.toLocalTime)
-        }
-        println(result)
-        result.asJson
-      }
-    }.recover{case e =>
-      e.printStackTrace()
-      Json.Null
-    }.get
   }
 
 
@@ -108,7 +100,7 @@ trait DateTimeWidget extends Widget  with Logging{
     ).render
   })
 
-  protected def editMe(id:Property[String], field:JSONField, model:Property[Json], format:String, style:StyleA, range:Boolean):Modifier = {
+  protected def editMe(id:Property[String], field:JSONField, model:Property[Json],style:StyleA, range:Boolean):Modifier = {
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
@@ -119,7 +111,10 @@ trait DateTimeWidget extends Widget  with Logging{
         val dates = toDate(d,range).toJSArray
         flatpicker.setDate(dates,force)
       } else {
-        toDate(d,range).headOption.foreach( date => flatpicker.setDate(date,force))
+        toDate(d,range).headOption match {
+          case Some(date) => flatpicker.setDate(date,force)
+          case None => flatpicker.clear(force)
+        }
       }
     }
 
@@ -164,7 +159,7 @@ trait DateTimeWidget extends Widget  with Logging{
                           instance: typings.flatpickr.instanceMod.Instance,
                           data:js.UndefOr[js.Any]) => {
       changeListener.cancel()
-      logger.info(s"flatpickr on change $dateStr")
+      logger.info(s"flatpickr on change $dateStr, selectedDates: $selectedDates $instance $data")
       model.set(dateStr.asJson)
       setListener(false, instance)
     }
@@ -177,10 +172,10 @@ trait DateTimeWidget extends Widget  with Logging{
       options.setMode(typings.flatpickr.flatpickrStrings.range)
     }
 
-    format match {
-      case `dateTimePickerFormat` => options.setEnableTime(true).setTime_24hr(true)
-      case `datePickerFormat` => {}
-      case `timePickerFormat` => options.setEnableTime(true).setTime_24hr(true).setNoCalendar(true).setDateFormat("H:i")
+    fieldType match {
+      case FieldTypes.DateTime => options.setEnableTime(true).setTime_24hr(true)
+      case FieldTypes.Date => {}
+      case FieldTypes.Time => options.setEnableTime(true).setTime_24hr(true).setNoCalendar(true).setDateFormat("H:i")
     }
 
     flatpicker = typings.flatpickr.mod.default(picker,options)
@@ -193,13 +188,28 @@ trait DateTimeWidget extends Widget  with Logging{
   }
 }
 
+
 object DateTimeWidget {
 
+  trait DateTimeWdg extends DateTimeWidget[LocalDateTime] {
+    override val fieldType = FieldTypes.DateTime
+    override val dateTimeFormatters: DateTimeFormatters[LocalDateTime] = DateTimeFormatters.timestamp
+  }
+
+  trait TimeWdg extends DateTimeWidget[LocalTime] {
+    override val fieldType = FieldTypes.Time
+    override val dateTimeFormatters: DateTimeFormatters[LocalTime] = DateTimeFormatters.time
+  }
+
+  trait DateWdg extends DateTimeWidget[LocalDate] {
+    override val fieldType = FieldTypes.Date
+    override val dateTimeFormatters: DateTimeFormatters[LocalDate] = DateTimeFormatters.date
+  }
 
 
 
-  case class Date(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,datePickerFormat,ClientConf.style.dateTimePicker,range)
+  case class Date(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateWdg {
+    override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePicker,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -207,8 +217,8 @@ object DateTimeWidget {
     override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = Date(id,field,prop)
   }
 
-  case class DateTime(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,dateTimePickerFormat,ClientConf.style.dateTimePicker,range)
+  case class DateTime(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWdg {
+    override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePicker,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -216,8 +226,8 @@ object DateTimeWidget {
     override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = DateTime(id,field,prop)
   }
 
-  case class Time(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,timePickerFormat,ClientConf.style.dateTimePicker,range)
+  case class Time(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends TimeWdg {
+    override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePicker,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -225,8 +235,8 @@ object DateTimeWidget {
     override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = Time(id,field,prop)
   }
 
-  case class DateFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,datePickerFormat,ClientConf.style.dateTimePickerFullWidth,range)
+  case class DateFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateWdg {
+    override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePickerFullWidth,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -234,8 +244,8 @@ object DateTimeWidget {
     override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = DateFullWidth(id,field,prop)
   }
 
-  case class DateTimeFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,dateTimePickerFormat,ClientConf.style.dateTimePickerFullWidth,range)
+  case class DateTimeFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWdg {
+    override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePickerFullWidth,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
@@ -243,8 +253,8 @@ object DateTimeWidget {
     override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = DateTimeFullWidth(id,field,prop)
   }
 
-  case class TimeFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget {
-    override def edit() = editMe(id,field,prop,timePickerFormat,ClientConf.style.dateTimePickerFullWidth,range)
+  case class TimeFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends TimeWdg {
+    override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePickerFullWidth,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 

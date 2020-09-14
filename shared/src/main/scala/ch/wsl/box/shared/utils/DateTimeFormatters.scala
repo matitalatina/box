@@ -6,16 +6,26 @@ import java.time._
 
 import scala.util.{Failure, Try}
 
+
+
+
 trait DateTimeFormatters[T]{
 
   protected val parsers:Seq[String]
   protected val stringFormatter:String
 
+  def nextMonth(obj:T):T
+  def nextYear(obj:T):T
 
 
   def format(dt:T,format:String = stringFormatter):String
 
   def parse(str:String):Option[T] = toObject(str)
+
+  protected def fromZonedTimeZone(i:ZonedDateTime):T
+
+  def from(d:Long):T = fromZonedTimeZone(Instant.ofEpochMilli(d).atZone(ZoneOffset.UTC))
+
 
   //this is to format a timestamp with data only and add time to 00:00
   lazy val dateOnlyFormatter = new DateTimeFormatterBuilder().append(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
@@ -79,6 +89,12 @@ object DateTimeFormatters {
 
     override protected val stringFormatter: String = "yyyy-MM-dd HH:mm"
 
+
+    override protected def fromZonedTimeZone(i: ZonedDateTime): LocalDateTime = i.toLocalDateTime
+
+    override def nextMonth(obj: LocalDateTime): LocalDateTime = obj.plusMonths(1)
+    override def nextYear(obj: LocalDateTime): LocalDateTime = obj.plusYears(1)
+
     override def parser(str: String, pattern: DateTimeFormatter): LocalDateTime = {
       val parsed = pattern.parse(str)
       LocalDateTime.of(
@@ -104,6 +120,12 @@ object DateTimeFormatters {
 
     override protected val stringFormatter: String = "yyyy-MM-dd"
 
+
+    override protected def fromZonedTimeZone(i: ZonedDateTime): LocalDate = i.toLocalDate
+
+    override def nextMonth(obj: LocalDate): LocalDate = obj.plusMonths(1)
+    override def nextYear(obj: LocalDate): LocalDate = obj.plusYears(1)
+
     override def parser(str: String, pattern: DateTimeFormatter): LocalDate = {
       val parsed = pattern.parse(str)
       LocalDate.of(
@@ -128,6 +150,10 @@ object DateTimeFormatters {
 
     override protected val stringFormatter: String = "HH:mm"
 
+
+    override def nextMonth(obj: LocalTime): LocalTime = obj //adding month to a time it stays the same
+    override def nextYear(obj: LocalTime): LocalTime = obj
+
     override def parser(str: String, pattern: DateTimeFormatter): LocalTime = {
       val parsed = pattern.parse(str)
       LocalTime.of(
@@ -137,6 +163,7 @@ object DateTimeFormatters {
       )
     }
 
+    override protected def fromZonedTimeZone(i: ZonedDateTime): LocalTime = i.toLocalTime
 
     override def format(dt: LocalTime, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
 

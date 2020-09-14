@@ -92,7 +92,7 @@ lazy val client: Project = (project in file("client"))
       "@types/jquery" -> "3.3.1",
       "bootstrap" -> "4.1.3",
       "@types/bootstrap" -> "4.1.3",
-      "flatpickr" -> "4.6.6",
+      "flatpickr" -> "4.6.3",
     ),
     stIgnore += "ol-ext",
     stIgnore += "roboto-fontface",
