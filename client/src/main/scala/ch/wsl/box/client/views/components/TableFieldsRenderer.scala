@@ -42,7 +42,7 @@ object TableFieldsRenderer extends Logging{
 //        a(href := routes.edit(JSONKeys.fromMap(Map(field.key -> value)).asString).url,finalLabel)
       }
       case (None,Some(WidgetsNames.richTextEditor)) => p(raw(value))
-      case (None,_) => p(value)
+      case (None,_) => p(ClientConf.style.preformatted,value)
     }
 
 //    val editing = Property(false)

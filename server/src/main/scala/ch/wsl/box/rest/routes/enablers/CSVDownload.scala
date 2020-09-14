@@ -6,7 +6,6 @@ import akka.http.scaladsl.model.ContentTypes
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 import ch.wsl.box.model.shared.JSONData
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 
 trait CSVDownload {
 
@@ -14,7 +13,9 @@ trait CSVDownload {
   implicit def asCsv[M <: Product] = Marshaller.strict[M, ByteString] { t =>
     Marshalling.WithFixedContentType(ContentTypes.`text/csv(UTF-8)`, () => {
       import JSONData._
-      ByteString(CSV.writeRow(t.values()))
+      import kantan.csv._
+      import kantan.csv.ops._
+      ByteString(Seq(t.values()).asCsv(rfc))
     })
   }
 

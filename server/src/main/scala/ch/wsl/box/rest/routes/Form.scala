@@ -10,7 +10,6 @@ import akka.util.ByteString
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.utils.{JSONSupport, Timer, UserProfile}
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
@@ -256,7 +255,10 @@ case class Form(
 
                 val headers = metadata.exportFields.map(ef => metadata.fields.find(_.name == ef).map(_.title).getOrElse(ef))
 
-                Source.fromFuture(Future.successful(CSV.writeRow(headers)))
+                import kantan.csv._
+                import kantan.csv.ops._
+
+                Source.fromFuture(Future.successful(Seq(headers).asCsv(rfc)))
                   .concat(formActions.csv(query,fkValues,_.exportFields))
               }
             }

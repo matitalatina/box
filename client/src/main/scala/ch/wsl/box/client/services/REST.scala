@@ -4,17 +4,20 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.REST.get
 import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.{Decoder, Json}
 import org.scalajs.dom.File
 
 import scala.concurrent.Future
 import ch.wsl.box.shared.utils.JSONUtils._
+import scribe.Logging
+
+import kantan.csv._
+import kantan.csv.ops._
 
 /**
   * Created by andre on 4/24/2017.
   */
-object REST {
+object REST extends Logging {
 
 
 
@@ -38,7 +41,7 @@ object REST {
   def list(kind:String, lang:String, entity:String, limit:Int): Future[Seq[Json]] = client.post[JSONQuery,Seq[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",JSONQuery.empty.limit(limit))
   def list(kind:String, lang:String, entity:String, query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,Seq[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",query)
   def csv(kind:String, lang:String, entity:String, q:JSONQuery): Future[Seq[Seq[String]]] = client.post[JSONQuery,String](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/csv",q).map{ result =>
-    CSV.read(result)
+    result.asUnsafeCsvReader[Seq[String]](rfc).toSeq
   }
   def count(kind:String, lang:String, entity:String): Future[Int] = client.get[Int](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/count")
   def keys(kind:String, lang:String, entity:String): Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/keys")
@@ -83,7 +86,9 @@ object REST {
   def dataDef(kind:String,name:String,lang:String) = client.get[ExportDef](s"/$kind/$name/def/$lang")
   def dataList(kind:String,lang:String) = client.get[Seq[ExportDef]](s"/$kind/list/$lang")
 
-  def data(kind:String,name:String,params:Json,lang:String):Future[Seq[Seq[String]]] = client.post[Json,String](s"/$kind/$name/$lang", params).map(CSV.read)
+  def data(kind:String,name:String,params:Json,lang:String):Future[Seq[Seq[String]]] = client.post[Json,String](s"/$kind/$name/$lang", params).map{ result =>
+    result.asUnsafeCsvReader[Seq[String]](rfc).toSeq
+  }
 
   def writeAccess(table:String,kind:String) = client.get[Boolean](s"/access/$kind/$table/write")
 

@@ -16,7 +16,6 @@ import akka.util.ByteString
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, FormActions, JSONTableActions, Lookup}
 import ch.wsl.box.rest.utils.{BoxConfig, JSONSupport, UserProfile}
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
@@ -207,16 +206,20 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
           post {
             entity(as[JSONQuery]) { query =>
               logger.info("csv")
-              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))).log("csv"))
+              import kantan.csv._
+              import kantan.csv.ops._
+              complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => Seq(x.values()).asCsv(rfc))).log("csv"))
             }
           } ~
           respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
             get {
               parameters('q) { q =>
+                import kantan.csv._
+                import kantan.csv.ops._
                 val query = parse(q).right.get.as[JSONQuery].right.get
                 val csv = Source.fromFuture(EntityMetadataFactory.of(name,lang, limitLookupFromFk).map{ metadata =>
-                  CSV.writeRow(metadata.fields.map(_.name))
-                }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => CSV.writeRow(x.values()))).log("csv")
+                  Seq(metadata.fields.map(_.name)).asCsv(rfc)
+                }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => Seq(x.values()).asCsv(rfc))).log("csv")
                 complete(csv)
               }
             }

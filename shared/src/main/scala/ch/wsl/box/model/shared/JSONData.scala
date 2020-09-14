@@ -3,7 +3,8 @@ package ch.wsl.box.model.shared
 import java.text.SimpleDateFormat
 
 import ch.wsl.box.shared.utils.DateTimeFormatters
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
+import kantan.csv._
+import kantan.csv.ops._
 
 
 
@@ -13,7 +14,7 @@ import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 case class JSONData[M <: Product](data:Seq[M], count:Int) {
 
   import JSONData._
-  def csv:String = CSV.writeAll(data.map(_.values()))
+  def csv:String = data.map(_.values()).asCsv(rfc)
 }
 
 object JSONData{

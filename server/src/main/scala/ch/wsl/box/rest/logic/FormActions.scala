@@ -11,7 +11,7 @@ import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.routes.enablers.CSVDownload
 import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
+
 import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher
@@ -82,13 +82,16 @@ case class FormActions(metadata:JSONMetadata,
 
   def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {
 
+    import kantan.csv._
+    import kantan.csv.ops._
+
     val lookup = Lookup.valueExtractor(lookupElements, metadata) _
 
     _list(query).map { json =>
       val row = fields(metadata).map { field =>
         lookup(field,json.get(field)).getOrElse(json.get(field))
       }
-      CSV.writeRow(row)
+      Seq(row).asCsv(rfc)
     }
 
   }

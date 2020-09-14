@@ -71,6 +71,8 @@ object Settings {
 
     val scalaJsonSchema = "0.2.6"
 
+    val kantan = "0.6.0"
+
   }
 
   /**
@@ -83,7 +85,7 @@ object Settings {
     "io.circe" %%% "circe-generic" % versions.circe,
     "io.circe" %%% "circe-parser" % versions.circe,
     "com.outr" %%% "scribe" % versions.scribe,
-    "com.github.tototoshi" %%% "scala-csv" % versions.scalaCSV
+    "com.nrinaudo" %%% "kantan.csv" % versions.kantan
   ))
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(
@@ -139,7 +141,8 @@ object Settings {
     "com.vmunier" %% "scalajs-scripts" % "1.1.4",
     "com.norbitltd" %% "spoiwo" % "1.7.0",
     "io.github.cquiroz" %% "scala-java-time" % "2.0.0-RC3",
-    "org.flywaydb" % "flyway-core" % "6.5.5"
+    "org.flywaydb" % "flyway-core" % "6.5.5",
+    "com.nrinaudo" %% "kantan.csv" % versions.kantan
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))

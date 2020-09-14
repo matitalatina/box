@@ -13,7 +13,6 @@ import akka.util.ByteString
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONTableActions, JSONViewActions, Lookup}
 import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
 import scribe.Logging
@@ -159,7 +158,9 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
               entity(as[JSONQuery]) { query =>
                 logger.info("csv")
                 //Source
-                complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => CSV.writeRow(x.values()))).log("csv"))
+                import kantan.csv._
+                import kantan.csv.ops._
+                complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => Seq(x.values()).asCsv(rfc))).log("csv"))
               }
             } ~
               respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -177,10 +178,13 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
                         val lookup = Lookup.valueExtractor(fkValues,metadata) _
 
+                        import kantan.csv._
+                        import kantan.csv.ops._
+
                         Source.fromFuture(Future.successful(
-                          CSV.writeRow(metadata.fields.map(_.name))
+                          Seq(metadata.fields.map(_.name)).asCsv(rfc)
                         )).concat(Source.fromPublisher(dbActions.findStreamed(query).mapResult{x =>
-                          CSV.writeRow(x.values())
+                          Seq(x.values()).asCsv(rfc)
                         }))
                       }
                     }

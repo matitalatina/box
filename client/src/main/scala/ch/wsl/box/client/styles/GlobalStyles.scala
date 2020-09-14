@@ -189,6 +189,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   )
 
+  val preformatted = style(
+    whiteSpace.preLine
+  )
+
   val dateTimePicker = style(
     inputDefaultWidth,
     textAlign.right,

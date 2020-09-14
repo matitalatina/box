@@ -13,7 +13,6 @@ import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.html.Html
 import ch.wsl.box.rest.jdbc.JdbcConnect
 import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.Json
 import io.circe.parser.parse
 import io.circe._
@@ -54,7 +53,10 @@ trait Data extends Logging {
       case Some(dc) if dc.mode == FunctionKind.Modes.TABLE  =>
         respondWithHeaders(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> s"$function.csv"))) {
           {
-            val csv = CSV.writeAll(Seq(dc.asTable.headers) ++ dc.asTable.rows)
+            import kantan.csv._
+            import kantan.csv.ops._
+
+            val csv = (Seq(dc.asTable.headers) ++ dc.asTable.rows).asCsv(rfc)
             complete(HttpEntity(ContentTypes.`text/csv(UTF-8)`,ByteString(csv)))
           }
         }

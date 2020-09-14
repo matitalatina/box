@@ -15,7 +15,6 @@ import akka.stream.scaladsl.Source
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONViewActions, Lookup, TableActions, ViewActions}
 import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
-import com.github.tototoshi.csv.{CSV, DefaultCSVFormat}
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
 import scribe.Logging
