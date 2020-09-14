@@ -76,12 +76,17 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def findStreamed(query:JSONQuery)(implicit db:Database): DatabasePublisher[M] = {
 
-    val q = entity.where(query.filter).sort(query.sort, query.lang.getOrElse("en"))
-    q.page(query.paging).result
+    val q = entity
+      .where(query.filter)
+      .sort(query.sort, query.lang.getOrElse("en"))
+      .page(query.paging)
+
+
+    db.stream(q
+      .result
       .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
-
-
-    db.stream(q.result.transactionally)
+      .transactionally
+    )
 
   }
 
