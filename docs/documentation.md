@@ -1,6 +1,6 @@
 ---
 title: Documentation
-permalink: /documentation/
+permalink: /doc/
 nav_order: 2
 ---
 

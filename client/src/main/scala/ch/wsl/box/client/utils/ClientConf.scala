@@ -8,6 +8,9 @@ import ch.wsl.box.client.styles.{GlobalStyles, StyleConf}
 import ch.wsl.box.client.styles.constants.StyleConstants.Colors
 import ch.wsl.box.model.shared.JSONFieldTypes
 
+import io.circe._
+import io.circe.parser._
+
 import scala.util.Try
 
 /**
@@ -76,6 +79,8 @@ object ClientConf {
   def notificationTimeOut = Try(conf("notification.timeout").toInt).getOrElse(6)
 
   def mapBoxAccessToken = Try(conf("mapbox.accesstoken")).getOrElse("no token provided")
+
+  def mapOptions = Try(parse(conf("map.options")).right.get).getOrElse(Json.Null)
 
 //  def filterEqualityPrecisionDouble:Option[Int] = Try(conf("filterEqualityPrecision.double").toInt).toOption
 //

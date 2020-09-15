@@ -55,7 +55,7 @@ object Settings {
     //database
     val postgres = "42.2.11"
     val slick = "3.3.2"
-    val slickPg = "0.19.0"
+    val slickPg = "0.19.3"
 
     //frontend
     val scalaCss = "0.6.0"
@@ -95,6 +95,8 @@ object Settings {
     "com.iheart"               %% "ficus"           % versions.ficus,
     "com.github.tminglei"      %% "slick-pg"         % versions.slickPg,
     "com.github.tminglei"      %% "slick-pg_jts_lt"     % versions.slickPg,
+    "io.circe"                 %% "circe-core" % versions.circe,
+    "com.github.tminglei"      %% "slick-pg_circe-json"     % versions.slickPg,
     "org.locationtech.jts" % "jts-core" % "1.16.1",
   ))
 

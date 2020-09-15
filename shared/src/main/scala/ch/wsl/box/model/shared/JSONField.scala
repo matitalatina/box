@@ -17,7 +17,8 @@ case class JSONField(
                       default: Option[String] = None,
                       file: Option[FileReference] = None,
                       condition: Option[ConditionalField] = None,
-                      tooltip: Option[String] = None
+                      tooltip: Option[String] = None,
+                      params: Option[Json] = None
                     ) {
   def title = label.getOrElse(name)
 }

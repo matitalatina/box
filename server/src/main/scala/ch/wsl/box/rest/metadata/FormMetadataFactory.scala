@@ -299,7 +299,21 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
         placeHolder <- placeholder
         tip <- tooltip
       } yield {
-        JSONField(field.`type`, field.name, nullable, Some(lab),look, placeHolder, field.widget, subform, field.default,file,condition,tip)
+        JSONField(
+          `type` = field.`type`,
+          name = field.name,
+          nullable = nullable,
+          label = Some(lab),
+          lookup = look,
+          placeholder = placeHolder,
+          widget = field.widget,
+          child = subform,
+          default = field.default,
+          file = file,
+          condition = condition,
+          tooltip = tip,
+          params = field.params
+        )
       }
 
     }
