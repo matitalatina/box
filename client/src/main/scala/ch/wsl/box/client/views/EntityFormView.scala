@@ -267,8 +267,13 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     Navigate.to(newState)
   }
 
-  model.subProp(_.data).listen { _ =>
-    avoidGoAway
+  private var currentData:Json = Json.Null.deepMerge(model.get.data)
+
+  model.subProp(_.data).listen { d =>
+    if(!currentData.equals(d)) {
+      currentData = Json.Null.deepMerge(d)
+      avoidGoAway
+    }
   }
 
   def avoidGoAway = {

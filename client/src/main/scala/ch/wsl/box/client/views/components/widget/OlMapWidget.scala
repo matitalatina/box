@@ -28,6 +28,7 @@ import org.scalajs.dom._
 import org.scalajs.dom.html.Div
 import typings.ol.drawMod.DrawEvent
 import typings.ol.modifyMod.ModifyEvent
+import typings.ol.sourceMod.WMTS
 import typings.ol.sourceVectorMod.VectorSourceEvent
 import typings.ol.translateMod.TranslateEvent
 import typings.ol.viewMod.FitOptions
@@ -128,6 +129,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     proj4Mod.register(typings.proj4.mod.^.asInstanceOf[js.Dynamic].default)
 
     val projections = options.projections.map { projection =>
+
+
       projection.name -> new projectionMod.default(projectionMod.Options(projection.name)
         .setUnits(projection.unit)
         .setExtent(js.Tuple4(
@@ -142,15 +145,77 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
     val defaultProjection = projections(options.defaultProjection)
 
-
+//    //get from https://codepen.io/geoadmin/pen/MyYYXR?editors=0010
+//    def wmtsSource(layer:String): WMTS = {
+//
+//      val resolutions = js.Array(
+//      4000,
+//      3750,
+//      3500,
+//      3250,
+//      3000,
+//      2750,
+//      2500,
+//      2250,
+//      2000,
+//      1750,
+//      1500,
+//      1250,
+//      1000,
+//      750,
+//      650,
+//      500,
+//      250,
+//      100,
+//      50,
+//      20,
+//      10,
+//      5,
+//      2.5,
+//      2,
+//      1.5,
+//      1,
+//      0.5,
+//      0.25,
+//      0.1
+//      );
+//
+//      val proj = options.projections.find(_.name == "EPSG:2056").get
+//
+//     val origin = js.Array(proj.extent(0),proj.extent(3))
+//
+//      val tileGrid = new tilegridWmtsMod.default(tilegridWmtsMod.Options(
+//        resolutions = resolutions,
+//        matrixIds = resolutions.zipWithIndex.map{ case (x,i) => i.toString }
+//      ).setExtent(projections("EPSG:2056").getExtent()))
+//
+//      new sourceMod.WMTS(
+//        wmtsMod.Options(
+//          layer = layer,
+//          matrixSet = "",
+//          style = "",
+//          tileGrid = tileGrid
+//        )
+//          .setAttributions("<a target=\"new\" href=\"https://www.swisstopo.admin.ch/internet/swisstopo/en/home.html\">swisstopo</a>")
+//          .setUrl("http://wmts10.geo.admin.ch/1.0.0/{Layer}/default/current/2056/{TileMatrix}/{TileCol}/{TileRow}.jpeg")
+//          .setProjection(projections("EPSG:2056"))
+//          .setCrossOrigin("")
+//          .setRequestEncoding("REST")
+//      )
+//
+//
+//    }
 
     val raster = new layerMod.Tile(baseTileMod.Options().setSource(new sourceMod.OSM()))
+
+    //val swisstopo25 = new layerMod.Tile(baseTileMod.Options().setSource(wmtsSource("ch.swisstopo.pixelkarte-grau")))
+
     val swisstopo1000 = new imageMod.default(baseImageMod.Options()
         .setExtent(defaultProjection.getExtent())
         .setSource(new imageWMSMod.default(imageWMSMod.Options(
-          url = "https://wms.geo.admin.ch/",
+          url = "http://wms.geo.admin.ch/",
           params = StringDictionary(
-            "LAYERS" -> "ch.swisstopo.pixelkarte-farbe-pk1000.noscale",
+            "LAYERS" -> "ch.swisstopo.pixelkarte-farbe-pk25.noscale",
             "FORMAT" -> "image/jpeg"
           )
         )))
