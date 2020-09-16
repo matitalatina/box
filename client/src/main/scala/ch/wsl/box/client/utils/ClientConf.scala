@@ -4,10 +4,10 @@ import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
 
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.styles.constants.StyleConstants
 import ch.wsl.box.client.styles.{GlobalStyles, StyleConf}
-import ch.wsl.box.client.styles.constants.StyleConstants.Colors
+import ch.wsl.box.client.styles.constants.StyleConstants.{ChildProperties, Colors}
 import ch.wsl.box.model.shared.JSONFieldTypes
-
 import io.circe._
 import io.circe.parser._
 
@@ -59,8 +59,16 @@ object ClientConf {
 
   def tableFontSize = Try(conf("table.fontSize").toInt).getOrElse(10)
 
-  lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorMainText,colorMainLink,colorLink,colorDanger,colorWarning), tableFontSize))
+  def childBorderSize = Try(conf("child.border.size").toInt).getOrElse(1)
+  def childBorderColor = Try(conf("child.border.color")).getOrElse(StyleConstants.Colors.GreySemi.value)
+  def childPaddingSize = Try(conf("child.padding.size").toInt).getOrElse(10)
+  def childMarginTopSize = Try(conf("child.marginTop.size").toInt).getOrElse(-1)
+  def childBackgroundColor = Try(conf("child.backgroundColor")).getOrElse(StyleConstants.Colors.GreyExtra.value)
 
+  lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorMainText,colorMainLink,colorLink,colorDanger,colorWarning),
+                                          tableFontSize,
+                                          ChildProperties(childBorderSize, childBorderColor, childPaddingSize,
+                                            childMarginTopSize, childBackgroundColor)  ))
 
   def filterPrecisionDatetime = Try(conf("filter.precision.datetime").toUpperCase).toOption match {
       case Some("DATE") => JSONFieldTypes.DATE

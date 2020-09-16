@@ -3,7 +3,7 @@ package ch.wsl.box.client.styles
 
 
 import ch.wsl.box.client.styles.constants.StyleConstants
-import ch.wsl.box.client.styles.constants.StyleConstants.Colors
+import ch.wsl.box.client.styles.constants.StyleConstants.{ChildProperties, Colors}
 import ch.wsl.box.client.styles.utils.MediaQueries
 
 import scala.language.postfixOps
@@ -15,7 +15,7 @@ import scalatags.JsDom
 import scalatags.generic.Attr
 
 
-case class StyleConf(colors:Colors, smallCellsSize:Int)
+case class StyleConf(colors:Colors, smallCellsSize:Int, childProps: ChildProperties)
 
 
 case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
@@ -326,10 +326,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val subform = style(
-    marginTop(-1 px),
-    padding(10 px),
-    border(1 px,solid,StyleConstants.Colors.GreySemi),
-    backgroundColor(StyleConstants.Colors.GreyExtra)
+    marginTop(conf.childProps.marginTopSize px),
+    padding(conf.childProps.paddingSize px),
+    border(conf.childProps.borderSize px,solid, conf.childProps.borderColor),
+    backgroundColor(conf.childProps.backgroundColor)
   )
 
   val boxButton = style(

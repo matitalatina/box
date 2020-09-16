@@ -42,7 +42,7 @@ object StyleConstants extends StyleSheet.Inline{
     val mainLink = Color(mainLinkColor)
     val link = Color(linkColor) //default "#fbf0b2"
 
-    val warning = Color(warningColor) //defualt "#ffa500"
+    val warning = Color(warningColor) //default "#ffa500"
 
   }
 
@@ -76,4 +76,34 @@ object StyleConstants extends StyleSheet.Inline{
 
     val PhoneMax = TabletMin - 1
   }
+
+
+
+  /**
+    * CHILD PROPERTIES
+    */
+
+  case class ChildProperties(
+                              childBorderSize:Int,
+                              childBorderColor:String,
+                              childPaddingSize:Int,
+                              childMarginTopSize:Int,
+                              childBackgroundColor:String
+                            ) {
+
+
+    val borderSize = childBorderSize
+
+    val borderColor:Color = Color(childBorderColor)
+
+    val paddingSize = childPaddingSize
+    val marginTopSize = childMarginTopSize
+    val backgroundColor = Color(childBackgroundColor)
+
+
+  }
+
+
 }
+
+
