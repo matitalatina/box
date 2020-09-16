@@ -74,4 +74,7 @@ object StyleUtils extends StyleSheet.Inline {
 
     s"rgba($r, $g, $b, $opacity)"
   }
+
+  def unsafeProp(key:String,value:String) = AV(scalacss.internal.Attr.real(key),value)
+
 }
