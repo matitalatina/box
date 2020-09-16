@@ -2,9 +2,9 @@ package ch.wsl.box.client.styles
 
 
 
-import ch.wsl.box.client.styles.constants.StyleConstants
-import ch.wsl.box.client.styles.constants.StyleConstants.Colors
-import ch.wsl.box.client.styles.utils.MediaQueries
+import ch.wsl.box.client.styles.constants.{Font, StyleConstants}
+import ch.wsl.box.client.styles.constants.StyleConstants.{ChildProperties, Colors}
+import ch.wsl.box.client.styles.utils.{MediaQueries, StyleUtils}
 
 import scala.language.postfixOps
 import scalacss.ProdDefaults._
