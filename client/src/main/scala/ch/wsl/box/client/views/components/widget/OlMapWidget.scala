@@ -38,6 +38,8 @@ import typings.ol.viewMod.FitOptions
 import scala.concurrent.Future
 import scala.util.Try
 
+import org.scalajs.dom
+
 
 
 
@@ -108,6 +110,13 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     ))
   )
 
+  val wgs84 = MapParamsProjection(
+    name = "EPSG:4326",
+    proj = "+proj=longlat +datum=WGS84 +no_defs",
+    extent = Seq(-180, -90, 180, 90),
+    unit = "m"
+  )
+
   val jsonOption:Json = ClientConf.mapOptions.deepMerge(field.params.getOrElse(JsonObject().asJson))
   val options:MapParams = jsonOption.as[MapParams] match {
     case Right(value) => value
@@ -119,6 +128,10 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
   logger.info(s"$options")
 
+  typings.proj4.mod.^.asInstanceOf[js.Dynamic].default.defs(
+    wgs84.name,
+    wgs84.proj
+  )
 
   options.projections.map { projection =>
     //typings error need to map it manually
@@ -130,10 +143,9 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
   proj4Mod.register(typings.proj4.mod.^.asInstanceOf[js.Dynamic].default)
 
-  val projections = options.projections.map { projection =>
 
-
-    projection.name -> new projectionMod.default(projectionMod.Options(projection.name)
+  def toOlProj(projection: MapParamsProjection) = {
+    new projectionMod.default(projectionMod.Options(projection.name)
       .setUnits(projection.unit)
       .setExtent(js.Tuple4(
         projection.extent.lift(0).getOrElse(0),
@@ -142,8 +154,10 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
         projection.extent.lift(3).getOrElse(0),
       ))
     )
+  }
 
-  }.toMap
+  val wgs84Proj = toOlProj(wgs84)
+  val projections = options.projections.map { projection => projection.name -> toOlProj(projection) }.toMap
 
   val defaultProjection = projections(options.defaultProjection)
 
@@ -648,7 +662,10 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
               BootstrapStyles.Button.groupSize(BootstrapStyles.Size.Small),
             )(
               button(BootstrapStyles.Button.btn, BootstrapStyles.Button.color())(
-                onclick :+= ((e: Event) => Unit)
+                onclick :+= ((e: Event) => dom.window.navigator.geolocation.getCurrentPosition{position =>
+                  val localCoords = projMod.transform(js.Array(position.coords.longitude,position.coords.latitude),wgs84Proj,defaultProjection)
+                  textField.set(s"${localCoords(0)}, ${localCoords(1)}")
+                })
               )(Icons.location),
               if (enablePoint) {
                 showIf(textField.transform(x => parseCoordinates(x).isDefined)) {
