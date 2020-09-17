@@ -145,6 +145,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
     val defaultProjection = projections(options.defaultProjection)
 
+    //https://codepen.io/geoadmin/pen/xVKLdV?editors=0010
 //    //get from https://codepen.io/geoadmin/pen/MyYYXR?editors=0010
 //    def wmtsSource(layer:String): WMTS = {
 //
