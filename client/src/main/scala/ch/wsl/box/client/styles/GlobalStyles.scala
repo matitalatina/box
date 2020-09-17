@@ -510,9 +510,19 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     display.block,
     width(100.%%),
     backgroundColor(c"#6c757d"),
-    unsafeRoot("svg") {
+    unsafeRoot("svg") (
       marginTop(-2.px)
-    }
+    ),
+  )
+
+  val mapSearch = style(
+    display.flex,
+    backgroundColor(c"#6c757d"),
+    unsafeChild("input") (
+      width(100.%%),
+      margin(5 px),
+      backgroundColor.white
+    )
   )
 
 //  val fixedHeader = style(

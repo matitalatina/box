@@ -22,10 +22,12 @@ import typings.ol.selectMod.SelectEvent
 import io.circe._
 import io.circe.syntax._
 import io.circe.generic.auto._
+import io.udash.bindings.inputs
 
 import scala.scalajs.js
 import org.scalajs.dom._
 import org.scalajs.dom.html.Div
+import typings.ol.coordinateMod.Coordinate
 import typings.ol.drawMod.DrawEvent
 import typings.ol.modifyMod.ModifyEvent
 import typings.ol.sourceMod.WMTS
@@ -34,6 +36,7 @@ import typings.ol.translateMod.TranslateEvent
 import typings.ol.viewMod.FitOptions
 
 import scala.concurrent.Future
+import scala.util.Try
 
 
 
@@ -116,34 +119,37 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
   logger.info(s"$options")
 
+
+  options.projections.map { projection =>
+    //typings error need to map it manually
+    typings.proj4.mod.^.asInstanceOf[js.Dynamic].default.defs(
+      projection.name,
+      projection.proj
+    )
+  }
+
+  proj4Mod.register(typings.proj4.mod.^.asInstanceOf[js.Dynamic].default)
+
+  val projections = options.projections.map { projection =>
+
+
+    projection.name -> new projectionMod.default(projectionMod.Options(projection.name)
+      .setUnits(projection.unit)
+      .setExtent(js.Tuple4(
+        projection.extent.lift(0).getOrElse(0),
+        projection.extent.lift(1).getOrElse(0),
+        projection.extent.lift(2).getOrElse(0),
+        projection.extent.lift(3).getOrElse(0),
+      ))
+    )
+
+  }.toMap
+
+  val defaultProjection = projections(options.defaultProjection)
+
+
   def loadMap(mapDiv:Div) = {
 
-    options.projections.map { projection =>
-      //typings error need to map it manually
-      typings.proj4.mod.^.asInstanceOf[js.Dynamic].default.defs(
-        projection.name,
-        projection.proj
-      )
-    }
-
-    proj4Mod.register(typings.proj4.mod.^.asInstanceOf[js.Dynamic].default)
-
-    val projections = options.projections.map { projection =>
-
-
-      projection.name -> new projectionMod.default(projectionMod.Options(projection.name)
-        .setUnits(projection.unit)
-        .setExtent(js.Tuple4(
-          projection.extent.lift(0).getOrElse(0),
-          projection.extent.lift(1).getOrElse(0),
-          projection.extent.lift(2).getOrElse(0),
-          projection.extent.lift(3).getOrElse(0),
-        ))
-      )
-
-    }.toMap
-
-    val defaultProjection = projections(options.defaultProjection)
 
     //https://codepen.io/geoadmin/pen/xVKLdV?editors=0010
 //    //get from https://codepen.io/geoadmin/pen/MyYYXR?editors=0010
@@ -505,6 +511,52 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     }
   }
 
+  def parseCoordinates(coord:String): Option[Coordinate] = {
+
+
+    val separators = Seq(',',';',' ')
+    val tokens = separators.foldLeft(Seq(coord.replace("'","")))((acc,sep) => acc.flatMap(_.trim.split(sep)))
+
+
+    Try{
+      val x = tokens(0).trim.toDouble
+      val y = tokens(1).trim.toDouble
+
+      val points = projections.map { case (name,proj) =>
+
+        val minLng = proj.getExtent()._1
+        val minLat = proj.getExtent()._2
+        val maxLng = proj.getExtent()._3
+        val maxLat = proj.getExtent()._4
+
+
+
+        val point = if(x >= minLat && x <= maxLat && y >= minLng && y <= maxLng) {
+          Some(js.Array(y,x))
+        } else if (y >= minLat && y <= maxLat && x >= minLng && x <= maxLng) {
+          Some(js.Array(x,y))
+        } else {
+          None
+        }
+
+        val projectedPoint = point.map{ p =>
+          projMod.transform(p,proj,defaultProjection)
+        }
+
+        logger.info(s"Tokens: $tokens x:$x y:$y original: $point projected: $projectedPoint for projection: $name")
+
+        (name,projectedPoint)
+
+      }.filter(_._2.isDefined)
+
+      points.find(_._1 == options.defaultProjection).orElse(points.headOption).get._2.get
+
+
+
+    }.toOption
+
+  }
+
   override protected def edit(): JsDom.all.Modifier = {
 
     val mapDiv: Div = div(height := 400).render
@@ -560,22 +612,56 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
         if(!enablePolygonHole && Seq(Control.POLYGON_HOLE).contains(activeControl.get)) activeControl.set(Control.VIEW)
         if(geometry.isEmpty && Seq(Control.EDIT,Control.MOVE,Control.DELETE).contains(activeControl.get)) activeControl.set(Control.VIEW)
 
-        div(
-          BootstrapStyles.Button.group,
-          BootstrapStyles.Button.groupSize(BootstrapStyles.Size.Small),
-          ClientConf.style.controlButtons
-        )( //controls
-          controlButton(Icons.hand, "Pan & Zoom", Control.VIEW),
-          if (geometry.isDefined) controlButton(Icons.pencil, "Edit", Control.EDIT) else frag(),
-          if (enablePoint) controlButton(Icons.point, "Add Point", Control.POINT) else frag(),
-          if (enableLine) controlButton(Icons.line, "Add Linestring", Control.LINESTRING) else frag(),
-          if (enablePolygon) controlButton(Icons.polygon, "Add Polygon", Control.POLYGON) else frag(),
-          if (enablePolygonHole) controlButton(Icons.hole, "Add Polygon", Control.POLYGON_HOLE) else frag(),
-          if (geometry.isDefined) controlButton(Icons.move, "Move", Control.MOVE) else frag(),
-          if (geometry.isDefined) controlButton(Icons.trash, "Delete", Control.DELETE) else frag(),
-          if (geometry.isDefined) button(BootstrapStyles.Button.btn, BootstrapStyles.Button.color())(
-            onclick :+= ((e: Event) => map.getView().fit(vectorSource.getExtent(), FitOptions().setPaddingVarargs(10, 10, 10, 10).setMinResolution(0.5)))
-          )(Icons.search).render else frag()
+        val textField = Property("")
+
+        textField.listen{ search =>
+          parseCoordinates(search).foreach{ coord =>
+            logger.info(s"Go to coords: $coord")
+            map.getView().setCenter(coord)
+          }
+        }
+
+        frag(
+          div(
+            BootstrapStyles.Button.group,
+            BootstrapStyles.Button.groupSize(BootstrapStyles.Size.Small),
+            ClientConf.style.controlButtons
+          )( //controls
+            controlButton(Icons.hand, "Pan & Zoom", Control.VIEW),
+            if (geometry.isDefined) controlButton(Icons.pencil, "Edit", Control.EDIT) else frag(),
+            if (enablePoint) controlButton(Icons.point, "Add Point", Control.POINT) else frag(),
+            if (enableLine) controlButton(Icons.line, "Add Linestring", Control.LINESTRING) else frag(),
+            if (enablePolygon) controlButton(Icons.polygon, "Add Polygon", Control.POLYGON) else frag(),
+            if (enablePolygonHole) controlButton(Icons.hole, "Add Polygon", Control.POLYGON_HOLE) else frag(),
+            if (geometry.isDefined) controlButton(Icons.move, "Move", Control.MOVE) else frag(),
+            if (geometry.isDefined) controlButton(Icons.trash, "Delete", Control.DELETE) else frag(),
+            if (geometry.isDefined) button(BootstrapStyles.Button.btn, BootstrapStyles.Button.color())(
+              onclick :+= ((e: Event) => map.getView().fit(vectorSource.getExtent(), FitOptions().setPaddingVarargs(10, 10, 10, 10).setMinResolution(0.5)))
+            )(Icons.search).render else frag()
+          ),
+          div(
+            ClientConf.style.mapSearch
+          )( //controls
+            TextInput(textField)(placeholder := "Go To"),
+            div(
+              BootstrapStyles.Button.group,
+              BootstrapStyles.Button.groupSize(BootstrapStyles.Size.Small),
+            )(
+              button(BootstrapStyles.Button.btn, BootstrapStyles.Button.color())(
+                onclick :+= ((e: Event) => Unit)
+              )(Icons.location),
+              if (enablePoint) {
+                showIf(textField.transform(x => parseCoordinates(x).isDefined)) {
+                  button(BootstrapStyles.Button.btn, BootstrapStyles.Button.color())(
+                    onclick :+= ((e: Event) => parseCoordinates(textField.get).foreach { p =>
+                      val feature = new olFeatureMod.default[geometryMod.default](new geomMod.Point(p))
+                      vectorSource.addFeature(feature)
+                    })
+                  )(Icons.plus).render
+                }
+              } else frag()
+            )
+          )
         ).render
       },
       mapDiv

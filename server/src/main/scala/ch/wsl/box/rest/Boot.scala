@@ -57,7 +57,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
     implicit def handler: ExceptionHandler = BoxExceptionHandler(origins).handler()
 
 
-    val preloading: Future[Http.ServerBinding] = Http().bindAndHandle(Preloading.route, host, port)
+    //val preloading: Future[Http.ServerBinding] = Http().bindAndHandle(Preloading.route, host, port)
 
     Registry.load()
 
@@ -74,16 +74,27 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
 
 
     for{
-      pl <- preloading
-      _ <- pl.terminate(1.seconds)
+      //pl <- preloading
+      //_ <- pl.terminate(1.seconds)
       b <- Http().bindAndHandle(Root(s"$name $version",akkaConf,() => this.restart(), origins).route, host, port) //attach the root route
     } yield {
-      println("Stopped preloading server and started box")
+      println(
+        s"""
+          |===================================
+          |
+          |    _/_/_/      _/_/    _/      _/
+          |   _/    _/  _/    _/    _/  _/
+          |  _/_/_/    _/    _/      _/
+          | _/    _/  _/    _/    _/  _/
+          |_/_/_/      _/_/    _/      _/
+          |
+          |===================================
+          |
+          |Box server started at http://localhost:$port
+          |
+          |""".stripMargin)
       server = b
     }
-
-
-    println(s"Server online at http://localhost:$port")
 
 
   }
