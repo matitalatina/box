@@ -507,7 +507,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val controlButtons = style(
-    display.block,
+    display.flex,
+    alignItems.center,
     width(100.%%),
     backgroundColor(c"#6c757d"),
     unsafeRoot("svg") (
@@ -523,6 +524,13 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       margin(5 px),
       backgroundColor.white
     )
+  )
+
+  val mapLayerSelect = style(
+    marginLeft(10 px),
+    width.auto,
+    color.white,
+    backgroundColor.transparent
   )
 
 //  val fixedHeader = style(

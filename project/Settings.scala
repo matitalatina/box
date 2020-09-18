@@ -158,7 +158,7 @@ object Settings {
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "com.lihaoyi" %% "utest" % "0.4.5" % "test",
-    "org.scala-js" %%% "scalajs-dom" % "0.9.8",
+    "org.scala-js" %%% "scalajs-dom" % "1.0.0",
     "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
   ))
 

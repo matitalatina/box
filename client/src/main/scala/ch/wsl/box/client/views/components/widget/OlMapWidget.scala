@@ -23,6 +23,7 @@ import io.circe._
 import io.circe.syntax._
 import io.circe.generic.auto._
 import io.udash.bindings.inputs
+import io.udash.wrappers.jquery.jQ
 
 import scala.scalajs.js
 import org.scalajs.dom._
@@ -35,10 +36,11 @@ import typings.ol.sourceVectorMod.VectorSourceEvent
 import typings.ol.translateMod.TranslateEvent
 import typings.ol.viewMod.FitOptions
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.util.Try
-
 import org.scalajs.dom
+
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
 
@@ -50,47 +52,36 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   import io.udash.css.CssView._
 
 
-  var map:mod.Map = null
-
-
-
-  override def afterRender(): Unit = {
-    if(map != null) {
-      map.updateSize()
-    }
-    prop.touch()
-  }
-
   /*
-  {
-    "features": {
-        "point":  true,
-        "line": false,
-        "polygon": true
-    },
-    "multiGeometry": false,
-    "projection": {
-        "name": "EPSG:21781",
-        "proj": "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.4,15.1,405.3,0,0,0,0 +units=m +no_defs",
-        "extent": [485071.54,75346.36,828515.78,299941.84]
-    }
+{
+  "features": {
+      "point":  true,
+      "line": false,
+      "polygon": true
+  },
+  "multiGeometry": false,
+  "projection": {
+      "name": "EPSG:21781",
+      "proj": "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.4,15.1,405.3,0,0,0,0 +units=m +no_defs",
+      "extent": [485071.54,75346.36,828515.78,299941.84]
+  }
 }
-   */
+ */
   case class MapParamsFeatures(
-                              point: Boolean,
-                              multiPoint: Boolean,
-                              line: Boolean,
-                              multiLine:Boolean,
-                              polygon: Boolean,
-                              multiPolygon: Boolean,
-                              geometryCollection: Boolean
+                                point: Boolean,
+                                multiPoint: Boolean,
+                                line: Boolean,
+                                multiLine:Boolean,
+                                polygon: Boolean,
+                                multiPolygon: Boolean,
+                                geometryCollection: Boolean
                               )
 
   case class MapParamsProjection(
-                                name:String,
-                                proj:String,
-                                extent: Seq[Double],
-                                unit: String
+                                  name:String,
+                                  proj:String,
+                                  extent: Seq[Double],
+                                  unit: String
                                 )
 
   case class MapParams(
@@ -144,6 +135,79 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   proj4Mod.register(typings.proj4.mod.^.asInstanceOf[js.Dynamic].default)
 
 
+
+  var map:mod.Map = null
+  var featuresLayer: layerMod.Vector = null
+
+
+  val baseLayers = Seq("ch.swisstopo.pixelkarte-farbe","ch.swisstopo.swissimage")
+
+  val baseLayer = Property(baseLayers.head)
+
+
+  override def afterRender(): Unit = {
+    if(map != null) {
+      baseLayer.listen({layer =>
+        loadWmtsLayer(
+          "https://wmts.geo.admin.ch/EPSG/21781/1.0.0/WMTSCapabilities.xml",
+          layer
+        ).map{wmtsLayer =>
+          setBaseLayer(wmtsLayer)
+          map.updateSize()
+          prop.touch()
+        }
+      },true)
+    } else {
+      prop.touch()
+    }
+
+  }
+
+
+  def setBaseLayer(baseLayer:baseMod.default) = {
+    logger.info(s"Set base layer $baseLayer with $map and $featuresLayer")
+    if(map != null && featuresLayer != null) {
+      map.getLayers().forEach{case l => map.removeLayer(l._1)}
+      map.addLayer(baseLayer)
+      map.addLayer(featuresLayer)
+      map.render()
+    }
+  }
+
+
+  def loadWmtsLayer(capabilitiesUrl:String,layer:String) = {
+
+    val result = Promise[layerMod.Tile]()
+
+    logger.info(s"Loading WMTS layer $layer")
+
+    val xhr = new dom.XMLHttpRequest()
+
+    xhr.open("GET",capabilitiesUrl)
+
+    xhr.onload = { (e: dom.Event) =>
+      if (xhr.status == 200) {
+        logger.info(s"Recived WMTS layer $layer")
+        BrowserConsole.log(xhr)
+        val capabilities = new formatMod.WMTSCapabilities().read(xhr.responseText)
+        val wmtsOptions = wmtsMod.optionsFromCapabilities(capabilities, js.Dictionary(
+          "layer" -> layer
+        ))
+
+        val wmts = new layerMod.Tile(baseTileMod.Options().setSource(new sourceMod.WMTS(wmtsOptions)))
+        result.success(wmts)
+      }
+    }
+    xhr.onerror = { (e: dom.Event) =>
+      logger.warn(s"Get capabilities error: ${xhr.responseText}")
+      result.failure(new Exception(xhr.responseText))
+    }
+    xhr.send()
+
+
+    result.future
+  }
+
   def toOlProj(projection: MapParamsProjection) = {
     new projectionMod.default(projectionMod.Options(projection.name)
       .setUnits(projection.unit)
@@ -165,82 +229,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   def loadMap(mapDiv:Div) = {
 
 
-    //https://codepen.io/geoadmin/pen/xVKLdV?editors=0010
-//    //get from https://codepen.io/geoadmin/pen/MyYYXR?editors=0010
-//    def wmtsSource(layer:String): WMTS = {
-//
-//      val resolutions = js.Array(
-//      4000,
-//      3750,
-//      3500,
-//      3250,
-//      3000,
-//      2750,
-//      2500,
-//      2250,
-//      2000,
-//      1750,
-//      1500,
-//      1250,
-//      1000,
-//      750,
-//      650,
-//      500,
-//      250,
-//      100,
-//      50,
-//      20,
-//      10,
-//      5,
-//      2.5,
-//      2,
-//      1.5,
-//      1,
-//      0.5,
-//      0.25,
-//      0.1
-//      );
-//
-//      val proj = options.projections.find(_.name == "EPSG:2056").get
-//
-//     val origin = js.Array(proj.extent(0),proj.extent(3))
-//
-//      val tileGrid = new tilegridWmtsMod.default(tilegridWmtsMod.Options(
-//        resolutions = resolutions,
-//        matrixIds = resolutions.zipWithIndex.map{ case (x,i) => i.toString }
-//      ).setExtent(projections("EPSG:2056").getExtent()))
-//
-//      new sourceMod.WMTS(
-//        wmtsMod.Options(
-//          layer = layer,
-//          matrixSet = "",
-//          style = "",
-//          tileGrid = tileGrid
-//        )
-//          .setAttributions("<a target=\"new\" href=\"https://www.swisstopo.admin.ch/internet/swisstopo/en/home.html\">swisstopo</a>")
-//          .setUrl("http://wmts10.geo.admin.ch/1.0.0/{Layer}/default/current/2056/{TileMatrix}/{TileCol}/{TileRow}.jpeg")
-//          .setProjection(projections("EPSG:2056"))
-//          .setCrossOrigin("")
-//          .setRequestEncoding("REST")
-//      )
-//
-//
-//    }
-
     val raster = new layerMod.Tile(baseTileMod.Options().setSource(new sourceMod.OSM()))
 
-    //val swisstopo25 = new layerMod.Tile(baseTileMod.Options().setSource(wmtsSource("ch.swisstopo.pixelkarte-grau")))
-
-    val swisstopo1000 = new imageMod.default(baseImageMod.Options()
-        .setExtent(defaultProjection.getExtent())
-        .setSource(new imageWMSMod.default(imageWMSMod.Options(
-          url = "http://wms.geo.admin.ch/",
-          params = StringDictionary(
-            "LAYERS" -> "ch.swisstopo.pixelkarte-farbe-pk25.noscale",
-            "FORMAT" -> "image/jpeg"
-          )
-        )))
-    )
 
     val vectorSource = new sourceMod.Vector[geometryMod.default](sourceVectorMod.Options())
 
@@ -272,7 +262,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       )
     )
 
-    val vector = new layerMod.Vector(baseVectorMod.Options()
+    featuresLayer = new layerMod.Vector(baseVectorMod.Options()
       .setSource(vectorSource)
       .setStyle(vectorStyle)
     )
@@ -295,42 +285,41 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
 
     map = new mod.Map(pluggableMapMod.MapOptions()
-      .setLayers(js.Array[baseMod.default](raster,vector))
       .setTarget(mapDiv)
       .setControls(controls.getArray())
       .setView(view)
     )
 
+
     BrowserConsole.log(map)
     BrowserConsole.log(mapDiv)
 
-    var listener:Registration = null
+    var listener: Registration = null
 
-    var onAddFeature:js.Function1[VectorSourceEvent[typings.ol.geometryMod.default], Unit] = null
+    var onAddFeature: js.Function1[VectorSourceEvent[typings.ol.geometryMod.default], Unit] = null
 
-    def registerListener(immediate:Boolean) = {
+    def registerListener(immediate: Boolean) = {
       listener = prop.listen({ geoData =>
-        vectorSource.removeEventListener("addfeature",onAddFeature.asInstanceOf[eventsMod.Listener])
+        vectorSource.removeEventListener("addfeature", onAddFeature.asInstanceOf[eventsMod.Listener])
         vectorSource.getFeatures().foreach(f => vectorSource.removeFeature(f))
 
-        if(!geoData.isNull) {
+        if (!geoData.isNull) {
           val geom = new geoJSONMod.default().readFeature(convertJsonToJs(geoData).asInstanceOf[js.Object]).asInstanceOf[olFeatureMod.default[geometryMod.default]]
           vectorSource.addFeature(geom)
-          view.fit(geom.getGeometry().getExtent(),FitOptions().setPaddingVarargs(150,50,50,150).setMinResolution(2))
+          view.fit(geom.getGeometry().getExtent(), FitOptions().setPaddingVarargs(150, 50, 50, 150).setMinResolution(2))
         } else {
           view.fit(defaultProjection.getExtent())
         }
 
-        vectorSource.on_addfeature(olStrings.addfeature,onAddFeature)
+        vectorSource.on_addfeature(olStrings.addfeature, onAddFeature)
       }, immediate)
     }
-
 
 
     def changedFeatures() = {
       listener.cancel()
       val geoJson = new geoJSONMod.default().writeFeaturesObject(vectorSource.getFeatures())
-      convertJsToJson(geoJson).flatMap(FeatureCollection.decode).foreach{ collection =>
+      convertJsToJson(geoJson).flatMap(FeatureCollection.decode).foreach { collection =>
         import ch.wsl.box.client.utils.GeoJson._
         import ch.wsl.box.client.utils.GeoJson.Geometry._
         val geometries = collection.features.map(_.geometry)
@@ -339,31 +328,31 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
           case 0 => prop.set(Json.Null)
           case 1 => prop.set(geometries.head.asJson)
           case _ => {
-            val multiPoint = geometries.map{
-              case g:Point => Some(Seq(g.coordinates))
-              case g:MultiPoint => Some(g.coordinates)
+            val multiPoint = geometries.map {
+              case g: Point => Some(Seq(g.coordinates))
+              case g: MultiPoint => Some(g.coordinates)
               case _ => None
             }
-            val multiLine = geometries.map{
-              case g:LineString => Some(Seq(g.coordinates))
-              case g:MultiLineString => Some(g.coordinates)
+            val multiLine = geometries.map {
+              case g: LineString => Some(Seq(g.coordinates))
+              case g: MultiLineString => Some(g.coordinates)
               case _ => None
             }
-            val multiPolygon = geometries.map{
-              case g:Polygon => Some(Seq(g.coordinates))
-              case g:MultiPolygon => Some(g.coordinates)
+            val multiPolygon = geometries.map {
+              case g: Polygon => Some(Seq(g.coordinates))
+              case g: MultiPolygon => Some(g.coordinates)
               case _ => None
             }
 
-            val collection:Option[ch.wsl.box.client.utils.GeoJson.Geometry] = if(multiPoint.forall(_.isDefined) && options.features.multiPoint) {
+            val collection: Option[ch.wsl.box.client.utils.GeoJson.Geometry] = if (multiPoint.forall(_.isDefined) && options.features.multiPoint) {
               Some(MultiPoint(multiPoint.flatMap(_.get)))
-            } else if(multiLine.forall(_.isDefined) && options.features.multiLine) {
+            } else if (multiLine.forall(_.isDefined) && options.features.multiLine) {
               Some(MultiLineString(multiLine.flatMap(_.get)))
-            } else if(multiPolygon.forall(_.isDefined) && options.features.multiPolygon) {
+            } else if (multiPolygon.forall(_.isDefined) && options.features.multiPolygon) {
               Some(MultiPolygon(multiPolygon.flatMap(_.get)))
-            } else if(options.features.geometryCollection){
+            } else if (options.features.geometryCollection) {
               Some(GeometryCollection(geometries))
-            }else {
+            } else {
               None
             }
             prop.set(collection.asJson)
@@ -376,12 +365,12 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
     }
 
-    onAddFeature = (e:VectorSourceEvent[geometryMod.default]) => changedFeatures()
+    onAddFeature = (e: VectorSourceEvent[geometryMod.default]) => changedFeatures()
 
     registerListener(true)
 
 
-    vectorSource.on_changefeature(olStrings.changefeature,(e:VectorSourceEvent[geometryMod.default]) => changedFeatures())
+    vectorSource.on_changefeature(olStrings.changefeature, (e: VectorSourceEvent[geometryMod.default]) => changedFeatures())
 
 
     val modify = new modifyMod.default(modifyMod.Options()
@@ -416,8 +405,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
     val delete = new selectMod.default(selectMod.Options())
 
-    delete.on_select(olStrings.select,(e:SelectEvent) => {
-      if(window.confirm(Labels.form.removeMap)) {
+    delete.on_select(olStrings.select, (e: SelectEvent) => {
+      if (window.confirm(Labels.form.removeMap)) {
         e.selected.foreach(x => vectorSource.removeFeature(x))
         changedFeatures()
       }
@@ -441,7 +430,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       x.setActive(false)
     })
 
-    activeControl.listen({section =>
+    activeControl.listen({ section =>
       dynamicInteraction.foreach(x => x.setActive(false))
 
       section match {
@@ -651,7 +640,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
             if (geometry.isDefined) controlButton(Icons.trash, "Delete", Control.DELETE) else frag(),
             if (geometry.isDefined) button(BootstrapStyles.Button.btn, BootstrapStyles.Button.color())(
               onclick :+= ((e: Event) => map.getView().fit(vectorSource.getExtent(), FitOptions().setPaddingVarargs(10, 10, 10, 10).setMinResolution(0.5)))
-            )(Icons.search).render else frag()
+            )(Icons.search).render else frag(),
+            if(baseLayers.length > 1) Select(baseLayer,SeqProperty(baseLayers))(Select.defaultLabel,ClientConf.style.mapLayerSelect) else frag()
           ),
           div(
             ClientConf.style.mapSearch
