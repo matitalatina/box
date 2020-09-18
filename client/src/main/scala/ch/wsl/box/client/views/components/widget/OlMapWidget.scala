@@ -84,10 +84,17 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
                                   unit: String
                                 )
 
+  case class MapParamsLayers(
+                            name: String,
+                            capabilitiesUrl: String,
+                            layerId:String
+                            )
+
   case class MapParams(
                         features: MapParamsFeatures,
                         defaultProjection: String,
                         projections: Seq[MapParamsProjection],
+                        baseLayers: Option[Seq[MapParamsLayers]]
                       )
 
   val defaultParams = MapParams(
@@ -98,7 +105,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
       proj = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs",
       extent = Seq(-20026376.39, -20048966.10, 20026376.39, 20048966.10),
       unit = "m"
-    ))
+    )),
+    None
   )
 
   val wgs84 = MapParamsProjection(
@@ -107,6 +115,8 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
     extent = Seq(-180, -90, 180, 90),
     unit = "m"
   )
+
+  val openStreetMapLayer = new layerMod.Tile(baseTileMod.Options().setSource(new sourceMod.OSM()))
 
   val jsonOption:Json = ClientConf.mapOptions.deepMerge(field.params.getOrElse(JsonObject().asJson))
   val options:MapParams = jsonOption.as[MapParams] match {
@@ -140,22 +150,25 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   var featuresLayer: layerMod.Vector = null
 
 
-  val baseLayers = Seq("ch.swisstopo.pixelkarte-farbe","ch.swisstopo.swissimage")
-
-  val baseLayer = Property(baseLayers.head)
+  val baseLayer = Property(options.baseLayers.flatMap(_.headOption))
 
 
   override def afterRender(): Unit = {
     if(map != null) {
-      baseLayer.listen({layer =>
-        loadWmtsLayer(
-          "https://wmts.geo.admin.ch/EPSG/21781/1.0.0/WMTSCapabilities.xml",
-          layer
-        ).map{wmtsLayer =>
-          setBaseLayer(wmtsLayer)
+      baseLayer.listen({
+        case None => {
+          setBaseLayer(openStreetMapLayer)
           map.updateSize()
           prop.touch()
         }
+        case Some(layer) => loadWmtsLayer(
+            layer.capabilitiesUrl,
+            layer.layerId
+          ).map{wmtsLayer =>
+            setBaseLayer(wmtsLayer)
+            map.updateSize()
+            prop.touch()
+          }
       },true)
     } else {
       prop.touch()
@@ -229,7 +242,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   def loadMap(mapDiv:Div) = {
 
 
-    val raster = new layerMod.Tile(baseTileMod.Options().setSource(new sourceMod.OSM()))
+
 
 
     val vectorSource = new sourceMod.Vector[geometryMod.default](sourceVectorMod.Options())
@@ -641,7 +654,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
             if (geometry.isDefined) button(BootstrapStyles.Button.btn, BootstrapStyles.Button.color())(
               onclick :+= ((e: Event) => map.getView().fit(vectorSource.getExtent(), FitOptions().setPaddingVarargs(10, 10, 10, 10).setMinResolution(0.5)))
             )(Icons.search).render else frag(),
-            if(baseLayers.length > 1) Select(baseLayer,SeqProperty(baseLayers))(Select.defaultLabel,ClientConf.style.mapLayerSelect) else frag()
+            if(options.baseLayers.exists(_.length > 1)) Select(baseLayer,SeqProperty(options.baseLayers.toSeq.flatten.map(x => Some(x))))((x:Option[MapParamsLayers]) => StringFrag(x.map(_.name).getOrElse("")),ClientConf.style.mapLayerSelect) else frag()
           ),
           div(
             ClientConf.style.mapSearch

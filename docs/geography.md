@@ -41,9 +41,32 @@ Here an example of the configuration Json with Swiss LV05 coordinates system and
                 828515.78,
                 299941.84
             ]
+        },
+        {
+            "name": "EPSG:2056",
+            "proj": "+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs ",
+            "unit": "m",
+            "extent": [
+                2485071.58,
+                1075346.31,
+                2828515.82,
+                1299941.79
+            ]
         }
     ],
-    "defaultProjection": "EPSG:21781"
+    "defaultProjection": "EPSG:21781",
+    "baseLayers": [
+        {
+            "name": "Swisstopo",
+            "capabilitiesUrl": "https://wmts.geo.admin.ch/EPSG/21781/1.0.0/WMTSCapabilities.xml",
+            "layerId": "ch.swisstopo.pixelkarte-farbe"
+        },
+        {
+            "name": "SwissImage",
+            "capabilitiesUrl": "https://wmts.geo.admin.ch/EPSG/21781/1.0.0/WMTSCapabilities.xml",
+            "layerId": "ch.swisstopo.swissimage"
+         }
+     ]
 }
 ```
 
@@ -60,3 +83,7 @@ Fields:
 - `projections.0.proj`: proj4 definition string (can be found in [https://epsg.io/](https://epsg.io/) )
 - `projections.0.unit`: unit of measure
 - `projections.0.extent`: vertex of the map
+- Optional `baseLayers`: array of object, if not defined Openstreetmap is used as baselayer
+    - `name`: name of the layer (it will appear on the UI)
+    - `capabilitiesUrl`: WMTS capabilities URL
+    - `layerId`: name of the layer
