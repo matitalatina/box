@@ -6,6 +6,9 @@ import scalacss.internal.Macros.Color
 object StyleConstants extends StyleSheet.Inline{
   import dsl._
 
+
+  val defaultFontSize = fontSize(14.px)
+
   /**
     * SIZES
     */

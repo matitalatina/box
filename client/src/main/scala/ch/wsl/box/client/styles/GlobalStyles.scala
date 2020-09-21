@@ -35,6 +35,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   val global = style(
 
     unsafeRoot("body") (
+      StyleConstants.defaultFontSize,
       backgroundColor.white,
       Font.regular
     ),
@@ -330,6 +331,38 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     padding(conf.childProps.paddingSize px),
     border(conf.childProps.borderSize px,solid, conf.childProps.borderColor),
     backgroundColor(conf.childProps.backgroundColor)
+  )
+
+  val childTable = style(
+    backgroundColor(conf.childProps.backgroundColor),
+    border(conf.childProps.borderSize px,solid, conf.childProps.borderColor),
+    width(100.%%)
+  )
+
+  val childTableTr = style(
+    border(conf.childProps.borderSize px,solid, conf.childProps.borderColor),
+    borderBottom.`0`
+  )
+
+  val childTableTd = style(
+    fontSize(conf.smallCellsSize px),
+    padding(5.px)
+  )
+
+  val childTableHeader = style(
+    Font.bold
+  )
+
+  val childTableAction = style(
+    textAlign.right
+  )
+
+  val childFormTableTr = style(
+    borderTop.`0`
+  )
+
+  val childFormTableTd = style(
+    StyleConstants.defaultFontSize
   )
 
   val boxButton = style(
