@@ -563,7 +563,16 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     marginLeft(10 px),
     width.auto,
     color.white,
-    backgroundColor.transparent
+    backgroundColor.transparent,
+    &.hover(
+      backgroundColor.transparent
+    ),
+    &.focus(
+      backgroundColor.transparent
+    ),
+    unsafeChild("option") (
+      color.black
+    )
   )
 
 //  val fixedHeader = style(

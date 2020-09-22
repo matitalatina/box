@@ -152,38 +152,45 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 
   val baseLayer = Property(options.baseLayers.flatMap(_.headOption))
 
+  baseLayer.listen(loadBase,false)
 
   override def afterRender(): Unit = {
-    if(map != null) {
-      baseLayer.listen({
-        case None => {
-          setBaseLayer(openStreetMapLayer)
-          map.updateSize()
-          prop.touch()
-        }
-        case Some(layer) => loadWmtsLayer(
-            layer.capabilitiesUrl,
-            layer.layerId
-          ).map{wmtsLayer =>
-            setBaseLayer(wmtsLayer)
-            map.updateSize()
-            prop.touch()
-          }
-      },true)
+    if(map != null && featuresLayer != null) {
+      loadBase(baseLayer.get).map { _ =>
+        map.addLayer(featuresLayer)
+        map.updateSize()
+        map.renderSync()
+        prop.touch()
+      }
     } else {
       prop.touch()
     }
 
   }
 
+  def loadBase(l:Option[MapParamsLayers]): Future[Boolean] = {
+    l match {
+      case None => {
+        setBaseLayer(openStreetMapLayer)
+        Future.successful(true)
+      }
+      case Some(layer) => loadWmtsLayer(
+        layer.capabilitiesUrl,
+        layer.layerId
+      ).map{wmtsLayer =>
+        setBaseLayer(wmtsLayer)
+        true
+      }
+    }
+  }
+
 
   def setBaseLayer(baseLayer:baseMod.default) = {
     logger.info(s"Set base layer $baseLayer with $map and $featuresLayer")
-    if(map != null && featuresLayer != null) {
-      map.getLayers().forEach{case l => map.removeLayer(l._1)}
-      map.addLayer(baseLayer)
-      map.addLayer(featuresLayer)
-      map.render()
+    if(map != null) {
+      map.removeLayer(map.getLayers().item(0))
+      map.getLayers().insertAt(0,baseLayer)
+      map.renderSync()
     }
   }
 
