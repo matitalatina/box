@@ -143,7 +143,9 @@ object Settings {
     "com.norbitltd" %% "spoiwo" % "1.7.0",
     "io.github.cquiroz" %% "scala-java-time" % "2.0.0-RC3",
     "org.flywaydb" % "flyway-core" % "6.5.5",
-    "com.nrinaudo" %% "kantan.csv" % versions.kantan
+    "com.nrinaudo" %% "kantan.csv" % versions.kantan,
+    "org.graalvm.js" % "js" % "20.2.0",
+    "org.javadelight" % "delight-graaljs-sandbox" % "0.1.2",
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))
