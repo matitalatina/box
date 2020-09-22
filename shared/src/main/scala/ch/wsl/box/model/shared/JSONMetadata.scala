@@ -23,6 +23,7 @@ case class JSONMetadata(
                          entity:String,
                          lang:String,
                          tabularFields:Seq[String],
+                         rawTabularFields:Seq[String], //without keys
                          keys:Seq[String],
                          query:Option[JSONQuery],
                          exportFields:Seq[String],

@@ -181,6 +181,7 @@ object EntityMetadataFactory extends Logging {
             table,
             lang,
             fieldList,
+            fieldList,
             keys,
             None,
             fieldList,

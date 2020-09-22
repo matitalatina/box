@@ -354,7 +354,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val childTableAction = style(
-    textAlign.right
+    width(10.px)
   )
 
   val childFormTableTr = style(

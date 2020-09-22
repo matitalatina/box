@@ -3,7 +3,7 @@ package ch.wsl.box.client.views.components
 import java.util.UUID
 
 import ch.wsl.box.client.services.REST
-import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles, Icons}
 import ch.wsl.box.client.utils.{ClientConf, Labels, Session}
 import ch.wsl.box.client.views.components.widget.{ChildWidget, ComponentWidgetFactory, Widget}
 import ch.wsl.box.model.shared._
@@ -239,13 +239,13 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
         case None => p("child not found")
         case Some(f) => {
 
-          val fields = f.tabularFields.flatMap{fieldId => f.fields.find(_.name == fieldId)}
+          val fields = f.rawTabularFields.flatMap{fieldId => f.fields.find(_.name == fieldId)}
 
           div(
             table(ClientConf.style.childTable,
               tr(ClientConf.style.childTableTr,ClientConf.style.childTableHeader,
-                fields.map(f => td(ClientConf.style.childTableTd,f.title)),
-                td()
+                td(),
+                fields.map(f => td(ClientConf.style.childTableTd,f.title))
               ),
               tbody(
                 autoRelease(repeat(entity) { e =>
@@ -253,16 +253,16 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
                   val open = Property(widget.get.open)
                   frag(
                     tr(ClientConf.style.childTableTr,
-                      produce(widget.get.data) { data  => fields.map(x => td(ClientConf.style.childTableTd,data.get(x.name))).render},
                       td(ClientConf.style.childTableTd, ClientConf.style.childTableAction,a(produce(open) {
-                        case true => StringFrag("Close").render
-                        case false => StringFrag("Open").render
+                        case true => span(Icons.caretDown).render
+                        case false => span(Icons.caretRight).render
                       }, onclick :+= ((e:Event) => {
                         open.set(!open.get)
                         if(open.get) {
                           widget.get.widget.afterRender()
                         }
-                      })))
+                      }))),
+                      produce(widget.get.data) { data  => fields.map(x => td(ClientConf.style.childTableTd,data.get(x.name))).render},
                     ),
                     tr(ClientConf.style.childTableTr,ClientConf.style.childFormTableTr,
                       produce(open) { o =>  if(!o) frag().render else

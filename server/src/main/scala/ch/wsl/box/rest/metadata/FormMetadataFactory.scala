@@ -180,6 +180,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
         form.entity,
         lang,
         tableFields,
+        form.tabularFields.toSeq.flatMap(_.split(",")),
         keys,
         defaultQuery,
         form.exportFields.map(_.split(",").toSeq).getOrElse(tableFields),
