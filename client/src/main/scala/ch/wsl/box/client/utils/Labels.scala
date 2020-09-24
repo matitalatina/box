@@ -108,7 +108,9 @@ object Labels {
     def edit = get("table.edit")
     def no_action = get("table.no_action")
     def delete = get("table.delete")
+    def revert = get("table.revert")
     def confirmDelete = get("table.confirmDelete")
+    def confirmRevert = get("table.confirmRevert")
     def csv = get ("table.csv")
     def xls = get ("table.xls")
   }

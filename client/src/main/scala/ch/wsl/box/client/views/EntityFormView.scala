@@ -52,6 +52,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JSONUtils._
 
+  private var currentData:Json = Json.Null
+
   override def handleState(state: EntityFormState): Unit = {
 
 
@@ -73,7 +75,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     {for{
       metadata <- if(reloadMetadata) REST.metadata(state.kind, Session.lang(), state.entity) else Future.successful(model.get.metadata.get)
       children <- if(Seq(EntityKind.FORM,EntityKind.BOX).map(_.kind).contains(state.kind) && reloadMetadata) REST.children(state.kind,state.entity,Session.lang()) else Future.successful(Seq())
-      currentData <- state.id match {
+      data <- state.id match {
         case Some(id) => REST.get(state.kind, Session.lang(), state.entity,jsonId.get)
         case None => Future.successful{
           Json.obj(JSONMetadata.jsonPlaceholder(metadata,children).toSeq :_*)
@@ -81,17 +83,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       }
     } yield {
 
-
-      //initialise an array of n strings, where n is the number of fields
-      val results:Seq[(String,Json)] = Enhancer.extract(currentData, metadata)
-
-
       model.set(EntityFormModel(
         name = state.entity,
         kind = state.kind,
         id = state.id,
         metadata = Some(metadata),
-        data = currentData,
+        data = data,
         "",
         children,
         Navigation.empty1,
@@ -100,7 +97,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         state.writeable
       ))
 
-
+      currentData = Json.Null.deepMerge(data)
 
 
       //need to be called after setting data because we are listening for data changes
@@ -159,6 +156,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
         logger.debug(afterSaveResult.toString())
 
+        currentData = Json.Null.deepMerge(afterSaveResult)
+
         enableGoAway
 
         action(newId.get)
@@ -183,7 +182,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     }
   }
 
-
+  def revert() = {
+    val confim = window.confirm(Labels.entity.confirmRevert)
+    if(confim) {
+      model.subProp(_.data).set(Json.Null.deepMerge(currentData))
+    }
+  }
 
   def delete() = {
 
@@ -267,12 +271,13 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     Navigate.to(newState)
   }
 
-  private var currentData:Json = Json.Null.deepMerge(model.get.data)
+
 
   model.subProp(_.data).listen { d =>
     if(!currentData.equals(d)) {
-      currentData = Json.Null.deepMerge(d)
       avoidGoAway
+    } else {
+      enableGoAway
     }
   }
 
@@ -412,7 +417,8 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
               )(Labels.form.save_add), " ",
               button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
               button(ClientConf.style.boxButton, onclick :+= ((ev:Event) => presenter.duplicate()))(Labels.entities.duplicate), " ",
-              button(ClientConf.style.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete)
+              button(ClientConf.style.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete),
+              button(ClientConf.style.boxButton, onclick :+= ((e: Event) => presenter.revert()))(Labels.entity.revert)
             ).render
           })
         ).render
