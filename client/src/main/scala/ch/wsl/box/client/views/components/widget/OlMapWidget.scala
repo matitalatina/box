@@ -3,7 +3,7 @@ package ch.wsl.box.client.views.components.widget
 import ch.wsl.box.client.styles.Icons
 import ch.wsl.box.client.styles.Icons.Icon
 import ch.wsl.box.client.utils.GeoJson.{FeatureCollection, GeometryCollection}
-import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels}
+import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels, Session}
 import ch.wsl.box.client.vendors.{DrawHole, DrawHoleOptions}
 import ch.wsl.box.model.shared.{JSONField, JSONMetadata}
 import io.circe.Json
@@ -150,7 +150,14 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
   var featuresLayer: layerMod.Vector = null
 
 
-  val baseLayer = Property(options.baseLayers.flatMap(_.headOption))
+  val baseLayer:Property[Option[MapParamsLayers]] =  { for{
+    session <- Session.getBaseLayer()
+    layers <- options.baseLayers
+    bl <- layers.find(_.layerId == session)
+  } yield bl } match {
+    case Some(bl) => Property(Some(bl))
+    case None => Property(options.baseLayers.flatMap(_.headOption))
+  }
 
   baseLayer.listen(loadBase,false)
 
@@ -178,6 +185,7 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
         layer.capabilitiesUrl,
         layer.layerId
       ).map{wmtsLayer =>
+        Session.setBaseLayer(layer.layerId)
         setBaseLayer(wmtsLayer)
         true
       }

@@ -33,6 +33,7 @@ object Session extends Logging {
   final val LANG = "lang"
   final val LABELS = "labels"
   final val STATE = "state"
+  final private val BASE_LAYER = "base_layer"
 
   lazy val logged = {
     Property(false)
@@ -119,6 +120,9 @@ object Session extends Logging {
   def getQuery():Option[SessionQuery] = get[SessionQuery](QUERY)
   def setQuery(query: SessionQuery) = set(QUERY,query)
   def resetQuery() = set(QUERY, None)
+
+  def getBaseLayer():Option[String] = get[String](BASE_LAYER)
+  def setBaseLayer(bl: String) = set(BASE_LAYER,bl)
 
 
   def getIDs():Option[IDs] = get[IDs](IDS)
