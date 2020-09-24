@@ -1,7 +1,7 @@
 ---
 title: Geography support
-permalink: /doc/geography_support/
-nav_order: 6
+parent: Documentation
+nav_order: 1
 ---
 
 #Geography support

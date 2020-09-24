@@ -1,36 +1,13 @@
 ---
 title: Documentation
 permalink: /doc/
-nav_order: 2
+nav_order: 4
+has_children: true
 ---
 
 # Documentation
-TODO Explain widget in details
 
-## Dynamic select fields
-Lookup tables can be queried dynamically by adding a JSONQuery to the field
-and setting some parameters with `#fieldname`, the system will substitute the `#fieldname` parameter
-with the current value and update the lookup values.
+1. [Widget](/doc/widgets)
+1. [Geography](/doc/geography) 
+1. [Logging](/doc/logging)
 
-Example:
-```
-{
-    "filter": [
-        {
-            "column": "enddate",
-            "operator": "<=",
-            "value": #date
-        },
-        {
-            "column": "startdate",
-            "operator": ">=",
-            "value": #date
-        }
-    ],
-    "sort": [],
-    "paging": {
-        "pageLength": 500,
-        "currentPage": 1
-    }
-}
-```

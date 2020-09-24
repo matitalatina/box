@@ -1,3 +1,6 @@
 title: Box 
 remote_theme: pmarsceill/just-the-docs
-search_enabled: false
+search_enabled: true
+aux_links:
+  "Box on GitHub":
+    - "//github.com/Insubric/box"

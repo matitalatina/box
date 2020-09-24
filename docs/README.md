@@ -1,3 +1,9 @@
+---
+title: Box
+permalink: /
+nav_order: 1
+---
+
 # BOX
 
 ## Concept

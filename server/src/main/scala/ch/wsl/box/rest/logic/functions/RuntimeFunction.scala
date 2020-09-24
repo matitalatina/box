@@ -9,6 +9,7 @@ import io.circe.Json
 import scala.concurrent.{ExecutionContext, Future}
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
+import delight.graaljssandbox.{GraalSandbox, GraalSandboxes}
 
 
 trait RuntimeWS{
@@ -31,7 +32,7 @@ object RuntimeFunction {
     PSQLImpl
   )
 
-  private val compiledFunctions = scala.collection.mutable.Map[String,(ExecutionContext,UserProfile,Materializer,ActorSystem) => ((Context,String) => Future[DataResult])]()
+  private val compiledFunctions = scala.collection.mutable.Map[String,GraalSandbox]()
 
   def resetCache() = {
     compiledFunctions.clear()
@@ -39,35 +40,10 @@ object RuntimeFunction {
 
 
   private def compile(embedded:String) = {
-    val code = s"""
-                  |import io.circe._
-                  |import io.circe.syntax._
-                  |import scala.concurrent.{ExecutionContext, Future}
-                  |import ch.wsl.box.shared.utils.JSONUtils._
-                  |import ch.wsl.box.rest.logic.functions.Context
-                  |import ch.wsl.box.rest.logic._
-                  |import ch.wsl.box.jdbc.PostgresProfile.api._
-                  |import akka.stream.Materializer
-                  |import akka.actor.ActorSystem
-                  |import ch.wsl.box.rest.utils.UserProfile
-                  |import ch.wsl.box.rest.utils.Lang
-                  |import ch.wsl.box.model.shared.JSONQuery
-                  |import ch.wsl.box.model.shared.JSONQuery._
-                  |import ch.wsl.box.model.shared.JSONQueryFilter._
-                  |
-                  |(ec:ExecutionContext,up:UserProfile,mat:Materializer,system:ActorSystem) => { (context:Context,lang:String) => {
-                  |implicit def ecImpl = ec
-                  |implicit def dbImpl = up.db
-                  |implicit def upImpl = up
-                  |implicit def matImpl = mat
-                  |implicit def systemImpl = system
-                  |implicit def langImpl = Lang(lang)
-                  |$embedded
-                  |}}
-                  |
-     """.stripMargin
-
-    Eval[(ExecutionContext,UserProfile,Materializer,ActorSystem) => ((Context,String) => Future[DataResult])](code)
+    val sandbox = GraalSandboxes.create()
+    sandbox.inject("ws",WSImpl)
+    sandbox.inject("psql",PSQLImpl)
+    sandbox
   }
 
   def apply(name:String,embedded:String)(implicit ec:ExecutionContext,up:UserProfile,mat:Materializer,system:ActorSystem): (Context,String) => Future[DataResult] = {
