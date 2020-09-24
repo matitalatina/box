@@ -248,41 +248,44 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
                 fields.map(f => td(ClientConf.style.childTableTd,f.title))
               ),
               tbody(
-                autoRelease(repeat(entity) { e =>
-                  val widget = childWidgets.find(_.id == e.get)
-                  val open = Property(widget.get.open)
-                  frag(
-                    tr(ClientConf.style.childTableTr,
-                      td(ClientConf.style.childTableTd, ClientConf.style.childTableAction,a(produce(open) {
-                        case true => span(Icons.caretDown).render
-                        case false => span(Icons.caretRight).render
-                      }, onclick :+= ((e:Event) => {
-                        open.set(!open.get)
-                        if(open.get) {
-                          widget.get.widget.afterRender()
-                        }
-                      }))),
-                      produce(widget.get.data) { data  => fields.map(x => td(ClientConf.style.childTableTd,data.get(x.name))).render},
-                    ),
-                    tr(ClientConf.style.childTableTr,ClientConf.style.childFormTableTr,
-                      produce(open) { o =>  if(!o) frag().render else
-                        td(ClientConf.style.childFormTableTd, colspan := fields.length + 1,
-                          div(
-                            widget.get.widget.render(write, Property(true)),
-                            if (write) div(
-                              BootstrapStyles.Grid.row,
-                              div(BootstrapCol.md(12), ClientConf.style.block,
-                                div(BootstrapStyles.Float.right(),
-                                  a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
-                                )
+                autoRelease(produce(entity) { ent => //cannot use repeat because we have two childs for each iteration so frag is not working
+                  ent.map { e =>
+                    val widget = childWidgets.find(_.id == e)
+                    val open = Property(widget.get.open)
+                    frag(
+                      tr(ClientConf.style.childTableTr,
+                        td(ClientConf.style.childTableTd, ClientConf.style.childTableAction, a(produce(open) {
+                          case true => span(Icons.caretDown).render
+                          case false => span(Icons.caretRight).render
+                        }, onclick :+= ((e: Event) => {
+                          open.set(!open.get)
+                          if (open.get) {
+                            widget.get.widget.afterRender()
+                          }
+                        }))),
+                        autoRelease(produce(widget.get.data) { data => fields.map(x => td(ClientConf.style.childTableTd, data.get(x.name))).render }),
+                      ),
+                      tr(ClientConf.style.childTableTr, ClientConf.style.childFormTableTr,
+                        autoRelease(produce(open) { o =>
+                          if (!o) frag().render else
+                            td(ClientConf.style.childFormTableTd, colspan := fields.length + 1,
+                              div(
+                                widget.get.widget.render(write, Property(true)),
+                                if (write) div(
+                                  BootstrapStyles.Grid.row,
+                                  div(BootstrapCol.md(12), ClientConf.style.block,
+                                    div(BootstrapStyles.Float.right(),
+                                      a(onclick :+= ((_: Event) => removeItem(e)), Labels.subform.remove)
+                                    )
+                                  )
+                                ) else frag()
                               )
-                            ) else frag()
-                          )
-                        ).render
-                      }
-                    ).render
+                            ).render
+                        })
+                      ).render
 
-                  ).render
+                    ).render
+                  }
                 })
               ),
               tr(ClientConf.style.childTableTr,
