@@ -185,7 +185,8 @@ object EntityMetadataFactory extends Logging {
             keys,
             None,
             fieldList,
-            None
+            None,
+            FormActionsMetadata.default
           )
         }
         if(BoxConfig.enableCache) {

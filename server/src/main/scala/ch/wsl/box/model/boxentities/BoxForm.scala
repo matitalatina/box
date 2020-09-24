@@ -93,4 +93,34 @@ object BoxForm {
   lazy val BoxForm_i18nTable = new TableQuery(tag => new BoxForm_i18n(tag))
 
 
+  case class BoxForm_actions_row(id: Option[Int] = None, form_id: Option[Int] = None,
+                              action:String,importance:String,after_action_goto:Option[String],
+                              label:String,
+                              update_only:Boolean,
+                              insert_only:Boolean,
+                              reload:Boolean,
+                              confirm_text:Option[String])
+
+  class BoxForm_actions(_tableTag: Tag) extends profile.api.Table[BoxForm_actions_row](_tableTag, "form_actions") {
+    def * = (Rep.Some(id), form_id, action, importance, after_action_goto, label, update_only, insert_only, reload,confirm_text) <> (BoxForm_actions_row.tupled, BoxForm_actions_row.unapply)
+
+    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    val form_id: Rep[Option[Int]] = column[Option[Int]]("form_id", O.Default(None))
+    val action: Rep[String] = column[String]("action")
+    val importance: Rep[String] = column[String]("importance")
+    val after_action_goto: Rep[Option[String]] = column[Option[String]]("after_action_goto", O.Default(None))
+    val label: Rep[String] = column[String]("label")
+    val update_only: Rep[Boolean] = column[Boolean]("update_only", O.Default(false))
+    val insert_only: Rep[Boolean] = column[Boolean]("insert_only", O.Default(false))
+    val reload: Rep[Boolean] = column[Boolean]("reload", O.Default(false))
+    val confirm_text: Rep[Option[String]] = column[Option[String]]("confirm_text", O.Default(None))
+
+
+    /** Foreign key referencing Field (database name fkey_field) */
+    lazy val fieldFk = foreignKey("fkey_form", form_id, BoxFormTable)(r => Rep.Some(r.form_id), onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
+  }
+
+  lazy val BoxForm_actions = new TableQuery(tag => new BoxForm_actions(tag))
+
+
 }

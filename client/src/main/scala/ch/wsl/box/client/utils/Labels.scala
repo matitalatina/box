@@ -1,6 +1,7 @@
 package ch.wsl.box.client.utils
 
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.model.shared.SharedLabels
 
 import scala.util.Try
 
@@ -69,9 +70,9 @@ object Labels {
 
   object form{
     def required = get("form.required")
-    def save = get("form.save")
-    def save_add = get("form.save_add")
-    def save_table = get("form.save_table")
+    def save = get(SharedLabels.form.save)
+    def save_add = get(SharedLabels.form.save_add)
+    def save_table = get(SharedLabels.form.save_table)
     def addDate = get("form.add_date")
     def removeDate = get("form.remove_date")
     def changed = get("form.changed")
@@ -86,9 +87,9 @@ object Labels {
     def search = get("entity.search")
     def title = get("entity.title")
     def select = get("entity.select")
-    def `new` = get("entity.new")
-    def table = get("entity.table")
-    def duplicate = get("entity.duplicate")
+    def `new` = get(SharedLabels.entities.`new`)
+    def table = get(SharedLabels.entities.table)
+    def duplicate = get(SharedLabels.entities.duplicate)
   }
 
   object exports{
@@ -107,10 +108,10 @@ object Labels {
     def show = get("table.show")
     def edit = get("table.edit")
     def no_action = get("table.no_action")
-    def delete = get("table.delete")
-    def revert = get("table.revert")
-    def confirmDelete = get("table.confirmDelete")
-    def confirmRevert = get("table.confirmRevert")
+    def delete = get(SharedLabels.entity.delete)
+    def revert = get(SharedLabels.entity.revert)
+    def confirmDelete = get(SharedLabels.entity.confirmDelete)
+    def confirmRevert = get(SharedLabels.entity.confirmRevert)
     def csv = get ("table.csv")
     def xls = get ("table.xls")
   }

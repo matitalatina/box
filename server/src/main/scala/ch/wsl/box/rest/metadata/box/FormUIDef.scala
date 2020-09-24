@@ -52,7 +52,8 @@ object FormUIDef {
     keys = Seq("form_id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 
   def field(forms:Seq[BoxForm.BoxForm_row]) = JSONMetadata(
@@ -121,7 +122,8 @@ object FormUIDef {
     keys = Seq("field_id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 
   val fieldI18n = JSONMetadata(
@@ -151,7 +153,8 @@ object FormUIDef {
     keys = Seq("id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 
   val formI18n = JSONMetadata(
@@ -179,7 +182,8 @@ object FormUIDef {
     keys = Seq("id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 
   val fieldFile = JSONMetadata(
@@ -204,6 +208,7 @@ object FormUIDef {
     keys = Seq("field_id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 }

@@ -1,5 +1,6 @@
 package ch.wsl.box.rest
 
+import io.circe.Json
 import org.graalvm.polyglot.Context
 
 class RIntegrationSpec extends BaseSpec {

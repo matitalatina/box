@@ -69,7 +69,8 @@ object FunctionUIDef {
     keys = Seq("function_id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 
   val field = JSONMetadata(
@@ -119,7 +120,8 @@ object FunctionUIDef {
     keys = Seq("field_id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 
   val fieldI18n = JSONMetadata(
@@ -149,7 +151,8 @@ object FunctionUIDef {
     keys = Seq("id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 
   val functionI18n = JSONMetadata(
@@ -177,7 +180,8 @@ object FunctionUIDef {
     keys = Seq("id"),
     query = None,
     exportFields = Seq(),
-    view = None
+    view = None,
+    action = FormActionsMetadata.default
   )
 
 

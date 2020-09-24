@@ -22,6 +22,7 @@ import scribe.Logging
 import scala.concurrent.Future
 import scalatags.JsDom
 import scalacss.ScalatagsCss._
+import scalacss.internal.StyleA
 
 import scala.scalajs.js.URIUtils
 import scala.language.reflectiveCalls
@@ -182,17 +183,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   }
 
   def revert() = {
-    val confim = window.confirm(Labels.entity.confirmRevert)
-    if(confim) {
       model.subProp(_.data).set(Json.Null.deepMerge(currentData))
       model.subProp(_.id).touch() //re-render childs
-    }
   }
 
   def delete() = {
 
-    val confim = window.confirm(Labels.entity.confirmDelete)
-    if(confim) {
       for{
         name <- model.get.metadata.map(_.name)
         key <- model.get.id.flatMap(JSONID.fromString)
@@ -202,7 +198,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
           Navigate.to(Routes(model.get.kind, name).entity(name))
         }
       }
-    }
+
   }
 
   def reset(): Unit = {
@@ -315,6 +311,58 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
     span(name).render
   }
 
+  def actionRenderer(id:Option[String])(action:FormAction):Modifier = {
+
+      val importance:StyleA = action.importance match {
+        case Primary => ClientConf.style.boxButtonImportant
+        case Danger => ClientConf.style.boxButtonDanger
+        case Std => ClientConf.style.boxButton
+      }
+
+      def callBack() = action.action match {
+        case SaveAction => presenter.save{ id =>
+          if(action.reload) {
+            presenter.reload(id)
+          }
+          action.getUrl(model.get.kind,model.get.name,Some(id.asString),model.get.write).foreach{ url =>
+            presenter.reset()
+            Navigate.toUrl(url)
+          }
+        }
+        case NoAction => action.getUrl(model.get.kind,model.get.name,id,model.get.write).foreach{ url =>
+          presenter.reset()
+          Navigate.toUrl(url)
+        }
+        case CopyAction => {
+          presenter.duplicate()
+        }
+        case DeleteAction => {
+          presenter.delete()
+        }
+        case RevertAction => {
+          presenter.revert()
+        }
+      }
+
+    def confirm(cb: () => Any) =  action.confirmText match {
+      case Some(ct) => {
+        val confim = window.confirm(ct)
+        if(confim) {
+          cb()
+        }
+      }
+      case None => cb()
+    }
+
+    if((action.updateOnly && id.isDefined) || (action.insertOnly && id.isEmpty) || (!action.insertOnly && !action.updateOnly)) {
+      button(
+        importance,
+        onclick :+= ((ev: Event) => confirm(callBack), true)
+      )(Labels(action.label)).render
+    } else frag()
+
+  }
+
   override def getTemplate: scalatags.generic.Modifier[Element] = {
 
     val recordNavigation = {
@@ -386,39 +434,13 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       produceWithNested(model.subProp(_.write)) { (w,realeser) =>
         if(!w) Seq() else
         div(BootstrapStyles.Float.left())(
-          realeser(produce(model.subProp(_.name)) { m =>
+          realeser(produceWithNested(model.subProp(_.metadata)) { (form,realeser2) =>
             div(
-
-              //save and stay on same record
-              showIf(model.transform(_.id.isDefined)) { // update
-                button(
-                  ClientConf.style.boxButtonImportant,
-                  onclick :+= ((ev: Event) => presenter.save(id => presenter.reload(id) ), true)
-                )(Labels.form.save).render
-              },
-              showIf(model.transform(!_.id.isDefined)) { // insert
-                button(
-                  ClientConf.style.boxButtonImportant,
-                  onclick :+= ((ev: Event) => presenter.save(id => Navigate.to(Routes(model.get.kind, model.get.name).edit(id.asString))), true)
-                )(Labels.form.save).render
-              }, " ",
-              //save and go to table view
-              button(
-                ClientConf.style.boxButton,ClientConf.style.noMobile,
-                onclick :+= ((ev: Event) => presenter.save(_ => Navigate.to(Routes(model.get.kind, model.get.name).entity())), true)
-              )(Labels.form.save_table), " ",
-              //save and go insert new record
-              button(
-                ClientConf.style.boxButton,ClientConf.style.noMobile,
-                onclick :+= ((ev: Event) => presenter.save{_ =>
-                  presenter.reset()
-                  Navigate.to(Routes(model.subProp(_.kind).get, m).add())
-                }, true)
-              )(Labels.form.save_add), " ",
-              button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`), " ",
-              button(ClientConf.style.boxButton, onclick :+= ((ev:Event) => presenter.duplicate()))(Labels.entities.duplicate), " ",
-              button(ClientConf.style.boxButtonDanger, onclick :+= ((e: Event) => presenter.delete()))(Labels.entity.delete),
-              button(ClientConf.style.boxButton, onclick :+= ((e: Event) => presenter.revert()))(Labels.entity.revert)
+              realeser2(produce(model.subProp(_.id)) { id =>
+                div(
+                  form.toSeq.flatMap(_.action.actions).map(actionRenderer(id))
+                ).render
+              })
             ).render
           })
         ).render

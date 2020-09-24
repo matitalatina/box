@@ -134,6 +134,9 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
           BoxField.BoxFieldFileTable.filter(_.field_id === f.field_id).result
         }.map(_.headOption)
       })
+      actions <- Auth.boxDB.run{
+        BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
+      }
       columns <- Future.sequence(fields.map(f => columns(form,f._1)))
       keys <- EntityMetadataFactory.keysOf(form.entity)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
@@ -169,7 +172,25 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
       val layout = Layout.fromString(form.layout).getOrElse(defaultLayout)
 
-
+      val formActions = if(actions.isEmpty) {
+        FormActionsMetadata.default
+      } else {
+        FormActionsMetadata(
+          actions = actions.map{a =>
+            FormAction(
+              action = Action.fromString(a.action),
+              importance = Importance.fromString(a.importance),
+              afterActionGoTo = a.after_action_goto,
+              label = a.label,
+              updateOnly = a.update_only,
+              insertOnly = a.insert_only,
+              reload = a.reload,
+              confirmText = a.confirm_text
+            )
+          },
+          navigationActions = Seq() // TODO
+        )
+      }
 
       val result = JSONMetadata(
         form.form_id.get,
@@ -184,7 +205,8 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
         keys,
         defaultQuery,
         form.exportFields.map(_.split(",").toSeq).getOrElse(tableFields),
-        formI18n.flatMap(_.viewTable)
+        formI18n.flatMap(_.viewTable),
+        formActions
       )//, form.entity)
       //println(s"resulting form: $result")
       result

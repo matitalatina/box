@@ -27,7 +27,8 @@ case class JSONMetadata(
                          keys:Seq[String],
                          query:Option[JSONQuery],
                          exportFields:Seq[String],
-                         view:Option[String]
+                         view:Option[String],
+                         action:FormActionsMetadata
                        ) {
   def order:Ordering[JSONID] = new Ordering[JSONID] {
     override def compare(x: JSONID, y: JSONID): Int = x.id.map{ keyX =>
