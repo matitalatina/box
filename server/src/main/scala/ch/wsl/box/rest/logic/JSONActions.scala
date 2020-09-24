@@ -48,7 +48,7 @@ class JSONViewActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Pro
       IDs(
         last,
         query.paging.map(_.currentPage).getOrElse(1),
-        data.map{_.asJson.ID(keys).asString},
+        data.flatMap{_.asJson.ID(keys).map(_.asString)},
         n
       )
     }

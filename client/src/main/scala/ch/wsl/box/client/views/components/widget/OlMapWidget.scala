@@ -45,7 +45,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
 
-case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Json]) extends Widget with Logging {
+case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging {
 
   import scalacss.ScalatagsCss._
 
@@ -705,5 +705,5 @@ case class OlMapWidget(id: Property[String], field: JSONField, prop: Property[Js
 }
 
 object OlMapWidget extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField) = OlMapWidget(id,field,prop)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField) = OlMapWidget(id,field,prop)
 }

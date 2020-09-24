@@ -98,7 +98,7 @@ trait Widget extends Logging {
 
 trait ComponentWidgetFactory{
 
-  def create(id:Property[String], prop:Property[Json], field:JSONField):Widget
+  def create(id:Property[Option[String]], prop:Property[Json], field:JSONField):Widget
 }
 
 object ChildWidget {
@@ -110,13 +110,6 @@ trait ChildWidget extends Widget with Logging {
 
   def data:Property[Json]
 
-
-  def isOf(js:Json) = {
-    val saved = js.get(ChildWidget.childTag)
-    val childId = data.get.get(ChildWidget.childTag)
-    logger.debug(s"cheking if result childId: $saved is equals to widgetId: $childId")
-    saved == childId
-  }
 }
 
 

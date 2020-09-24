@@ -15,7 +15,7 @@ import io.circe.syntax._
 
 import scala.util.Try
 
-case class MonacoWidget(_id: Property[String], field: JSONField, prop: Property[Json]) extends Widget with Logging {
+case class MonacoWidget(_id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging {
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
 
@@ -38,5 +38,5 @@ case class MonacoWidget(_id: Property[String], field: JSONField, prop: Property[
 }
 
 object MonacoWidget extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField) = MonacoWidget(id,field,prop)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField) = MonacoWidget(id,field,prop)
 }

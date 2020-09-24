@@ -25,7 +25,7 @@ import scala.scalajs.js
 
 
 case class PopupWidgetFactory(allData:Property[Json]) extends ComponentWidgetFactory  {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = PopupWidget(field,prop,allData)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = PopupWidget(field,prop,allData)
 }
 
 case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Json]) extends LookupWidget with Logging {

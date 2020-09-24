@@ -28,7 +28,7 @@ import scala.util.Random
   * @param field
   * @param entity
   */
-case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
+case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
@@ -45,19 +45,17 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
     }
   }
 
-  val urlProp:Property[Option[String]] = Property(url(id.get))
+  val urlProp:Property[Option[String]] = Property(id.get.flatMap(url))
 
   val fileName:Property[String] = Property("")
 
   val selectedFile: SeqProperty[File] = SeqProperty(Seq.empty[File])
 
-  logger.debug(id.get)
 
   autoRelease(id.listen({ idString =>
-    logger.info(idString)
     selectedFile.set(Seq())
     fileName.set(prop.get.string)
-    val newUrl = url(idString)
+    val newUrl = idString.flatMap(url)
     if(urlProp.get != newUrl) {
       urlProp.set(newUrl)
     }
@@ -77,7 +75,7 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
     val jsonid = result.ID(metadata.keys)
     for{
       idfile <- Future.sequence{
-        val r: Seq[Future[Int]] = selectedFile.get.map(REST.sendFile(_,jsonid,s"${metadata.entity}.${field.file.get.file_field}"))
+        val r: Seq[Future[Int]] = selectedFile.get.map(REST.sendFile(_,jsonid.get,s"${metadata.entity}.${field.file.get.file_field}"))
         r
       }
     } yield {
@@ -127,5 +125,5 @@ case class FileWidget(id:Property[String], prop:Property[Json], field:JSONField,
 }
 
 case class FileWidgetFactory( entity:String) extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = FileWidget(id,prop,field,entity)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = FileWidget(id,prop,field,entity)
 }

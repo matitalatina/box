@@ -49,11 +49,15 @@ object JSONUtils extends Logging {
       }, { x => Some(x.string) }
     )
 
-    def ID(fields:Seq[String]):JSONID = {
-      val values = fields map { field =>
-        field -> get(field)
-      }
-      JSONID.fromMap(values.toMap)
+    def ID(fields:Seq[String]):Option[JSONID] = {
+
+      if(fields.forall(x => getOpt(x).isDefined)) {
+
+        val values = fields map { field =>
+          field -> get(field)
+        }
+        Some(JSONID.fromMap(values.toMap))
+      } else None
     }
   }
 }

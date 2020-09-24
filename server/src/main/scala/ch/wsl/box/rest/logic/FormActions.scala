@@ -129,7 +129,7 @@ case class FormActions(metadata:JSONMetadata,
       subJson = attachArrayIndex(e.seq(field.name),form)
       deleted <- DBIO.sequence(deleteChild(form,subJson,dbSubforms))
       result <- DBIO.sequence(subJson.map{ json => //order matters so we do it synchro
-        action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys),json).map(x => Some(x))
+        action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys).get,json).map(x => Some(x))
       }).map(_.flatten)
     } yield result
   }
@@ -147,8 +147,8 @@ case class FormActions(metadata:JSONMetadata,
    * @return number of deleted rows
    */
   def deleteChild(child:JSONMetadata, receivedJson:Seq[Json], dbJson:Seq[Json]): Seq[DBIO[Int]] = {
-    val receivedID = receivedJson.map(_.ID(child.keys))
-    val dbID = dbJson.map(_.ID(child.keys))
+    val receivedID = receivedJson.flatMap(_.ID(child.keys))
+    val dbID = dbJson.flatMap(_.ID(child.keys))
     logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
     dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
       logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")

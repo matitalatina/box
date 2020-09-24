@@ -18,40 +18,40 @@ import org.scalajs.dom.Node
 object InputWidgetFactory {
 
   object Text extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.Text(field, prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.Text(field, prop)
   }
 
   object TextDisabled extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.TextDisabled(field, prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.TextDisabled(field, prop)
   }
 
   object TextNoLabel extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.TextNoLabel(field, prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.TextNoLabel(field, prop)
   }
 
   object TextArea extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.Textarea(field, prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.Textarea(field, prop)
 
   }
 
   object TwoLines extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.TwoLines(field, prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.TwoLines(field, prop)
 
   }
 
   object Number extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.Number(field, prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.Number(field, prop)
 
   }
 
 
   object NumberNoLabel extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.NumberNoLabel(field, prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.NumberNoLabel(field, prop)
 
   }
 
   object NumberArray extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = new InputWidget.NumberArray(field, prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.NumberArray(field, prop)
 
   }
 

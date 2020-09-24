@@ -100,7 +100,7 @@ trait DateTimeWidget[T] extends Widget  with Logging{
     ).render
   })
 
-  protected def editMe(id:Property[String], field:JSONField, model:Property[Json],style:StyleA, range:Boolean):Modifier = {
+  protected def editMe(id:Property[Option[String]], field:JSONField, model:Property[Json],style:StyleA, range:Boolean):Modifier = {
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
@@ -208,58 +208,58 @@ object DateTimeWidget {
 
 
 
-  case class Date(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateWdg {
+  case class Date(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateWdg {
     override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePicker,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
   object Date extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = Date(id,field,prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = Date(id,field,prop)
   }
 
-  case class DateTime(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWdg {
+  case class DateTime(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWdg {
     override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePicker,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
   object DateTime extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = DateTime(id,field,prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = DateTime(id,field,prop)
   }
 
-  case class Time(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends TimeWdg {
+  case class Time(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends TimeWdg {
     override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePicker,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
   object Time extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = Time(id,field,prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = Time(id,field,prop)
   }
 
-  case class DateFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateWdg {
+  case class DateFullWidth(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateWdg {
     override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePickerFullWidth,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
   object DateFullWidth extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = DateFullWidth(id,field,prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = DateFullWidth(id,field,prop)
   }
 
-  case class DateTimeFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWdg {
+  case class DateTimeFullWidth(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWdg {
     override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePickerFullWidth,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
   object DateTimeFullWidth extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = DateTimeFullWidth(id,field,prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = DateTimeFullWidth(id,field,prop)
   }
 
-  case class TimeFullWidth(id: Property[String], field: JSONField, prop: Property[Json], range:Boolean = false) extends TimeWdg {
+  case class TimeFullWidth(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends TimeWdg {
     override def edit() = editMe(id,field,prop,ClientConf.style.dateTimePickerFullWidth,range)
     override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
   }
 
   object TimeFullWidth extends ComponentWidgetFactory {
-    override def create(id: Property[String], prop: Property[Json], field: JSONField): Widget = TimeFullWidth(id,field,prop)
+    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = TimeFullWidth(id,field,prop)
   }
 
 

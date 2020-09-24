@@ -156,8 +156,6 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
         logger.debug(afterSaveResult.toString())
 
-        currentData = Json.Null.deepMerge(afterSaveResult)
-
         enableGoAway
 
         action(newId.get)
@@ -175,8 +173,9 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       resultSaved <- REST.get(model.get.kind, Session.lang(), model.get.name, id)
     } yield {
       reset()
-      model.subProp(_.id).set(Some(id.asString), true)
+      currentData = Json.Null.deepMerge(resultSaved)
       model.subProp(_.data).set(resultSaved)
+      model.subProp(_.id).set(Some(id.asString), true)
       enableGoAway
       widget.afterRender()
     }
@@ -186,6 +185,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     val confim = window.confirm(Labels.entity.confirmRevert)
     if(confim) {
       model.subProp(_.data).set(Json.Null.deepMerge(currentData))
+      model.subProp(_.id).touch() //re-render childs
     }
   }
 
@@ -239,7 +239,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   }
 
   def loadWidgets(f:JSONMetadata) = {
-    widget = JSONMetadataRenderer(f, model.subProp(_.data), model.subProp(_.children).get)
+    widget = JSONMetadataRenderer(f, model.subProp(_.data), model.subProp(_.children).get, model.subProp(_.id))
     widget
   }
 

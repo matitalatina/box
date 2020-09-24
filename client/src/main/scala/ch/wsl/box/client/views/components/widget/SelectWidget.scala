@@ -18,11 +18,11 @@ import scribe.Logging
 import scala.concurrent.Future
 
 case class SelectWidgetFactory(allData:Property[Json]) extends ComponentWidgetFactory  {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = new SelectWidget(field, prop, allData)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = new SelectWidget(field, prop, allData)
 }
 
 case class SelectWidgetFullWidthFactory(allData:Property[Json]) extends ComponentWidgetFactory  {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = new SelectWidgetFullWidth(field, prop, allData)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = new SelectWidgetFullWidth(field, prop, allData)
 }
 
 class SelectWidget(val field:JSONField, data: Property[Json], val allData:Property[Json]) extends  LookupWidget with Logging {

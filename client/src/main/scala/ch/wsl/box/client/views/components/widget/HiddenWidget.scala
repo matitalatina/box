@@ -9,7 +9,7 @@ import scalatags.JsDom.all._
 
 
 object HiddenWidget extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = HiddenWidgetImpl
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = HiddenWidgetImpl
 
   object HiddenWidgetImpl extends Widget {
 

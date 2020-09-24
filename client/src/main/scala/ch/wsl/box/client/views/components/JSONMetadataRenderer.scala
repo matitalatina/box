@@ -24,7 +24,7 @@ import io.udash.css.CssView._
   */
 
 
-case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], children: Seq[JSONMetadata]) extends ChildWidget {
+case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], children: Seq[JSONMetadata], id: Property[Option[String]]) extends ChildWidget {
 
 
   import ch.wsl.box.client.Context._
@@ -36,11 +36,10 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
 
 
-  private def getId(data:Json): String = {
-    data.ID(metadata.keys).asString
+  private def getId(data:Json): Option[String] = {
+    data.ID(metadata.keys).map(_.asString)
   }
 
-  private val id: Property[String] = Property(getId(data.get))
 
   data.listen { data =>
     val currentID = getId(data)
@@ -85,7 +84,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   }
 
 
-  private def widgetSelector(field: JSONField, id:Property[String], fieldData:Property[Json]): Widget = {
+  private def widgetSelector(field: JSONField, id:Property[Option[String]], fieldData:Property[Json]): Widget = {
     import JSONFieldTypes._
 
 

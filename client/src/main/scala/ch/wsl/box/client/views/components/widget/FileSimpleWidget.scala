@@ -31,7 +31,7 @@ import scala.util.Random
   * @param field
   * @param entity
   */
-case class FileSimpleWidget(id:Property[String], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
+case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
@@ -88,5 +88,5 @@ case class FileSimpleWidget(id:Property[String], prop:Property[Json], field:JSON
 }
 
 case class FileSimpleWidgetFactory( entity:String) extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = FileSimpleWidget(id,prop,field,entity)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = FileSimpleWidget(id,prop,field,entity)
 }

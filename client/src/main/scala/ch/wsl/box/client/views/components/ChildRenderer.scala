@@ -42,7 +42,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
     import io.circe.syntax._
     import ch.wsl.box.shared.utils.JSONUtils._
 
-    def id: Property[String]
+    def id: Property[Option[String]]
     def prop: Property[Json]
     def field:JSONField
 
@@ -53,12 +53,20 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
     protected def render(write: Boolean): JsDom.all.Modifier
 
     private def add(data:Json,open:Boolean): Unit = {
-      val id = childId
-      val d = attachChild(id,data)
-      val propData = Property(d)
+      val id = UUID.randomUUID().toString
+      val propData = Property(data)
+      val childId = Property(data.ID(metadata.get.keys).map(_.asString))
 
+      propData.listen{data =>
+        val newData = prop.get.as[Seq[Json]].toSeq.flatten.map{x =>
+          if(x.ID(metadata.get.keys) == data.ID(metadata.get.keys)) {
+            x.deepMerge(data)
+          } else x
+        }
+        prop.set(newData.asJson)
+      }
 
-      val widget = JSONMetadataRenderer(metadata.get, propData, children)
+      val widget = JSONMetadataRenderer(metadata.get, propData, children, childId)
 
 
       childWidgets += ChildRow(widget,id,propData,open)
@@ -66,23 +74,10 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
       widget.afterRender()
     }
 
-    private def childId = UUID.randomUUID().toString
-
-    private def attachChild(childId:String, js:Json):Json = js.deepMerge(Json.obj((ChildWidget.childTag, childId.asJson)))
-
-
     def splitJson(js: Json): Seq[Json] = {
       js.as[Seq[Json]].right.getOrElse(Seq()) //.map{ js => js.deepMerge(Json.obj((subformInjectedId,Random.alphanumeric.take(16).mkString.asJson)))}
     }
 
-
-//    def splitJsonRows(metadata: JSONMetadata, i: Int)(js: Seq[Json]): Json = js.lift(i).getOrElse(Json.Null)
-//
-//    def mergeJsonRows(entity: Property[Seq[Json]], metadata: JSONMetadata, i: Int)(longJs: Json): Seq[Json] = for {
-//      (m, j) <- entity.get.zipWithIndex
-//    } yield {
-//      if (i == j) longJs else m
-//    }
 
     def removeItem(itemToRemove: String) = {
       logger.info("removing item")
@@ -163,7 +158,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
 
 
-    autoRelease(id.listen(i => {
+    id.listen(i => {
 
       childWidgets.foreach(_.widget.killWidget())
       childWidgets.clear()
@@ -171,7 +166,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
       val entityData = splitJson(prop.get)
       logger.debug(s"id changed with $i")
       entityData.foreach(x => add(x,false))
-    },true))
+    },true)
 
 
 
@@ -182,9 +177,9 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 }
 
 case class SimpleChildFactory(child:Child, children:Seq[JSONMetadata], masterData:Property[Json]) extends ChildRendererFactory {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = SimpleChildRenderer(id,prop,field)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = SimpleChildRenderer(id,prop,field)
 
-  case class SimpleChildRenderer(id: Property[String], prop: Property[Json], field:JSONField) extends ChildRenderer {
+  case class SimpleChildRenderer(id: Property[Option[String]], prop: Property[Json], field:JSONField) extends ChildRenderer {
 
     import scalatags.JsDom.all._
     import io.udash.css.CssView._
@@ -225,9 +220,9 @@ case class SimpleChildFactory(child:Child, children:Seq[JSONMetadata], masterDat
 
 
 case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData:Property[Json]) extends ChildRendererFactory {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = TableChildRenderer(id,prop,field)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = TableChildRenderer(id,prop,field)
 
-  case class TableChildRenderer(id: Property[String], prop: Property[Json], field:JSONField) extends ChildRenderer {
+  case class TableChildRenderer(id: Property[Option[String]], prop: Property[Json], field:JSONField) extends ChildRenderer {
 
     import scalatags.JsDom.all._
     import io.udash.css.CssView._

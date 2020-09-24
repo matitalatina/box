@@ -104,6 +104,7 @@ case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) ext
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
+  import ch.wsl.box.shared.utils.JSONUtils._
 
   def table = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.TABLE))
   def pdf = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.PDF))
@@ -125,7 +126,7 @@ case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) ext
       div(ClientConf.style.global)(ed.map(_.description.getOrElse[String]("")).getOrElse[String]("")).render
     },
     br,
-    JSONMetadataRenderer(metadata, model.subProp(_.queryData),Seq()).edit(),
+    JSONMetadataRenderer(metadata, model.subProp(_.queryData),Seq(),Property(model.get.queryData.ID(metadata.keys).map(_.asString))).edit(),
     showIf(table) { button(Labels.exports.load,onclick :+= ((e:Event) => presenter.query()),ClientConf.style.boxButton).render },
     showIf(table) { button(Labels.exports.csv,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton).render },
     showIf(pdf) { button(Labels.exports.pdf,onclick :+= ((e:Event) => presenter.csv()),ClientConf.style.boxButton).render },

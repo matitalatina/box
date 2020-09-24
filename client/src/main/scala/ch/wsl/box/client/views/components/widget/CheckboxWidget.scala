@@ -38,5 +38,5 @@ case class CheckboxWidget(field:JSONField, prop: Property[Json]) extends Widget 
 }
 
 object CheckboxWidget extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[String], prop: _root_.io.udash.Property[Json], field: JSONField) = CheckboxWidget(field,prop)
+  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField) = CheckboxWidget(field,prop)
 }
