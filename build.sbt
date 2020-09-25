@@ -51,7 +51,7 @@ lazy val server: Project  = project
     //Comment this to avoid errors in importing project, i.e. when changing libraries
     scalaJSProjects := Seq(client),
     pipelineStages in Assets := Seq(scalaJSPipeline),
-    Seq("jquery","ol","bootstrap","flatpickr").map{ p =>
+    Seq("jquery","ol","bootstrap","flatpickr","quill").map{ p =>
       npmAssets ++= NpmAssets.ofProject(client) { nodeModules =>
         (nodeModules / p).allPaths
       }.value
