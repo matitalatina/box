@@ -93,14 +93,31 @@ lazy val client: Project = (project in file("client"))
       "bootstrap" -> "4.1.3",
       "@types/bootstrap" -> "4.1.3",
       "flatpickr" -> "4.6.3",
+      "monaco-editor" -> "0.21.1"
     ),
     stIgnore += "ol-ext",
-    stIgnore += "roboto-fontface",
+    // Use library mode for fastOptJS
+    webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
+    webpackConfigFile in fastOptJS := Some(baseDirectory.value / ".." / "dev.config.js"),
+    // Use application model mode for fullOptJS
+    webpackBundlingMode in fullOptJS := BundlingMode.Application,
+    webpackConfigFile in fullOptJS := Some(baseDirectory.value / ".." / "prod.config.js"),
+    npmDevDependencies in Compile ++= Seq(
+      "html-webpack-plugin" -> "4.3.0",
+      "webpack-merge" -> "4.2.2",
+      "style-loader" -> "1.2.1",
+      "css-loader" -> "3.5.3",
+      "mini-css-extract-plugin" -> "0.9.0",
+      "monaco-editor-webpack-plugin" -> "2.0.0",
+      "file-loader" -> "6.1.0",
+    ),
+    webpackDevServerPort := 7357,
+    version in webpack := "4.43.0",
+    version in startWebpackDevServer       := "3.11.0",
     fork in fastOptJS := true,
     fork in fullOptJS := true,
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
-    scalaJSUseMainModuleInitializer := true
     // use uTest framework for tests
 //    testFrameworks += new TestFramework("utest.runner.Framework"),
 //    // Compile tests to JS using fast-optimisation

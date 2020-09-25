@@ -139,7 +139,6 @@ object Settings {
     "com.github.spullara.mustache.java" % "compiler" % "0.9.6",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3",
     "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.2.0",
-    "com.vmunier" %% "scalajs-scripts" % "1.1.4",
     "com.norbitltd" %% "spoiwo" % "1.7.0",
     "io.github.cquiroz" %% "scala-java-time" % "2.0.0-RC3",
     "org.flywaydb" % "flyway-core" % "6.5.5",

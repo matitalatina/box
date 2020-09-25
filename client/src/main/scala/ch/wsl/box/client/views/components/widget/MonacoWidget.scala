@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components.widget
 
 import java.util.UUID
 
-import ch.wsl.box.client.utils.ClientConf
+import ch.wsl.box.client.utils.{BrowserConsole, ClientConf}
 import ch.wsl.box.client.vendors.Monaco
 import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
@@ -12,6 +12,8 @@ import scribe.Logging
 import io.udash._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.syntax._
+import org.scalajs.dom.html.Div
+import typings.monacoEditor.mod.editor.{IStandaloneCodeEditor, IStandaloneEditorConstructionOptions}
 
 import scala.util.Try
 
@@ -23,11 +25,27 @@ case class MonacoWidget(_id: Property[Option[String]], field: JSONField, prop: P
     div(p.string).render
   })
 
+  var container: Div = null
+
+
+  override def afterRender(): Unit = {
+    if(container != null) {
+      val language = Try(field.widget.get.split("\\.").last).getOrElse("html")
+      val editor = typings.monacoEditor.mod.editor.create(container,IStandaloneEditorConstructionOptions()
+        .setLanguage(language)
+        .setValue(prop.get.string)
+
+      )
+      editor.onDidChangeModelContent(e => prop.set(editor.getValue().asJson))
+    }
+  }
+
   override protected def edit(): JsDom.all.Modifier = {
-    val language = Try(field.widget.get.split("\\.").last).getOrElse("html")
+
     autoRelease(produce(_id) { _ =>
-      val container = div(ClientConf.style.editor).render
-      Monaco.load(container,language,prop.get.string,{s:String => prop.set(s.asJson)})
+      container = div(ClientConf.style.editor).render
+
+      //Monaco.load(container,language,prop.get.string,{s:String => prop.set(s.asJson)})
       div(
         container
       ).render
