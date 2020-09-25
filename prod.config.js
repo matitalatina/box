@@ -2,29 +2,33 @@ const ScalaJS = require("./scalajs.webpack.config");
 const Merge = require("webpack-merge");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
-const path = require("path");
-const rootDir = path.resolve(__dirname, "../../../..");
-const resourcesDir = path.resolve(rootDir, "src/main/resources");
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 const WebApp = Merge(ScalaJS, {
     mode: "production",
-    entry: {
-        app: [path.resolve(resourcesDir, "./box-app.js")]
+    output: {
+        filename: "box-app.js",
+        publicPath: "bundle/"
     },
     module: {
         rules: [
             {
                 test: /\.css$/,
                 use: ["style-loader", MiniCssExtractPlugin.loader, "css-loader"]
+            },
+            {
+                test: /\.ttf$/,
+                use: ['file-loader']
             }
         ]
     },
-    output: {
-        filename: "[name].[chunkhash].js",
-        path: path.resolve(rootDir, "demo")
-    },
-    plugins: [new HtmlWebpackPlugin(), new MiniCssExtractPlugin({})]
+    plugins: [
+        new HtmlWebpackPlugin(),
+        new MiniCssExtractPlugin({}),
+        new MonacoWebpackPlugin({
+            publicPath: "bundle"
+        })
+    ]
 });
 
 module.exports = WebApp;

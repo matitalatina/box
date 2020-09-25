@@ -3,7 +3,6 @@ package ch.wsl.box.client.views.components.widget
 import java.util.UUID
 
 import ch.wsl.box.client.utils.{BrowserConsole, ClientConf}
-import ch.wsl.box.client.vendors.Monaco
 import ch.wsl.box.model.shared.JSONField
 import io.circe.Json
 import io.udash.properties.single.Property

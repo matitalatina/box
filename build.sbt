@@ -93,7 +93,9 @@ lazy val client: Project = (project in file("client"))
       "bootstrap" -> "4.1.3",
       "@types/bootstrap" -> "4.1.3",
       "flatpickr" -> "4.6.3",
-      "monaco-editor" -> "0.21.1"
+      "monaco-editor" -> "0.21.1",
+      "quill" -> "1.3.7",
+      "@types/quill" -> "1.3.10",
     ),
     stIgnore += "ol-ext",
     // Use library mode for fastOptJS
@@ -195,6 +197,7 @@ lazy val deleteSlickTask = Def.task{
 lazy val box = (project in file("."))
   .settings(
     publishAll := publishAllTask.value,
+    publishAllLocal := publishAllLocalTask.value,
     installBox := installBoxTask.value,
     dropBox := dropBoxTask.value,
   )
@@ -212,6 +215,20 @@ lazy val publishAllTask = {
     (publish in sharedJVM),
     (publish in codegen),
     (publish in server)
+  )
+}
+
+lazy val publishAllLocal = taskKey[Unit]("Publish all modules")
+lazy val publishAllLocalTask = {
+  Def.sequential(
+    (clean in client),
+    (clean in server),
+    (clean in codegen),
+    (webpack in fullOptJS in Compile in client),
+    (compile in Compile in codegen),
+    (publishLocal in sharedJVM),
+    (publishLocal in codegen),
+    (publishLocal in server)
   )
 }
 
