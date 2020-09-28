@@ -13,11 +13,11 @@ const WebApp = Merge(ScalaJS, {
     module: {
         rules: [
             {
-                test: /\.css$/,
-                use: ["style-loader", MiniCssExtractPlugin.loader, "css-loader"]
+                test: /\.css$/i,
+                use: ['style-loader', 'css-loader'],
             },
             {
-                test: /\.ttf$/,
+                test: /\.(woff|woff2|eot|ttf|otf|svg)$/,
                 use: ['file-loader']
             }
         ]

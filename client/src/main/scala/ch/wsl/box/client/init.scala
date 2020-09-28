@@ -33,6 +33,9 @@ object Init extends JSApp with Logging {
     //loads datetime picker
     typings.bootstrap.bootstrapRequire
 
+    //require font
+    styles.fonts.ClearSans
+
     Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
 
 

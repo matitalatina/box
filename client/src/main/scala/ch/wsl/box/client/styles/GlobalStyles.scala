@@ -2,8 +2,9 @@ package ch.wsl.box.client.styles
 
 
 
-import ch.wsl.box.client.styles.constants.{Font, StyleConstants}
+import ch.wsl.box.client.styles.constants.StyleConstants
 import ch.wsl.box.client.styles.constants.StyleConstants.{ChildProperties, Colors}
+import ch.wsl.box.client.styles.fonts.Font
 import ch.wsl.box.client.styles.utils.{MediaQueries, StyleUtils}
 
 import scala.language.postfixOps
@@ -37,7 +38,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     unsafeRoot("body") (
       StyleConstants.defaultFontSize,
       backgroundColor.white,
-      Font.regular
+      Font.clearSans
     ),
 
     unsafeRoot("select")(
@@ -234,7 +235,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val tableHeader = style(
     fontSize(14 px),
-    Font.bold
+    Font.clearSans,
+    fontWeight.bold
   )
 
 
@@ -304,7 +306,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     ),
     color(conf.colors.link),
     textTransform.uppercase,
-    Font.bold,
+    Font.clearSans,
+    fontWeight.bold,
     cursor.pointer,
     padding.horizontal(2.px)
   )
@@ -350,7 +353,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val childTableHeader = style(
-    Font.bold
+    Font.clearSans,
+    fontWeight.bold
   )
 
   val childTableAction = style(
@@ -512,8 +516,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val labelRequired = style(
-    fontWeight.bold,
-    Font.bold
+    fontWeight.bolder,
+    Font.clearSans
   )
 
   val notNullable = style(
@@ -528,7 +532,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val labelNonRequred = style(
-    Font.bold
+    Font.clearSans,
+    fontWeight.bold
   )
 
   val editor = style(

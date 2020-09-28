@@ -15,7 +15,8 @@ lazy val codegen  = (project in file("codegen")).settings(
   resolvers += Resolver.jcenterRepo,
   resolvers += Resolver.bintrayRepo("waveinch","maven"),
   resourceDirectory in Compile := baseDirectory.value / "../resources",
-  unmanagedResourceDirectories in Compile += baseDirectory.value / "../db"
+  unmanagedResourceDirectories in Compile += baseDirectory.value / "../db",
+  git.useGitDescribe := true
 )
 
 lazy val server: Project  = project
@@ -38,9 +39,7 @@ lazy val server: Project  = project
     mainClass in (Compile, packageBin) := Some("ch.wsl.box.rest.Boot"),
     mainClass in (Compile, run) := Some("ch.wsl.box.rest.Boot"),
     resourceDirectory in Compile := baseDirectory.value / "../resources",
-    git.gitTagToVersionNumber := { tag:String =>
-      Some(tag)
-    },
+    git.useGitDescribe := true,
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "boxInfo",
     buildInfoObject := "BoxBuildInfo",
@@ -96,7 +95,9 @@ lazy val client: Project = (project in file("client"))
       "monaco-editor" -> "0.21.1",
       "quill" -> "1.3.7",
       "@types/quill" -> "1.3.10",
+      "typeface-clear-sans" -> "0.0.44"
     ),
+    stIgnore += "typeface-clear-sans",
     stIgnore += "ol-ext",
     // Use library mode for fastOptJS
     webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
@@ -157,6 +158,7 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure
     libraryDependencies ++= Settings.sharedJVMJSDependencies.value,
     resolvers += Resolver.jcenterRepo,
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
+    git.useGitDescribe := true
   )
   .jsSettings(
     libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC5"

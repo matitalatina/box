@@ -16,7 +16,7 @@ const WebApp = Merge(ScalaJS, {
                 use: ['style-loader', 'css-loader'],
             },
             {
-                test: /\.ttf$/,
+                test: /\.(woff|woff2|eot|ttf|otf|svg)$/,
                 use: ['file-loader']
             }
         ]
