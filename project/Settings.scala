@@ -90,6 +90,7 @@ object Settings {
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(
     "com.typesafe.slick"       %% "slick"           % versions.slick,
+    "com.typesafe.slick"       %% "slick-hikaricp"           % versions.slick,
     "org.postgresql"           %  "postgresql"      % versions.postgres,
     "com.typesafe"             % "config"           % "1.3.3",
     "com.iheart"               %% "ficus"           % versions.ficus,

@@ -43,6 +43,13 @@ object FormMetadataFactory{
     cacheFormName = cacheFormName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
   }
 
+  def hasGuestAccess(formName:String)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = Auth.boxDB.run{
+    BoxFormTable.filter(f => f.name === formName && f.guest_user.nonEmpty).result.headOption
+  }.map{_.map{ form =>
+    Auth.userProfileForUser(form.guest_user.get)
+  }}
+
+
 }
 
 

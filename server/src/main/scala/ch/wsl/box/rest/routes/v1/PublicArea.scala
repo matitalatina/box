@@ -5,8 +5,11 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import ch.wsl.box.model.boxentities.BoxPublicEntities
-import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.model.shared.EntityKind
+import ch.wsl.box.rest.metadata.FormMetadataFactory
+import ch.wsl.box.rest.routes.Form
 import ch.wsl.box.rest.runtime.Registry
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -20,7 +23,31 @@ case class PublicArea(implicit ec:ExecutionContext, mat:Materializer, system:Act
 
   implicit val up = Auth.adminUserProfile
 
+  def form = pathPrefix("form") {
+    pathPrefix(Segment) { lang =>
+      pathPrefix(Segment) { name =>
+        val route: Future[Route] = FormMetadataFactory.hasGuestAccess(name).map {
+          _ match {
+            case Some(userProfile) => {
+              implicit val up = userProfile
+              Form(name, lang, Registry().actions.tableActions(ec), FormMetadataFactory(), up.db, EntityKind.FORM.kind).route
+            }
+            case None => complete(StatusCodes.BadRequest, "The form is not public")
+          }
+        }
+        onComplete(route) {
+          case Success(value) => value
+          case Failure(e) => {
+            e.printStackTrace()
+            complete(StatusCodes.InternalServerError,"error")
+          }
+        }
+      }
+    }
+  }
+
   val route:Route = pathPrefix("public") {
+    form ~
     pathPrefix(Segment) { entity =>
       val route: Future[Route] = publicEntities.map{ pe =>
         pe.find(_.entity == entity).flatMap(e => Registry().actions.actions(e.entity)) match {

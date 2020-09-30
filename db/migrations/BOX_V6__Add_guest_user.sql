@@ -1,0 +1,1 @@
+alter table box.form add guest_user text;
