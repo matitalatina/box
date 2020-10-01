@@ -125,9 +125,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (FILE, _, _, _, _)                                     => FileWidgetFactory(metadata.entity)
           case (_,Some(WidgetsNames.mapPoint),_,_,_)                  => OlMapWidget
           case (_,Some(WidgetsNames.map),_,_,_)                       => OlMapWidget
-          case (_,Some(c),_,_,_) if c.startsWith(WidgetsNames.code)   => MonacoWidget
-          case (_,Some(c),_,_,_) if c == WidgetsNames.richTextEditor  => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)
-          case (_,Some(c),_,_,_) if c == WidgetsNames.richTextEditorFull => RichTextEditorWidgetFactory(RichTextEditorWidget.Full)
+          case (_,Some(WidgetsNames.code),_,_,_) => MonacoWidget
+          case (_,Some(WidgetsNames.richTextEditor),_,_,_)   => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)
+          case (_,Some(WidgetsNames.richTextEditorFull),_,_,_)  => RichTextEditorWidgetFactory(RichTextEditorWidget.Full)
           case (_, _, _, _, _)                                        => InputWidgetFactory.Text
     }
 

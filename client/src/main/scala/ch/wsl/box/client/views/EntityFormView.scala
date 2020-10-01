@@ -465,7 +465,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
             }
           }
         ).render
-      },br,br,
+      },
 
       Debug(model.subProp(_.data),b => b, "data"),
       Debug(model.subProp(_.metadata),b => b, "metadata")

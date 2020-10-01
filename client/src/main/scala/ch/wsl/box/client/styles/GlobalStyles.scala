@@ -537,7 +537,6 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val editor = style(
-    height(800 px),
     width(100.%%),
     borderStyle.solid,
     borderWidth(1 px),

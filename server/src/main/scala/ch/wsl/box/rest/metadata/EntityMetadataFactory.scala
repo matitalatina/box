@@ -275,7 +275,8 @@ object EntityMetadataFactory extends Logging {
     "interval" -> JSONFieldTypes.INTERVAL,
     "ARRAY" -> JSONFieldTypes.STRING,                              //todo: works only for visualisation
     "USER-DEFINED" -> JSONFieldTypes.STRING,
-    "geometry" -> JSONFieldTypes.GEOMETRY
+    "geometry" -> JSONFieldTypes.GEOMETRY,
+    "jsonb" -> JSONFieldTypes.JSON
   )
 
 
@@ -297,6 +298,7 @@ object EntityMetadataFactory extends Logging {
     "interval" -> Some(WidgetsNames.datepicker),
     "ARRAY" -> Some(WidgetsNames.textinput),                          //todo: works only for visualisation -> provide widget
     "USER-DEFINED" -> None,
-    "geometry" -> Some(WidgetsNames.map)
+    "geometry" -> Some(WidgetsNames.map),
+    "jsonb" -> Some(WidgetsNames.code)
   )
 }

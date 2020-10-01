@@ -50,21 +50,26 @@ object StubMetadataFactory {
           (BoxForm.BoxForm_i18nTable.returning(BoxForm.BoxForm_i18nTable) += newFormI18n).transactionally
         }
       })
-      fields <- Future.sequence(metadata.fields.map{ field =>
-        val newField = BoxField_row(
-          form_id = form.form_id.get,
-          `type` = field.`type`,
-          name = field.name,
-          widget = field.widget,
-          lookupEntity = field.lookup.map(_.lookupEntity),
-          lookupValueField = field.lookup.map(_.map.valueProperty),
-          default = field.default,
-        )
+      a <- up.boxDb.run {
+        DBIO.seq(metadata.fields.map { field =>
+          val newField = BoxField_row(
+            form_id = form.form_id.get,
+            `type` = field.`type`,
+            name = field.name,
+            widget = field.widget,
+            lookupEntity = field.lookup.map(_.lookupEntity),
+            lookupValueField = field.lookup.map(_.map.valueProperty),
+            default = field.default,
+          )
 
-        up.boxDb.run{
+
           (BoxField.BoxFieldTable.returning(BoxField.BoxFieldTable) += newField).transactionally
-        }
-      })
+
+        }: _*).transactionally
+      }
+      fields <- up.boxDb.run {
+        BoxField.BoxFieldTable.filter(_.form_id === form.form_id.get ).result
+      }
       fieldsI18n <- {
         val t1: Future[Seq[Seq[BoxField_i18n_row]]] = Future.sequence(langs.map{ lang =>
           val t: Future[Seq[BoxField_i18n_row]] = Future.sequence(lang._2.fields.map{ case jsonField =>
