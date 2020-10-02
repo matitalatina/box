@@ -71,13 +71,13 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
         }
 
 
-        val visibility = Property(evaluate(observedData.get))
-        observedData.listen{d =>
+        val visibility = Property(false)
+        observedData.listen(d => {
           val r = evaluate(d)
           if(r == !visibility.get) { //change only when the status changes
             visibility.set(r)
           }
-        }
+        },true)
         visibility
       }
     }
@@ -86,9 +86,6 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
   private def widgetSelector(field: JSONField, id:Property[Option[String]], fieldData:Property[Json]): Widget = {
     import JSONFieldTypes._
-
-
-    val label = field.label.getOrElse(field.name)
 
     val widg:ComponentWidgetFactory =
 

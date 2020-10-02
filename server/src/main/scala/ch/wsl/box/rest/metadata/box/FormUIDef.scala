@@ -96,7 +96,7 @@ object FormUIDef {
       JSONField(JSONFieldTypes.NUMBER,"min",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.NUMBER.asJson)))),
       JSONField(JSONFieldTypes.NUMBER,"max",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.NUMBER.asJson)))),
       JSONField(JSONFieldTypes.STRING,"conditionFieldId",true),
-      JSONField(JSONFieldTypes.STRING,"conditionValues",true),
+      JSONField(JSONFieldTypes.STRING,"conditionValues",true,placeholder = Some("[1,2,3]"),tooltip = Some("Enter a JSON array with the possibles values")),
       JSONField(JSONFieldTypes.JSON,"params",true,widget = Some(WidgetsNames.code)),
     ),
     layout = Layout(
