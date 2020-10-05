@@ -1,24 +1,17 @@
 package ch.wsl.box.client
 
 import ch.wsl.box.model.shared.{JSONSchema}
-import utest._
+import org.scalatest.flatspec.AnyFlatSpec
 
-object JsonTest extends TestSuite{
+object JsonTest extends AnyFlatSpec {
 
-  val jsonSchema = """{"type":"object","title":"val_a","properties":{"id":{"type":"number","title":"id","readonly":false,"order":1},"name":{"type":"string","title":"name","readonly":false,"order":2}},"required":["id"],"readonly":false}"""
-  //val jsonSchema = """{"type":"object","readonly":false}"""
+  "An empty Set" should "have size 0" in {
+    assert(Set.empty.size == 0)
+  }
 
-
-
-  val tests = this{
-    'test1{
-      import io.circe.parser.decode
-      import io.circe.generic.auto._
-
-      val result = decode[JSONSchema](jsonSchema)
+  it should "produce NoSuchElementException when head is invoked" in {
+    assertThrows[NoSuchElementException] {
+      Set.empty.head
     }
-//    'test2{
-//      GenCodec.read[Js.Value](new SimpleValueInput(json2))
-//    }
   }
 }

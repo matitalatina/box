@@ -79,7 +79,6 @@ lazy val client: Project = (project in file("client"))
     skip in packageJSDependencies := false,
     // use Scala.js provided launcher code to start the client app
     scalaJSUseMainModuleInitializer := true,
-    scalaJSUseMainModuleInitializer in Test := false,
     Compile / npmDependencies ++= Seq(
       "ol" -> "6.3.1",
       "@types/ol" -> "6.3.1",
@@ -105,6 +104,7 @@ lazy val client: Project = (project in file("client"))
     // Use application model mode for fullOptJS
     webpackBundlingMode in fullOptJS := BundlingMode.Application,
     webpackConfigFile in fullOptJS := Some(baseDirectory.value / ".." / "prod.config.js"),
+    webpackConfigFile in Test := Some(baseDirectory.value / ".." / "test.config.js"),
     npmDevDependencies in Compile ++= Seq(
       "html-webpack-plugin" -> "4.3.0",
       "webpack-merge" -> "4.2.2",
@@ -121,7 +121,9 @@ lazy val client: Project = (project in file("client"))
     fork in fullOptJS := true,
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
-    // use uTest framework for tests
+    // use scalatest framework for tests
+    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+    requireJsDomEnv in Test := true,
 //    testFrameworks += new TestFramework("utest.runner.Framework"),
 //    // Compile tests to JS using fast-optimisation
 //    scalaJSStage in Test := FastOptStage,

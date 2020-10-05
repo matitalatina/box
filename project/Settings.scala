@@ -43,7 +43,7 @@ object Settings {
     //Testing
     val specs2 = "4.3.4"
     val junit = "4.12"
-    val scalatest = "3.0.5"
+    val scalatest = "3.2.2"
     val selenium = "3.14.0"
 
     //logs
@@ -122,7 +122,6 @@ object Settings {
     "org.webjars"               % "webjars-locator-core" % "0.44",
     "org.webjars"              % "webjars-locator"   % "0.39",
     "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
-    "org.scalatest"            %% "scalatest"        % versions.scalatest % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium  % "test",
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka      % "test",
@@ -144,6 +143,8 @@ object Settings {
     "com.nrinaudo" %% "kantan.csv" % versions.kantan,
     "org.graalvm.js" % "js" % "20.2.0",
     "org.javadelight" % "delight-graaljs-sandbox" % "0.1.2",
+    "org.scalatest" %% "scalatest" % versions.scalatest % "test",
+    "org.scalatest" %% "scalatest-flatspec" % versions.scalatest % "test"
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))
@@ -157,9 +158,10 @@ object Settings {
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
     "io.circe" %%% "circe-scalajs" % versions.circe,
-    "com.lihaoyi" %% "utest" % "0.4.5" % "test",
     "org.scala-js" %%% "scalajs-dom" % "1.0.0",
-    "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
+    "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3",
+    "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
+    "org.scalatest" %%% "scalatest-flatspec" % versions.scalatest % "test"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */
