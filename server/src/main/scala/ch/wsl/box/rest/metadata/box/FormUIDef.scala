@@ -81,8 +81,10 @@ object FormUIDef {
       JSONField(JSONFieldTypes.STRING,"lookupEntity",true,lookup = Some(JSONFieldLookup.prefilled(
         tables.map(x => JSONLookup(x,x))
       ))),
-      JSONField(JSONFieldTypes.STRING,"lookupValueField",true),
-      JSONField(JSONFieldTypes.STRING,"lookupQuery",true),
+      JSONField(JSONFieldTypes.STRING,"lookupValueField",true,condition = Some(ConditionalField("lookupEntity",tables.map(_.asJson)))),
+      JSONField(JSONFieldTypes.STRING,"lookupQuery",true, widget = Some(WidgetsNames.code),condition = Some(ConditionalField("lookupEntity",tables.map(_.asJson))),
+        params = Some(Json.obj("language" -> "json".asJson, "height" -> 200.asJson))
+      ),
       JSONField(JSONFieldTypes.NUMBER,"child_form_id",true,
         lookup = Some(JSONFieldLookup.prefilled(
           forms.map{ form => JSONLookup(form.form_id.get.toString,form.name) }

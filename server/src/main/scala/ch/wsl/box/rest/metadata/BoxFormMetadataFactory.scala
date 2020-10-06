@@ -3,7 +3,7 @@ package ch.wsl.box.rest.metadata
 import akka.stream.Materializer
 import ch.wsl.box.model.boxentities.{BoxForm, BoxUser}
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.routes.Table
+import ch.wsl.box.rest.routes.{Table, View}
 import ch.wsl.box.rest.utils.UserProfile
 import scribe.Logging
 
@@ -60,7 +60,7 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
 
   override def children(form: JSONMetadata): Future[Seq[JSONMetadata]] = getForms().map{ forms =>
     form match {
-      case f if f.objId == FORM => Seq(FormUIDef.field(forms,Table.tables.toSeq.sorted),FormUIDef.fieldI18n,FormUIDef.formI18n,FormUIDef.fieldFile)
+      case f if f.objId == FORM => Seq(FormUIDef.field(forms,(Table.tables.toSeq++View.views).sorted),FormUIDef.fieldI18n,FormUIDef.formI18n,FormUIDef.fieldFile)
       case f if f.objId == FORM_FIELD => Seq(FormUIDef.fieldI18n,FormUIDef.fieldFile)
       case f if f.objId == FUNCTION => Seq(FunctionUIDef.field,FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
       case f if f.objId == FUNCTION_FIELD => Seq(FunctionUIDef.fieldI18n)
