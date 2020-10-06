@@ -75,7 +75,7 @@ case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JS
     val jsonid = result.ID(metadata.keys)
     for{
       idfile <- Future.sequence{
-        val r: Seq[Future[Int]] = selectedFile.get.map(REST.sendFile(_,jsonid.get,s"${metadata.entity}.${field.file.get.file_field}"))
+        val r: Seq[Future[Int]] = selectedFile.get.map(REST.sendFile(_,jsonid.get,s"${metadata.entity}.${field.file.get.file_field}")).toSeq
         r
       }
     } yield {

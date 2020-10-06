@@ -87,7 +87,10 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
   private def sidebar: Element = if(UI.showEntitiesSidebar) {
     div(sidebarGrid)(
       div(Labels.entities.search),
-      TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
+      TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => {
+        presenter.updateEntitiesList()
+        true
+      })),
       produceWithNested(model.subProp(_.search)) { (q,releaser) =>
         ul(ClientConf.style.noBullet,
           releaser(repeat(model.subSeq(_.filteredList)){m =>

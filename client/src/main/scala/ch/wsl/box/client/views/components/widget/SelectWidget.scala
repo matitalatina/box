@@ -31,7 +31,7 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
   val modifiers:Seq[Modifier] = Seq()
 
 
-  val selectModel = data.transform(value2Label,label2Value)
+  val selectModel = data.bitransform(value2Label)(label2Value)
 
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
@@ -61,18 +61,18 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
 
 
     val model:Property[JSONLookup] = field.`type` match {
-      case "number" =>  data.transform[JSONLookup](
+      case "number" =>  data.bitransform[JSONLookup](
         {json:Json =>
           val id = jsonToString(json)
           lookup.get.find(_.id == jsonToString(json)).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-        },
+        })(
         {jsonLookup:JSONLookup => strToNumericJson(jsonLookup.id)}
       )
-      case _ => data.transform[JSONLookup](
+      case _ => data.bitransform[JSONLookup](
         {json:Json =>
           val id = jsonToString(json)
           lookup.get.find(_.id == id).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-        },
+        })(
         {jsonLookup:JSONLookup => strToJson(field.nullable)(jsonLookup.id)}
       )
     }

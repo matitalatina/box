@@ -1,34 +1,32 @@
 package ch.wsl.box.client
 
 import ch.wsl.box.client.styles.OpenLayersStyles
-import ch.wsl.box.client.styles.constants.StyleConstants.Colors
 import ch.wsl.box.client.utils._
-import io.udash._
-import io.udash.properties.PropertyCreator
 import io.udash.wrappers.jquery._
-import org.scalajs.dom
 import org.scalajs.dom.{Element, document}
-import scalatags.Text.TypedTag
 import scribe.{Level, Logger, Logging}
 
-import scala.concurrent.Future
-import scala.scalajs.js
-import scala.scalajs.js.JSApp
-import scala.scalajs.js.annotation.JSExport
-
-object Context {
-  implicit val executionContext = scalajs.concurrent.JSExecutionContext.Implicits.queue
-  val routingRegistry = new RoutingRegistryDef
-  private val viewPresenterRegistry = new StatesToViewPresenterDef
-
-  implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry)   //udash application
-}
-
-object Init extends JSApp with Logging {
+object Main extends Logging {
   import Context._
 
-  @JSExport
-  override def main(): Unit = {
+  def main(args: Array[String]): Unit = {
+
+
+    println(
+      s"""
+         |===================================
+         |
+         |    _/_/_/      _/_/    _/      _/
+         |   _/    _/  _/    _/    _/  _/
+         |  _/_/_/    _/    _/      _/
+         | _/    _/  _/    _/    _/  _/
+         |_/_/_/      _/_/    _/      _/
+         |
+         |===================================
+         |
+         |Box client started
+         |
+         |""".stripMargin)
 
     //loads datetime picker
     typings.bootstrap.bootstrapRequire
@@ -37,9 +35,6 @@ object Init extends JSApp with Logging {
     styles.fonts.ClearSans
 
     Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
-
-
-    logger.debug("Box started")
 
     for {
       _ <- ClientConf.load()

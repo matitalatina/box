@@ -124,7 +124,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
         f(cw.widget)(d, childMetadata).map{ r =>
           r
         }
-      })
+      }.toSeq)
       //correct futures
       out
     }

@@ -48,7 +48,10 @@ object Navigation extends HasModelPropertyCreator[Navigation] {
   def button(navProp:ReadableProperty[Boolean],callback: () => Unit,label:String,pull:BootstrapStyles.type => CssStyleName) = scalatags.JsDom.all.button(
     disabled.attrIfNot(navProp),
     pull(BootstrapStyles),ClientConf.style.boxButton,
-    onclick :+= ((ev: Event) => callback(), true),
+    onclick :+= ((ev: Event) => {
+      callback()
+      true
+    }),
     label
   )
 

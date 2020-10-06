@@ -117,7 +117,7 @@ object InputWidget {
 
     override def edit() = editMe(field,true, false, modifiers){ case y =>
 
-      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
+      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
       TextInput(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true, modifiers))
@@ -132,7 +132,7 @@ object InputWidget {
 //      case true => {
         case _ => {
         editMe(field,true, !ClientConf.manualEditKeyFields, modifiers){ case y =>
-          val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
+          val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
           TextInput(stringModel)(y:_*).render
         }
       }
@@ -146,7 +146,7 @@ object InputWidget {
 
 
     override def edit() = editMe(field,false, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
+      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
       TextInput(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field, false))
@@ -157,7 +157,7 @@ object InputWidget {
     val modifiers:Seq[Modifier] = Seq()
 
     override def edit() = editMe(field,true, false, modifiers){ case y =>
-      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
+      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
       TextArea(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true,modifiers))
@@ -173,7 +173,7 @@ object InputWidget {
   case class Number(field:JSONField, prop: Property[Json]) extends Widget {
 
     override def edit():JsDom.all.Modifier = (editMe(field, true, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
+      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericJson _)
       NumberInput(stringModel)(y:_*).render
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, true))
@@ -182,7 +182,7 @@ object InputWidget {
   case class NumberNoLabel(field:JSONField, prop: Property[Json]) extends Widget {
 
     override def edit():JsDom.all.Modifier = (editMe(field,false, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
+      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericJson _)
       NumberInput(stringModel)(y:_*).render
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, false,Seq()))
@@ -191,7 +191,7 @@ object InputWidget {
   case class NumberArray(field:JSONField, prop: Property[Json]) extends Widget {
 
     override def edit():JsDom.all.Modifier = (editMe(field, true, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _,strToNumericArrayJson _)
+      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericArrayJson _)
       NumberInput(stringModel)(y:_*).render
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, true))

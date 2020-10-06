@@ -40,7 +40,7 @@ import ch.wsl.box.client.Context._
 
 
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
-    val selectedItem: Property[String] = data.transform(value2Label,label2Value)
+    val selectedItem: Property[String] = data.bitransform(value2Label)(label2Value)
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin)(
       label(field.title),
@@ -62,7 +62,7 @@ import ch.wsl.box.client.Context._
 
     val modalStatus = Property(Status.Closed)
 
-    val selectedItem: Property[String] = data.transform(value2Label,label2Value)
+    val selectedItem: Property[String] = data.bitransform(value2Label)(label2Value)
 
     def optionList(nested:NestedInterceptor):Modifier = div(
       lab(Labels.popup.search),br,
@@ -102,7 +102,10 @@ import ch.wsl.box.client.Context._
     ).render
 
     val footer = (x:NestedInterceptor) => div(
-      button(onclick :+= ((e:Event) => modal.hide(),true), Labels.popup.close)
+      button(onclick :+= ((e:Event) => {
+        modal.hide()
+        true
+      }), Labels.popup.close)
     ).render
 
     modal = UdashModal(modalSize = Some(Size.Large).toProperty)(
@@ -130,7 +133,10 @@ import ch.wsl.box.client.Context._
     div(BootstrapCol.md(12),ClientConf.style.noPadding, ClientConf.style.smallBottomMargin,
       BootstrapStyles.Display.flex(),BootstrapStyles.Flex.justifyContent(BootstrapStyles.FlexContentJustification.Between))(
       WidgetUtils.toLabel(field),
-      tooltip(button(ClientConf.style.popupButton, onclick :+= ((e:Event) => modalStatus.set(Status.Open),true),bind(selectedItem)).render),
+      tooltip(button(ClientConf.style.popupButton, onclick :+= ((e:Event) => {
+        modalStatus.set(Status.Open)
+        true
+      }),bind(selectedItem)).render),
       modal.render
 
     )

@@ -37,7 +37,7 @@ case class LoginPresenter(model:ModelProperty[LoginData]) extends Presenter[Logi
 
   def login() = {
     Session.login(model.get.username,model.get.password).map{ _ match {
-        case true => Unit
+        case true => ()
         case false => model.subProp(_.message).set(Labels.login.failed)
       }
     }

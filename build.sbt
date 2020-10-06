@@ -1,6 +1,3 @@
-// If you are using Scala.js 0.6.x, you need the following import:
-import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
-
 
 /** codegen project containing the customized code generator */
 lazy val codegen  = (project in file("codegen")).settings(
@@ -10,7 +7,7 @@ lazy val codegen  = (project in file("codegen")).settings(
   bintrayOrganization := Some("waveinch"),
   publishMavenStyle := true,
   licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
-  scalaVersion := Settings.versions.scala,
+  scalaVersion := Settings.versions.scala212,
   libraryDependencies ++= Settings.codegenDependecies.value,
   resolvers += Resolver.jcenterRepo,
   resolvers += Resolver.bintrayRepo("waveinch","maven"),
@@ -27,7 +24,7 @@ lazy val server: Project  = project
     bintrayOrganization := Some("waveinch"),
     publishMavenStyle := true,
     licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
-    scalaVersion := Settings.versions.scala,
+    scalaVersion := Settings.versions.scala212,
     scalaBinaryVersion := "2.12",
     scalacOptions ++= Settings.scalacOptionsServer,
     libraryDependencies ++= Settings.jvmDependencies.value,
@@ -48,8 +45,8 @@ lazy val server: Project  = project
     WebKeys.packagePrefix in Assets := "public/",
     managedClasspath in Runtime += (packageBin in Assets).value,
     //Comment this to avoid errors in importing project, i.e. when changing libraries
-    scalaJSProjects := Seq(client),
     pipelineStages in Assets := Seq(scalaJSPipeline),
+    scalaJSProjects := Seq(client),
     Seq("jquery","ol","bootstrap","flatpickr","quill").map{ p =>
       npmAssets ++= NpmAssets.ofProject(client) { nodeModules =>
         (nodeModules / p).allPaths
@@ -69,16 +66,16 @@ lazy val server: Project  = project
 lazy val client: Project = (project in file("client"))
   .settings(
     name := "client",
-    scalaVersion := Settings.versions.scala,
+    scalaVersion := Settings.versions.scala213,
     scalacOptions ++= Settings.scalacOptions,
     resolvers += Resolver.jcenterRepo,
     resolvers += Resolver.bintrayRepo("waveinch","maven"),
     libraryDependencies ++= Settings.scalajsDependencies.value,
-    jsDependencies ++= Settings.jsDependencies.value,
     // yes, we want to package JS dependencies
     skip in packageJSDependencies := false,
     // use Scala.js provided launcher code to start the client app
     scalaJSUseMainModuleInitializer := true,
+    mainClass := Some("ch.wsl.box.client.Main"),
     Compile / npmDependencies ++= Seq(
       "ol" -> "6.3.1",
       "@types/ol" -> "6.3.1",
@@ -153,7 +150,6 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure
   .settings(
     organization := "boxframework",
     name := "box-shared",
-    scalaVersion := Settings.versions.scala,
     bintrayRepository := "maven",
     bintrayOrganization := Some("waveinch"),
     licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
@@ -163,12 +159,18 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure
     git.useGitDescribe := true
   )
   .jsSettings(
-    libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC5"
+    libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.0.0"
   )
 
-lazy val sharedJVM: Project = shared.jvm.settings(name := "box-shared-jvm")
+lazy val sharedJVM: Project = shared.jvm.settings(
+  name := "box-shared-jvm",
+  scalaVersion := Settings.versions.scala212,
+)
 
-lazy val sharedJS: Project = shared.js.settings(name := "box-shared-js")
+lazy val sharedJS: Project = shared.js.settings(
+  name := "box-shared-js",
+  scalaVersion := Settings.versions.scala213,
+)
 
 
 // code generation task that calls the customized code generator

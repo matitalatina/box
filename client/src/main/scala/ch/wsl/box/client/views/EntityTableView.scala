@@ -62,7 +62,7 @@ object IDsVM extends HasModelPropertyCreator[IDsVM] {
 }
 
 
-case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewFactory[EntityTableState] {
+case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => ())) extends ViewFactory[EntityTableState] {
 
   import ch.wsl.box.client.Context._
 
@@ -419,11 +419,11 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     filterValue.listen(v => logger.info(s"Filter for ${fieldQuery.field.name} changed in: $v"))
 
     fieldQuery.field.`type` match {
-      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(None),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(None),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
+      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(None),JSONField.empty,filterValue.bitransform(_.asJson)(_.string)).edit()
+      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(None),JSONField.empty,filterValue.bitransform(_.asJson)(_.string),true).edit()
       case JSONFieldTypes.DATETIME => ClientConf.filterPrecisionDatetime match{
-        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(None),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
-        case _ => DateTimeWidget.DateTimeFullWidth(Property(None),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
+        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(None),JSONField.empty,filterValue.bitransform(_.asJson)(_.string),true).edit()
+        case _ => DateTimeWidget.DateTimeFullWidth(Property(None),JSONField.empty,filterValue.bitransform(_.asJson)(_.string),true).edit()
       }
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && !Seq(Filter.BETWEEN, Filter.IN, Filter.NOTIN).contains(filterOperator) => {
         if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
@@ -492,7 +492,10 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
                   td(ClientConf.style.smallCells)(
                     a(
-                      onclick :+= ((ev: Event) => presenter.sort(fieldQuery.get), true),
+                      onclick :+= ((ev: Event) => {
+                        presenter.sort(fieldQuery.get)
+                        true
+                      }),
                       span(title, ClientConf.style.tableHeader), " ",
                       Labels(Sort.label(sort.get)), " ", order
                     )
@@ -520,20 +523,32 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             val hasKey = model.get.metadata.exists(_.keys.nonEmpty)
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
 
-            tr((`class` := "info").attrIf(selected), ClientConf.style.rowStyle, onclick :+= ((e:Event) => presenter.selected(el.get),true),
+            tr((`class` := "info").attrIf(selected), ClientConf.style.rowStyle, onclick :+= ((e:Event) => {
+              presenter.selected(el.get)
+              true
+            }),
               td(ClientConf.style.smallCells)(
                 (hasKey,model.get.write) match{
                   case (false,_) => p(color := "grey")(Labels.entity.no_action)
                   case (true,false) => a(
                     cls := "primary action",
-                    onclick :+= ((ev: Event) => presenter.show(el.get), true)
+                    onclick :+= ((ev: Event) => {
+                      presenter.show(el.get)
+                      true
+                    })
                   )(Labels.entity.show)
                   case (true,true) => Seq(a(
                     cls := "primary action",
-                    onclick :+= ((ev: Event) => presenter.edit(el.get), true)
+                    onclick :+= ((ev: Event) => {
+                      presenter.edit(el.get)
+                      true
+                    })
                   )(Labels.entity.edit),span(" "),a(
                     cls := "danger action",
-                    onclick :+= ((ev: Event) => presenter.delete(el.get), true)
+                    onclick :+= ((ev: Event) => {
+                      presenter.delete(el.get)
+                      true
+                    })
                   )(Labels.entity.delete))
                 }
               ),

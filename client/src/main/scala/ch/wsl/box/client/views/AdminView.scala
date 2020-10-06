@@ -22,7 +22,7 @@ object AdminViewModel extends HasModelPropertyCreator[AdminViewModel] {
     Blank.Simple(AdminViewModel(Seq()))
 }
 
-object AdminViewPresenter extends FinalViewFactory[AdminState.type]{
+object AdminViewPresenter extends ViewFactory[AdminState.type]{
 
   val prop = ModelProperty.blank[AdminViewModel]
 
@@ -46,7 +46,7 @@ class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[
   }
 }
 
-class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresenter) extends FinalView {
+class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresenter) extends View {
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.circe.generic.auto._

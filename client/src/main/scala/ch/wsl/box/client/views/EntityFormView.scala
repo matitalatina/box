@@ -357,7 +357,10 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
     if((action.updateOnly && id.isDefined) || (action.insertOnly && id.isEmpty) || (!action.insertOnly && !action.updateOnly)) {
       button(
         importance,
-        onclick :+= ((ev: Event) => confirm(callBack), true)
+        onclick :+= ((ev: Event) => {
+          confirm(callBack)
+          true
+        })
       )(Labels(action.label)).render
     } else frag()
 

@@ -89,7 +89,7 @@ class DataListView(model:ModelProperty[DataList], presenter: DataListPresenter) 
 
   private def sidebar: Element = div(sidebarGrid)(
     Labels.exports.search,
-    TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => presenter.updateExportsList(), true)),
+    TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => presenter.updateExportsList())),
       produce(model.subProp(_.search)) { q =>
         ul(ClientConf.style.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>

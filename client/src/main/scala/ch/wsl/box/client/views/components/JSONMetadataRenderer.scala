@@ -172,7 +172,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   } yield {
 
 
-    val fieldData = data.transform(_.js(field.name),(fd:Json) => data.get.deepMerge(Json.obj((field.name,fd))))
+    val fieldData = data.bitransform(_.js(field.name))((fd:Json) => data.get.deepMerge(Json.obj((field.name,fd))))
 
 //    data.listen({ d =>
 //      val newJs = d.js(field.name)
