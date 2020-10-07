@@ -82,7 +82,7 @@ object Header {
 
   def navbar(title:Option[String]) = produce(Session.logged) { x =>
     header(
-      div(BootstrapStyles.Float.left())(b(title), small(ClientConf.style.noMobile,user.map("   -   " + _))),
+      div(BootstrapStyles.Float.left())(b(id := "headerTitle", title), small(ClientConf.style.noMobile,user.map("   -   " + _))),
       div(BootstrapStyles.Float.right(),ClientConf.style.noMobile) (
         menu
       ),

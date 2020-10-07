@@ -13,7 +13,7 @@ object UI {
 
   private var ui:Map[String,String] = Map()
 
-  def load() = REST.ui().map { ui =>
+  def load(ui:Map[String,String]) = {
     this.ui = ui
   }
 

@@ -26,11 +26,7 @@ object ClientConf {
   private var _version:String = ""
   private var _appVersion:String = ""
 
-  def load() = for{
-    table <- REST.conf()
-    version <- REST.version()
-    appVersion <- REST.appVersion()
-  } yield {
+  def load(table:Map[String,String],version:String,appVersion:String) = {
     conf = table
     _version = version
     _appVersion = appVersion

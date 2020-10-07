@@ -1,3 +1,4 @@
+import org.scalajs.jsenv.selenium.SeleniumJSEnv
 
 /** codegen project containing the customized code generator */
 lazy val codegen  = (project in file("codegen")).settings(
@@ -75,7 +76,6 @@ lazy val client: Project = (project in file("client"))
     skip in packageJSDependencies := false,
     // use Scala.js provided launcher code to start the client app
     scalaJSUseMainModuleInitializer := true,
-    mainClass := Some("ch.wsl.box.client.Main"),
     Compile / npmDependencies ++= Seq(
       "ol" -> "6.3.1",
       "@types/ol" -> "6.3.1",
@@ -119,9 +119,8 @@ lazy val client: Project = (project in file("client"))
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     // use scalatest framework for tests
-    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+    jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(false)),
     requireJsDomEnv in Test := true,
-//    testFrameworks += new TestFramework("utest.runner.Framework"),
 //    // Compile tests to JS using fast-optimisation
 //    scalaJSStage in Test := FastOptStage,
 //    fullClasspath in Test ~= { _.filter(_.data.exists) },
@@ -136,6 +135,7 @@ lazy val client: Project = (project in file("client"))
   )
   .enablePlugins(
     ScalaJSPlugin,
+    ScalaJSJUnitPlugin,
     ScalablyTypedConverterPlugin
   )
   .dependsOn(sharedJS)

@@ -72,8 +72,9 @@ object Session extends Logging {
     dom.window.sessionStorage.setItem(USER,username)
     val fut = for{
       _ <- REST.login(LoginRequest(username,password))
-      _ <- UI.load()
+      ui <- REST.ui()
     } yield {
+      UI.load(ui)
       logged.set(true)
       if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined && dom.window.sessionStorage.getItem(STATE).trim.length > 0) {
         val state = dom.window.sessionStorage.getItem(STATE).replaceAll("#","")
@@ -109,8 +110,9 @@ object Session extends Logging {
       dom.window.sessionStorage.removeItem(USER)
       for{
         _ <- REST.logout()
-        _ <- UI.load()
+        ui <- REST.ui()
       } yield {
+        UI.load(ui)
         logged.set(false)
         Navigate.to(LoginState)
       }
@@ -134,8 +136,8 @@ object Session extends Logging {
     case _ if ClientConf.langs.nonEmpty => ClientConf.langs.head
     case _ => "en"
   }
-  def setLang(lang:String) = {
-    Labels.load(lang)
+  def setLang(lang:String) = REST.labels(lang).map{ labels =>
+    Labels.load(labels)
     dom.window.sessionStorage.setItem(LANG,lang)
     dom.window.location.reload()
   }

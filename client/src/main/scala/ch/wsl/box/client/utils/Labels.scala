@@ -16,7 +16,7 @@ object Labels {
 
   private var labels:Map[String,String] = Map()
 
-  def load(lang:String) = REST.labels(lang).map{ table =>
+  def load(table:Map[String,String]) = {
     labels = table
   }
 
