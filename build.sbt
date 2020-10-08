@@ -1,3 +1,4 @@
+import org.scalajs.jsenv.Input.Script
 import org.scalajs.jsenv.selenium.SeleniumJSEnv
 
 /** codegen project containing the customized code generator */
@@ -113,13 +114,22 @@ lazy val client: Project = (project in file("client"))
     ),
     webpackDevServerPort := 7357,
     version in webpack := "4.43.0",
-    version in startWebpackDevServer       := "3.11.0",
+    version in installJsdom := "16.4.0",
+    version in startWebpackDevServer := "3.11.0",
     fork in fastOptJS := true,
     fork in fullOptJS := true,
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     // use scalatest framework for tests
-    jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(false)),
+    jsEnv in Test := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+    jsEnvInput in Test := Def.task{
+      val targetDir = (npmUpdate in Test).value
+      println(targetDir)
+      val r = Seq(Script((targetDir / s"fixTest.js").toPath)) ++ (jsEnvInput in Test).value
+      println(r)
+      r
+    }.value,
+    //jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(false)),
     requireJsDomEnv in Test := true,
 //    // Compile tests to JS using fast-optimisation
 //    scalaJSStage in Test := FastOptStage,

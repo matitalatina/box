@@ -1,11 +1,9 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.model.shared.JSONSchema
-import org.scalajs.dom
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._
-import org.junit.Test
 import org.scalatest.flatspec.AnyFlatSpec
+
 
 class LoaderSpec extends AnyFlatSpec  {
 

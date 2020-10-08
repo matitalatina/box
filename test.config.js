@@ -24,10 +24,21 @@ const WebApp = {
         ]
     },
     plugins: [
-        new HtmlWebpackPlugin(),
-        new MonacoWebpackPlugin({
-            publicPath: "bundle"
-        })
+        // new HtmlWebpackPlugin({
+        //     'templateContent': ({htmlWebpackPlugin}) => `
+        //     <html>
+        //       <head>
+        //
+        //       </head>
+        //       <body>
+        //         <script src="fixQueryCommandSupported.js"></script>
+        //       </body>
+        //     </html>
+        //   `
+        // }),
+        // new MonacoWebpackPlugin({
+        //     publicPath: "bundle"
+        // })
     ]
 };
 
