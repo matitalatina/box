@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
+import ch.wsl.box.client.services.{Navigate, Notification, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.{ClientConf, Labels, Navigation, Session, SessionQuery}
 import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget, SelectWidgetFullWidth}
@@ -86,7 +86,6 @@ with error: DecodingFailure(String, List(DownArray, DownField(fields), DownArray
 case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState] with Logging {
 
   import ch.wsl.box.client.Context._
-  import Enhancer._
 
 
   private var filterUpdateHandler: Int = 0
@@ -175,7 +174,18 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
 
-  def ids(el:Row): JSONID = Enhancer.extractID(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
+  private def extractID(row:Seq[String], fields:Seq[String], keys:Seq[String]):JSONID = {
+    val map = for{
+      key <- keys
+      (field,i) <- fields.zipWithIndex if field == key
+    } yield {
+      key -> row.lift(i).getOrElse("")
+    }
+    JSONID.fromMap(map.toMap)
+  }
+
+
+  def ids(el:Row): JSONID = extractID(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
 
   def edit(el:Row) = {
     val k = ids(el)
@@ -378,7 +388,6 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
   import io.udash.css.CssView._
   import ch.wsl.box.shared.utils.JSONUtils._
 
-  import Enhancer._
 
 
 

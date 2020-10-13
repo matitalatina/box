@@ -7,5 +7,5 @@ object Context {
   val routingRegistry = new RoutingRegistryDef
   private val viewPresenterRegistry = new StatesToViewPresenterDef
 
-  implicit val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry)   //udash application
+  val applicationInstance = new Application[RoutingState](routingRegistry, viewPresenterRegistry)   //udash application
 }

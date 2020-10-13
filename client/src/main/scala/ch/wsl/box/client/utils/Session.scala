@@ -100,7 +100,7 @@ object Session extends Logging {
 
   def logoutAndSaveState() = {
     Try{
-      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url)
+      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url(applicationInstance))
     }
     logout()
   }

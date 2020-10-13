@@ -36,6 +36,8 @@ object Settings {
     val scala213 = "2.13.3"
     val ficus = "1.4.7"
 
+    val macWire = "2.3.7"
+
     //HTTP actors
     val akka = "2.6.4"
     val akkaHttp = "10.1.11"
@@ -161,7 +163,8 @@ object Settings {
     "org.scala-js" %%% "scalajs-dom" % "1.0.0",
     "io.github.cquiroz" %%% "scala-java-time" % "2.0.0",
     "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
-    "org.scalatest" %%% "scalatest-flatspec" % versions.scalatest % "test"
+    "org.scalatest" %%% "scalatest-flatspec" % versions.scalatest % "test",
+    "com.softwaremill.macwire" %% "macros" % versions.macWire,
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

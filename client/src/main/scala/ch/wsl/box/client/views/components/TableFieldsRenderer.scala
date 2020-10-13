@@ -22,7 +22,6 @@ object TableFieldsRenderer extends Logging{
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
-  import ch.wsl.box.client.services.Enhancer._
 
 
 
