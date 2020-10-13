@@ -2,7 +2,6 @@ package ch.wsl.box.client.views.components.widget
 
 import java.util.UUID
 
-import ch.wsl.box.client.MainModule
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{ClientConf, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
@@ -28,9 +27,9 @@ import scala.util.Random
   * @param field
   * @param entity
   */
-case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging with MainModule {
+case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
 
-  import context._
+  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
   import io.udash.css.CssView._

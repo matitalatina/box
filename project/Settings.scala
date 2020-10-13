@@ -37,6 +37,7 @@ object Settings {
     val ficus = "1.4.7"
 
     val macWire = "2.3.7"
+    val airframe = "20.10.0"
 
     //HTTP actors
     val akka = "2.6.4"
@@ -164,7 +165,7 @@ object Settings {
     "io.github.cquiroz" %%% "scala-java-time" % "2.0.0",
     "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
     "org.scalatest" %%% "scalatest-flatspec" % versions.scalatest % "test",
-    "com.softwaremill.macwire" %% "macros" % versions.macWire,
+    "org.wvlet.airframe" %%% "airframe" % versions.airframe,
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

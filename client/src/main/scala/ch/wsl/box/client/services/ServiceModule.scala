@@ -1,12 +1,10 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.client.Context
+import wvlet.airframe._
 
-class ServiceModule(context:Context) {
-  import com.softwaremill.macwire._
-
-  lazy val httpClient = wire[HttpClient]
-  lazy val rest = wire[REST]
-  lazy val session = wire[Session]
-  lazy val navigator = wire[Navigator]
+trait ServiceModule {
+  val httpClient = bind[HttpClient]
+  val rest = bind[REST]
+  val clientSession = bind[ClientSession]
+  val navigator  = bind[Navigator]
 }

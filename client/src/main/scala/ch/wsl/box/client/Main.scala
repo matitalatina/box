@@ -1,6 +1,6 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.services.{ClientConf, Labels, REST, Session, UI}
+import ch.wsl.box.client.services.{ClientConf, Labels, REST, UI}
 import ch.wsl.box.client.styles.OpenLayersStyles
 import ch.wsl.box.client.utils._
 import io.udash.wrappers.jquery._
@@ -8,11 +8,12 @@ import org.scalajs.dom
 import org.scalajs.dom.{Element, document}
 import scribe.{Level, Logger, Logging}
 
-object Main extends Logging with MainModule {
-  import context._
+object Main extends Logging {
+  import Context._
 
   def main(args: Array[String]): Unit = {
 
+    Context.init(Module.prod)
 
     println(
       s"""
@@ -39,7 +40,7 @@ object Main extends Logging with MainModule {
       version <- services.rest.version()
       clientConf <- services.rest.conf()
       uiConf <- services.rest.ui()
-      labels <- services.rest.labels(services.session.lang())
+      labels <- services.rest.labels(services.clientSession.lang())
     } yield {
 
       document.addEventListener("DOMContentLoaded", { (e: dom.Event) =>

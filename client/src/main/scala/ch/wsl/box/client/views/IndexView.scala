@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import io.udash._
 import ch.wsl.box.client._
-import ch.wsl.box.client.services.{ClientConf, REST, ServiceModule, Session, UI}
+import ch.wsl.box.client.services.{ClientConf, REST, ServiceModule, UI}
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.model.shared.{JSONQuery, JSONSort, NewsEntry, Sort}
@@ -26,14 +26,14 @@ object IndexViewPresenter extends ViewFactory[IndexState.type]{
   override def create() = (new IndexView(prop),new IndexPresenter(prop))
 }
 
-class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[IndexState.type] with MainModule {
+class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[IndexState.type] {
 
-  import context._
+  import Context._
 
   override def handleState(state: IndexState.type): Unit = {
     for{
       news <- if(ClientConf.displayIndexNews)
-          services.rest.news(services.session.lang())
+          services.rest.news(services.clientSession.lang())
         else
           Future.successful(Seq())
     } yield {

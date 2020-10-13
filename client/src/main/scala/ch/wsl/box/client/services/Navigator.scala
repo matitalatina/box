@@ -55,9 +55,9 @@ object Navigation extends HasModelPropertyCreator[Navigation] {
 }
 
 
-class Navigator(session:Session,rest:REST,context:Context) {
+class Navigator(session:ClientSession,rest:REST) {
 
-  import context._
+  import Context._
 
   case class For(currentId: Option[String], kind: String = "", model: String = "") {
 

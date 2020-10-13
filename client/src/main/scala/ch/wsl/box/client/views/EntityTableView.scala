@@ -1,8 +1,8 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{EntityFormState, EntityTableState, MainModule}
-import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Notification, REST, Session, SessionQuery}
+import ch.wsl.box.client.{EntityFormState, EntityTableState}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Notification, SessionQuery}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget, SelectWidgetFullWidth}
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
@@ -81,10 +81,10 @@ Failed to decode JSON on
 /model/en/v_remark_base/metadata
 with error: DecodingFailure(String, List(DownArray, DownField(fields), DownArray, DownField(blocks), DownField(layout)))
  */
-case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState] with Logging with MainModule {
+case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState] with Logging {
 
 
-  import context._
+  import ch.wsl.box.client.Context._
 
 
   private var filterUpdateHandler: Int = 0
@@ -116,7 +116,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
 
     {for{
-      emptyFieldsForm <- services.rest.tabularMetadata(state.kind,services.session.lang(),state.entity)
+      emptyFieldsForm <- services.rest.tabularMetadata(state.kind,services.clientSession.lang(),state.entity)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
       form = emptyFieldsForm.copy(fields = fields)
 
@@ -125,7 +125,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         case Some(jsonquery) => jsonquery.copy(paging = emptyJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
       }
 
-      query:JSONQuery = services.session.getQuery() match {
+      query:JSONQuery = services.clientSession.getQuery() match {
         case Some(SessionQuery(jsonquery,name)) if name == model.get.name => jsonquery      //in case a query is already stored in Session
         case _ => defaultQuery
       }
@@ -137,7 +137,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 //      ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
 //      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
-      specificKind <- services.rest.specificKind(state.kind, services.session.lang(), state.entity)
+      specificKind <- services.rest.specificKind(state.kind, services.clientSession.lang(), state.entity)
     } yield {
 
 
@@ -203,7 +203,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     val confim = window.confirm(Labels.entity.confirmDelete)
     if(confim) {
       model.get.metadata.map(_.name).foreach { name =>
-        services.rest.delete(model.get.kind, services.session.lang(),name,k).map{ count =>
+        services.rest.delete(model.get.kind, services.clientSession.lang(),name,k).map{ count =>
           Notification.add("Deleted " + count.count + " rows")
           reloadRows(model.get.ids.currentPage)
         }
@@ -212,8 +212,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def saveIds(ids: IDs, query:JSONQuery) = {
-    services.session.setQuery(SessionQuery(query,model.get.name))
-    services.session.setIDs(ids)
+    services.clientSession.setQuery(SessionQuery(query,model.get.name))
+    services.clientSession.setIDs(ids)
   }
 
   private def encodeFk(fields:Seq[JSONField],query:JSONQuery):JSONQuery = {
@@ -263,7 +263,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       JSONQueryFilter(f.field.name,Some(f.filterOperator),f.filterValue)
     }.toList
 
-    JSONQuery(filter, sort, None, Some(services.session.lang()))
+    JSONQuery(filter, sort, None, Some(services.clientSession.lang()))
   }
 
   def reloadRows(page:Int): Future[Unit] = {
@@ -274,8 +274,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     val qEncoded = encodeFk(model.get.metadata.toSeq.flatMap(_.fields),q)
 
     for {
-      csv <- services.rest.csv(model.subProp(_.kind).get, services.session.lang(), model.subProp(_.name).get, qEncoded)
-      ids <- services.rest.ids(model.get.kind, services.session.lang(), model.get.name, qEncoded)
+      csv <- services.rest.csv(model.subProp(_.kind).get, services.clientSession.lang(), model.subProp(_.name).get, qEncoded)
+      ids <- services.rest.ids(model.get.kind, services.clientSession.lang(), model.get.name, qEncoded)
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
       model.subProp(_.ids).set(IDsVM.fromIDs(ids))
@@ -372,7 +372,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
 
     val url = Routes.apiV1(
-      s"/$kind/${services.session.lang()}/$modelName/$format?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
+      s"/$kind/${services.clientSession.lang()}/$modelName/$format?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
     )
     logger.info(s"downloading: $url")
     dom.window.open(url)

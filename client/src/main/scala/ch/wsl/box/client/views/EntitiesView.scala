@@ -7,7 +7,7 @@ package ch.wsl.box.client.views
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, REST, UI}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.{EntitiesState, EntityFormState, EntityTableState, MainModule}
+import ch.wsl.box.client.{EntitiesState, EntityFormState, EntityTableState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
@@ -34,10 +34,10 @@ case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int
   }
 }
 
-class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[EntitiesState] with MainModule {
+class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[EntitiesState] {
 
 
-  import context._
+  import ch.wsl.box.client.Context._
 
   override def handleState(state: EntitiesState): Unit = {
     model.subProp(_.kind).set(Some(state.kind))

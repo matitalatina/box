@@ -2,7 +2,6 @@ package ch.wsl.box.client.views.components.widget
 
 import java.util.UUID
 
-import ch.wsl.box.client.MainModule
 import ch.wsl.box.client.services.{Labels, REST}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup, JSONLookup, JSONMetadata}
@@ -113,9 +112,9 @@ trait ChildWidget extends Widget with Logging {
 }
 
 
-trait LookupWidget extends Widget with MainModule {
+trait LookupWidget extends Widget  {
 
-  import context._
+  import ch.wsl.box.client.Context._
 
   def allData:Property[Json]
 
@@ -152,7 +151,7 @@ trait LookupWidget extends Widget with MainModule {
         }
         if(lastQuery != jsonQuery) {
           lastQuery = jsonQuery
-          services.rest.lookup(services.session.lang(),look.lookupEntity, look.map, jsonQuery).map { lookups =>
+          services.rest.lookup(services.clientSession.lang(),look.lookupEntity, look.map, jsonQuery).map { lookups =>
             val newLookup = toSeq(lookups)
             if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
               lookup.set(newLookup, true)

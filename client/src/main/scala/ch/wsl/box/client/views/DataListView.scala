@@ -6,14 +6,14 @@ package ch.wsl.box.client.views
   */
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, REST, Session}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
-import ch.wsl.box.client.{DataListState, DataState, MainModule}
+import ch.wsl.box.client.{DataListState, DataState}
 import ch.wsl.box.client.views.components.widget.WidgetUtils
 import ch.wsl.box.model.shared.ExportDef
 import scalatags.generic
@@ -39,15 +39,15 @@ case class DataListViewPresenter(modelName:String) extends ViewFactory[DataListS
   }
 }
 
-class DataListPresenter(model:ModelProperty[DataList]) extends Presenter[DataListState] with MainModule {
+class DataListPresenter(model:ModelProperty[DataList]) extends Presenter[DataListState] {
 
 
-  import context._
+  import ch.wsl.box.client.Context._
 
   override def handleState(state: DataListState ): Unit = {
     model.subProp(_.kind).set(state.kind)
 //    println(state.currentExport)
-    services.rest.dataList(state.kind,services.session.lang()).map{ exports =>
+    services.rest.dataList(state.kind,services.clientSession.lang()).map{ exports =>
       model.subSeq(_.list).set(exports)
       model.subSeq(_.filteredList).set(exports)
       val current = exports.find(_.function == state.currentExport)

@@ -1,12 +1,12 @@
 package ch.wsl.box.client.views.components
 
-import ch.wsl.box.client.{AdminState, DataKind, DataListState, EntitiesState, IndexState, LoginState, MainModule, RoutingState}
+import ch.wsl.box.client.{AdminState, DataKind, DataListState, EntitiesState, IndexState, LoginState, RoutingState}
 import ch.wsl.box.client.styles.GlobalStyles
 import org.scalajs.dom.raw.Element
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import io.udash.css.CssView._
-import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, ServiceModule, Session, UI}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, ServiceModule, UI}
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.dropdown.UdashDropdown
 import io.udash.properties.seq.SeqProperty
@@ -19,11 +19,11 @@ import scalatags.generic
 
 case class MenuLink(name:String, state:RoutingState)
 
-object Header extends MainModule {
+object Header {
 
-  import ch.wsl.box.client.Context
+  import ch.wsl.box.client.Context._
 
-  private val links:Seq[Modifier] = Seq(produce(services.session.logged) { logged =>
+  private val links:Seq[Modifier] = Seq(produce(services.clientSession.logged) { logged =>
     if(!logged) span().render else {
       val l = Seq(MenuLink(Labels.header.home, IndexState)) ++ {
         if (UI.enableAllTables) {
@@ -59,13 +59,13 @@ object Header extends MainModule {
   }
 
   def otherMenu:Seq[Modifier] = Seq(
-    showIf(services.session.logged) {
-      frag(a(id := "logoutButton", ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); services.session.logout() } ),"Logout"), ClientConf.menuSeparator).render
+    showIf(services.clientSession.logged) {
+      frag(a(id := "logoutButton", ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); services.clientSession.logout() } ),"Logout"), ClientConf.menuSeparator).render
     },
     ClientConf.menuSeparator,
     Labels.header.lang + " ",
     ClientConf.langs.map{ l =>
-      span(a(ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); services.session.setLang(l)  } ),l)," ")
+      span(a(ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); services.clientSession.setLang(l)  } ),l)," ")
     }
   )
 
@@ -76,9 +76,9 @@ object Header extends MainModule {
 
   val showMenu = Property(false)
 
-  def user = Option(dom.window.sessionStorage.getItem(services.session.USER))
+  def user = Option(dom.window.sessionStorage.getItem(services.clientSession.USER))
 
-  def navbar(title:Option[String]) = produce(services.session.logged) { x =>
+  def navbar(title:Option[String]) = produce(services.clientSession.logged) { x =>
     header(
       div(BootstrapStyles.Float.left())(b(id := "headerTitle", title), small(ClientConf.style.noMobile,user.map("   -   " + _))),
       div(BootstrapStyles.Float.right(),ClientConf.style.noMobile) (

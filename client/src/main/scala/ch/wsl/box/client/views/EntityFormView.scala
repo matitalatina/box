@@ -1,8 +1,8 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{EntityFormState, EntityTableState, MainModule, services}
-import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Navigator, Notification, REST, Session}
+import ch.wsl.box.client.{Context, EntityFormState}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Navigator, Notification}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils._
 import ch.wsl.box.client.views.components.widget.Widget
@@ -48,9 +48,9 @@ object EntityFormViewPresenter extends ViewFactory[EntityFormState] {
   }
 }
 
-case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] with Logging with MainModule {
+case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] with Logging {
   import ch.wsl.box.shared.utils.JSONUtils._
-  import context._
+  import ch.wsl.box.client.Context._
 
   private var currentData:Json = Json.Null
 
@@ -73,10 +73,10 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     val jsonId = state.id.flatMap(JSONID.fromString)
 
     {for{
-      metadata <- if(reloadMetadata) services.rest.metadata(state.kind, services.session.lang(), state.entity) else Future.successful(model.get.metadata.get)
-      children <- if(Seq(EntityKind.FORM,EntityKind.BOX).map(_.kind).contains(state.kind) && reloadMetadata) services.rest.children(state.kind,state.entity,services.session.lang()) else Future.successful(Seq())
+      metadata <- if(reloadMetadata) services.rest.metadata(state.kind, services.clientSession.lang(), state.entity) else Future.successful(model.get.metadata.get)
+      children <- if(Seq(EntityKind.FORM,EntityKind.BOX).map(_.kind).contains(state.kind) && reloadMetadata) services.rest.children(state.kind,state.entity,services.clientSession.lang()) else Future.successful(Seq())
       data <- state.id match {
-        case Some(id) => services.rest.get(state.kind, services.session.lang(), state.entity,jsonId.get)
+        case Some(id) => services.rest.get(state.kind, services.clientSession.lang(), state.entity,jsonId.get)
         case None => Future.successful{
           Json.obj(JSONMetadata.jsonPlaceholder(metadata,children).toSeq :_*)
         }
@@ -114,7 +114,6 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   }
 
   import io.circe.syntax._
-  import ch.wsl.box.client._
 
   def save(action:JSONID => Unit) = {
 
@@ -132,10 +131,10 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         logger.debug("saveAction")
         for {
           id <- JSONID.fromString(m.id.getOrElse("")) match {
-            case Some (id) => services.rest.update (m.kind, services.session.lang(), m.name, id, data).map(_ => id)
-            case None => services.rest.insert (m.kind, services.session.lang (), m.name, data)
+            case Some (id) => services.rest.update (m.kind, services.clientSession.lang(), m.name, id, data).map(_ => id)
+            case None => services.rest.insert (m.kind, services.clientSession.lang (), m.name, data)
           }
-          result <- services.rest.get(m.kind, services.session.lang(), m.name, id)
+          result <- services.rest.get(m.kind, services.clientSession.lang(), m.name, id)
         } yield {
           logger.debug("saveAction::Result")
           result
@@ -170,7 +169,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
   def reload(id:JSONID): Unit = {
     for{
-      resultSaved <- services.rest.get(model.get.kind, services.session.lang(), model.get.name, id)
+      resultSaved <- services.rest.get(model.get.kind, services.clientSession.lang(), model.get.name, id)
     } yield {
       reset()
       currentData = Json.Null.deepMerge(resultSaved)
@@ -192,7 +191,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         name <- model.get.metadata.map(_.name)
         key <- model.get.id.flatMap(JSONID.fromString)
       } yield {
-        services.rest.delete(model.get.kind, services.session.lang(),name,key).map{ count =>
+        services.rest.delete(model.get.kind, services.clientSession.lang(),name,key).map{ count =>
           Notification.add("Deleted " + count.count + " rows")
           Navigate.to(Routes(model.get.kind, name).entity(name))
         }
@@ -239,7 +238,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   }
 
 
-  def navigate(n: services.navigator.For => Future[Option[String]]) = {
+
+  def navigate(n: navigator.For => Future[Option[String]]) = {
     n(nav).map(_.map(goTo))
   }
 
@@ -252,7 +252,9 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   def firstPage() = navigate(_.firstPage())
   def lastPage() = navigate(_.lastPage())
 
-  def nav = services.navigator.For(model.get.id, model.get.kind,model.get.name)
+  val navigator = services.navigator
+
+  def nav = navigator.For(model.get.id, model.get.kind,model.get.name)
 
   def goTo(id:String) = {
     model.subProp(_.loading).set(true)

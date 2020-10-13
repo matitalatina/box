@@ -30,9 +30,9 @@ object AdminViewPresenter extends ViewFactory[AdminState.type]{
   }
 }
 
-class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[AdminState.type] with MainModule {
+class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[AdminState.type] {
 
-  import context._
+  import Context._
 
   override def handleState(state: AdminState.type): Unit = {
     for{

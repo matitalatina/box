@@ -1,12 +1,12 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.client.{Context, MainModule, RoutingState}
+import ch.wsl.box.client.{Context, RoutingState}
 import io.udash.{State, Url}
 import org.scalajs.dom.{BeforeUnloadEvent, window}
 import scribe.Logging
 
 
-object Navigate extends Logging with MainModule {
+object Navigate extends Logging {
   private var enabled:Boolean = true
   private var enabler:() => Boolean = () => false
 
@@ -18,13 +18,13 @@ object Navigate extends Logging with MainModule {
 
   def to(state:RoutingState) = toAction{ () =>
     logger.debug(s"navigate to $state")
-    context.applicationInstance.goTo(state)
+    Context.applicationInstance.goTo(state)
   }
 
   def toUrl(url:String) = toAction{ () =>
     logger.debug(s"navigate to $url")
-    val state = context.routingRegistry.matchUrl(Url(url))
-    context.applicationInstance.goTo(state)
+    val state = Context.routingRegistry.matchUrl(Url(url))
+    Context.applicationInstance.goTo(state)
   }
 
   def toAction(action: () => Unit) = {

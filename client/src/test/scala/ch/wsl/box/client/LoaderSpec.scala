@@ -15,6 +15,8 @@ class LoaderSpec extends AnyFlatSpec  {
   val appVersion:String = "TEST"
   val version:String = "TEST"
 
+  Context.init(Module.prod)
+
   Main.setupUI(
     clientConf,
     labels,

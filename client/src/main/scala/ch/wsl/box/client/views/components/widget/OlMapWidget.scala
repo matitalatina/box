@@ -1,7 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 
-import ch.wsl.box.client.MainModule
-import ch.wsl.box.client.services.{BrowserConsole, ClientConf, Labels, Session}
+import ch.wsl.box.client.services.{BrowserConsole, ClientConf, Labels}
 import ch.wsl.box.client.styles.Icons
 import ch.wsl.box.client.styles.Icons.Icon
 import ch.wsl.box.client.utils.GeoJson.{FeatureCollection, GeometryCollection}
@@ -41,12 +40,13 @@ import scala.concurrent.{Future, Promise}
 import scala.util.Try
 import org.scalajs.dom
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
 
 
-case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging with MainModule {
+case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging {
+
+  import ch.wsl.box.client.Context._
 
   import scalacss.ScalatagsCss._
 
@@ -152,7 +152,7 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
 
 
   val baseLayer:Property[Option[MapParamsLayers]] =  { for{
-    session <- services.session.getBaseLayer()
+    session <- services.clientSession.getBaseLayer()
     layers <- options.baseLayers
     bl <- layers.find(_.layerId == session)
   } yield bl } match {
@@ -186,7 +186,7 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
         layer.capabilitiesUrl,
         layer.layerId
       ).map{wmtsLayer =>
-        services.session.setBaseLayer(layer.layerId)
+        services.clientSession.setBaseLayer(layer.layerId)
         setBaseLayer(wmtsLayer)
         true
       }

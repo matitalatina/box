@@ -18,9 +18,9 @@ object SessionQuery{
   def empty = SessionQuery(JSONQuery.empty,"")
 }
 
-class Session(rest:REST, context: Context) extends Logging {
+class ClientSession(rest:REST) extends Logging {
 
-  import context._
+  import Context._
   import io.circe._
   import io.circe.generic.auto._
   import io.circe.parser._
@@ -40,7 +40,7 @@ class Session(rest:REST, context: Context) extends Logging {
 
   isValidSession().map{
     case true => logged.set(true)
-    case false => logout()
+    case false => dom.window.sessionStorage.removeItem(USER)
   }
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
@@ -99,7 +99,7 @@ class Session(rest:REST, context: Context) extends Logging {
 
   def logoutAndSaveState() = {
     Try{
-      dom.window.sessionStorage.setItem(STATE,context.applicationInstance.currentState.url(applicationInstance))
+      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url(applicationInstance))
     }
     logout()
   }

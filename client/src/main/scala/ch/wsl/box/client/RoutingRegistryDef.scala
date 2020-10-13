@@ -1,21 +1,21 @@
 package ch.wsl.box.client
 
 import io.udash._
-import ch.wsl.box.client.services.Session
 import scribe.Logging
 
-class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging with MainModule {
+class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {
+  import Context._
   def matchUrl(url: Url): RoutingState = {
-    logger.info(s"match URL ${services.session.isSet(services.session.USER)}")
-    services.session.isSet(services.session.USER) match {
+    logger.info(s"match URL ${services.clientSession.isSet(services.clientSession.USER)}")
+    services.clientSession.isSet(services.clientSession.USER) match {
       case true => loggedInUrl2State.applyOrElse (url.value.stripSuffix ("/"), (x: String) => ErrorState)
       case false => loggedOutUrl2State.applyOrElse (url.value.stripSuffix ("/"), (x: String) => ErrorState)
     }
   }
 
   def matchState(state: RoutingState): Url = {
-    logger.info(s"match STATE ${services.session.isSet(services.session.USER)}")
-    services.session.isSet(services.session.USER) match {
+    logger.info(s"match STATE ${services.clientSession.isSet(services.clientSession.USER)}")
+    services.clientSession.isSet(services.clientSession.USER) match {
       case true => Url(loggedInState2Url.apply(state))
       case false => Url(loggedOutState2Url.apply(state))
     }
