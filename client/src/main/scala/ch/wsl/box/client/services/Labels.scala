@@ -119,7 +119,7 @@ object Labels {
     def forms = get("header.forms")
     def exports = get("header.exports")
     def functions = get("header.functions")
-    def lang = get("header.lang")
+    def lang = get(SharedLabels.header.lang)
   }
 
   object popup{

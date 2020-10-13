@@ -75,7 +75,7 @@ object ClientConf {
     case _ => ((x:Timestamp) => x)
   }
 
-  def langs = Try(conf("langs")).getOrElse("en").split(",")
+  def langs = Try(conf("langs")).getOrElse("en").split(",").toSeq.map(_.trim)
 
   def notificationTimeOut = Try(conf("notification.timeout").toInt).getOrElse(6)
 

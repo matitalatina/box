@@ -6,13 +6,14 @@ import org.scalajs.dom.raw.Element
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import io.udash.css.CssView._
-import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, ServiceModule, UI}
+import ch.wsl.box.client.services.{ClientConf, ClientSession, Labels, Navigate, ServiceModule, UI}
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.dropdown.UdashDropdown
 import io.udash.properties.seq.SeqProperty
 import io.udash._
 import java.io
 
+import ch.wsl.box.client.utils.TestHooks
 import org.scalajs.dom
 import org.scalajs.dom.{Event, Node}
 import scalatags.generic
@@ -65,7 +66,7 @@ object Header {
     ClientConf.menuSeparator,
     Labels.header.lang + " ",
     ClientConf.langs.map{ l =>
-      span(a(ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); services.clientSession.setLang(l)  } ),l)," ")
+      span(a(id := TestHooks.langSwitch(l), ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); services.clientSession.setLang(l)  } ),l)," ")
     }
   )
 
@@ -76,7 +77,7 @@ object Header {
 
   val showMenu = Property(false)
 
-  def user = Option(dom.window.sessionStorage.getItem(services.clientSession.USER))
+  def user = Option(dom.window.sessionStorage.getItem(ClientSession.USER))
 
   def navbar(title:Option[String]) = produce(services.clientSession.logged) { x =>
     header(

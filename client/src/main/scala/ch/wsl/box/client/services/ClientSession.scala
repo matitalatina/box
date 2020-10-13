@@ -18,6 +18,15 @@ object SessionQuery{
   def empty = SessionQuery(JSONQuery.empty,"")
 }
 
+object ClientSession {
+  final val QUERY = "query"
+  final val IDS = "ids"
+  final val USER = "user"
+  final val LANG = "lang"
+  final val LABELS = "labels"
+  final val STATE = "state"
+}
+
 class ClientSession(rest:REST) extends Logging {
 
   import Context._
@@ -25,13 +34,9 @@ class ClientSession(rest:REST) extends Logging {
   import io.circe.generic.auto._
   import io.circe.parser._
   import io.circe.syntax._
+  import ClientSession._
 
-  final val QUERY = "query"
-  final val IDS = "ids"
-  final val USER = "user"
-  final val LANG = "lang"
-  final val LABELS = "labels"
-  final val STATE = "state"
+
   final private val BASE_LAYER = "base_layer"
 
   lazy val logged = {
@@ -138,6 +143,6 @@ class ClientSession(rest:REST) extends Logging {
   def setLang(lang:String) = rest.labels(lang).map{ labels =>
     Labels.load(labels)
     dom.window.sessionStorage.setItem(LANG,lang)
-    dom.window.location.reload()
+    Context.applicationInstance.reload()
   }
 }

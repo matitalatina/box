@@ -21,4 +21,8 @@ object SharedLabels {
     def confirmRevert = "table.confirmRevert"
   }
 
+  object header{
+    def lang = "header.lang"
+  }
+
 }
