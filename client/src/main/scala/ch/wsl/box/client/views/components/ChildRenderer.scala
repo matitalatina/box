@@ -2,6 +2,7 @@ package ch.wsl.box.client.views.components
 
 import java.util.UUID
 
+import ch.wsl.box.client.MainModule
 import ch.wsl.box.client.services.{ClientConf, Labels, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles, Icons}
 import ch.wsl.box.client.views.components.widget.{ChildWidget, ComponentWidgetFactory, Widget}
@@ -26,7 +27,7 @@ import scalatags.JsDom
 
 case class ChildRow(widget:ChildWidget,id:String, data:ReadableProperty[Json], open:Boolean)
 
-trait ChildRendererFactory extends ComponentWidgetFactory {
+trait ChildRendererFactory extends ComponentWidgetFactory with MainModule {
 
   def child:Child
   def children:Seq[JSONMetadata]
@@ -34,7 +35,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
   trait ChildRenderer extends Widget with Logging {
 
-    import ch.wsl.box.client.Context._
+    import context._
     import scalatags.JsDom.all._
     import io.udash.css.CssView._
     import io.circe._

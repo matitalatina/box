@@ -2,7 +2,7 @@ package ch.wsl.box.client.services
 
 import java.io.ByteArrayInputStream
 
-import ch.wsl.box.client.IndexState
+import ch.wsl.box.client.{Context, IndexState}
 import ch.wsl.box.model.shared.errors.{ExceptionReport, GenericExceptionReport, JsonDecoderExceptionReport, SQLExceptionReport}
 import org.scalajs.dom
 import org.scalajs.dom.{File, FormData, XMLHttpRequest}
@@ -17,7 +17,7 @@ object HttpClient{
   type Response[T] = Either[ExceptionReport,T]
 }
 
-case class HttpClient(endpoint:String) extends Logging {
+class HttpClient(context:Context) extends Logging {
 
   import io.circe.parser.decode
   import io.circe.syntax._
@@ -26,11 +26,11 @@ case class HttpClient(endpoint:String) extends Logging {
   import ch.wsl.box.shared.utils.JSONUtils._
   import HttpClient._
 
-  import ch.wsl.box.client.Context._
+  import context._
   import scala.concurrent.blocking
 
 
-  private def httpCall[T](method:String, url:String, json:Boolean=true, file:Boolean=false)(send:XMLHttpRequest => Unit)(implicit decoder:io.circe.Decoder[T]):Future[Response[T]] = {
+  private def httpCall[T](endpoint:String,method:String, url:String, json:Boolean=true, file:Boolean=false)(send:XMLHttpRequest => Unit)(implicit decoder:io.circe.Decoder[T]):Future[Response[T]] = {
 
 
     val promise = Promise[Response[T]]()
@@ -64,8 +64,8 @@ case class HttpClient(endpoint:String) extends Logging {
           }
         } else if (xhr.status == 401 || xhr.status == 403) {
           logger.info("Not authorized")
-          Session.logoutAndSaveState()
           promise.failure(new Exception("HTTP status" + xhr.status))
+          dom.window.location.reload()
         } else {
           promise.success(Left(manageError(xhr)))
         }
@@ -75,8 +75,8 @@ case class HttpClient(endpoint:String) extends Logging {
       xhr.onerror = { (e: dom.Event) =>
         if (xhr.status == 401 || xhr.status == 403) {
           logger.info("Not authorized")
-          Session.logoutAndSaveState()
           promise.failure(new Exception("HTTP status" + xhr.status))
+          dom.window.location.reload()
         } else {
           promise.success(Left(manageError(xhr)))
         }
@@ -118,7 +118,7 @@ case class HttpClient(endpoint:String) extends Logging {
     }
   }
 
-  private def httpCallWithNoticeInterceptor[T](method:String, url:String, json:Boolean=true, file:Boolean=false)(send:XMLHttpRequest => Unit)(implicit decoder:io.circe.Decoder[T]):Future[T] = httpCall(method,url,json,file)(send).map{
+  private def httpCallWithNoticeInterceptor[T](endpoint:String,method:String, url:String, json:Boolean=true, file:Boolean=false)(send:XMLHttpRequest => Unit)(implicit decoder:io.circe.Decoder[T]):Future[T] = httpCall(endpoint,method,url,json,file)(send).map{
     case Right(result) => result
     case Left(error) => {
       Notification.add(error.humanReadable(Map()))
@@ -126,42 +126,37 @@ case class HttpClient(endpoint:String) extends Logging {
     }
   }
 
-  private def request[T](method:String,url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = httpCallWithNoticeInterceptor[T](method,url)( xhr => xhr.send())
+  private def request[T](endpoint:String,method:String,url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = httpCallWithNoticeInterceptor[T](endpoint,method,url)( xhr => xhr.send())
 
-  private def send[D,R](method:String,url:String,obj:D,json:Boolean = true)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]):Future[R] = {
-    httpCallWithNoticeInterceptor[R](method,url,json){ xhr =>
+  private def send[D,R](endpoint:String,method:String,url:String,obj:D,json:Boolean = true)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]):Future[R] = {
+    httpCallWithNoticeInterceptor[R](endpoint,method,url,json){ xhr =>
       xhr.send(obj.asJson.toString())
     }
   }
 
+  case class ForEndpoint(endpoint:String) {
 
+    def post[D, R](url: String, obj: D)(implicit decoder: io.circe.Decoder[R], encoder: io.circe.Encoder[D]) = send[D, R](endpoint,"POST", url, obj)
 
-  def post[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("POST",url,obj)
-  def put[D,R](url:String,obj:D)(implicit decoder:io.circe.Decoder[R],encoder: io.circe.Encoder[D]) = send[D,R]("PUT",url,obj)
-  def get[T](url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = request("GET",url)
-  def delete[T](url:String)(implicit decoder:io.circe.Decoder[T]):Future[T] = request("DELETE",url)
+    def put[D, R](url: String, obj: D)(implicit decoder: io.circe.Decoder[R], encoder: io.circe.Encoder[D]) = send[D, R](endpoint,"PUT", url, obj)
 
-  def sendFile[T](url:String, file:File)(implicit decoder:io.circe.Decoder[T]):Future[T] = {
+    def get[T](url: String)(implicit decoder: io.circe.Decoder[T]): Future[T] = request(endpoint,"GET", url)
 
-    val formData = new FormData();
-    formData.append("file",file)
+    def delete[T](url: String)(implicit decoder: io.circe.Decoder[T]): Future[T] = request(endpoint,"DELETE", url)
 
-    httpCallWithNoticeInterceptor[T]("POST",url,false){ xhr =>
-      xhr.send(formData)
+    def sendFile[T](url: String, file: File)(implicit decoder: io.circe.Decoder[T]): Future[T] = {
+
+      val formData = new FormData();
+      formData.append("file", file)
+
+      httpCallWithNoticeInterceptor[T](endpoint,"POST", url, false) { xhr =>
+        xhr.send(formData)
+      }
+
     }
-
   }
 
-//  def getFile[T](url:String):Future[T] = {
-//    httpCall("GET", url, false, true)
-////    val formData = new FormData();
-////    formData.append("file",file)
-////
-////    httpCall[T]("GET",url,false){ xhr =>
-////      xhr.send(formData)
-////    }
-//
-//  }
+
 
 
 

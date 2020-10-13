@@ -1,6 +1,7 @@
 package ch.wsl.box.client.views.components
 
 
+import ch.wsl.box.client.MainModule
 import ch.wsl.box.client.services.{ClientConf, Labels}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.views.components
@@ -24,10 +25,10 @@ import io.udash.css.CssView._
   */
 
 
-case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], children: Seq[JSONMetadata], id: Property[Option[String]]) extends ChildWidget {
+case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], children: Seq[JSONMetadata], id: Property[Option[String]]) extends ChildWidget with MainModule {
 
 
-  import ch.wsl.box.client.Context._
+  import context._
   import io.circe._
 
   import scalacss.ScalatagsCss._

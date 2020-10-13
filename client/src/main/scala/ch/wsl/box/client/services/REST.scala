@@ -1,7 +1,7 @@
 package ch.wsl.box.client.services
 
+import ch.wsl.box.client.Context
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.REST.get
 import ch.wsl.box.model.shared._
 import io.circe.{Decoder, Json}
 import org.scalajs.dom.File
@@ -15,22 +15,22 @@ import kantan.csv.ops._
 /**
   * Created by andre on 4/24/2017.
   */
-object REST extends Logging {
+class REST(context:Context,httpClient:HttpClient) extends Logging {
 
 
 
   import io.circe.generic.auto._
   import ch.wsl.box.shared.utils.Formatters._
-  import ch.wsl.box.client.Context._
+  import context._
   import ch.wsl.box.model.shared.EntityKind._
 
-  private def client = HttpClient(Routes.apiV1())
+  private def client = httpClient.ForEndpoint(Routes.apiV1())
 
   def version() = client.get[String]("/version")
   def appVersion() = client.get[String]("/app_version")
   def validSession() = client.get[Boolean]("/validSession")
-  def cacheReset() = HttpClient("").get[String]("cache/reset")
-  def serverReset() = HttpClient("").get[String]("server/reset")
+  def cacheReset() = httpClient.ForEndpoint("").get[String]("cache/reset")
+  def serverReset() = httpClient.ForEndpoint("").get[String]("server/reset")
 
   def entities(kind:String):Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).plural}")
 
@@ -50,16 +50,15 @@ object REST extends Logging {
 
   //only for forms
   def children(kind:String, entity:String, lang:String): Future[Seq[JSONMetadata]] = client.get[Seq[JSONMetadata]](s"/$kind/$lang/$entity/children")
-  def lookup(lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]] = {
-    val lang = Session.lang()
+  def lookup(lang:String,lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]] = {
     queryWithSubstitutions.as[JSONQuery] match {
-      case Right(query) => client.post[JSONQuery,Seq[JSONLookup]](s"/entity/$lang/$lookupEntity/lookup/${map.textProperty}/${map.valueProperty}", query)
+      case Right(query) => client.post[JSONQuery, Seq[JSONLookup]](s"/entity/$lang/$lookupEntity/lookup/${map.textProperty}/${map.valueProperty}", query)
       case Left(fail) => {
         Future.successful(Seq())
       }
     }
-
   }
+
 
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json] = client.get[Json](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}")

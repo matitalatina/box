@@ -9,7 +9,6 @@ import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import scalacss.ScalatagsCss._
-import Context._
 import ch.wsl.box.client.views.components.Debug
 import io.udash.bootstrap.BootstrapStyles
 
@@ -31,22 +30,24 @@ object AdminViewPresenter extends ViewFactory[AdminState.type]{
   }
 }
 
-class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[AdminState.type] {
+class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[AdminState.type] with MainModule {
+
+  import context._
+
   override def handleState(state: AdminState.type): Unit = {
     for{
-      entitites <- REST.entities(EntityKind.TABLE.kind)
+      entitites <- services.rest.entities(EntityKind.TABLE.kind)
     } yield {
       viewModel.set(AdminViewModel(entitites))
     }
   }
 
   def generateStub(entity:String) = {
-    REST.generateStub(entity)
+    services.rest.generateStub(entity)
   }
 }
 
 class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresenter) extends View {
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.circe.generic.auto._
   import ch.wsl.box.shared.utils.JSONUtils._

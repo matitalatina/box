@@ -20,7 +20,6 @@ object TableFieldsRenderer extends Logging{
 
   import io.circe.syntax._
 
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
 
 

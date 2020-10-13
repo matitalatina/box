@@ -10,7 +10,6 @@ import org.scalajs.dom.Event
 
 object Debug {
 
-  import ch.wsl.box.client.Context._
 
   def apply[T](model: Property[T],releaser:Binding=>Binding = b => b, name:String ="")(implicit enc:io.circe.Encoder[T]) = {
     val show = Property {

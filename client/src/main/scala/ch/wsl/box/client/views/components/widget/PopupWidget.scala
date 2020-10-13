@@ -30,7 +30,6 @@ case class PopupWidgetFactory(allData:Property[Json]) extends ComponentWidgetFac
 
 case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Json]) extends LookupWidget with Logging {
 
-import ch.wsl.box.client.Context._
   import scalacss.ScalatagsCss._
 
   import scalatags.JsDom.all.{label => lab}

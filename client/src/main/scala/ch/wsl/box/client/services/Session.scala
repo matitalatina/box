@@ -18,9 +18,9 @@ object SessionQuery{
   def empty = SessionQuery(JSONQuery.empty,"")
 }
 
-object Session extends Logging {
+class Session(rest:REST, context: Context) extends Logging {
 
-  import ch.wsl.box.client.Context._
+  import context._
   import io.circe._
   import io.circe.generic.auto._
   import io.circe.parser._
@@ -59,7 +59,7 @@ object Session extends Logging {
   def isValidSession():Future[Boolean] = {
     isSet(USER) match {
       case false => Future.successful(false)
-      case true => REST.validSession()
+      case true => rest.validSession()
     }
   }
 
@@ -70,8 +70,8 @@ object Session extends Logging {
   def login(username:String,password:String):Future[Boolean] = {
     dom.window.sessionStorage.setItem(USER,username)
     val fut = for{
-      _ <- REST.login(LoginRequest(username,password))
-      ui <- REST.ui()
+      _ <- rest.login(LoginRequest(username,password))
+      ui <- rest.ui()
     } yield {
       UI.load(ui)
       logged.set(true)
@@ -99,7 +99,7 @@ object Session extends Logging {
 
   def logoutAndSaveState() = {
     Try{
-      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url(applicationInstance))
+      dom.window.sessionStorage.setItem(STATE,context.applicationInstance.currentState.url(applicationInstance))
     }
     logout()
   }
@@ -108,8 +108,8 @@ object Session extends Logging {
     Navigate.toAction{ () =>
       dom.window.sessionStorage.removeItem(USER)
       for{
-        _ <- REST.logout()
-        ui <- REST.ui()
+        _ <- rest.logout()
+        ui <- rest.ui()
       } yield {
         UI.load(ui)
         logged.set(false)
@@ -135,7 +135,7 @@ object Session extends Logging {
     case _ if ClientConf.langs.nonEmpty => ClientConf.langs.head
     case _ => "en"
   }
-  def setLang(lang:String) = REST.labels(lang).map{ labels =>
+  def setLang(lang:String) = rest.labels(lang).map{ labels =>
     Labels.load(labels)
     dom.window.sessionStorage.setItem(LANG,lang)
     dom.window.location.reload()

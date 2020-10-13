@@ -1,5 +1,6 @@
 package ch.wsl.box.client.views.components.widget
 
+import ch.wsl.box.client.MainModule
 import ch.wsl.box.client.services.{BrowserConsole, ClientConf, Labels, Session}
 import ch.wsl.box.client.styles.Icons
 import ch.wsl.box.client.styles.Icons.Icon
@@ -45,7 +46,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
 
-case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging {
+case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging with MainModule {
 
   import scalacss.ScalatagsCss._
 
@@ -151,7 +152,7 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
 
 
   val baseLayer:Property[Option[MapParamsLayers]] =  { for{
-    session <- Session.getBaseLayer()
+    session <- services.session.getBaseLayer()
     layers <- options.baseLayers
     bl <- layers.find(_.layerId == session)
   } yield bl } match {
@@ -185,7 +186,7 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
         layer.capabilitiesUrl,
         layer.layerId
       ).map{wmtsLayer =>
-        Session.setBaseLayer(layer.layerId)
+        services.session.setBaseLayer(layer.layerId)
         setBaseLayer(wmtsLayer)
         true
       }

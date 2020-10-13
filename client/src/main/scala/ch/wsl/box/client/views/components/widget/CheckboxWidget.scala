@@ -2,7 +2,6 @@ package ch.wsl.box.client.views.components.widget
 import io.circe._
 import io.circe.syntax._
 import io.udash._
-import ch.wsl.box.client.Context._
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import scalatags.JsDom
 import scalatags.JsDom.all._

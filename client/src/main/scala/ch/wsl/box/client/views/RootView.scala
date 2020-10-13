@@ -10,7 +10,6 @@ import ch.wsl.box.client.views.components._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.core.Presenter
 import scalacss.ScalatagsCss._
-import ch.wsl.box.client.Context._
 
 case object RootViewPresenter extends ViewFactory[RootState.type]{
 
@@ -29,7 +28,6 @@ class RootPresenter() extends Presenter[RootState.type] {
 }
 
 class RootView() extends ContainerView {
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
 

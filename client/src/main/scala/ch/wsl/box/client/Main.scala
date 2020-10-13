@@ -8,8 +8,8 @@ import org.scalajs.dom
 import org.scalajs.dom.{Element, document}
 import scribe.{Level, Logger, Logging}
 
-object Main extends Logging {
-  import Context._
+object Main extends Logging with MainModule {
+  import context._
 
   def main(args: Array[String]): Unit = {
 
@@ -35,11 +35,11 @@ object Main extends Logging {
     Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
 
     for {
-      appVersion <- REST.appVersion()
-      version <- REST.version()
-      clientConf <- REST.conf()
-      uiConf <- REST.ui()
-      labels <- REST.labels(Session.lang())
+      appVersion <- services.rest.appVersion()
+      version <- services.rest.version()
+      clientConf <- services.rest.conf()
+      uiConf <- services.rest.ui()
+      labels <- services.rest.labels(services.session.lang())
     } yield {
 
       document.addEventListener("DOMContentLoaded", { (e: dom.Event) =>
