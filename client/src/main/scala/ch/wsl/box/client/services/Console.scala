@@ -1,4 +1,4 @@
-package ch.wsl.box.client.utils
+package ch.wsl.box.client.services
 
 import scala.scalajs.js
 

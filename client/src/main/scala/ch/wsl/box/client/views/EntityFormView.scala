@@ -1,8 +1,8 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Navigate, Notification, REST}
+import ch.wsl.box.client.{EntityFormState, EntityTableState, services}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Navigator, Notification, REST, Session}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils._
 import ch.wsl.box.client.views.components.widget.Widget
@@ -240,7 +240,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
   }
 
 
-  def navigate(n: ch.wsl.box.client.utils.Navigator => Future[Option[String]]) = {
+  def navigate(n: services.Navigator => Future[Option[String]]) = {
     n(nav).map(_.map(goTo))
   }
 

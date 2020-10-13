@@ -1,9 +1,9 @@
 package ch.wsl.box.client.views.components.widget
 
+import ch.wsl.box.client.services.{BrowserConsole, ClientConf, Labels, Session}
 import ch.wsl.box.client.styles.Icons
 import ch.wsl.box.client.styles.Icons.Icon
 import ch.wsl.box.client.utils.GeoJson.{FeatureCollection, GeometryCollection}
-import ch.wsl.box.client.utils.{BrowserConsole, ClientConf, Labels, Session}
 import ch.wsl.box.client.vendors.{DrawHole, DrawHoleOptions}
 import ch.wsl.box.model.shared.{JSONField, JSONMetadata}
 import io.circe.Json

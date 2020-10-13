@@ -1,10 +1,9 @@
-package ch.wsl.box.client.utils
+package ch.wsl.box.client.services
 
-import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.{Context, IndexState, LoginState}
-import org.scalajs.dom
 import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
 import io.udash.properties.single.Property
+import org.scalajs.dom
 import scribe.Logging
 
 import scala.concurrent.Future
@@ -23,9 +22,9 @@ object Session extends Logging {
 
   import ch.wsl.box.client.Context._
   import io.circe._
-  import io.circe.syntax._
   import io.circe.generic.auto._
   import io.circe.parser._
+  import io.circe.syntax._
 
   final val QUERY = "query"
   final val IDS = "ids"

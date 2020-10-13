@@ -7,8 +7,7 @@ import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import io.udash.css.CssView._
 import ch.wsl.box.client.Context._
-import ch.wsl.box.client.services.Navigate
-import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Session, UI}
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.dropdown.UdashDropdown
 import io.udash.properties.seq.SeqProperty

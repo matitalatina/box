@@ -1,9 +1,9 @@
 package ch.wsl.box.client.views
 
 
+import ch.wsl.box.client.services.{ClientConf, Labels, Session}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.{IndexState, LoginState}
-import ch.wsl.box.client.utils.{ClientConf, Labels, Session}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm

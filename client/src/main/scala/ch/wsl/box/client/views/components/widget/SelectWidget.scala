@@ -6,7 +6,7 @@ import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
 import ch.wsl.box.client.Context._
-import ch.wsl.box.client.utils.ClientConf
+import ch.wsl.box.client.services.ClientConf
 import io.circe
 import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}

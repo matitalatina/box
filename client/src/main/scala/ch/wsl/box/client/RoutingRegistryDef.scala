@@ -1,8 +1,8 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.utils.Session
 import io.udash._
 import Context._
+import ch.wsl.box.client.services.Session
 import scribe.Logging
 
 class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {

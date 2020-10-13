@@ -1,12 +1,11 @@
-package ch.wsl.box.client.utils
+package ch.wsl.box.client.services
 
 import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
 
-import ch.wsl.box.client.services.REST
 import ch.wsl.box.client.styles.constants.StyleConstants
-import ch.wsl.box.client.styles.{GlobalStyles, StyleConf}
 import ch.wsl.box.client.styles.constants.StyleConstants.{ChildProperties, Colors}
+import ch.wsl.box.client.styles.{GlobalStyles, StyleConf}
 import ch.wsl.box.model.shared.JSONFieldTypes
 import io.circe._
 import io.circe.parser._
@@ -19,8 +18,6 @@ import scala.util.Try
 
 
 object ClientConf {
-
-  import ch.wsl.box.client.Context._
 
   private var conf:Map[String,String] = Map()
   private var _version:String = ""

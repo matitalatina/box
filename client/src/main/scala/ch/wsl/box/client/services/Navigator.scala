@@ -1,16 +1,12 @@
-package ch.wsl.box.client.utils
+package ch.wsl.box.client.services
 
-import ch.wsl.box.client.services.REST
-import ch.wsl.box.model.shared.{IDs, JSONQuery}
-
-import scala.concurrent.Future
 import ch.wsl.box.client.Context._
-import ch.wsl.box.client.styles.GlobalStyles
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.css.CssStyleName
 import io.udash.properties.HasModelPropertyCreator
 import org.scalajs.dom.Event
-import scalatags.JsDom.all.{disabled, onclick}
+
+import scala.concurrent.Future
 
 /**
   * Created by andre on 5/24/2017.
@@ -41,9 +37,9 @@ object Navigation extends HasModelPropertyCreator[Navigation] {
   def maxIndexLastPage(nav:Navigation) = (nav.count -1) % nav.pageLength + 1  //1-based
 
   import io.udash._
-  import scalatags.JsDom.all._
-  import scalacss.ScalatagsCss._
   import io.udash.css.CssView._
+  import scalacss.ScalatagsCss._
+  import scalatags.JsDom.all._
 
   def button(navProp:ReadableProperty[Boolean],callback: () => Unit,label:String,pull:BootstrapStyles.type => CssStyleName) = scalatags.JsDom.all.button(
     disabled.attrIfNot(navProp),

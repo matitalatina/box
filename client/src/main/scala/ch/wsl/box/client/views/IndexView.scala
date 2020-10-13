@@ -2,10 +2,9 @@ package ch.wsl.box.client.views
 
 import io.udash._
 import ch.wsl.box.client._
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{ClientConf, REST, Session, UI}
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Session, UI}
 import ch.wsl.box.model.shared.{JSONQuery, JSONSort, NewsEntry, Sort}
 import io.circe.Json
 import scalacss.ScalatagsCss._

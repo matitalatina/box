@@ -2,9 +2,8 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Navigate, Notification, REST}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Notification, REST, Session, SessionQuery}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Labels, Navigation, Session, SessionQuery}
 import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget, SelectWidgetFullWidth}
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
 import ch.wsl.box.model.shared.EntityKind.VIEW

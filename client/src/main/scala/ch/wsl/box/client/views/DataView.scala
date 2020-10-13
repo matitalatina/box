@@ -4,7 +4,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{DataKind, DataState, EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Navigate, REST}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, REST, Session}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils._
 import ch.wsl.box.client.views.components.widget.Widget

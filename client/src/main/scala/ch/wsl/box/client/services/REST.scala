@@ -2,7 +2,6 @@ package ch.wsl.box.client.services
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.REST.get
-import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
 import io.circe.{Decoder, Json}
 import org.scalajs.dom.File
@@ -10,7 +9,6 @@ import org.scalajs.dom.File
 import scala.concurrent.Future
 import ch.wsl.box.shared.utils.JSONUtils._
 import scribe.Logging
-
 import kantan.csv._
 import kantan.csv.ops._
 

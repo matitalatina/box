@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views.components.widget
 
+import ch.wsl.box.client.services.ClientConf
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import io.circe.Json
 import io.udash._

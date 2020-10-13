@@ -2,9 +2,8 @@ package ch.wsl.box.client.views.components
 
 import java.util.UUID
 
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{ClientConf, Labels, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles, Icons}
-import ch.wsl.box.client.utils.{ClientConf, Labels, Session}
 import ch.wsl.box.client.views.components.widget.{ChildWidget, ComponentWidgetFactory, Widget}
 import ch.wsl.box.model.shared._
 import io.circe.Json

@@ -3,7 +3,6 @@ package ch.wsl.box.client.services
 import java.io.ByteArrayInputStream
 
 import ch.wsl.box.client.IndexState
-import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared.errors.{ExceptionReport, GenericExceptionReport, JsonDecoderExceptionReport, SQLExceptionReport}
 import org.scalajs.dom
 import org.scalajs.dom.{File, FormData, XMLHttpRequest}

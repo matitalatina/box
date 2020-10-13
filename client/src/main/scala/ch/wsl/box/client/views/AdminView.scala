@@ -3,10 +3,9 @@ package ch.wsl.box.client.views
 
 import io.udash._
 import ch.wsl.box.client._
-import ch.wsl.box.client.services.{Navigate, REST}
+import ch.wsl.box.client.services.{ClientConf, Navigate, REST}
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Session, UI}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import scalacss.ScalatagsCss._

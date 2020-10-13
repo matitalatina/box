@@ -1,6 +1,6 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{ClientConf, Labels, REST, Session, UI}
 import ch.wsl.box.client.styles.OpenLayersStyles
 import ch.wsl.box.client.utils._
 import io.udash.wrappers.jquery._

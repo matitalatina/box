@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components
 
-import ch.wsl.box.client.utils.UI
+import ch.wsl.box.client.services.UI
 import io.udash.properties.model.ModelProperty
 import scalatags.JsDom.all._
 import io.udash._

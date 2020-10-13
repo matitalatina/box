@@ -3,9 +3,8 @@ package ch.wsl.box.client.views.components.widget
 import java.util.UUID
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{ClientConf, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.client.views.components.Debug
 import ch.wsl.box.model.shared._
 import io.circe.Json
