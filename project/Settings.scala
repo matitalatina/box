@@ -163,9 +163,10 @@ object Settings {
     "io.circe" %%% "circe-scalajs" % versions.circe,
     "org.scala-js" %%% "scalajs-dom" % "1.0.0",
     "io.github.cquiroz" %%% "scala-java-time" % "2.0.0",
-    "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
-    "org.scalatest" %%% "scalatest-flatspec" % versions.scalatest % "test",
+//    "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
+//    "org.scalatest" %%% "scalatest-flatspec" % versions.scalatest % "test",
     "org.wvlet.airframe" %%% "airframe" % versions.airframe,
+    "com.lihaoyi" %%% "utest" % "0.7.5" % "test"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

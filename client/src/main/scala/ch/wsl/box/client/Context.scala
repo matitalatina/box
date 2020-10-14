@@ -16,8 +16,8 @@ object Context {
   }else { _services }
   private var _services:ServiceModule = null
   def init(design:Design,ec: ExecutionContext = scalajs.concurrent.JSExecutionContext.Implicits.queue) = {
-    design.build[ServiceModule]{ sm => _services = sm}
     executionContext = ec
+    design.build[ServiceModule]{ sm => _services = sm}
   }
 
 }

@@ -43,9 +43,22 @@ class ClientSession(rest:REST) extends Logging {
     Property(false)
   }
 
-  isValidSession().map{
-    case true => logged.set(true)
-    case false => dom.window.sessionStorage.removeItem(USER)
+  logger.info("Loading session")
+
+
+  isValidSession().map{ x =>
+    logger.info(s"is valid session $x")
+    x match {
+      case true => {
+        logger.info("Valid session found")
+        logged.set(true)
+      }
+      case false => {
+        logger.info("No valid session found")
+        dom.window.sessionStorage.removeItem(USER)
+        logoutAndSaveState()
+      }
+    }
   }
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
@@ -106,14 +119,17 @@ class ClientSession(rest:REST) extends Logging {
     Try{
       dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url(applicationInstance))
     }
-    logout()
+    logout(false)
   }
 
-  def logout() = {
+  def logout(invalidateSession:Boolean = true) = {
     Navigate.toAction{ () =>
       dom.window.sessionStorage.removeItem(USER)
       for{
-        _ <- rest.logout()
+        _ <- invalidateSession match {
+          case true => rest.logout()
+          case false => Future.successful()
+        }
         ui <- rest.ui()
       } yield {
         UI.load(ui)

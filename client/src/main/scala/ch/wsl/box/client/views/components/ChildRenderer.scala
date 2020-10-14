@@ -25,7 +25,7 @@ import scalatags.JsDom
   * Created by andre on 6/1/2017.
   */
 
-case class ChildRow(widget:ChildWidget,id:String, data:ReadableProperty[Json], open:Boolean)
+case class ChildRow(widget:ChildWidget,id:String, data:ReadableProperty[Json], open:Boolean, rowId:Option[JSONID])
 
 trait ChildRendererFactory extends ComponentWidgetFactory {
 
@@ -53,6 +53,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
     protected def render(write: Boolean): JsDom.all.Modifier
 
     private def add(data:Json,open:Boolean): Unit = {
+
       val id = UUID.randomUUID().toString
       val propData = Property(data)
       val childId = Property(data.ID(metadata.get.keys).map(_.asString))
@@ -68,9 +69,10 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
       val widget = JSONMetadataRenderer(metadata.get, propData, children, childId)
 
-
-      childWidgets += ChildRow(widget,id,propData,open)
+      val childRow = ChildRow(widget,id,propData,open,JSONID.fromData(propData.get,metadata.get))
+      childWidgets += childRow
       entity.append(id)
+      logger.debug(s"Added row ${childRow.rowId.map(_.asString).getOrElse("No ID")} of childForm ${metadata.get.name}")
       widget.afterRender()
     }
 
@@ -157,15 +159,14 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
 
 
-
     row_id.listen(i => {
-
-      childWidgets.foreach(_.widget.killWidget())
-      childWidgets.clear()
-      entity.clear()
-      val entityData = splitJson(prop.get)
-      logger.debug(s"id changed with $i")
-      entityData.foreach(x => add(x,false))
+      prop.listenOnce { data =>
+        childWidgets.foreach(_.widget.killWidget())
+        childWidgets.clear()
+        entity.clear()
+        val entityData = splitJson(data)
+        entityData.foreach(x => add(x, false))
+      }
     },true)
 
 
@@ -248,8 +249,8 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
                     val widget = childWidgets.find(_.id == e)
                     val open = Property(widget.get.open)
                     frag(
-                      tr(ClientConf.style.childTableTr,
-                        td(ClientConf.style.childTableTd, ClientConf.style.childTableAction, a(produce(open) {
+                      tr(`class` := TestHooks.tableChildRow,ClientConf.style.childTableTr,
+                        td(ClientConf.style.childTableTd, ClientConf.style.childTableAction, a(id := TestHooks.tableChildButtonId(f.objId,widget.get.rowId), produce(open) {
                           case true => span(Icons.caretDown).render
                           case false => span(Icons.caretRight).render
                         }, onclick :+= ((e: Event) => {
@@ -285,7 +286,10 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
               ),
               tr(ClientConf.style.childTableTr,
                 td(ClientConf.style.childTableTd,colspan := fields.length + 1,
-                  if (write) a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add) else frag()
+                  if (write) a(id := TestHooks.addChildId(f.objId),onclick :+= ((e: Event) => {
+                    addItem(child, f)
+                    true
+                  }), Labels.subform.add) else frag()
                 )
               )
             ).render,

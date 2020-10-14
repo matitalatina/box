@@ -120,7 +120,8 @@ lazy val client: Project = (project in file("client"))
     fork in fullOptJS := true,
     javaOptions in fastOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
-    // use scalatest framework for tests
+
+    //To use jsdom headless browser uncomment the following lines
     jsEnv in Test := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
     jsEnvInput in Test := Def.task{
       val targetDir = (npmUpdate in Test).value
@@ -129,23 +130,16 @@ lazy val client: Project = (project in file("client"))
       println(r)
       r
     }.value,
-    //jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(false)),
+
+    //To use Selenium uncomment the following line
+//    jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(true)),
+
+
+    testFrameworks += new TestFramework("utest.runner.Framework"),
     requireJsDomEnv in Test := true,
-//    // Compile tests to JS using fast-optimisation
-//    scalaJSStage in Test := FastOptStage,
-//    fullClasspath in Test ~= { _.filter(_.data.exists) },
-//    //scalaJSOptimizerOptions ~= { _.withDisableOptimizer(true) },
-//    compile := ((compile in Compile).dependsOn(compileStatics)).value,
-//    compileStatics := {
-//      IO.copyDirectory(sourceDirectory.value / "main/assets/fonts", crossTarget.value / StaticFilesDir / WebContent / "assets/fonts")
-//      IO.copyDirectory(sourceDirectory.value / "main/assets/images", crossTarget.value / StaticFilesDir / WebContent / "assets/images")
-//      val statics = compileStaticsForRelease.value
-//      (crossTarget.value / StaticFilesDir).get
-//    },
   )
   .enablePlugins(
     ScalaJSPlugin,
-    ScalaJSJUnitPlugin,
     ScalablyTypedConverterPlugin
   )
   .dependsOn(sharedJS)

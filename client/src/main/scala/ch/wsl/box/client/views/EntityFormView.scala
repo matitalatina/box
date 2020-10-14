@@ -311,7 +311,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
     span(name).render
   }
 
-  def actionRenderer(id:Option[String])(action:FormAction):Modifier = {
+  def actionRenderer(_id:Option[String])(action:FormAction):Modifier = {
 
       val importance:StyleA = action.importance match {
         case Primary => ClientConf.style.boxButtonImportant
@@ -320,16 +320,16 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       }
 
       def callBack() = action.action match {
-        case SaveAction => presenter.save{ id =>
+        case SaveAction => presenter.save{ _id =>
           if(action.reload) {
-            presenter.reload(id)
+            presenter.reload(_id)
           }
-          action.getUrl(model.get.kind,model.get.name,Some(id.asString),model.get.write).foreach{ url =>
+          action.getUrl(model.get.kind,model.get.name,Some(_id.asString),model.get.write).foreach{ url =>
             presenter.reset()
             Navigate.toUrl(url)
           }
         }
-        case NoAction => action.getUrl(model.get.kind,model.get.name,id,model.get.write).foreach{ url =>
+        case NoAction => action.getUrl(model.get.kind,model.get.name,_id,model.get.write).foreach{ url =>
           presenter.reset()
           Navigate.toUrl(url)
         }
@@ -354,8 +354,9 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       case None => cb()
     }
 
-    if((action.updateOnly && id.isDefined) || (action.insertOnly && id.isEmpty) || (!action.insertOnly && !action.updateOnly)) {
+    if((action.updateOnly && _id.isDefined) || (action.insertOnly && _id.isEmpty) || (!action.insertOnly && !action.updateOnly)) {
       button(
+        id := TestHooks.actionButton(action.label),
         importance,
         onclick :+= ((ev: Event) => {
           confirm(callBack)
@@ -439,9 +440,9 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         div(BootstrapStyles.Float.left())(
           realeser(produceWithNested(model.subProp(_.metadata)) { (form,realeser2) =>
             div(
-              realeser2(produce(model.subProp(_.id)) { id =>
+              realeser2(produce(model.subProp(_.id)) { _id =>
                 div(
-                  form.toSeq.flatMap(_.action.actions).map(actionRenderer(id))
+                  form.toSeq.flatMap(_.action.actions).map(actionRenderer(_id))
                 ).render
               })
             ).render
