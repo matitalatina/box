@@ -3,10 +3,9 @@ package ch.wsl.box.client
 import ch.wsl.box.client.mocks.Values
 import ch.wsl.box.client.utils.TestHooks
 import ch.wsl.box.model.shared.{FormActionsMetadata, JSONID, SharedLabels}
-import org.scalajs.dom.document
-import org.scalajs.dom.window
+import org.scalajs.dom.{KeyboardEventInit, document, window}
 import org.scalajs.dom.ext._
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.raw.{Event, HTMLElement, HTMLInputElement, KeyboardEvent}
 import utest._
 
 import scala.concurrent.Future
@@ -37,6 +36,14 @@ object ChildTest extends TestSuite with TestBase {
           _ <- waitCycle
           _ <- Future {
             assert(countChilds(2) == 1)
+            val input = document.querySelector(s".${TestHooks.formField("text")}").asInstanceOf[HTMLInputElement]
+            input.value = "test"
+            input.onchange(new Event("change"))
+          }
+          _ <- waitCycle
+          _ <- Future {
+            assert(countChilds(2) == 1)
+            assert(document.getElementById(TestHooks.dataChanged) != null)
             document.getElementById(TestHooks.actionButton(SharedLabels.form.save)).asInstanceOf[HTMLElement].click()
           }
           _ <- waitCycle
@@ -52,6 +59,7 @@ object ChildTest extends TestSuite with TestBase {
             assert(countChilds(2) == 2)
             assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(JSONID.fromMap(Map("id" -> "3"))))).isInstanceOf[HTMLElement])
           }
+
         } yield true
 
     }

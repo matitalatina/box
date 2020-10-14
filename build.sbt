@@ -132,7 +132,7 @@ lazy val client: Project = (project in file("client"))
     }.value,
 
     //To use Selenium uncomment the following line
-//    jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(true)),
+    //jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(true)),
 
 
     testFrameworks += new TestFramework("utest.runner.Framework"),

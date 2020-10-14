@@ -95,14 +95,14 @@ class RestMock extends REST {
       case "1" => Map(
         "id" -> 1.asJson,
         "child" -> Seq(
-          Map("parent_id" -> 1, "id" -> 1)
+          Map("parent_id" -> 1.asJson, "id" -> 1.asJson, "text" -> "test".asJson)
         ).asJson
       ).asJson
       case "2" => Map(
         "id" -> 2.asJson,
         "child" -> Seq(
-          Map("parent_id" -> 2, "id" -> 2),
-          Map("parent_id" -> 2, "id" -> 3)
+          Map("parent_id" -> 2.asJson, "id" -> 2.asJson, "text" -> "test".asJson),
+          Map("parent_id" -> 2.asJson, "id" -> 3.asJson, "text" -> "test".asJson)
         ).asJson
       ).asJson
     }

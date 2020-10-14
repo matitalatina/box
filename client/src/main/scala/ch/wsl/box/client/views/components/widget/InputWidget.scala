@@ -2,6 +2,7 @@ package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.services.ClientConf
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.client.utils.TestHooks
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import io.circe.Json
 import io.udash._
@@ -118,7 +119,7 @@ object InputWidget {
     override def edit() = editMe(field,true, false, modifiers){ case y =>
 
       val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
-      TextInput(stringModel)(y:_*).render
+      TextInput(stringModel)(y ++ Seq(`class` := TestHooks.formField(field.name)):_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true, modifiers))
   }

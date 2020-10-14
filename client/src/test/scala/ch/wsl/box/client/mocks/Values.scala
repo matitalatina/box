@@ -74,9 +74,14 @@ object Values {
         JSONFieldTypes.NUMBER,
         name = "parent_id",
         nullable = false
+      ),
+      JSONField(
+        JSONFieldTypes.STRING,
+        name = "text",
+        nullable = true
       )
     ),
-    layout = Layout(Seq(LayoutBlock(None,12,Seq(Left("id"),Left("parent_id"))))),
+    layout = Layout(Seq(LayoutBlock(None,12,Seq(Left("id"),Left("parent_id"),Left("text"))))),
     entity = "test_child",
     lang = "it",
     tabularFields = Seq("id"),

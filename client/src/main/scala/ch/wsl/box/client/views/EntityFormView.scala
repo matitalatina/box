@@ -419,7 +419,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
             small(" - " + Labels.navigation.loading).render
           },
           showIf(model.subProp(_.changed)) {
-            small(style := "color: red"," - " + Labels.form.changed).render
+            small(id := TestHooks.dataChanged,style := "color: red"," - " + Labels.form.changed).render
           }
 
         )

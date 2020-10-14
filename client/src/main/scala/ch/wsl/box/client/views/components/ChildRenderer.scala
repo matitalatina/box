@@ -64,7 +64,9 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
             x.deepMerge(data)
           } else x
         }
+        propListener.cancel()
         prop.set(newData.asJson)
+        registerListener(false)
       }
 
       val widget = JSONMetadataRenderer(metadata.get, propData, children, childId)
@@ -159,15 +161,19 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
 
 
-    row_id.listen(i => {
-      prop.listenOnce { data =>
+    var propListener:Registration = null
+
+    def registerListener(immediate:Boolean) {
+      propListener = prop.listen(i => {
         childWidgets.foreach(_.widget.killWidget())
         childWidgets.clear()
         entity.clear()
-        val entityData = splitJson(data)
+        val entityData = splitJson(prop.get)
         entityData.foreach(x => add(x, false))
-      }
-    },true)
+      }, immediate)
+    }
+
+    registerListener(true)
 
 
 
