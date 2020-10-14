@@ -1,7 +1,7 @@
 package ch.wsl.box.client.mocks
 
 import ch.wsl.box.client.services.REST
-import ch.wsl.box.model.shared.{ExportDef, IDs, JSONCount, JSONFieldMap, JSONID, JSONLookup, JSONMetadata, JSONQuery, LoginRequest, NewsEntry, SharedLabels}
+import ch.wsl.box.model.shared.{Child, ExportDef, FormActionsMetadata, IDs, JSONCount, JSONField, JSONFieldMap, JSONFieldTypes, JSONID, JSONLookup, JSONMetadata, JSONQuery, Layout, LayoutBlock, LoginRequest, NewsEntry, SharedLabels, WidgetsNames}
 import io.circe.Json
 import org.scalajs.dom.File
 
@@ -12,9 +12,8 @@ class RestMock extends REST {
 
   override def appVersion(): Future[String] = Future.successful("appVersion")
 
-  override def validSession(): Future[Boolean] = {
-    println("validSession not implemented")
-    ???
+  override def validSession(): Future[Boolean] = Future.successful{
+    true
   }
 
   override def cacheReset(): Future[String] = {
@@ -28,8 +27,13 @@ class RestMock extends REST {
   }
 
   override def entities(kind: String): Future[Seq[String]] = {
-    println("entities not implemented")
-    ???
+    kind match {
+      case "form" => Future.successful(Values.formEntities)
+      case _ => {
+        println(s"entities for $kind not implemented")
+        ???
+      }
+    }
   }
 
   override def specificKind(kind: String, lang: String, entity: String): Future[String] = {
@@ -67,9 +71,8 @@ class RestMock extends REST {
     ???
   }
 
-  override def metadata(kind: String, lang: String, entity: String): Future[JSONMetadata] = {
-    println("metadata not implemented")
-    ???
+  override def metadata(kind: String, lang: String, entity: String): Future[JSONMetadata] = Future.successful{
+    Values.metadata
   }
 
   override def tabularMetadata(kind: String, lang: String, entity: String): Future[JSONMetadata] = {
@@ -112,9 +115,8 @@ class RestMock extends REST {
     ???
   }
 
-  override def login(request: LoginRequest): Future[Json] = {
-    println("login not implemented")
-    ???
+  override def login(request: LoginRequest): Future[Json] = Future.successful{
+    Json.True
   }
 
   override def logout(): Future[String] = {

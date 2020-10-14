@@ -4,6 +4,7 @@ import java.util.UUID
 
 import ch.wsl.box.client.services.{ClientConf, Labels, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles, Icons}
+import ch.wsl.box.client.utils.TestHooks
 import ch.wsl.box.client.views.components.widget.{ChildWidget, ComponentWidgetFactory, Widget}
 import ch.wsl.box.model.shared._
 import io.circe.Json
@@ -41,7 +42,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
     import io.circe.syntax._
     import ch.wsl.box.shared.utils.JSONUtils._
 
-    def id: Property[Option[String]]
+    def row_id: Property[Option[String]]
     def prop: Property[Json]
     def field:JSONField
 
@@ -157,7 +158,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
 
 
-    id.listen(i => {
+    row_id.listen(i => {
 
       childWidgets.foreach(_.widget.killWidget())
       childWidgets.clear()
@@ -178,7 +179,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 case class SimpleChildFactory(child:Child, children:Seq[JSONMetadata], masterData:Property[Json]) extends ChildRendererFactory {
   override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = SimpleChildRenderer(id,prop,field)
 
-  case class SimpleChildRenderer(id: Property[Option[String]], prop: Property[Json], field:JSONField) extends ChildRenderer {
+  case class SimpleChildRenderer(row_id: Property[Option[String]], prop: Property[Json], field:JSONField) extends ChildRenderer {
 
     import scalatags.JsDom.all._
     import io.udash.css.CssView._
@@ -221,7 +222,7 @@ case class SimpleChildFactory(child:Child, children:Seq[JSONMetadata], masterDat
 case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData:Property[Json]) extends ChildRendererFactory {
   override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = TableChildRenderer(id,prop,field)
 
-  case class TableChildRenderer(id: Property[Option[String]], prop: Property[Json], field:JSONField) extends ChildRenderer {
+  case class TableChildRenderer(row_id: Property[Option[String]], prop: Property[Json], field:JSONField) extends ChildRenderer {
 
     import scalatags.JsDom.all._
     import io.udash.css.CssView._
@@ -236,7 +237,7 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
           val fields = f.rawTabularFields.flatMap{fieldId => f.fields.find(_.name == fieldId)}
 
           div(
-            table(ClientConf.style.childTable,
+            table(id := TestHooks.tableChildId(f.objId),ClientConf.style.childTable,
               tr(ClientConf.style.childTableTr,ClientConf.style.childTableHeader,
                 td(),
                 fields.map(f => td(ClientConf.style.childTableTd,f.title))
