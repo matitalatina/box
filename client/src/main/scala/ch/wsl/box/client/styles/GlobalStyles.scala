@@ -76,6 +76,8 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       )
     ),
 
+
+
     unsafeRoot("input[type='checkbox']")(
       width.auto,
       height.auto
@@ -189,6 +191,12 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     )
 
 
+  )
+
+  val jsonMetadataRendered = style(
+    unsafeChild("input") (
+      float.right
+    )
   )
 
   val preformatted = style(

@@ -259,7 +259,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     div(UdashForm()( factory => Seq(
         Debug(data,autoRelease, "data"),
-        div(BootstrapStyles.Grid.row)(
+        div(ClientConf.style.jsonMetadataRendered,BootstrapStyles.Grid.row)(
           blocks.map{ case (block,widget) =>
             div(BootstrapCol.md(block.width), ClientConf.style.block)(
               renderer(block,widget)
