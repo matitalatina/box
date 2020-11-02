@@ -123,6 +123,10 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
   }
 
+  private def keys(form:BoxForm_row):Future[Seq[String]] = form.edit_key_field.map{x =>
+    Future.successful(x.split(",").toSeq.map(_.trim))
+  }.getOrElse(EntityMetadataFactory.keysOf(form.entity))
+
   private def getForm(formQuery: Query[BoxForm.BoxForm,BoxForm_row,Seq], lang:String) = {
 
     import io.circe.generic.auto._
@@ -146,7 +150,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
         BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
       }
       columns <- Future.sequence(fields.map(f => columns(form,f._1)))
-      keys <- EntityMetadataFactory.keysOf(form.entity)
+      keys <- keys(form)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
     } yield {
 

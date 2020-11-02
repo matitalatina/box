@@ -29,6 +29,7 @@ object FormUIDef {
       JSONField(JSONFieldTypes.STRING,"guest_user",true,lookup = Some(JSONFieldLookup.prefilled(
         users.map(x => JSONLookup(x.username,x.username))
       ))),
+      JSONField(JSONFieldTypes.STRING,"edit_key_field",true, label = Some("Key fields"), placeholder = Some("by default primary key is used"), tooltip = Some("Manually enter the fields that should be used as primary key. This is useful mainly for updatable views where the primary key of the entity cannot be calculated. Fields are separated with comma")),
       JSONField(JSONFieldTypes.STRING,"exportFields",true),
       JSONField(JSONFieldTypes.CHILD,"fields",true,child = Some(Child(FORM_FIELD,"fields","form_id","form_id",Some(JSONQuery.sortByKeys(Seq("field_id"))))), widget = Some(WidgetsNames.tableChild)),
       JSONField(JSONFieldTypes.CHILD,"form_i18n",true,child = Some(Child(FORM_I18N,"form_i18n","form_id","form_id",Some(JSONQuery.sortByKeys(Seq("lang"))))), widget = Some(WidgetsNames.tableChild))
@@ -38,7 +39,7 @@ object FormUIDef {
         LayoutBlock(None,8,Seq(
           SubLayoutBlock(None,Seq(12,12,12),Seq(
             Right(
-              SubLayoutBlock(Some("Base Info"),Seq(12),Seq("form_id","name","entity","query","description","guest_user").map(Left(_)))
+              SubLayoutBlock(Some("Base Info"),Seq(12),Seq("form_id","name","entity","query","description","guest_user","edit_key_field").map(Left(_)))
             ),
             Left(""),
             Right(
@@ -170,7 +171,7 @@ object FormUIDef {
     action = FormActionsMetadata.default
   )
 
-  val formI18n = JSONMetadata(
+  def formI18n(views:Seq[String]) = JSONMetadata(
     objId = FORM_I18N,
     name = "FormI18n builder",
     label = "FormI18n builder",
@@ -181,7 +182,9 @@ object FormUIDef {
       JSONField(JSONFieldTypes.STRING,"label",true),
       JSONField(JSONFieldTypes.STRING,"tooltip",true),
       JSONField(JSONFieldTypes.STRING,"hint",true),
-      JSONField(JSONFieldTypes.STRING,"view_table",true),
+      JSONField(JSONFieldTypes.STRING,"view_table",true,lookup = Some(JSONFieldLookup.prefilled(
+        views.map(x => JSONLookup(x,x))
+      ))),
     ),
     layout = Layout(
       blocks = Seq(

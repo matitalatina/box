@@ -20,6 +20,8 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
   import ch.wsl.box.rest.metadata.box._
 
 
+  val viewsOnly = View.views.toSeq.sorted
+  val tablesAndViews = (Table.tables.toSeq ++ View.views).sorted
 
 
 
@@ -27,10 +29,10 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
     forms <- getForms()
     users <- getUsers()
   } yield Seq(
-    FormUIDef.main(Table.tables.toSeq.sorted,users.sortBy(_.username)),
-    FormUIDef.field(forms,Table.tables.toSeq.sorted),
+    FormUIDef.main(tablesAndViews,users.sortBy(_.username)),
+    FormUIDef.field(forms,tablesAndViews),
     FormUIDef.fieldI18n,
-    FormUIDef.formI18n,
+    FormUIDef.formI18n(viewsOnly),
     FormUIDef.fieldFile,
     FunctionUIDef.main,
     FunctionUIDef.field,
@@ -60,7 +62,7 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
 
   override def children(form: JSONMetadata): Future[Seq[JSONMetadata]] = getForms().map{ forms =>
     form match {
-      case f if f.objId == FORM => Seq(FormUIDef.field(forms,(Table.tables.toSeq++View.views).sorted),FormUIDef.fieldI18n,FormUIDef.formI18n,FormUIDef.fieldFile)
+      case f if f.objId == FORM => Seq(FormUIDef.field(forms,tablesAndViews),FormUIDef.fieldI18n,FormUIDef.formI18n(viewsOnly),FormUIDef.fieldFile)
       case f if f.objId == FORM_FIELD => Seq(FormUIDef.fieldI18n,FormUIDef.fieldFile)
       case f if f.objId == FUNCTION => Seq(FunctionUIDef.field,FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
       case f if f.objId == FUNCTION_FIELD => Seq(FunctionUIDef.fieldI18n)
