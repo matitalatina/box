@@ -77,6 +77,9 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     ),
 
 
+    unsafeRoot("label")(
+      fontWeight.bold
+    ),
 
     unsafeRoot("input[type='checkbox']")(
       width.auto,

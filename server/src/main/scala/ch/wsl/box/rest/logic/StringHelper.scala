@@ -21,6 +21,5 @@ object StringHelper {
       .map(_.capitalize)
       .mkString("")
 
-    final def slickfy = str //toCamelCase.uncapitalize
   }
 }

@@ -35,6 +35,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   import io.udash.css.CssView._
 
 
+  override def field: JSONField = JSONField("metadataRenderer","metadataRenderer",false)
 
   private def getId(data:Json): Option[String] = {
     data.ID(metadata.keys).map(_.asString)
@@ -87,6 +88,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   private def widgetSelector(field: JSONField, id:Property[Option[String]], fieldData:Property[Json]): Widget = {
     import JSONFieldTypes._
 
+
+
     val widg:ComponentWidgetFactory =
 
         ( field.`type`,
@@ -128,6 +131,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (_, _, _, _, _)                                        => InputWidgetFactory.Text
     }
 
+    logger.debug(s"Selected widget for ${field.name}: ${widg}")
+
     widg.create(id,fieldData,field)
 
   }
@@ -153,6 +158,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     override def killWidget(): Unit = widget.killWidget()
 
+    override def field: JSONField = JSONField("block","block",false)
 
     override def afterRender(): Unit = widget.afterRender()
 
@@ -168,7 +174,6 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
   private def simpleField(fieldName:String):WidgetVisibility = {for{
     field <- metadata.fields.find(_.name == fieldName)
-
   } yield {
 
 
@@ -189,7 +194,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     WidgetVisibility(widgetSelector(field, id, fieldData),checkCondition(field))
 
-  }}.getOrElse(WidgetVisibility(HiddenWidget.HiddenWidgetImpl))
+  }}.getOrElse(WidgetVisibility(HiddenWidget.HiddenWidgetImpl(JSONField.empty)))
 
 
   private def fieldsRenderer(fields: Seq[Either[String, SubLayoutBlock]], widths: Stream[Int] = Stream.continually(12)):Widget = new Widget {
@@ -207,6 +212,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
 
     override def afterRender(): Unit = widgets.foreach(_.widget.afterRender())
+
+    override def field: JSONField = JSONField("fieldsRenderer","fieldsRenderer",false)
 
     override protected def show(): JsDom.all.Modifier = render(false)
 

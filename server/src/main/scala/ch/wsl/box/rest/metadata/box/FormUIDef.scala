@@ -100,6 +100,7 @@ object FormUIDef {
       JSONField(JSONFieldTypes.STRING,"conditionFieldId",true),
       JSONField(JSONFieldTypes.STRING,"conditionValues",true,placeholder = Some("[1,2,3]"),tooltip = Some("Enter a JSON array with the possibles values")),
       JSONField(JSONFieldTypes.JSON,"params",true,widget = Some(WidgetsNames.code)),
+      JSONField(JSONFieldTypes.BOOLEAN,"read_only",false,default = Some("false")),
     ),
     layout = Layout(
       blocks = Seq(
@@ -109,6 +110,7 @@ object FormUIDef {
           "name",
           "type",
           "widget",
+          "read_only",
           "lookupEntity",
           "lookupValueField",
           "lookupQuery",
@@ -130,7 +132,7 @@ object FormUIDef {
     entity = "field",
     lang = "en",
     tabularFields = Seq("field_id","name","widget"),
-    rawTabularFields = Seq("name","widget","lookupEntity","child_form_id"),
+    rawTabularFields = Seq("name","widget","read_only","lookupEntity","child_form_id"),
     keys = Seq("field_id"),
     query = None,
     exportFields = Seq(),

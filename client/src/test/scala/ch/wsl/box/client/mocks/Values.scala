@@ -1,6 +1,6 @@
 package ch.wsl.box.client.mocks
 
-import ch.wsl.box.model.shared.{Child, FormActionsMetadata, JSONField, JSONFieldTypes, JSONMetadata, Layout, LayoutBlock, WidgetsNames}
+import ch.wsl.box.model.shared.{Child, FormActionsMetadata, JSONField, JSONFieldTypes, JSONID, JSONKeyValue, JSONMetadata, Layout, LayoutBlock, WidgetsNames}
 
 object Values {
   val headerLangEn = "test header en"
@@ -24,6 +24,9 @@ object Values {
 
   val formEntities = Seq(testFormName)
 
+  val readOnlyField = "read_only_test"
+  val readOnlyValue = "read_only_test_value"
+
   val metadata = JSONMetadata(
     1,
     testFormName,
@@ -33,6 +36,12 @@ object Values {
         JSONFieldTypes.NUMBER,
         "id",
         false
+      ),
+      JSONField(
+        JSONFieldTypes.STRING,
+        name = readOnlyField,
+        nullable = true,
+        readOnly = true
       ),
       JSONField(
         JSONFieldTypes.CHILD,
@@ -48,7 +57,7 @@ object Values {
         ))
       )
     ),
-    layout = Layout(Seq(LayoutBlock(None,12,Seq(Left("child"))))),
+    layout = Layout(Seq(LayoutBlock(None,12,Seq(Left("child"),Left(readOnlyField))))),
     entity = "test",
     lang = "it",
     tabularFields = Seq("id"),
@@ -92,5 +101,16 @@ object Values {
     view = None,
     action = FormActionsMetadata.default
   )
+
+  object ids {
+    object main {
+      val singleChild: JSONID = JSONID(Vector(JSONKeyValue("id", "1")))
+      val doubleChild: JSONID = JSONID(Vector(JSONKeyValue("id", "2")))
+    }
+    object childs {
+      val thirdChild: JSONID = JSONID(Vector(JSONKeyValue("id", "3")))
+    }
+
+  }
 
 }

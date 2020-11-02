@@ -15,6 +15,7 @@ import scalatags.JsDom.all._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.udash.bindings.modifiers.Binding
 import org.scalajs.dom.Node
+import scribe.Logging
 
 object InputWidgetFactory {
 
@@ -58,7 +59,7 @@ object InputWidgetFactory {
 
 }
 
-object InputWidget {
+object InputWidget extends Logging {
 
 
   import scalacss.ScalatagsCss._
@@ -72,13 +73,16 @@ object InputWidget {
 
     def reallyWithLabel = withLabel & (field.title.length > 0)
 
+    val mods = if(reallyWithLabel)
+      inputRendererDefaultModifiers++modifiers
+    else
+      inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct)
+
+
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin,
       if(reallyWithLabel) label(field.title) else {},
-      if(reallyWithLabel)
-        div(inputRendererDefaultModifiers++modifiers, (bind(prop.transform(_.string))))
-      else
-        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), (bind(prop.transform(_.string)))),
+      div(`class` := TestHooks.readOnlyField(field.name) ,mods, bind(prop.transform(_.string))),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
 
@@ -121,7 +125,9 @@ object InputWidget {
       val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
       TextInput(stringModel)(y ++ Seq(`class` := TestHooks.formField(field.name)):_*).render
     }
-    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true, modifiers))
+    override protected def show(): JsDom.all.Modifier = {
+      autoRelease(showMe(prop,field,true, modifiers))
+    }
   }
 
   class TextDisabled(field:JSONField, prop: Property[Json]) extends Text(field,prop) {

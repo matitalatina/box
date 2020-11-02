@@ -228,6 +228,9 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
   private var widget:Widget = new Widget {
     import scalatags.JsDom.all._
+
+    override def field: JSONField = JSONField.empty
+
     override protected def show(): JsDom.all.Modifier = div()
     override protected def edit(): JsDom.all.Modifier = div()
   }

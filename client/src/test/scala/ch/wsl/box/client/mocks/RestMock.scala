@@ -91,14 +91,15 @@ class RestMock extends REST {
   }
 
   override def get(kind: String, lang: String, entity: String, id: JSONID): Future[Json] = Future.successful{
-    id.values.head match {
-      case "1" => Map(
+    id match {
+      case Values.ids.main.singleChild => Map(
         "id" -> 1.asJson,
+        Values.readOnlyField -> Values.readOnlyValue.asJson,
         "child" -> Seq(
-          Map("parent_id" -> 1.asJson, "id" -> 1.asJson, "text" -> "test".asJson)
+          Map("parent_id" -> 1.asJson, "id" -> 1.asJson, "text" -> "test".asJson )
         ).asJson
       ).asJson
-      case "2" => Map(
+      case Values.ids.main.doubleChild => Map(
         "id" -> 2.asJson,
         "child" -> Seq(
           Map("parent_id" -> 2.asJson, "id" -> 2.asJson, "text" -> "test".asJson),

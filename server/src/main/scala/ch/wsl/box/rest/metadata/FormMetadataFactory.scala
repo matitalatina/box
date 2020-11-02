@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
+import ch.wsl.box.information_schema.{PgColumn, PgColumns}
 import ch.wsl.box.model.boxentities.BoxField.{BoxFieldFile_row, BoxField_i18n_row, BoxField_row}
 import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_row}
 import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
@@ -333,6 +334,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
           `type` = field.`type`,
           name = field.name,
           nullable = nullable,
+          readOnly = field.read_only,
           label = Some(lab),
           lookup = look,
           placeholder = placeHolder,

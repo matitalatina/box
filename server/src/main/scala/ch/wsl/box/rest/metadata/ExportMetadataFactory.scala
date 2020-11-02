@@ -164,6 +164,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
         field.`type`,
         field.name,
         false,
+        false,
         fieldI18n.flatMap(_.label),
         look,
         fieldI18n.flatMap(_.placeholder),

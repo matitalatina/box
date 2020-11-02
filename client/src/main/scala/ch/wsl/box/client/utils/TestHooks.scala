@@ -12,4 +12,5 @@ object TestHooks {
   val logoutButton = "logoutButton"
   val dataChanged = "dataChanged"
   def formField(name:String) = s"formField$name"
+  def readOnlyField(name:String) = s"readOnlyField$name"
 }

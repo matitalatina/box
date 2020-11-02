@@ -48,16 +48,16 @@ object ChildTest extends TestSuite with TestBase {
           }
           _ <- waitCycle
           _ <- Future { //test if element is still present after save
-            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(JSONID.fromMap(Map("id" -> "1"))))).isInstanceOf[HTMLElement])
+            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.main.singleChild))).isInstanceOf[HTMLElement])
             assert(countChilds(2) == 1)
             //navigate to another record
             val otherId = Some(JSONID.fromMap(Map("id" -> "2")).asString)
-            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", otherId))
+            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.doubleChild.asString)))
           }
           _ <- waitCycle
           _ <- Future {
             assert(countChilds(2) == 2)
-            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(JSONID.fromMap(Map("id" -> "3"))))).isInstanceOf[HTMLElement])
+            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.childs.thirdChild))).isInstanceOf[HTMLElement])
           }
 
         } yield true

@@ -36,7 +36,7 @@ class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[
 
   override def handleState(state: AdminState.type): Unit = {
     for{
-      entitites <- services.rest.entities(EntityKind.TABLE.kind)
+      entitites <- services.rest.entities(EntityKind.ENTITY.kind)
     } yield {
       viewModel.set(AdminViewModel(entitites))
     }

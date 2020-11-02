@@ -36,6 +36,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
 
     val calculatedViews = enabledViews.map(_.name.name).distinct
     val calculatedTables = enabledTables.map(_.name.name).distinct
+    enabledViews.foreach(println(_))
 
     GeneratedFiles(
       entities = EntitiesGenerator(dbModel,dbConf),

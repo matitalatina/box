@@ -16,7 +16,7 @@ lazy val codegen  = (project in file("codegen")).settings(
   resourceDirectory in Compile := baseDirectory.value / "../resources",
   unmanagedResourceDirectories in Compile += baseDirectory.value / "../db",
   git.useGitDescribe := true
-)
+).dependsOn(sharedJVM)
 
 lazy val server: Project  = project
   .settings(

@@ -1,0 +1,1 @@
+alter table box.field add column if not exists read_only bool not null default false;

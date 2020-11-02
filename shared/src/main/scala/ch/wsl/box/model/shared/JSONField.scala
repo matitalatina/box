@@ -9,6 +9,7 @@ case class JSONField(
                       `type`:String,
                       name:String,
                       nullable: Boolean,
+                      readOnly: Boolean = false,
                       label:Option[String] = None,
                       lookup:Option[JSONFieldLookup] = None,
                       placeholder:Option[String] = None,
@@ -24,7 +25,7 @@ case class JSONField(
 }
 
 object JSONField{
-  val empty = JSONField("","",true)
+  val empty = JSONField("","",true,true)
 }
 
 

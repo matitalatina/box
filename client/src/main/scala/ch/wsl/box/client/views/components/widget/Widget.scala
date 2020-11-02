@@ -24,6 +24,8 @@ import scala.concurrent.duration._
 
 trait Widget extends Logging {
 
+  def field:JSONField
+
   def jsonToString(json:Json):String = json.string
 
   def strToJson(nullable:Boolean = false)(str:String):Json = (str, nullable) match {
@@ -45,7 +47,7 @@ trait Widget extends Logging {
   protected def edit():Modifier
 
   def render(write:Boolean,conditional:ReadableProperty[Boolean]):Modifier = showIf(conditional) {
-    if(write) {
+    if(write && !field.readOnly) {
       div(edit()).render
     } else {
       div(show()).render

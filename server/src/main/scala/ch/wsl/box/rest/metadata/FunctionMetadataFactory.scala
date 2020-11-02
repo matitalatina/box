@@ -160,6 +160,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
         field.`type`,
         field.name,
         false,
+        false,
         fieldI18n.flatMap(_.label),
         look,
         fieldI18n.flatMap(_.placeholder),
