@@ -22,7 +22,7 @@ object PSQLImpl extends RuntimePSQL {
 
     implicit def db = up.db
 
-    val actions = Registry().actions.actions(name)(ec).get
+    val actions = Registry().actions(name)
 
     val io = for {
       rows <- actions.find(query)

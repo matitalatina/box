@@ -258,7 +258,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
 
 
-          lookupData <- db.run(Registry().actions.actions(refEntity)(ec).get.find(filter.copy(lang = Some(lang))))
+          lookupData <- db.run(Registry().actions(refEntity).find(filter.copy(lang = Some(lang))))
 
         } yield {
 //          val options = lookupData.map{ lookupRow =>

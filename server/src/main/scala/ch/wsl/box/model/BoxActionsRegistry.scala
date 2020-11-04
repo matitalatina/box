@@ -34,7 +34,7 @@ class BoxActionsRegistry(implicit ec:ExecutionContext)  {
     case "function_i18n" => JSONTableActions[BoxFunction.BoxFunction_i18n,BoxFunction.BoxFunction_i18n_row](BoxFunction.BoxFunction_i18nTable)
     case "function_field" => JSONTableActions[BoxFunction.BoxFunctionField,BoxFunction.BoxFunctionField_row](BoxFunction.BoxFunctionFieldTable)
     case "function_field_i18n" => JSONTableActions[BoxFunction.BoxFunctionField_i18n,BoxFunction.BoxFunctionField_i18n_row](BoxFunction.BoxFunctionField_i18nTable)
-    case s:String => Registry().actions.tableActions(ec)(s)
+    case s:String => Registry().actions(s)
   }
 
 }

@@ -30,7 +30,7 @@ case class PublicArea(implicit ec:ExecutionContext, mat:Materializer, system:Act
           _ match {
             case Some(userProfile) => {
               implicit val up = userProfile
-              Form(name, lang, Registry().actions.tableActions(ec), FormMetadataFactory(), up.db, EntityKind.FORM.kind).route
+              Form(name, lang, x => Registry().actions(x), FormMetadataFactory(), up.db, EntityKind.FORM.kind).route
             }
             case None => complete(StatusCodes.BadRequest, "The form is not public")
           }
@@ -50,7 +50,7 @@ case class PublicArea(implicit ec:ExecutionContext, mat:Materializer, system:Act
     form ~
     pathPrefix(Segment) { entity =>
       val route: Future[Route] = publicEntities.map{ pe =>
-        pe.find(_.entity == entity).flatMap(e => Registry().actions.actions(e.entity)) match {
+        pe.find(_.entity == entity).map(e => Registry().actions(e.entity)) match {
           case Some(action) => EntityRead(entity,action)
           case None => complete(StatusCodes.NotFound,"Entity not found")
         }

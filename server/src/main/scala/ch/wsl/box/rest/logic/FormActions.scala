@@ -63,7 +63,7 @@ case class FormActions(metadata:JSONMetadata,
 
 
   private def _list(query:JSONQuery): Source[Json, NotUsed] = {
-    metadata.view.flatMap(Registry().actions.actions) match {
+    metadata.view.map(v => Registry().actions(v)) match {
       case None => streamSeq(query)
       case Some(v) => Source.fromPublisher(v.findStreamed(query))
     }
@@ -152,7 +152,7 @@ case class FormActions(metadata:JSONMetadata,
     logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
     dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
       logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")
-      jsonActions(child.entity).delete(idsToDelete)
+      Registry().actions(child.entity).delete(idsToDelete)
     }
   }
 
@@ -260,7 +260,7 @@ case class FormActions(metadata:JSONMetadata,
   override def count(query: JSONQuery)(implicit db: box.jdbc.PostgresProfile.api.Database) = jsonAction.count(query)
 
   override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer) = {
-    metadata.view.flatMap(Registry().actions.actions) match {
+    metadata.view.map(v => Registry().actions(v)) match {
       case None => jsonAction.ids(query)
       case Some(v) => for {
         data <- v.find(query)

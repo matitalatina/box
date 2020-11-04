@@ -60,6 +60,7 @@ trait BaseCodeGenerator {
       }
     }.distinct
 
+
   private val enabledEntities = enabledTables ++ enabledViews
 
   //println(enabledEntities.map(_.name.name))

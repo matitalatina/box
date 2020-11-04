@@ -105,7 +105,7 @@ object EntityMetadataFactory extends Logging {
               case None => Future.successful(None)
             }
             count <- fk match {
-              case Some(fk) => db.run(Registry().actions.tableActions(ec)(fk.referencingTable).count().map(_.count))
+              case Some(fk) => db.run(Registry().actions(fk.referencingTable).count().map(_.count))
               case None => Future.successful(0)
             }
           } yield {
@@ -128,7 +128,7 @@ object EntityMetadataFactory extends Logging {
 
                     import ch.wsl.box.shared.utils.JSONUtils._
                     for {
-                      lookupData <- db.run(Registry().actions.tableActions(ec)(model).find())
+                      lookupData <- db.run(Registry().actions(model).find())
                     } yield {
                       val options = lookupData.map { lookupRow =>
                         JSONLookup(lookupRow.get(value), lookupRow.get(text))

@@ -55,7 +55,7 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   import ch.wsl.box.model.shared.EntityKind
   import JSONData._
 
-    implicit val db  = up.db
+  implicit val db  = up.db
 
   val dbActions = new DbActions[T,M](table)
   val jsonActions = JSONTableActions[T,M](table)
@@ -89,109 +89,126 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     }
   }
 
-    def route = pathPrefix(name) {
-        logger.info(s"view with name: $name")
+  def lookup:Route = pathPrefix("lookup") {
+    pathPrefix(Segment) { textProperty =>
+      path(Segment) { valueProperty =>
+        post{
+          entity(as[JSONQuery]){ query =>
+            complete {
+              Lookup.values(name, valueProperty, textProperty, query)
+            }
+          }
+        }
+      }
+    }
+  }
 
-        pathPrefix("lookup") {
-          pathPrefix(Segment) { textProperty =>
-            path(Segment) { valueProperty =>
-              post{
-                entity(as[JSONQuery]){ query =>
-                  complete {
-                    Lookup.values(name, valueProperty, textProperty, query)
-                  }
+  def kind:Route = path("kind") {
+    get {
+      complete{EntityKind.VIEW.kind}
+    }
+  }
+
+  def metadata:Route = path("metadata") {
+    get {
+      complete{ EntityMetadataFactory.of(name, lang) }
+    }
+  }
+
+  def tabularMetadata:Route = path("tabularMetadata") {
+    get {
+      complete{ EntityMetadataFactory.of(name, lang) }
+    }
+  }
+
+  def keys:Route = path("keys") {   //returns key fields names
+    get {
+      complete{ Seq[String]()} //JSONSchemas.keysOf(name)
+    }
+  }
+
+  def ids:Route = path("ids") {   //returns all id values in JSONIDS format filtered according to specified JSONQuery (as body of the post)
+    post {
+      entity(as[JSONQuery]) { query =>
+        complete {
+          db.run(dbActions.ids(query))
+          //                EntityActionsRegistry().viewActions(name).map(_.ids(query))
+        }
+      }
+    }
+  }
+
+  def count:Route = path("count") {
+    get { ctx =>
+
+      val nr = db.run { table.length.result }.map{r =>
+        JSONCount(r)
+      }
+      ctx.complete{ nr }
+    }
+  }
+
+  def list:Route = path("list") {
+    post {
+      entity(as[JSONQuery]) { query =>
+        logger.info("list")
+        complete(db.run(dbActions.find(query)))
+      }
+    }
+  }
+
+  def csv:Route = path("csv") {           //all values in csv format according to JSONQuery
+    post {
+      entity(as[JSONQuery]) { query =>
+        logger.info("csv")
+        //Source
+        import kantan.csv._
+        import kantan.csv.ops._
+        complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => Seq(x.values()).asCsv(rfc))).log("csv"))
+      }
+    } ~
+      respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
+        get {
+          parameters('q,'lang.?) { (q, lang) =>
+            val query = parse(q).right.get.as[JSONQuery].right.get
+            complete {
+              for {
+                metadata <- EntityMetadataFactory.of(name, lang.getOrElse("en"))
+                fkValues <- lang match {
+                  case None => Future.successful(None)
+                  case Some(_) => Lookup.valuesForEntity(metadata).map(Some(_))
                 }
-              }
-            }
-          }
-        } ~
-        path("kind") {
-          get {
-            complete{EntityKind.VIEW.kind}
-          }
-        } ~
-        path("metadata") {
-          get {
-            complete{ EntityMetadataFactory.of(name, lang) }
-          }
-        } ~
-        path("tabularMetadata") {
-            get {
-              complete{ EntityMetadataFactory.of(name, lang) }
-            }
-        } ~
-        path("keys") {   //returns key fields names
-          get {
-            complete{ Seq[String]()} //JSONSchemas.keysOf(name)
-          }
-        } ~
-        path("ids") {   //returns all id values in JSONIDS format filtered according to specified JSONQuery (as body of the post)
-          post {
-            entity(as[JSONQuery]) { query =>
-              complete {
-                db.run(dbActions.ids(query))
-//                EntityActionsRegistry().viewActions(name).map(_.ids(query))
-              }
-            }
-          }
-        } ~
-        path("count") {
-          get { ctx =>
+              } yield {
 
-            val nr = db.run { table.length.result }.map{r =>
-              JSONCount(r)
-            }
-            ctx.complete{ nr }
-          }
-        } ~
-        path("list") {
-          post {
-            entity(as[JSONQuery]) { query =>
-              logger.info("list")
-              complete(db.run(dbActions.find(query)))
-            }
-          }
-        } ~
-      xls ~
-          path("csv") {           //all values in csv format according to JSONQuery
-            post {
-              entity(as[JSONQuery]) { query =>
-                logger.info("csv")
-                //Source
+                val lookup = Lookup.valueExtractor(fkValues,metadata) _
+
                 import kantan.csv._
                 import kantan.csv.ops._
-                complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => Seq(x.values()).asCsv(rfc))).log("csv"))
+
+                Source.fromFuture(Future.successful(
+                  Seq(metadata.fields.map(_.name)).asCsv(rfc)
+                )).concat(Source.fromPublisher(dbActions.findStreamed(query).mapResult{x =>
+                  Seq(x.values()).asCsv(rfc)
+                }))
               }
-            } ~
-              respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
-                get {
-                  parameters('q,'lang.?) { (q, lang) =>
-                    val query = parse(q).right.get.as[JSONQuery].right.get
-                    complete {
-                      for {
-                        metadata <- EntityMetadataFactory.of(name, lang.getOrElse("en"))
-                        fkValues <- lang match {
-                          case None => Future.successful(None)
-                          case Some(_) => Lookup.valuesForEntity(metadata).map(Some(_))
-                        }
-                      } yield {
+            }
+          }
+        }
+      }
+  }
 
-                        val lookup = Lookup.valueExtractor(fkValues,metadata) _
-
-                        import kantan.csv._
-                        import kantan.csv.ops._
-
-                        Source.fromFuture(Future.successful(
-                          Seq(metadata.fields.map(_.name)).asCsv(rfc)
-                        )).concat(Source.fromPublisher(dbActions.findStreamed(query).mapResult{x =>
-                          Seq(x.values()).asCsv(rfc)
-                        }))
-                      }
-                    }
-                  }
-                }
-              }
-          } ~
+    def route = pathPrefix(name) {
+        logger.info(s"view with name: $name")
+        lookup ~
+        kind ~
+        metadata ~
+        tabularMetadata ~
+        keys ~
+        ids ~
+        count ~
+        list ~
+        xls ~
+        csv ~
         pathEnd{
           get { ctx =>
             ctx.complete {
@@ -199,7 +216,6 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
               val data: Future[Seq[M]] = db.run{ q.result }
               data
             }
-
           }
         }
     }

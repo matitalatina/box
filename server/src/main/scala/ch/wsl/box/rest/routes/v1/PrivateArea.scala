@@ -70,7 +70,7 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
   def form(implicit up:UserProfile) = pathPrefix("form") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        Form(name, lang,Registry().actions.tableActions(ec),FormMetadataFactory(),up.db,EntityKind.FORM.kind).route
+        Form(name, lang,x => Registry().actions(x),FormMetadataFactory(),up.db,EntityKind.FORM.kind).route
       }
     }
   }

@@ -133,7 +133,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
             } yield query
           }.getOrElse(JSONQuery.sortByKeys(keys))
 
-        lookupData <- db.run(Registry().actions.tableActions(ec)(entity).find(filter))
+        lookupData <- db.run(Registry().actions(entity).find(filter))
 
       } yield {
         Some(JSONFieldLookup.fromData(entity, JSONFieldMap(value, text), lookupData))
