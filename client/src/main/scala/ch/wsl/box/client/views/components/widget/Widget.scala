@@ -132,34 +132,38 @@ trait LookupWidget extends Widget  {
     s
   }
 
-  private var lastQuery:Json = Json.Null
+
 
   for{
     look <- field.lookup
     query <- look.lookupQuery
   } yield {
     if(query.find(_ == '#').nonEmpty) {
-      allData.listen({ json =>
-        val variables = extractVariables(query)
-        val queryWithSubstitutions = variables.foldRight(query){(variable, finalQuery) =>
+
+      val variables =extractVariables(query)
+      val queryWithSubstitutions = allData.transform({ json =>
+        variables.foldRight(query){(variable, finalQuery) =>
           finalQuery.replaceAll("#" + variable, "\"" + json.js(variable).string + "\"")
         }
-        val jsonQuery = parser.parse(queryWithSubstitutions) match {
+      })
+      queryWithSubstitutions.listen({ q =>
+        lookup.set(Seq(), true) //reset lookup state
+
+        val jsonQuery = parser.parse(q) match {
           case Left(e) => {
             logger.error(e.message)
             Json.Null
           }
           case Right(j) => j
         }
-        if(lastQuery != jsonQuery) {
-          lastQuery = jsonQuery
-          services.rest.lookup(services.clientSession.lang(),look.lookupEntity, look.map, jsonQuery).map { lookups =>
-            val newLookup = toSeq(lookups)
-            if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
-              lookup.set(newLookup, true)
-            }
+
+        services.rest.lookup(services.clientSession.lang(),look.lookupEntity, look.map, jsonQuery).map { lookups =>
+          val newLookup = toSeq(lookups)
+          if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
+            lookup.set(newLookup, true)
           }
         }
+
       }, true)
     }
   }

@@ -77,13 +77,6 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
     }
 
 
-    lookup.listen({lookups =>
-      if(!lookups.contains(model.get)) {
-        model.set(lookups.headOption.getOrElse(JSONLookup("","")))
-      }
-    })
-
-
     val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.Float.right())++modifiers++WidgetUtils.toNullable(field.nullable)
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
