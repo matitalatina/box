@@ -6,15 +6,14 @@ import org.scalajs.dom.raw.Element
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import io.udash.css.CssView._
-import ch.wsl.box.client.Context._
-import ch.wsl.box.client.services.Navigate
-import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
+import ch.wsl.box.client.services.{ClientConf, ClientSession, Labels, Navigate, ServiceModule, UI}
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.dropdown.UdashDropdown
 import io.udash.properties.seq.SeqProperty
 import io.udash._
 import java.io
 
+import ch.wsl.box.client.utils.TestHooks
 import org.scalajs.dom
 import org.scalajs.dom.{Event, Node}
 import scalatags.generic
@@ -23,9 +22,9 @@ case class MenuLink(name:String, state:RoutingState)
 
 object Header {
 
-  import ch.wsl.box.client.Context
+  import ch.wsl.box.client.Context._
 
-  private val links:Seq[Modifier] = Seq(produce(Session.logged) { logged =>
+  private val links:Seq[Modifier] = Seq(produce(services.clientSession.logged) { logged =>
     if(!logged) span().render else {
       val l = Seq(MenuLink(Labels.header.home, IndexState)) ++ {
         if (UI.enableAllTables) {
@@ -61,13 +60,13 @@ object Header {
   }
 
   def otherMenu:Seq[Modifier] = Seq(
-    showIf(Session.logged) {
-      frag(a(id := "logoutButton", ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); Session.logout() } ),"Logout"), ClientConf.menuSeparator).render
+    showIf(services.clientSession.logged) {
+      frag(a(id := TestHooks.logoutButton, ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); services.clientSession.logout() } ),"Logout"), ClientConf.menuSeparator).render
     },
     ClientConf.menuSeparator,
     Labels.header.lang + " ",
     ClientConf.langs.map{ l =>
-      span(a(ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); Session.setLang(l)  } ),l)," ")
+      span(a(id := TestHooks.langSwitch(l), ClientConf.style.linkHeaderFooter,onclick :+= ((e:Event) => { showMenu.set(false); services.clientSession.setLang(l)  } ),l)," ")
     }
   )
 
@@ -78,11 +77,11 @@ object Header {
 
   val showMenu = Property(false)
 
-  def user = Option(dom.window.sessionStorage.getItem(Session.USER))
+  def user = Option(dom.window.sessionStorage.getItem(ClientSession.USER))
 
-  def navbar(title:Option[String]) = produce(Session.logged) { x =>
+  def navbar(title:Option[String]) = produce(services.clientSession.logged) { x =>
     header(
-      div(BootstrapStyles.Float.left())(b(title), small(ClientConf.style.noMobile,user.map("   -   " + _))),
+      div(BootstrapStyles.Float.left())(b(id := "headerTitle", title), small(ClientConf.style.noMobile,user.map("   -   " + _))),
       div(BootstrapStyles.Float.right(),ClientConf.style.noMobile) (
         menu
       ),

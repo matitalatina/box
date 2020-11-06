@@ -1,98 +1,63 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.REST.get
-import ch.wsl.box.client.utils.Session
 import ch.wsl.box.model.shared._
-import io.circe.{Decoder, Json}
+import io.circe.Json
 import org.scalajs.dom.File
-
 import scala.concurrent.Future
-import ch.wsl.box.shared.utils.JSONUtils._
-import scribe.Logging
-
-import kantan.csv._
-import kantan.csv.ops._
-
-/**
-  * Created by andre on 4/24/2017.
-  */
-object REST extends Logging {
 
 
 
-  import io.circe.generic.auto._
-  import ch.wsl.box.shared.utils.Formatters._
-  import ch.wsl.box.client.Context._
-  import ch.wsl.box.model.shared.EntityKind._
-
-  private def client = HttpClient(Routes.apiV1())
-
-  def version() = client.get[String]("/version")
-  def appVersion() = client.get[String]("/app_version")
-  def validSession() = client.get[Boolean]("/validSession")
-  def cacheReset() = HttpClient("").get[String]("cache/reset")
-  def serverReset() = HttpClient("").get[String]("server/reset")
-
-  def entities(kind:String):Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).plural}")
+trait REST{
+  def version():Future[String]
+  def appVersion():Future[String]
+  def validSession():Future[Boolean]
+  def cacheReset():Future[String]
+  def serverReset():Future[String]
+  def entities(kind:String):Future[Seq[String]]
 
   //for entities and forms
-  def specificKind(kind:String, lang:String, entity:String):Future[String] = client.get[String](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/kind")     //distinguish entities into table or view
-  def list(kind:String, lang:String, entity:String, limit:Int): Future[Seq[Json]] = client.post[JSONQuery,Seq[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",JSONQuery.empty.limit(limit))
-  def list(kind:String, lang:String, entity:String, query:JSONQuery): Future[Seq[Json]] = client.post[JSONQuery,Seq[Json]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/list",query)
-  def csv(kind:String, lang:String, entity:String, q:JSONQuery): Future[Seq[Seq[String]]] = client.post[JSONQuery,String](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/csv",q).map{ result =>
-    result.asUnsafeCsvReader[Seq[String]](rfc).toSeq
-  }
-  def count(kind:String, lang:String, entity:String): Future[Int] = client.get[Int](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/count")
-  def keys(kind:String, lang:String, entity:String): Future[Seq[String]] = client.get[Seq[String]](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/keys")
-  def ids(kind:String, lang:String, entity:String, q:JSONQuery): Future[IDs] = client.post[JSONQuery,IDs](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/ids",q)
-//  def schema(kind:String, lang:String, entity:String): Future[JSONSchema] = client.get[JSONSchema](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/schema")
-  def metadata(kind:String, lang:String, entity:String): Future[JSONMetadata] = client.get[JSONMetadata](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/metadata")
-  def tabularMetadata(kind:String, lang:String, entity:String): Future[JSONMetadata] = client.get[JSONMetadata](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/tabularMetadata")
+  def specificKind(kind:String, lang:String, entity:String):Future[String]
+  def list(kind:String, lang:String, entity:String, limit:Int): Future[Seq[Json]]
+  def list(kind:String, lang:String, entity:String, query:JSONQuery): Future[Seq[Json]]
+  def csv(kind:String, lang:String, entity:String, q:JSONQuery): Future[Seq[Seq[String]]]
+  def count(kind:String, lang:String, entity:String): Future[Int]
+  def keys(kind:String, lang:String, entity:String): Future[Seq[String]]
+  def ids(kind:String, lang:String, entity:String, q:JSONQuery): Future[IDs]
+  def metadata(kind:String, lang:String, entity:String): Future[JSONMetadata]
+  def tabularMetadata(kind:String, lang:String, entity:String): Future[JSONMetadata]
 
   //only for forms
-  def children(kind:String, entity:String, lang:String): Future[Seq[JSONMetadata]] = client.get[Seq[JSONMetadata]](s"/$kind/$lang/$entity/children")
-  def lookup(lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]] = {
-    val lang = Session.lang()
-    queryWithSubstitutions.as[JSONQuery] match {
-      case Right(query) => client.post[JSONQuery,Seq[JSONLookup]](s"/entity/$lang/$lookupEntity/lookup/${map.textProperty}/${map.valueProperty}", query)
-      case Left(fail) => {
-        Future.successful(Seq())
-      }
-    }
+  def children(kind:String, entity:String, lang:String): Future[Seq[JSONMetadata]]
+  def lookup(lang:String,lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]]
 
-  }
 
   //for entities and forms
-  def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json] = client.get[Json](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}")
-  def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[Int] = client.put[Json,Int](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}",data)
-  def insert(kind:String, lang:String, entity:String, data:Json): Future[JSONID] = client.post[Json,JSONID](s"/${EntityKind(kind).entityOrForm}/$lang/$entity",data)
-  def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount] = client.delete[JSONCount](s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}")
+  def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json]
+  def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[Int]
+  def insert(kind:String, lang:String, entity:String, data:Json): Future[JSONID]
+  def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount]
 
   //files
-  def sendFile(file:File, id:JSONID, entity:String): Future[Int] = client.sendFile[Int](s"/file/$entity/${id.asString}",file)
+  def sendFile(file:File, id:JSONID, entity:String): Future[Int]
 
   //other utilsString
-  def login(request:LoginRequest) = client.post[LoginRequest,Json]("/login",request)
-  def logout() = client.get[String]("/logout")
-  def labels(lang:String):Future[Map[String,String]] = client.get[Map[String,String]](s"/labels/$lang")
-  def conf():Future[Map[String,String]] = client.get[Map[String,String]](s"/conf")
-  def ui():Future[Map[String,String]] = client.get[Map[String,String]](s"/ui")
-  def news(lang:String):Future[Seq[NewsEntry]] = client.get[Seq[NewsEntry]](s"/news/$lang")
+  def login(request:LoginRequest):Future[Json]
+  def logout():Future[String]
+  def labels(lang:String):Future[Map[String,String]]
+  def conf():Future[Map[String,String]]
+  def ui():Future[Map[String,String]]
+  def news(lang:String):Future[Seq[NewsEntry]]
 
 
   //export
-  def dataMetadata(kind:String,name:String,lang:String) = client.get[JSONMetadata](s"/$kind/$name/metadata/$lang")
-  def dataDef(kind:String,name:String,lang:String) = client.get[ExportDef](s"/$kind/$name/def/$lang")
-  def dataList(kind:String,lang:String) = client.get[Seq[ExportDef]](s"/$kind/list/$lang")
+  def dataMetadata(kind:String,name:String,lang:String):Future[JSONMetadata]
+  def dataDef(kind:String,name:String,lang:String):Future[ExportDef]
+  def dataList(kind:String,lang:String):Future[Seq[ExportDef]]
+  def data(kind:String,name:String,params:Json,lang:String):Future[Seq[Seq[String]]]
 
-  def data(kind:String,name:String,params:Json,lang:String):Future[Seq[Seq[String]]] = client.post[Json,String](s"/$kind/$name/$lang", params).map{ result =>
-    result.asUnsafeCsvReader[Seq[String]](rfc).toSeq
-  }
-
-  def writeAccess(table:String,kind:String) = client.get[Boolean](s"/access/$kind/$table/write")
+  def writeAccess(table:String,kind:String):Future[Boolean]
 
   //admin
-  def generateStub(entity:String) = client.get[Boolean](s"/create-stub/$entity")
-
+  def generateStub(entity:String):Future[Boolean]
 }
+

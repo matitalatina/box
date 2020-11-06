@@ -22,7 +22,7 @@ case class CheckboxNumberWidget(field:JSONField, prop: Property[Json]) extends W
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip,UdashTooltip.Placement.Right) _
 
-    val booleanModel = prop.transform[Boolean](jsToBool _ ,boolToJson _)
+    val booleanModel = prop.bitransform[Boolean](jsToBool _)(boolToJson _)
     div(
       tooltip(Checkbox(booleanModel)().render), " ", WidgetUtils.toLabel(field)
     )

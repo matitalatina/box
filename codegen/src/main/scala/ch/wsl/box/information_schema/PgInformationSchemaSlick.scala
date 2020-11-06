@@ -1,8 +1,7 @@
-package ch.wsl.box.rest.logic
+package ch.wsl.box.information_schema
 
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import StringHelper._
-import ch.wsl.box.rest.metadata.EntityMetadataFactory
+import ch.wsl.box.jdbc.TypeMapping
 
 case class PgTable(
    table_schema:String,
@@ -13,7 +12,7 @@ case class PgTable(
   def isView = table_type == "VIEW"
   def isTable = table_type == "BASE_TABLE"
   def isInsertableInto = is_insertable_into == "YES"
-  def boxName = table_name.slickfy
+  def boxName = table_name
 }
 
 class PgTables(tag: Tag) extends Table[PgTable](tag,  Some("information_schema"), "tables") {
@@ -31,6 +30,7 @@ case class PgColumn(
   column_name:String,
   is_nullable:String,
   is_updatable:String,
+ // is_trigger_updatable:String,
   _data_type:String,                         //todo: for ARRAYS it does not specify inner type. How to get it?
   udt_name:String,
   character_maximum_length:Option[Int],
@@ -41,10 +41,10 @@ case class PgColumn(
   ordinal_position:Int
 ) {
   def nullable = is_nullable == "YES"
-  def updatable = is_updatable == "YES"
-  def jsonType = EntityMetadataFactory.typesMapping(data_type)
-  def defaultWidget = EntityMetadataFactory.defaultWidgetMapping(data_type)
-  def boxName = column_name.slickfy
+  def updatable = is_updatable == "YES"// || is_trigger_updatable == "YES"
+  def jsonType = TypeMapping.typesMapping(data_type)
+  def defaultWidget = TypeMapping.defaultWidgetMapping(data_type)
+  def boxName = column_name
   def data_type = if(_data_type == "USER-DEFINED") udt_name else _data_type
 }
 
@@ -53,6 +53,7 @@ class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema
   def column_name = column[String]("column_name")
   def is_nullable = column[String]("is_nullable")
   def is_updatable = column[String]("is_updatable")
+  //def is_trigger_updatable = column[String]("is_trigger_updatable")
   def data_type = column[String]("data_type")
   def character_maximum_length = column[Option[Int]]("character_maximum_length")
   def numeric_precision = column[Option[Int]]("numeric_precision")

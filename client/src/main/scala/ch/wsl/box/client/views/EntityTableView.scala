@@ -2,9 +2,8 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Enhancer, Navigate, Notification, REST}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Notification, SessionQuery}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Labels, Navigation, Session, SessionQuery}
 import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget, SelectWidgetFullWidth}
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
 import ch.wsl.box.model.shared.EntityKind.VIEW
@@ -62,9 +61,8 @@ object IDsVM extends HasModelPropertyCreator[IDsVM] {
 }
 
 
-case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => Unit)) extends ViewFactory[EntityTableState] {
+case class EntityTableViewPresenter(routes:Routes, onSelect:Seq[(JSONField,String)] => Unit = (f => ())) extends ViewFactory[EntityTableState] {
 
-  import ch.wsl.box.client.Context._
 
 
 
@@ -85,8 +83,8 @@ with error: DecodingFailure(String, List(DownArray, DownField(fields), DownArray
  */
 case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:Seq[(JSONField,String)] => Unit, routes:Routes) extends Presenter[EntityTableState] with Logging {
 
+
   import ch.wsl.box.client.Context._
-  import Enhancer._
 
 
   private var filterUpdateHandler: Int = 0
@@ -118,7 +116,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
 
     {for{
-      emptyFieldsForm <- REST.tabularMetadata(state.kind,Session.lang(),state.entity)
+      emptyFieldsForm <- services.rest.tabularMetadata(state.kind,services.clientSession.lang(),state.entity)
       fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
       form = emptyFieldsForm.copy(fields = fields)
 
@@ -127,19 +125,19 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         case Some(jsonquery) => jsonquery.copy(paging = emptyJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
       }
 
-      query:JSONQuery = Session.getQuery() match {
+      query:JSONQuery = services.clientSession.getQuery() match {
         case Some(SessionQuery(jsonquery,name)) if name == model.get.name => jsonquery      //in case a query is already stored in Session
         case _ => defaultQuery
       }
 
       qEncoded = encodeFk(fields,query)
 
-      access <- REST.writeAccess(form.entity,state.kind)
+      access <- services.rest.writeAccess(form.entity,state.kind)
 //      csv <- REST.csv(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
 //      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
-      specificKind <- REST.specificKind(state.kind, Session.lang(), state.entity)
+      specificKind <- services.rest.specificKind(state.kind, services.clientSession.lang(), state.entity)
     } yield {
 
 
@@ -175,7 +173,18 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
 
-  def ids(el:Row): JSONID = Enhancer.extractID(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
+  private def extractID(row:Seq[String], fields:Seq[String], keys:Seq[String]):JSONID = {
+    val map = for{
+      key <- keys
+      (field,i) <- fields.zipWithIndex if field == key
+    } yield {
+      key -> row.lift(i).getOrElse("")
+    }
+    JSONID.fromMap(map.toMap)
+  }
+
+
+  def ids(el:Row): JSONID = extractID(el.data,model.subProp(_.metadata).get.toSeq.flatMap(_.tabularFields),model.subProp(_.metadata).get.toSeq.flatMap(_.keys))
 
   def edit(el:Row) = {
     val k = ids(el)
@@ -194,7 +203,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     val confim = window.confirm(Labels.entity.confirmDelete)
     if(confim) {
       model.get.metadata.map(_.name).foreach { name =>
-        REST.delete(model.get.kind, Session.lang(),name,k).map{ count =>
+        services.rest.delete(model.get.kind, services.clientSession.lang(),name,k).map{ count =>
           Notification.add("Deleted " + count.count + " rows")
           reloadRows(model.get.ids.currentPage)
         }
@@ -203,8 +212,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
   def saveIds(ids: IDs, query:JSONQuery) = {
-    Session.setQuery(SessionQuery(query,model.get.name))
-    Session.setIDs(ids)
+    services.clientSession.setQuery(SessionQuery(query,model.get.name))
+    services.clientSession.setIDs(ids)
   }
 
   private def encodeFk(fields:Seq[JSONField],query:JSONQuery):JSONQuery = {
@@ -254,7 +263,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
       JSONQueryFilter(f.field.name,Some(f.filterOperator),f.filterValue)
     }.toList
 
-    JSONQuery(filter, sort, None, Some(Session.lang()))
+    JSONQuery(filter, sort, None, Some(services.clientSession.lang()))
   }
 
   def reloadRows(page:Int): Future[Unit] = {
@@ -265,8 +274,8 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     val qEncoded = encodeFk(model.get.metadata.toSeq.flatMap(_.fields),q)
 
     for {
-      csv <- REST.csv(model.subProp(_.kind).get, Session.lang(), model.subProp(_.name).get, qEncoded)
-      ids <- REST.ids(model.get.kind, Session.lang(), model.get.name, qEncoded)
+      csv <- services.rest.csv(model.subProp(_.kind).get, services.clientSession.lang(), model.subProp(_.name).get, qEncoded)
+      ids <- services.rest.ids(model.get.kind, services.clientSession.lang(), model.get.name, qEncoded)
     } yield {
       model.subProp(_.rows).set(csv.map(Row(_)))
       model.subProp(_.ids).set(IDsVM.fromIDs(ids))
@@ -363,7 +372,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
 
     val url = Routes.apiV1(
-      s"/$kind/${Session.lang()}/$modelName/$format?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
+      s"/$kind/${services.clientSession.lang()}/$modelName/$format?fk=${ExportMode.RESOLVE_FK}&fields=${exportFields.mkString(",")}&q=${queryWithFK.asJson.toString()}".replaceAll("\n","")
     )
     logger.info(s"downloading: $url")
     dom.window.open(url)
@@ -373,12 +382,10 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 }
 
 case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:EntityTablePresenter, routes:Routes) extends View with Logging {
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
   import ch.wsl.box.shared.utils.JSONUtils._
 
-  import Enhancer._
 
 
 
@@ -419,11 +426,11 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
     filterValue.listen(v => logger.info(s"Filter for ${fieldQuery.field.name} changed in: $v"))
 
     fieldQuery.field.`type` match {
-      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(None),JSONField.empty,filterValue.transform(_.asJson,_.string)).edit()
-      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(None),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
+      case JSONFieldTypes.TIME => DateTimeWidget.TimeFullWidth(Property(None),JSONField.empty,filterValue.bitransform(_.asJson)(_.string)).edit()
+      case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(None),JSONField.empty,filterValue.bitransform(_.asJson)(_.string),true).edit()
       case JSONFieldTypes.DATETIME => ClientConf.filterPrecisionDatetime match{
-        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(None),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
-        case _ => DateTimeWidget.DateTimeFullWidth(Property(None),JSONField.empty,filterValue.transform(_.asJson,_.string),true).edit()
+        case JSONFieldTypes.DATE => DateTimeWidget.DateFullWidth(Property(None),JSONField.empty,filterValue.bitransform(_.asJson)(_.string),true).edit()
+        case _ => DateTimeWidget.DateTimeFullWidth(Property(None),JSONField.empty,filterValue.bitransform(_.asJson)(_.string),true).edit()
       }
       case JSONFieldTypes.NUMBER if fieldQuery.field.lookup.isEmpty && !Seq(Filter.BETWEEN, Filter.IN, Filter.NOTIN).contains(filterOperator) => {
         if(Try(filterValue.get.toDouble).toOption.isEmpty) filterValue.set("")
@@ -492,7 +499,10 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
 
                   td(ClientConf.style.smallCells)(
                     a(
-                      onclick :+= ((ev: Event) => presenter.sort(fieldQuery.get), true),
+                      onclick :+= ((ev: Event) => {
+                        presenter.sort(fieldQuery.get)
+                        true
+                      }),
                       span(title, ClientConf.style.tableHeader), " ",
                       Labels(Sort.label(sort.get)), " ", order
                     )
@@ -520,20 +530,32 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             val hasKey = model.get.metadata.exists(_.keys.nonEmpty)
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
 
-            tr((`class` := "info").attrIf(selected), ClientConf.style.rowStyle, onclick :+= ((e:Event) => presenter.selected(el.get),true),
+            tr((`class` := "info").attrIf(selected), ClientConf.style.rowStyle, onclick :+= ((e:Event) => {
+              presenter.selected(el.get)
+              true
+            }),
               td(ClientConf.style.smallCells)(
                 (hasKey,model.get.write) match{
                   case (false,_) => p(color := "grey")(Labels.entity.no_action)
                   case (true,false) => a(
                     cls := "primary action",
-                    onclick :+= ((ev: Event) => presenter.show(el.get), true)
+                    onclick :+= ((ev: Event) => {
+                      presenter.show(el.get)
+                      true
+                    })
                   )(Labels.entity.show)
                   case (true,true) => Seq(a(
                     cls := "primary action",
-                    onclick :+= ((ev: Event) => presenter.edit(el.get), true)
+                    onclick :+= ((ev: Event) => {
+                      presenter.edit(el.get)
+                      true
+                    })
                   )(Labels.entity.edit),span(" "),a(
                     cls := "danger action",
-                    onclick :+= ((ev: Event) => presenter.delete(el.get), true)
+                    onclick :+= ((ev: Event) => {
+                      presenter.delete(el.get)
+                      true
+                    })
                   )(Labels.entity.delete))
                 }
               ),

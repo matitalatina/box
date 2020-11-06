@@ -9,6 +9,7 @@ case class JSONField(
                       `type`:String,
                       name:String,
                       nullable: Boolean,
+                      readOnly: Boolean = false,
                       label:Option[String] = None,
                       lookup:Option[JSONFieldLookup] = None,
                       placeholder:Option[String] = None,
@@ -24,7 +25,7 @@ case class JSONField(
 }
 
 object JSONField{
-  val empty = JSONField("","",true)
+  val empty = JSONField("","",true,true)
 }
 
 
@@ -71,6 +72,7 @@ object JSONFieldTypes{
   val ARRAY_NUMBER = "array_number"
   val ARRAY_STRING = "array_string"
   val GEOMETRY = "geometry"
+  val JSON = "json"
 
-  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD,GEOMETRY)
+  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD,GEOMETRY,JSON)
 }

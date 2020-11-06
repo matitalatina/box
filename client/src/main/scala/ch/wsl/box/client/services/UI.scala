@@ -1,19 +1,16 @@
-package ch.wsl.box.client.utils
+package ch.wsl.box.client.services
 
-import ch.wsl.box.client.services.REST
 import scala.util.Try
 
 object UI {
 
-  import ch.wsl.box.client.Context._
   import io.circe._
   import io.circe.generic.auto._
-  import io.circe.syntax._
 
 
   private var ui:Map[String,String] = Map()
 
-  def load() = REST.ui().map { ui =>
+  def load(ui:Map[String,String]) = {
     this.ui = ui
   }
 

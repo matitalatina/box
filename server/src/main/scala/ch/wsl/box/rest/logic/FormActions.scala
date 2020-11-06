@@ -63,7 +63,7 @@ case class FormActions(metadata:JSONMetadata,
 
 
   private def _list(query:JSONQuery): Source[Json, NotUsed] = {
-    metadata.view.flatMap(Registry().actions.actions) match {
+    metadata.view.map(v => Registry().actions(v)) match {
       case None => streamSeq(query)
       case Some(v) => Source.fromPublisher(v.findStreamed(query))
     }
@@ -122,14 +122,14 @@ case class FormActions(metadata:JSONMetadata,
     }
   }
 
-  def subAction[T](e:Json, action: FormActions => ((JSONID,Json) => DBIO[_])): Seq[DBIO[Seq[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
+  def subAction[T](e:Json, action: FormActions => ((Option[JSONID],Json) => DBIO[_])): Seq[DBIO[Seq[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
       form <- DBIO.from(metadataFactory.of(field.child.get.objId, metadata.lang))
       dbSubforms <- getChild(e,field,form,field.child.get)
       subJson = attachArrayIndex(e.seq(field.name),form)
       deleted <- DBIO.sequence(deleteChild(form,subJson,dbSubforms))
       result <- DBIO.sequence(subJson.map{ json => //order matters so we do it synchro
-        action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys).get,json).map(x => Some(x))
+          action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys),json).map(x => Some(x))
       }).map(_.flatten)
     } yield result
   }
@@ -152,7 +152,7 @@ case class FormActions(metadata:JSONMetadata,
     logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
     dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
       logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")
-      jsonActions(child.entity).delete(idsToDelete)
+      Registry().actions(child.entity).delete(idsToDelete)
     }
   }
 
@@ -160,7 +160,7 @@ case class FormActions(metadata:JSONMetadata,
   def delete(id:JSONID)(implicit db: PostgresProfile.api.Database) = {
     for{
       json <- getById(id)
-      subs <- DBIO.sequence(subAction(json.get,_.deleteSingle))
+      subs <- DBIO.sequence(subAction(json.get,x => (id,json) => x.deleteSingle(id.get,json)))
       current <- deleteSingle(id,json.get)
     } yield current + subs.size
   }
@@ -199,7 +199,7 @@ case class FormActions(metadata:JSONMetadata,
     } yield result
   }
 
-  def upsertIfNeeded(id:JSONID,e:Json)(implicit db:Database) = {
+  def upsertIfNeeded(id:Option[JSONID],e:Json)(implicit db:Database) = {
 
     for{
       newId <- jsonAction.upsertIfNeeded(id,e)
@@ -260,7 +260,7 @@ case class FormActions(metadata:JSONMetadata,
   override def count(query: JSONQuery)(implicit db: box.jdbc.PostgresProfile.api.Database) = jsonAction.count(query)
 
   override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer) = {
-    metadata.view.flatMap(Registry().actions.actions) match {
+    metadata.view.map(v => Registry().actions(v)) match {
       case None => jsonAction.ids(query)
       case Some(v) => for {
         data <- v.find(query)

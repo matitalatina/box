@@ -16,7 +16,9 @@ object FunctionUIDef {
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"function_id",false),
       JSONField(JSONFieldTypes.STRING,"name",false),
-      JSONField(JSONFieldTypes.STRING,"function",false, widget = Some(WidgetsNames.code+".java"),label = Some(""), default = Some(
+      JSONField(JSONFieldTypes.STRING,"function",false, widget = Some(WidgetsNames.code),label = Some(""),
+        params = Some(Json.obj("language" -> "java".asJson, "height" -> 800.asJson)),
+        default = Some(
         """
           |/*
           | * Must return a Future[DataResult] that represent a CSV table
@@ -32,8 +34,11 @@ object FunctionUIDef {
           |  }
           |} yield result
           |
-        """.stripMargin)),
-      JSONField(JSONFieldTypes.STRING,"presenter",true, widget = Some(WidgetsNames.code+".handlebars"),label = Some("")),
+        """.stripMargin),
+      ),
+      JSONField(JSONFieldTypes.STRING,"presenter",true, widget = Some(WidgetsNames.code),label = Some(""),
+        params = Some(Json.obj("language" -> "handlebars".asJson, "height" -> 800.asJson)),
+      ),
       JSONField(JSONFieldTypes.STRING,"description",true),
       JSONField(JSONFieldTypes.STRING,"mode",false,lookup = Some(JSONFieldLookup.prefilled(
         FunctionKind.Modes.all.map(x => JSONLookup(x,x))
@@ -93,7 +98,7 @@ object FunctionUIDef {
       JSONField(JSONFieldTypes.STRING,"lookupQuery",true),
       JSONField(JSONFieldTypes.STRING,"default",true),
       JSONField(JSONFieldTypes.STRING,"conditionFieldId",true),
-      JSONField(JSONFieldTypes.STRING,"conditionValues",true),
+      JSONField(JSONFieldTypes.STRING,"conditionValues",true)
     ),
     layout = Layout(
       blocks = Seq(

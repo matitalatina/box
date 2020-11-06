@@ -65,3 +65,5 @@ resources/db.conf
 
 metals.*
 .bloop
+
+node_modules

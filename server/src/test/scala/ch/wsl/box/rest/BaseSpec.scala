@@ -3,17 +3,18 @@ package ch.wsl.box.rest
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import ch.wsl.box.rest.utils.{BoxConfig, UserProfile}
-import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.testmodel.GenRegistry
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import scribe.{Level, Logger}
 
 
-trait BaseSpec extends FlatSpec with ScalaFutures with Matchers {
+trait BaseSpec extends AnyFlatSpec with ScalaFutures with Matchers {
 
   private val executor = AsyncExecutor("public-executor",50,50,1000,50)
 

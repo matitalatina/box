@@ -3,9 +3,8 @@ package ch.wsl.box.client.views.components.widget
 import java.util.UUID
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{ClientConf, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.ClientConf
 import ch.wsl.box.client.views.components.Debug
 import ch.wsl.box.model.shared._
 import io.circe.Json
@@ -30,10 +29,10 @@ import scala.util.Random
   */
 case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
 
+  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
   import io.udash.css.CssView._
-  import ch.wsl.box.client.Context._
   import ch.wsl.box.shared.utils.JSONUtils._
   import io.circe.syntax._
 
@@ -75,7 +74,7 @@ case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JS
     val jsonid = result.ID(metadata.keys)
     for{
       idfile <- Future.sequence{
-        val r: Seq[Future[Int]] = selectedFile.get.map(REST.sendFile(_,jsonid.get,s"${metadata.entity}.${field.file.get.file_field}"))
+        val r: Seq[Future[Int]] = selectedFile.get.map(services.rest.sendFile(_,jsonid.get,s"${metadata.entity}.${field.file.get.file_field}")).toSeq
         r
       }
     } yield {

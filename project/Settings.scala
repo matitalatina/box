@@ -32,8 +32,12 @@ object Settings {
   object versions {
 
     //General
-    val scala = "2.12.12"
+    val scala212 = "2.12.12"
+    val scala213 = "2.13.3"
     val ficus = "1.4.7"
+
+    val macWire = "2.3.7"
+    val airframe = "20.10.0"
 
     //HTTP actors
     val akka = "2.6.4"
@@ -43,14 +47,14 @@ object Settings {
     //Testing
     val specs2 = "4.3.4"
     val junit = "4.12"
-    val scalatest = "3.0.5"
+    val scalatest = "3.2.2"
     val selenium = "3.14.0"
 
     //logs
     val logback = "1.2.3"
 
     //json parsers
-    val circe = "0.12.3"
+    val circe = "0.13.0"
 
     //database
     val postgres = "42.2.11"
@@ -58,20 +62,19 @@ object Settings {
     val slickPg = "0.19.3"
 
     //frontend
-    val scalaCss = "0.6.0"
+    val scalaCss = "0.6.1"
 
     //js
     val bootstrap =  "3.4.1-1"
 
-    val udash = "0.8.0"
-    val udashJQuery = "1.2.0"
+    val udash = "0.9.0-M4"
+    val udashJQuery = "3.0.4"
 
-    val scribe = "2.7.9"
-    val scalaCSV = "1.3.6-scalajs"
+    val scribe = "2.7.12"
 
     val scalaJsonSchema = "0.2.6"
 
-    val kantan = "0.6.0"
+    val kantan = "0.6.1"
 
   }
 
@@ -90,6 +93,7 @@ object Settings {
 
   val sharedJVMCodegenDependencies = Def.setting(Seq(
     "com.typesafe.slick"       %% "slick"           % versions.slick,
+    "com.typesafe.slick"       %% "slick-hikaricp"           % versions.slick,
     "org.postgresql"           %  "postgresql"      % versions.postgres,
     "com.typesafe"             % "config"           % "1.3.3",
     "com.iheart"               %% "ficus"           % versions.ficus,
@@ -107,7 +111,8 @@ object Settings {
 
   /** Dependencies only used by the JVM project */
   val jvmDependencies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(
-    "org.scala-lang"           % "scala-reflect"     % versions.scala,
+    "org.scala-lang"           % "scala-reflect"     % versions.scala212,
+    "org.scala-lang"           % "scala-compiler"    % versions.scala212,
     "com.typesafe.akka"        %% "akka-http-core"   % versions.akkaHttp,
     "com.typesafe.akka"        %% "akka-http-caching" % versions.akkaHttp,
     "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
@@ -120,32 +125,29 @@ object Settings {
     "io.udash"                 %% "udash-rpc"        % versions.udash,
     "org.webjars"               % "webjars-locator-core" % "0.44",
     "org.webjars"              % "webjars-locator"   % "0.39",
-    "org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
-    "org.scalatest"            %% "scalatest"        % versions.scalatest % "test",
+    //"org.specs2"               %% "specs2-core"      % versions.specs2    % "test",
     "junit"                    %  "junit"            % versions.junit     % "test",
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium  % "test",
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka      % "test",
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp  % "test",
-    "org.webjars.npm"          % "monaco-editor"     % "0.18.1",
-    "org.webjars.npm" % "quill" % "1.3.7",
     "com.outr"                 %% "scribe"           % versions.scribe,
     "com.outr"                 %% "scribe-slf4j"     % versions.scribe,
     "nz.co.rossphillips"       %% "scala-thumbnailer" % "0.5.SNAPSHOT",
     "javax.servlet"            % "javax.servlet-api" % "3.1.0" % "provided",
     "org.mitre.dsmiley.httpproxy" % "smiley-http-proxy-servlet" % "1.10",
-    "org.scala-lang"           % "scala-compiler"    % versions.scala,
     "com.openhtmltopdf"        % "openhtmltopdf-pdfbox" % "1.0.0",
     "org.jsoup"                % "jsoup"             % "1.12.1",
     "com.github.spullara.mustache.java" % "compiler" % "0.9.6",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.3",
     "org.locationtech.geotrellis" %% "geotrellis-raster" % "3.2.0",
-    "com.vmunier" %% "scalajs-scripts" % "1.1.4",
     "com.norbitltd" %% "spoiwo" % "1.7.0",
-    "io.github.cquiroz" %% "scala-java-time" % "2.0.0-RC3",
+    "io.github.cquiroz" %% "scala-java-time" % "2.0.0",
     "org.flywaydb" % "flyway-core" % "6.5.5",
     "com.nrinaudo" %% "kantan.csv" % versions.kantan,
     "org.graalvm.js" % "js" % "20.2.0",
     "org.javadelight" % "delight-graaljs-sandbox" % "0.1.2",
+    "org.scalatest" %% "scalatest" % versions.scalatest % "test",
+    "org.scalatest" %% "scalatest-flatspec" % versions.scalatest % "test"
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))
@@ -159,9 +161,12 @@ object Settings {
     "com.github.japgolly.scalacss" %%% "core" % versions.scalaCss,
     "com.github.japgolly.scalacss" %%% "ext-scalatags" % versions.scalaCss,
     "io.circe" %%% "circe-scalajs" % versions.circe,
-    "com.lihaoyi" %% "utest" % "0.4.5" % "test",
     "org.scala-js" %%% "scalajs-dom" % "1.0.0",
-    "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
+    "io.github.cquiroz" %%% "scala-java-time" % "2.0.0",
+//    "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
+//    "org.scalatest" %%% "scalatest-flatspec" % versions.scalatest % "test",
+    "org.wvlet.airframe" %%% "airframe" % versions.airframe,
+    "com.lihaoyi" %%% "utest" % "0.7.5" % "test"
   ))
 
   /** Dependencies for external JS libs that are bundled into a single .js file according to dependency order */

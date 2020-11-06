@@ -2,7 +2,6 @@ package ch.wsl.box.client.views.components.widget
 import io.circe._
 import io.circe.syntax._
 import io.udash._
-import ch.wsl.box.client.Context._
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import scalatags.JsDom
 import scalatags.JsDom.all._
@@ -21,7 +20,7 @@ case class CheckboxWidget(field:JSONField, prop: Property[Json]) extends Widget 
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip,UdashTooltip.Placement.Right) _
 
-    val booleanModel = prop.transform[Boolean](jsToBool _ ,boolToJson _)
+    val booleanModel = prop.bitransform[Boolean](jsToBool _)(boolToJson _)
     div(
       tooltip(Checkbox(booleanModel)().render), " ", WidgetUtils.toLabel(field)
     )

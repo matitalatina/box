@@ -1,7 +1,7 @@
 package ch.wsl.box.rest.routes
 
 import akka.http.scaladsl.server.Directives._
-import org.webjars.WebJarAssetLocator
+import org.webjars.{MultipleMatchesException, WebJarAssetLocator}
 import scribe.Logging
 
 import scala.util.{Failure, Success, Try}
@@ -20,6 +20,37 @@ object WebJarsSupport extends Logging {
         case Success(fullPath) => {
           logger.info("found")
           getFromResource(fullPath)
+        }
+        case Failure(e: MultipleMatchesException) => {
+          print(e.getMatches)
+          e.printStackTrace()
+          reject
+        }
+        case Failure(e: IllegalArgumentException) => {
+          e.printStackTrace()
+          reject
+        }
+        case Failure(e) => {
+          e.printStackTrace()
+          failWith(e)
+        }
+      }
+    }
+  }
+
+  def bundle = {
+    extractUnmatchedPath { path =>
+      val webjarName = path.toString().substring(1)
+      logger.info("Looking for webjar: " + webjarName )
+      Try(webJarAssetLocator.getFullPathExact("box-server",webjarName)) match {
+        case Success(fullPath) => {
+          logger.info("found")
+          getFromResource(fullPath)
+        }
+        case Failure(e: MultipleMatchesException) => {
+          print(e.getMatches)
+          e.printStackTrace()
+          reject
         }
         case Failure(e: IllegalArgumentException) => {
           e.printStackTrace()

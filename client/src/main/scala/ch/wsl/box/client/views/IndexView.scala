@@ -2,14 +2,12 @@ package ch.wsl.box.client.views
 
 import io.udash._
 import ch.wsl.box.client._
-import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.services.{ClientConf, REST, ServiceModule, UI}
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Session, UI}
 import ch.wsl.box.model.shared.{JSONQuery, JSONSort, NewsEntry, Sort}
 import io.circe.Json
 import scalacss.ScalatagsCss._
-import Context._
 import ch.wsl.box.client.views.components.Debug
 import io.udash.bootstrap.BootstrapStyles
 
@@ -29,10 +27,13 @@ object IndexViewPresenter extends ViewFactory[IndexState.type]{
 }
 
 class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[IndexState.type] {
+
+  import Context._
+
   override def handleState(state: IndexState.type): Unit = {
     for{
       news <- if(ClientConf.displayIndexNews)
-          REST.news(Session.lang())
+          services.rest.news(services.clientSession.lang())
         else
           Future.successful(Seq())
     } yield {
@@ -42,7 +43,6 @@ class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[
 }
 
 class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.circe.generic.auto._
   import ch.wsl.box.shared.utils.JSONUtils._

@@ -4,7 +4,7 @@ package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{DataKind, DataState, EntityFormState, EntityTableState}
-import ch.wsl.box.client.services.{Enhancer, Navigate, REST}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils._
 import ch.wsl.box.client.views.components.widget.Widget
@@ -42,7 +42,6 @@ object DataModel extends HasModelPropertyCreator[DataModel]{
 
 object DataViewPresenter extends ViewFactory[DataState] {
 
-  import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[DataState]) = {
     val model = ModelProperty.blank[DataModel]
     val presenter = DataPresenter(model)
@@ -53,6 +52,7 @@ object DataViewPresenter extends ViewFactory[DataState] {
 case class DataPresenter(model:ModelProperty[DataModel]) extends Presenter[DataState] with Logging {
 
   import ch.wsl.box.client.Context._
+
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
 
@@ -61,8 +61,8 @@ case class DataPresenter(model:ModelProperty[DataModel]) extends Presenter[DataS
     model.subProp(_.kind).set(state.kind)
 
     for{
-      metadata <- REST.dataMetadata(state.kind,state.export,Session.lang())
-      exportDef <- REST.dataDef(state.kind,state.export, Session.lang())
+      metadata <- services.rest.dataMetadata(state.kind,state.export,services.clientSession.lang())
+      exportDef <- services.rest.dataDef(state.kind,state.export, services.clientSession.lang())
     } yield {
       model.subProp(_.metadata).set(Some(metadata))
       model.subProp(_.queryData).set(Json.obj(JSONMetadata.jsonPlaceholder(metadata,Seq()).toSeq :_*))
@@ -73,7 +73,7 @@ case class DataPresenter(model:ModelProperty[DataModel]) extends Presenter[DataS
   private def args = {
     if(model.get.kind == DataKind.EXPORT) {
       val qd = model.get.queryData
-      model.get.metadata.get.tabularFields.map(k => qd.js(k)).map(_.injectLang(Session.lang())).asJson
+      model.get.metadata.get.tabularFields.map(k => qd.js(k)).map(_.injectLang(services.clientSession.lang())).asJson
     } else {
       model.get.queryData
     }
@@ -82,7 +82,7 @@ case class DataPresenter(model:ModelProperty[DataModel]) extends Presenter[DataS
   def csv() = {
     logger.info()
     val url = Routes.apiV1(
-      s"/${model.get.kind}/${model.get.metadata.get.name}/${Session.lang()}?q=${args.toString()}".replaceAll("\n","")
+      s"/${model.get.kind}/${model.get.metadata.get.name}/${services.clientSession.lang()}?q=${args.toString()}".replaceAll("\n","")
     )
     logger.info(s"downloading: $url")
     dom.window.open(url)
@@ -91,7 +91,7 @@ case class DataPresenter(model:ModelProperty[DataModel]) extends Presenter[DataS
   def query() = {
 
     for{
-      data <- REST.data(model.get.kind,model.get.metadata.get.name,args,Session.lang())
+      data <- services.rest.data(model.get.kind,model.get.metadata.get.name,args,services.clientSession.lang())
     } yield {
       model.subProp(_.headers).set(data.headOption.getOrElse(Seq()))
       model.subProp(_.data).set(Try(data.tail).getOrElse(Seq()))
@@ -101,7 +101,6 @@ case class DataPresenter(model:ModelProperty[DataModel]) extends Presenter[DataS
 
 case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) extends View {
 
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
   import ch.wsl.box.shared.utils.JSONUtils._

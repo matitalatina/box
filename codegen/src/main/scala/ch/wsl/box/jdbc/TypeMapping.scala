@@ -1,6 +1,8 @@
 package ch.wsl.box.jdbc
 
 import slick.model.Column
+import ch.wsl.box.model.shared.WidgetsNames
+import ch.wsl.box.model.shared.JSONFieldTypes
 
 object TypeMapping {
 
@@ -29,6 +31,51 @@ object TypeMapping {
       }
     }
   }
+
+  val typesMapping =  Map(
+    "numeric" -> JSONFieldTypes.NUMBER,
+    "integer" -> JSONFieldTypes.NUMBER,
+    "bigint" -> JSONFieldTypes.NUMBER,
+    "smallint" -> JSONFieldTypes.NUMBER,
+    "double precision" -> JSONFieldTypes.NUMBER,
+    "real" -> JSONFieldTypes.NUMBER,
+    "text" -> JSONFieldTypes.STRING,
+    "character varying" -> JSONFieldTypes.STRING,
+    "character" -> JSONFieldTypes.STRING,
+    "boolean" -> JSONFieldTypes.BOOLEAN,
+    "bytea" -> JSONFieldTypes.FILE,
+    "timestamp without time zone" -> JSONFieldTypes.DATETIME,
+    "time without time zone" -> JSONFieldTypes.TIME,
+    "date" -> JSONFieldTypes.DATE,
+    "interval" -> JSONFieldTypes.INTERVAL,
+    "ARRAY" -> JSONFieldTypes.STRING,                              //todo: works only for visualisation
+    "USER-DEFINED" -> JSONFieldTypes.STRING,
+    "geometry" -> JSONFieldTypes.GEOMETRY,
+    "jsonb" -> JSONFieldTypes.JSON
+  )
+
+
+  val defaultWidgetMapping = Map(
+    "integer" -> None,
+    "bigint" -> None,
+    "smallint" -> None,
+    "double precision" -> None,
+    "real" -> None,
+    "text" -> Some(WidgetsNames.textinput),
+    "character varying" -> Some(WidgetsNames.textinput),
+    "character" -> Some(WidgetsNames.textinput),
+    "boolean" -> None,
+    "bytea" -> Some(WidgetsNames.simpleFile),
+    "numeric" -> None,
+    "timestamp without time zone" -> Some(WidgetsNames.datetimePicker),
+    "time without time zone" -> Some(WidgetsNames.timepicker),
+    "date" -> Some(WidgetsNames.datepicker),
+    "interval" -> Some(WidgetsNames.datepicker),
+    "ARRAY" -> Some(WidgetsNames.textinput),                          //todo: works only for visualisation -> provide widget
+    "USER-DEFINED" -> None,
+    "geometry" -> Some(WidgetsNames.map),
+    "jsonb" -> Some(WidgetsNames.code)
+  )
 
 
 }

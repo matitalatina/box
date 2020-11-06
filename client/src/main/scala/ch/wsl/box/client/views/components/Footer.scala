@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components
+import ch.wsl.box.client.services.{ClientConf, UI}
 import ch.wsl.box.client.styles.GlobalStyles
-import ch.wsl.box.client.utils.{ClientConf, UI}
 import io.udash.bootstrap.BootstrapStyles
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._

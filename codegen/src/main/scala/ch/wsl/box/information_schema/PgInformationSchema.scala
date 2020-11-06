@@ -1,21 +1,14 @@
-package ch.wsl.box.rest.logic
+package ch.wsl.box.information_schema
 
-import ch.wsl.box.rest.utils.Auth
 import ch.wsl.box.jdbc.PostgresProfile
-import PostgresProfile.api._
-import net.ceedubs.ficus.Ficus._
-import ch.wsl.box.jdbc.PostgresProfile
-import slick.jdbc.meta.MTable
+import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
-import StringHelper._
-import com.typesafe.config.Config
-import slick.lifted.ShapedValue
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext) {
+class PgInformationSchema(table:String, db:Database, adminDB:Database, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext) {
 
   def runWithSession[T](d:Session => DBIOAction[T,NoStream,Nothing]): Future[T] = Future{
     val session = db.createSession()
@@ -37,13 +30,13 @@ class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=S
   val pgKeyUsage = TableQuery[PgKeyUsages]
 
   case class PrimaryKey(keys: Seq[String], constraintName: String) {
-    def boxKeys = keys.map(_.slickfy)
+    def boxKeys = keys
   }
 
   case class ForeignKey(keys: Seq[String], referencingKeys: Seq[String], referencingTable: String, constraintName: String) {
-    def boxKeys = keys.map(_.slickfy)
+    def boxKeys = keys
 
-    def boxReferencingKeys = referencingKeys.map(_.slickfy)
+    def boxReferencingKeys = referencingKeys
   }
 
   lazy val pgTable:Future[PgTable] = runWithSession{ session =>
@@ -63,30 +56,6 @@ class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=S
         .sortBy(_.ordinal_position).result
   }
 
-//  lazy val firstNoPKColumn:Future[Seq[PgColumn]] =
-//    if (excludeFields.size==0)
-//      for (
-//        pks <- pk
-//      ) yield {
-//        runWithSession { session =>
-//          pgColumns
-//            .filter(e => e.table_name === table && e.table_schema === session.conn.getSchema)
-//            .filterNot(e => e.column_name.inSet(pks.keys))
-//            .sortBy(_.ordinal_position).result
-//        }
-//      }
-//    else
-//      for (
-//        pks <- pk
-//      ) yield {
-//        runWithSession { session =>
-//          pgColumns
-//            .filter(e => e.table_name === table && e.table_schema === session.conn.getSchema)
-//            .filterNot(e => e.column_name.inSet(pks.keys))
-//            .filterNot(_.column_name.inSet(excludeFields))
-//            .sortBy(_.ordinal_position).result
-//        }
-//      }
 
 
   val pkQ = for{
@@ -94,7 +63,7 @@ class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=S
     usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
   } yield (usage.column_name, usage.constraint_name)
 
-  val pk:Future[PrimaryKey] = Auth.adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
+  val pk:Future[PrimaryKey] = adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
       pkQ.result
         .map(x => x.unzip)    //change seq of tuple into tuple of seqs
         .map(x => PrimaryKey(x._1, x._2.headOption.getOrElse("")))   //as constraint_name take only first element (should be the same)
@@ -115,9 +84,9 @@ class PgInformationSchema(table:String, db:Database, excludeFields:Seq[String]=S
 
   lazy val fks:Future[Seq[ForeignKey]] =  {
 
-    Auth.adminDB.run(fkQ1.result).flatMap { references =>
+    adminDB.run(fkQ1.result).flatMap { references =>
       Future.sequence(references.map { case (c, ref) =>
-        Auth.adminDB.run(fkQ2(c,ref).result).map{ keys =>
+        adminDB.run(fkQ2(c,ref).result).map{ keys =>
           ForeignKey(keys.map(_._1),keys.map(_._2),ref.table_name, c.constraint_name)
         }
       })

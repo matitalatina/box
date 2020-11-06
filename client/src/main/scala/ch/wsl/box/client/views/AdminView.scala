@@ -3,14 +3,12 @@ package ch.wsl.box.client.views
 
 import io.udash._
 import ch.wsl.box.client._
-import ch.wsl.box.client.services.{Navigate, REST}
+import ch.wsl.box.client.services.{ClientConf, Navigate, REST}
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Session, UI}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import scalacss.ScalatagsCss._
-import Context._
 import ch.wsl.box.client.views.components.Debug
 import io.udash.bootstrap.BootstrapStyles
 
@@ -22,7 +20,7 @@ object AdminViewModel extends HasModelPropertyCreator[AdminViewModel] {
     Blank.Simple(AdminViewModel(Seq()))
 }
 
-object AdminViewPresenter extends FinalViewFactory[AdminState.type]{
+object AdminViewPresenter extends ViewFactory[AdminState.type]{
 
   val prop = ModelProperty.blank[AdminViewModel]
 
@@ -33,21 +31,23 @@ object AdminViewPresenter extends FinalViewFactory[AdminState.type]{
 }
 
 class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[AdminState.type] {
+
+  import Context._
+
   override def handleState(state: AdminState.type): Unit = {
     for{
-      entitites <- REST.entities(EntityKind.TABLE.kind)
+      entitites <- services.rest.entities(EntityKind.ENTITY.kind)
     } yield {
       viewModel.set(AdminViewModel(entitites))
     }
   }
 
   def generateStub(entity:String) = {
-    REST.generateStub(entity)
+    services.rest.generateStub(entity)
   }
 }
 
-class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresenter) extends FinalView {
-  import ch.wsl.box.client.Context._
+class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresenter) extends View {
   import scalatags.JsDom.all._
   import io.circe.generic.auto._
   import ch.wsl.box.shared.utils.JSONUtils._

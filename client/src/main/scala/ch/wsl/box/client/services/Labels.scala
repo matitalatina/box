@@ -1,22 +1,17 @@
-package ch.wsl.box.client.utils
+package ch.wsl.box.client.services
 
-import ch.wsl.box.client.services.REST
 import ch.wsl.box.model.shared.SharedLabels
-
-import scala.util.Try
 
 /**
   * Created by andre on 6/8/2017.
   */
 object Labels {
 
-  import ch.wsl.box.client.Context._
-
 //  def langs = Seq("it","de","fr","en")
 
   private var labels:Map[String,String] = Map()
 
-  def load(lang:String) = REST.labels(lang).map{ table =>
+  def load(table:Map[String,String]) = {
     labels = table
   }
 
@@ -124,7 +119,7 @@ object Labels {
     def forms = get("header.forms")
     def exports = get("header.exports")
     def functions = get("header.functions")
-    def lang = get("header.lang")
+    def lang = get(SharedLabels.header.lang)
   }
 
   object popup{

@@ -36,7 +36,7 @@ trait BaseCodeGenerator {
 
   val enabledTables = Await.result(db.run{
     MTable.getTables(None, None, None, Some(Seq("TABLE")))   //slick method to retrieve db structure
-  }, 200 seconds)
+  }, 200.seconds)
     .filter { t =>
       if(excludes.exists(e => t.name.name matches e)) {
         false
@@ -49,7 +49,7 @@ trait BaseCodeGenerator {
 
   val enabledViews = Await.result(db.run{
     MTable.getTables(None, None, None, Some(Seq("VIEW")))
-  }, 200 seconds)
+  }, 200.seconds)
     .filter { t =>
       if(excludes.exists(e => t.name.name matches e)) {
         false
@@ -60,13 +60,14 @@ trait BaseCodeGenerator {
       }
     }.distinct
 
+
   private val enabledEntities = enabledTables ++ enabledViews
 
   //println(enabledEntities.map(_.name.name))
 
   private val slickDbModel = Await.result(db.run{
     PostgresProfile.createModelBuilder(enabledEntities,true).buildModel   //create model based on specific db (here postgres)
-  }, 300 seconds)
+  }, 300.seconds)
 
 
   //exclude fields

@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
+import ch.wsl.box.information_schema.{PgColumn, PgColumns}
 import ch.wsl.box.model.boxentities.BoxField.{BoxFieldFile_row, BoxField_i18n_row, BoxField_row}
 import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_row}
 import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
@@ -42,6 +43,13 @@ object FormMetadataFactory{
     cacheFormId = cacheFormId.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
     cacheFormName = cacheFormName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
   }
+
+  def hasGuestAccess(formName:String)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = Auth.boxDB.run{
+    BoxFormTable.filter(f => f.name === formName && f.guest_user.nonEmpty).result.headOption
+  }.map{_.map{ form =>
+    Auth.userProfileForUser(form.guest_user.get)
+  }}
+
 
 }
 
@@ -115,6 +123,10 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
   }
 
+  private def keys(form:BoxForm_row):Future[Seq[String]] = form.edit_key_field.map{x =>
+    Future.successful(x.split(",").toSeq.map(_.trim))
+  }.getOrElse(EntityMetadataFactory.keysOf(form.entity))
+
   private def getForm(formQuery: Query[BoxForm.BoxForm,BoxForm_row,Seq], lang:String) = {
 
     import io.circe.generic.auto._
@@ -138,7 +150,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
         BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
       }
       columns <- Future.sequence(fields.map(f => columns(form,f._1)))
-      keys <- EntityMetadataFactory.keysOf(form.entity)
+      keys <- keys(form)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
     } yield {
 
@@ -246,7 +258,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
 
 
-          lookupData <- db.run(Registry().actions.actions(refEntity)(ec).get.find(filter.copy(lang = Some(lang))))
+          lookupData <- db.run(Registry().actions(refEntity).find(filter.copy(lang = Some(lang))))
 
         } yield {
 //          val options = lookupData.map{ lookupRow =>
@@ -326,6 +338,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
           `type` = field.`type`,
           name = field.name,
           nullable = nullable,
+          readOnly = field.read_only,
           label = Some(lab),
           lookup = look,
           placeholder = placeHolder,

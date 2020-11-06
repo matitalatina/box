@@ -3,7 +3,7 @@ package ch.wsl.box.codegen
 import com.typesafe.config.Config
 import slick.model.Model
 
-case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[String], model:Model) extends slick.codegen.SourceCodeGenerator(model)
+case class EntityActionsRegistryGenerator(tableList:Seq[String], model:Model) extends slick.codegen.SourceCodeGenerator(model)
   with BoxSourceCodeGenerator
   with slick.codegen.OutputHelpers {
 
@@ -12,9 +12,6 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
       s"""   case "${table.model.name.table}" => JSONTableActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name})"""
     }
 
-    def mapView(model:String):Option[String] = tables.find(_.model.name.table == model).map{ table =>
-      s"""   case "${table.model.name.table}" => Some(new JSONViewActions[${table.TableClass.name},${table.EntityType.name}](${table.TableClass.name}))"""
-    }
 
 
     def generate(pkg:String, modelPackages:String):String =
@@ -33,16 +30,9 @@ case class EntityActionsRegistryGenerator(viewList:Seq[String], tableList:Seq[St
          |  import io.circe.generic.auto._
          |  import ch.wsl.box.rest.utils.JSONSupport._
          |
-         |  def tableActions(implicit ec: ExecutionContext) :String => TableActions[Json] = {
+         |  def apply(name:String)(implicit ec: ExecutionContext): TableActions[Json] = name match {
          |    ${tableList.flatMap(mapTable).mkString("\n")}
          |  }
-         |
-         |  def viewActions(implicit ec: ExecutionContext) :String => Option[ViewActions[Json]] = {
-         |    ${viewList.flatMap(mapView).mkString("\n")}
-         |    case _ => None
-         |  }
-         |
-         |  def actions(name:String)(implicit ec: ExecutionContext) : Option[ViewActions[Json]] = viewActions(ec)(name).orElse(Try(tableActions(ec)(name)).toOption)
          |
          |}
 

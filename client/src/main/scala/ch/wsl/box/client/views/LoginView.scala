@@ -1,9 +1,9 @@
 package ch.wsl.box.client.views
 
 
+import ch.wsl.box.client.services.{ClientConf, Labels}
 import ch.wsl.box.client.styles.GlobalStyles
 import ch.wsl.box.client.{IndexState, LoginState}
-import ch.wsl.box.client.utils.{ClientConf, Labels, Session}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
@@ -22,7 +22,6 @@ object LoginData extends HasModelPropertyCreator[LoginData] {
 
 
 case object LoginViewPresenter extends ViewFactory[LoginState.type] {
-  import ch.wsl.box.client.Context._
   override def create(): (View, Presenter[LoginState.type]) = {
     val model = ModelProperty.blank[LoginData]
     val presenter = LoginPresenter(model)
@@ -30,14 +29,15 @@ case object LoginViewPresenter extends ViewFactory[LoginState.type] {
   }
 }
 
-case class LoginPresenter(model:ModelProperty[LoginData]) extends Presenter[LoginState.type] {
+case class LoginPresenter(model:ModelProperty[LoginData]) extends Presenter[LoginState.type]  {
+
   import ch.wsl.box.client.Context._
 
   override def handleState(state: LoginState.type): Unit = {}
 
   def login() = {
-    Session.login(model.get.username,model.get.password).map{ _ match {
-        case true => Unit
+    services.clientSession.login(model.get.username,model.get.password).map{ _ match {
+        case true => ()
         case false => model.subProp(_.message).set(Labels.login.failed)
       }
     }
@@ -46,7 +46,6 @@ case class LoginPresenter(model:ModelProperty[LoginData]) extends Presenter[Logi
 
 case class LoginView(model:ModelProperty[LoginData],presenter:LoginPresenter) extends View {
 
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
   import io.udash.css.CssView._

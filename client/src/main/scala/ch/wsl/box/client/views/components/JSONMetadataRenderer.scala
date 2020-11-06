@@ -1,8 +1,8 @@
 package ch.wsl.box.client.views.components
 
 
+import ch.wsl.box.client.services.{ClientConf, Labels}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Labels}
 import ch.wsl.box.client.views.components
 import ch.wsl.box.client.views.components.widget._
 import ch.wsl.box.model.shared._
@@ -24,7 +24,7 @@ import io.udash.css.CssView._
   */
 
 
-case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], children: Seq[JSONMetadata], id: Property[Option[String]]) extends ChildWidget {
+case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], children: Seq[JSONMetadata], id: Property[Option[String]]) extends ChildWidget  {
 
 
   import ch.wsl.box.client.Context._
@@ -35,6 +35,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   import io.udash.css.CssView._
 
 
+  override def field: JSONField = JSONField("metadataRenderer","metadataRenderer",false)
 
   private def getId(data:Json): Option[String] = {
     data.ID(metadata.keys).map(_.asString)
@@ -71,13 +72,13 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
         }
 
 
-        val visibility = Property(evaluate(observedData.get))
-        observedData.listen{d =>
+        val visibility = Property(false)
+        observedData.listen(d => {
           val r = evaluate(d)
           if(r == !visibility.get) { //change only when the status changes
             visibility.set(r)
           }
-        }
+        },true)
         visibility
       }
     }
@@ -88,7 +89,6 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     import JSONFieldTypes._
 
 
-    val label = field.label.getOrElse(field.name)
 
     val widg:ComponentWidgetFactory =
 
@@ -125,11 +125,13 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (FILE, _, _, _, _)                                     => FileWidgetFactory(metadata.entity)
           case (_,Some(WidgetsNames.mapPoint),_,_,_)                  => OlMapWidget
           case (_,Some(WidgetsNames.map),_,_,_)                       => OlMapWidget
-          case (_,Some(c),_,_,_) if c.startsWith(WidgetsNames.code)   => MonacoWidget
-          case (_,Some(c),_,_,_) if c == WidgetsNames.richTextEditor  => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)
-          case (_,Some(c),_,_,_) if c == WidgetsNames.richTextEditorFull => RichTextEditorWidgetFactory(RichTextEditorWidget.Full)
+          case (_,Some(WidgetsNames.code),_,_,_) => MonacoWidget
+          case (_,Some(WidgetsNames.richTextEditor),_,_,_)   => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)
+          case (_,Some(WidgetsNames.richTextEditorFull),_,_,_)  => RichTextEditorWidgetFactory(RichTextEditorWidget.Full)
           case (_, _, _, _, _)                                        => InputWidgetFactory.Text
     }
+
+    logger.debug(s"Selected widget for ${field.name}: ${widg}")
 
     widg.create(id,fieldData,field)
 
@@ -156,6 +158,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     override def killWidget(): Unit = widget.killWidget()
 
+    override def field: JSONField = JSONField("block","block",false)
 
     override def afterRender(): Unit = widget.afterRender()
 
@@ -171,11 +174,10 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
   private def simpleField(fieldName:String):WidgetVisibility = {for{
     field <- metadata.fields.find(_.name == fieldName)
-
   } yield {
 
 
-    val fieldData = data.transform(_.js(field.name),(fd:Json) => data.get.deepMerge(Json.obj((field.name,fd))))
+    val fieldData = data.bitransform(_.js(field.name))((fd:Json) => data.get.deepMerge(Json.obj((field.name,fd))))
 
 //    data.listen({ d =>
 //      val newJs = d.js(field.name)
@@ -192,7 +194,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     WidgetVisibility(widgetSelector(field, id, fieldData),checkCondition(field))
 
-  }}.getOrElse(WidgetVisibility(HiddenWidget.HiddenWidgetImpl))
+  }}.getOrElse(WidgetVisibility(HiddenWidget.HiddenWidgetImpl(JSONField.empty)))
 
 
   private def fieldsRenderer(fields: Seq[Either[String, SubLayoutBlock]], widths: Stream[Int] = Stream.continually(12)):Widget = new Widget {
@@ -210,6 +212,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
 
     override def afterRender(): Unit = widgets.foreach(_.widget.afterRender())
+
+    override def field: JSONField = JSONField("fieldsRenderer","fieldsRenderer",false)
 
     override protected def show(): JsDom.all.Modifier = render(false)
 
@@ -262,7 +266,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     div(UdashForm()( factory => Seq(
         Debug(data,autoRelease, "data"),
-        div(BootstrapStyles.Grid.row)(
+        div(ClientConf.style.jsonMetadataRendered,BootstrapStyles.Grid.row)(
           blocks.map{ case (block,widget) =>
             div(BootstrapCol.md(block.width), ClientConf.style.block)(
               renderer(block,widget)

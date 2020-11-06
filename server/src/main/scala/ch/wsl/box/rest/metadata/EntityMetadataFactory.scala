@@ -1,8 +1,8 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
+import ch.wsl.box.information_schema.{PgColumn, PgInformationSchema}
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.logic.{PgColumn, PgInformationSchema}
 import ch.wsl.box.rest.utils.{Auth, BoxConfig, UserProfile}
 import ch.wsl.box.shared.utils.JSONUtils
 import com.typesafe.config.Config
@@ -11,6 +11,7 @@ import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.TypeMapping
 import ch.wsl.box.model.BoxFieldAccessRegistry
 import ch.wsl.box.rest.runtime.{ColType, Registry}
 
@@ -57,7 +58,7 @@ object EntityMetadataFactory extends Logging {
   def lookup(table:String, column:String, lang:String)(implicit db:Database,  ec:ExecutionContext):Future[Option[JSONFieldLookup]] = {
 
 
-    val schema = new PgInformationSchema(table, db, excludeFields)
+    val schema = new PgInformationSchema(table, db,Auth.adminDB, excludeFields)
 
     for {
       fkOpt <- schema.findFk(column)
@@ -90,7 +91,7 @@ object EntityMetadataFactory extends Logging {
       case None => {
         logger.info(s"Metadata table cache miss! cache key: ($table, $lang, $lookupMaxRows), cache: ${cacheTable}")
 
-        val schema = new PgInformationSchema(table, db, excludeFields)
+        val schema = new PgInformationSchema(table, db,Auth.adminDB, excludeFields)
 
         //    println(schema.fk)
 
@@ -104,7 +105,7 @@ object EntityMetadataFactory extends Logging {
               case None => Future.successful(None)
             }
             count <- fk match {
-              case Some(fk) => db.run(Registry().actions.tableActions(ec)(fk.referencingTable).count().map(_.count))
+              case Some(fk) => db.run(Registry().actions(fk.referencingTable).count().map(_.count))
               case None => Future.successful(0)
             }
           } yield {
@@ -127,7 +128,7 @@ object EntityMetadataFactory extends Logging {
 
                     import ch.wsl.box.shared.utils.JSONUtils._
                     for {
-                      lookupData <- db.run(Registry().actions.tableActions(ec)(model).find())
+                      lookupData <- db.run(Registry().actions(model).find())
                     } yield {
                       val options = lookupData.map { lookupRow =>
                         JSONLookup(lookupRow.get(value), lookupRow.get(text))
@@ -149,7 +150,7 @@ object EntityMetadataFactory extends Logging {
                     field.jsonType,
                     name = field.boxName,
                     nullable = field.nullable,
-                    widget = EntityMetadataFactory.defaultWidgetMapping(field.data_type)
+                    widget = TypeMapping.defaultWidgetMapping(field.data_type)
                   ))
                 }
               }
@@ -157,7 +158,7 @@ object EntityMetadataFactory extends Logging {
                 field.jsonType,
                 name = field.boxName,
                 nullable = field.nullable,
-                widget = EntityMetadataFactory.defaultWidgetMapping(field.data_type)
+                widget = TypeMapping.defaultWidgetMapping(field.data_type)
               ))
             }
           }
@@ -210,7 +211,7 @@ object EntityMetadataFactory extends Logging {
       case None => {
         logger.info(s"Metadata keys cache miss! cache key: ($table), cache: ${cacheKeys}")
 
-        val result = new PgInformationSchema(table, Auth.adminDB).pk.map { pk => //map to enter the future
+        val result = new PgInformationSchema(table, Auth.adminDB,Auth.adminDB).pk.map { pk => //map to enter the future
           logger.info(pk.toString)
           pk.boxKeys
         }
@@ -228,7 +229,7 @@ object EntityMetadataFactory extends Logging {
 
   def firstNoPKField(table:String)(implicit db:Database, ec:ExecutionContext):Future[Option[String]] = {
     logger.info("Getting first field of " + table + " that is not PK")
-    val schema = new PgInformationSchema(table, Auth.adminDB, excludeFields)
+    val schema = new PgInformationSchema(table, Auth.adminDB,Auth.adminDB, excludeFields)
     for {
       pks <- schema.pk.map(_.boxKeys) //todo: or boxKeys?
       c <- schema.columns
@@ -254,49 +255,8 @@ object EntityMetadataFactory extends Logging {
 
 
   def isView(table:String)(implicit ec:ExecutionContext):Future[Boolean] =
-    new PgInformationSchema(table,Auth.adminDB).pgTable.map(_.isView)  //map to enter the future
+    new PgInformationSchema(table,Auth.adminDB,Auth.adminDB).pgTable.map(_.isView)  //map to enter the future
 
 
-  val typesMapping =  Map(
-    "numeric" -> JSONFieldTypes.NUMBER,
-    "integer" -> JSONFieldTypes.NUMBER,
-    "bigint" -> JSONFieldTypes.NUMBER,
-    "smallint" -> JSONFieldTypes.NUMBER,
-    "double precision" -> JSONFieldTypes.NUMBER,
-    "real" -> JSONFieldTypes.NUMBER,
-    "text" -> JSONFieldTypes.STRING,
-    "character varying" -> JSONFieldTypes.STRING,
-    "character" -> JSONFieldTypes.STRING,
-    "boolean" -> JSONFieldTypes.BOOLEAN,
-    "bytea" -> JSONFieldTypes.FILE,
-    "timestamp without time zone" -> JSONFieldTypes.DATETIME,
-    "time without time zone" -> JSONFieldTypes.TIME,
-    "date" -> JSONFieldTypes.DATE,
-    "interval" -> JSONFieldTypes.INTERVAL,
-    "ARRAY" -> JSONFieldTypes.STRING,                              //todo: works only for visualisation
-    "USER-DEFINED" -> JSONFieldTypes.STRING,
-    "geometry" -> JSONFieldTypes.GEOMETRY
-  )
 
-
-  val defaultWidgetMapping = Map(
-    "integer" -> None,
-    "bigint" -> None,
-    "smallint" -> None,
-    "double precision" -> None,
-    "real" -> None,
-    "text" -> Some(WidgetsNames.textinput),
-    "character varying" -> Some(WidgetsNames.textinput),
-    "character" -> Some(WidgetsNames.textinput),
-    "boolean" -> None,
-    "bytea" -> Some(WidgetsNames.simpleFile),
-    "numeric" -> None,
-    "timestamp without time zone" -> Some(WidgetsNames.datetimePicker),
-    "time without time zone" -> Some(WidgetsNames.timepicker),
-    "date" -> Some(WidgetsNames.datepicker),
-    "interval" -> Some(WidgetsNames.datepicker),
-    "ARRAY" -> Some(WidgetsNames.textinput),                          //todo: works only for visualisation -> provide widget
-    "USER-DEFINED" -> None,
-    "geometry" -> Some(WidgetsNames.map)
-  )
 }

@@ -16,8 +16,8 @@ sealed abstract class RoutingState(val parentState: Option[ContainerRoutingState
     s"#${application.matchState(this).value}"
 }
 
-sealed abstract class ContainerRoutingState(parentState: Option[ContainerRoutingState]) extends RoutingState(parentState) with ContainerState
-sealed abstract class FinalRoutingState(parentState: Option[ContainerRoutingState]) extends RoutingState(parentState) with FinalState
+sealed abstract class ContainerRoutingState(parentState: Option[ContainerRoutingState]) extends RoutingState(parentState)
+sealed abstract class FinalRoutingState(parentState: Option[ContainerRoutingState]) extends RoutingState(parentState)
 
 
 case object LoginState extends FinalRoutingState(Some(RootState))

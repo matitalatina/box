@@ -25,5 +25,8 @@ object UI {
     } ~
     pathPrefix("assets") {
       WebJarsSupport.webJars
+    } ~
+    pathPrefix("bundle") {
+      WebJarsSupport.bundle
     }
 }

@@ -1,10 +1,9 @@
-package ch.wsl.box.client.utils
+package ch.wsl.box.client.services
 
-import ch.wsl.box.client.services.{Navigate, REST}
 import ch.wsl.box.client.{Context, IndexState, LoginState}
-import org.scalajs.dom
 import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
 import io.udash.properties.single.Property
+import org.scalajs.dom
 import scribe.Logging
 
 import scala.concurrent.Future
@@ -19,29 +18,47 @@ object SessionQuery{
   def empty = SessionQuery(JSONQuery.empty,"")
 }
 
-object Session extends Logging {
-
-  import ch.wsl.box.client.Context._
-  import io.circe._
-  import io.circe.syntax._
-  import io.circe.generic.auto._
-  import io.circe.parser._
-
+object ClientSession {
   final val QUERY = "query"
   final val IDS = "ids"
   final val USER = "user"
   final val LANG = "lang"
   final val LABELS = "labels"
   final val STATE = "state"
+}
+
+class ClientSession(rest:REST) extends Logging {
+
+  import Context._
+  import io.circe._
+  import io.circe.generic.auto._
+  import io.circe.parser._
+  import io.circe.syntax._
+  import ClientSession._
+
+
   final private val BASE_LAYER = "base_layer"
 
   lazy val logged = {
     Property(false)
   }
 
-  isValidSession().map{
-    case true => logged.set(true)
-    case false => logout()
+  logger.info("Loading session")
+
+
+  isValidSession().map{ x =>
+    logger.info(s"is valid session $x")
+    x match {
+      case true => {
+        logger.info("Valid session found")
+        logged.set(true)
+      }
+      case false => {
+        logger.info("No valid session found")
+        dom.window.sessionStorage.removeItem(USER)
+        logoutAndSaveState()
+      }
+    }
   }
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
@@ -60,7 +77,7 @@ object Session extends Logging {
   def isValidSession():Future[Boolean] = {
     isSet(USER) match {
       case false => Future.successful(false)
-      case true => REST.validSession()
+      case true => rest.validSession()
     }
   }
 
@@ -71,9 +88,10 @@ object Session extends Logging {
   def login(username:String,password:String):Future[Boolean] = {
     dom.window.sessionStorage.setItem(USER,username)
     val fut = for{
-      _ <- REST.login(LoginRequest(username,password))
-      _ <- UI.load()
+      _ <- rest.login(LoginRequest(username,password))
+      ui <- rest.ui()
     } yield {
+      UI.load(ui)
       logged.set(true)
       if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined && dom.window.sessionStorage.getItem(STATE).trim.length > 0) {
         val state = dom.window.sessionStorage.getItem(STATE).replaceAll("#","")
@@ -99,18 +117,22 @@ object Session extends Logging {
 
   def logoutAndSaveState() = {
     Try{
-      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url)
+      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url(applicationInstance))
     }
-    logout()
+    logout(false)
   }
 
-  def logout() = {
+  def logout(invalidateSession:Boolean = true) = {
     Navigate.toAction{ () =>
       dom.window.sessionStorage.removeItem(USER)
       for{
-        _ <- REST.logout()
-        _ <- UI.load()
+        _ <- invalidateSession match {
+          case true => rest.logout()
+          case false => Future.successful()
+        }
+        ui <- rest.ui()
       } yield {
+        UI.load(ui)
         logged.set(false)
         Navigate.to(LoginState)
       }
@@ -134,9 +156,9 @@ object Session extends Logging {
     case _ if ClientConf.langs.nonEmpty => ClientConf.langs.head
     case _ => "en"
   }
-  def setLang(lang:String) = {
-    Labels.load(lang)
+  def setLang(lang:String) = rest.labels(lang).map{ labels =>
+    Labels.load(labels)
     dom.window.sessionStorage.setItem(LANG,lang)
-    dom.window.location.reload()
+    Context.applicationInstance.reload()
   }
 }

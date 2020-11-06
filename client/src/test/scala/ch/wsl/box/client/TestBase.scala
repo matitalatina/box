@@ -1,0 +1,24 @@
+package ch.wsl.box.client
+
+import org.scalajs.dom.{document, window}
+import scribe.{Level, Logger}
+import wvlet.airframe.Design
+
+import scala.concurrent.{Future, Promise}
+
+trait TestBase {
+
+  Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
+
+  def injector:Design = TestModule.test
+
+  Context.init(injector)
+
+  def waitCycle:Future[Boolean] = {
+    val promise = Promise[Boolean]
+    window.setTimeout(() => {
+      promise.success(true)
+    }, 1000)
+    promise.future
+  }
+}

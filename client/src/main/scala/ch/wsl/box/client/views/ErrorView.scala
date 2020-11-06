@@ -2,7 +2,7 @@ package ch.wsl.box.client.views
 
 import io.udash._
 import ch.wsl.box.client.IndexState
-import ch.wsl.box.client.utils.Labels
+import ch.wsl.box.client.services.Labels
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom.Element
 

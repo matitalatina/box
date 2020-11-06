@@ -2,7 +2,6 @@ package ch.wsl.box.rest
 
 import ch.wsl.box.model.shared.{JSONID, JSONKeyValue}
 import ch.wsl.box.rest.logic.EnhancedModel
-import org.scalatest.{FlatSpec, Matchers}
 
 
 

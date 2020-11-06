@@ -1,9 +1,9 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.model.boxentities.BoxForm
+import ch.wsl.box.model.boxentities.{BoxForm, BoxUser}
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.routes.Table
+import ch.wsl.box.rest.routes.{Table, View}
 import ch.wsl.box.rest.utils.UserProfile
 import scribe.Logging
 
@@ -20,16 +20,19 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
   import ch.wsl.box.rest.metadata.box._
 
 
+  val viewsOnly = View.views.toSeq.sorted
+  val tablesAndViews = (Table.tables.toSeq ++ View.views).sorted
 
 
 
   def registry = for{
     forms <- getForms()
+    users <- getUsers()
   } yield Seq(
-    FormUIDef.main(Table.tables.toSeq.sorted),
-    FormUIDef.field(forms),
+    FormUIDef.main(tablesAndViews,users.sortBy(_.username)),
+    FormUIDef.field(forms,tablesAndViews),
     FormUIDef.fieldI18n,
-    FormUIDef.formI18n,
+    FormUIDef.formI18n(viewsOnly),
     FormUIDef.fieldFile,
     FunctionUIDef.main,
     FunctionUIDef.field,
@@ -43,6 +46,12 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
     }
   }
 
+  def getUsers():Future[Seq[BoxUser.BoxUser_row]] = {
+    up.boxDb.run{
+      BoxUser.BoxUserTable.result
+    }
+  }
+
   val visibleAdmin = Seq(FUNCTION,FORM)
 
   override def list: Future[Seq[String]] = registry.map(_.filter(f => visibleAdmin.contains(f.objId)).map(_.name))
@@ -53,7 +62,7 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
 
   override def children(form: JSONMetadata): Future[Seq[JSONMetadata]] = getForms().map{ forms =>
     form match {
-      case f if f.objId == FORM => Seq(FormUIDef.field(forms),FormUIDef.fieldI18n,FormUIDef.formI18n,FormUIDef.fieldFile)
+      case f if f.objId == FORM => Seq(FormUIDef.field(forms,tablesAndViews),FormUIDef.fieldI18n,FormUIDef.formI18n(viewsOnly),FormUIDef.fieldFile)
       case f if f.objId == FORM_FIELD => Seq(FormUIDef.fieldI18n,FormUIDef.fieldFile)
       case f if f.objId == FUNCTION => Seq(FunctionUIDef.field,FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
       case f if f.objId == FUNCTION_FIELD => Seq(FunctionUIDef.fieldI18n)

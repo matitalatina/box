@@ -9,9 +9,8 @@ import io.udash._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe._
 import io.circe.syntax._
-import ch.wsl.box.client.Context._
+import ch.wsl.box.client.services.ClientConf
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{BrowserConsole, ClientConf}
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import ch.wsl.box.shared.utils.DateTimeFormatters
 import io.udash.bootstrap.datepicker.UdashDatePicker.Placement

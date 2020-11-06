@@ -1,7 +1,8 @@
 package ch.wsl.box.client.views.components.widget
 
+import ch.wsl.box.client.services.ClientConf
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.ClientConf
+import ch.wsl.box.client.utils.TestHooks
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import io.circe.Json
 import io.udash._
@@ -14,6 +15,7 @@ import scalatags.JsDom.all._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.udash.bindings.modifiers.Binding
 import org.scalajs.dom.Node
+import scribe.Logging
 
 object InputWidgetFactory {
 
@@ -57,7 +59,7 @@ object InputWidgetFactory {
 
 }
 
-object InputWidget {
+object InputWidget extends Logging {
 
 
   import scalacss.ScalatagsCss._
@@ -71,13 +73,16 @@ object InputWidget {
 
     def reallyWithLabel = withLabel & (field.title.length > 0)
 
+    val mods = if(reallyWithLabel)
+      inputRendererDefaultModifiers++modifiers
+    else
+      inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct)
+
+
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin,
       if(reallyWithLabel) label(field.title) else {},
-      if(reallyWithLabel)
-        div(inputRendererDefaultModifiers++modifiers, (bind(prop.transform(_.string))))
-      else
-        div(inputRendererDefaultModifiers++modifiers++Seq(width := 100.pct), (bind(prop.transform(_.string)))),
+      div(`class` := TestHooks.readOnlyField(field.name) ,mods, bind(prop.transform(_.string))),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
 
@@ -117,10 +122,12 @@ object InputWidget {
 
     override def edit() = editMe(field,true, false, modifiers){ case y =>
 
-      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
-      TextInput(stringModel)(y:_*).render
+      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
+      TextInput(stringModel)(y ++ Seq(`class` := TestHooks.formField(field.name)):_*).render
     }
-    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true, modifiers))
+    override protected def show(): JsDom.all.Modifier = {
+      autoRelease(showMe(prop,field,true, modifiers))
+    }
   }
 
   class TextDisabled(field:JSONField, prop: Property[Json]) extends Text(field,prop) {
@@ -132,7 +139,7 @@ object InputWidget {
 //      case true => {
         case _ => {
         editMe(field,true, !ClientConf.manualEditKeyFields, modifiers){ case y =>
-          val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
+          val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
           TextInput(stringModel)(y:_*).render
         }
       }
@@ -146,7 +153,7 @@ object InputWidget {
 
 
     override def edit() = editMe(field,false, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
+      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
       TextInput(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field, false))
@@ -157,7 +164,7 @@ object InputWidget {
     val modifiers:Seq[Modifier] = Seq()
 
     override def edit() = editMe(field,true, false, modifiers){ case y =>
-      val stringModel = prop.transform[String](jsonToString _, strToJson(field.nullable) _)
+      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
       TextArea(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true,modifiers))
@@ -173,7 +180,7 @@ object InputWidget {
   case class Number(field:JSONField, prop: Property[Json]) extends Widget {
 
     override def edit():JsDom.all.Modifier = (editMe(field, true, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
+      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericJson _)
       NumberInput(stringModel)(y:_*).render
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, true))
@@ -182,7 +189,7 @@ object InputWidget {
   case class NumberNoLabel(field:JSONField, prop: Property[Json]) extends Widget {
 
     override def edit():JsDom.all.Modifier = (editMe(field,false, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _,strToNumericJson _)
+      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericJson _)
       NumberInput(stringModel)(y:_*).render
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, false,Seq()))
@@ -191,7 +198,7 @@ object InputWidget {
   case class NumberArray(field:JSONField, prop: Property[Json]) extends Widget {
 
     override def edit():JsDom.all.Modifier = (editMe(field, true, false){ case y =>
-      val stringModel = prop.transform[String](jsonToString _,strToNumericArrayJson _)
+      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericArrayJson _)
       NumberInput(stringModel)(y:_*).render
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, true))

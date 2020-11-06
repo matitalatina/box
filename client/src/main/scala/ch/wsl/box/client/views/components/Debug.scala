@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views.components
 
-import ch.wsl.box.client.utils.UI
+import ch.wsl.box.client.services.UI
 import io.udash.properties.model.ModelProperty
 import scalatags.JsDom.all._
 import io.udash._
@@ -10,7 +10,6 @@ import org.scalajs.dom.Event
 
 object Debug {
 
-  import ch.wsl.box.client.Context._
 
   def apply[T](model: Property[T],releaser:Binding=>Binding = b => b, name:String ="")(implicit enc:io.circe.Encoder[T]) = {
     val show = Property {

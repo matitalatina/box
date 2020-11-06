@@ -1,7 +1,7 @@
 package ch.wsl.box.rest
 
-import ch.wsl.box.rest.logic.{PgColumn, PgColumns, PgInformationSchema}
-import org.scalatest.FlatSpec
+import ch.wsl.box.information_schema.{PgColumn, PgInformationSchema}
+import ch.wsl.box.rest.logic.PgColumns
 import org.scalatest.concurrent.ScalaFutures
 import slick.lifted.TableQuery
 import ch.wsl.box.jdbc.PostgresProfile.api._

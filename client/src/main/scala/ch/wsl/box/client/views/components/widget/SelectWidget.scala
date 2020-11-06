@@ -5,8 +5,7 @@ import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
-import ch.wsl.box.client.Context._
-import ch.wsl.box.client.utils.ClientConf
+import ch.wsl.box.client.services.ClientConf
 import io.circe
 import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}
@@ -31,7 +30,7 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
   val modifiers:Seq[Modifier] = Seq()
 
 
-  val selectModel = data.transform(value2Label,label2Value)
+  val selectModel = data.bitransform(value2Label)(label2Value)
 
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
@@ -61,28 +60,21 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
 
 
     val model:Property[JSONLookup] = field.`type` match {
-      case "number" =>  data.transform[JSONLookup](
+      case "number" =>  data.bitransform[JSONLookup](
         {json:Json =>
           val id = jsonToString(json)
           lookup.get.find(_.id == jsonToString(json)).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-        },
+        })(
         {jsonLookup:JSONLookup => strToNumericJson(jsonLookup.id)}
       )
-      case _ => data.transform[JSONLookup](
+      case _ => data.bitransform[JSONLookup](
         {json:Json =>
           val id = jsonToString(json)
           lookup.get.find(_.id == id).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-        },
+        })(
         {jsonLookup:JSONLookup => strToJson(field.nullable)(jsonLookup.id)}
       )
     }
-
-
-    lookup.listen({lookups =>
-      if(!lookups.contains(model.get)) {
-        model.set(lookups.headOption.getOrElse(JSONLookup("","")))
-      }
-    })
 
 
     val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.Float.right())++modifiers++WidgetUtils.toNullable(field.nullable)

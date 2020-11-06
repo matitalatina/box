@@ -6,15 +6,13 @@ package ch.wsl.box.client.views
   */
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.{Navigate, REST}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
-import ch.wsl.box.client.Context._
 import ch.wsl.box.client.{DataListState, DataState}
 import ch.wsl.box.client.views.components.widget.WidgetUtils
 import ch.wsl.box.model.shared.ExportDef
@@ -44,11 +42,12 @@ case class DataListViewPresenter(modelName:String) extends ViewFactory[DataListS
 class DataListPresenter(model:ModelProperty[DataList]) extends Presenter[DataListState] {
 
 
+  import ch.wsl.box.client.Context._
 
   override def handleState(state: DataListState ): Unit = {
     model.subProp(_.kind).set(state.kind)
 //    println(state.currentExport)
-    REST.dataList(state.kind,Session.lang()).map{ exports =>
+    services.rest.dataList(state.kind,services.clientSession.lang()).map{ exports =>
       model.subSeq(_.list).set(exports)
       model.subSeq(_.filteredList).set(exports)
       val current = exports.find(_.function == state.currentExport)
@@ -65,7 +64,6 @@ class DataListPresenter(model:ModelProperty[DataList]) extends Presenter[DataLis
 }
 
 class DataListView(model:ModelProperty[DataList], presenter: DataListPresenter) extends ContainerView {
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
   import io.udash.css.CssView._
@@ -89,7 +87,7 @@ class DataListView(model:ModelProperty[DataList], presenter: DataListPresenter) 
 
   private def sidebar: Element = div(sidebarGrid)(
     Labels.exports.search,
-    TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => presenter.updateExportsList(), true)),
+    TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => presenter.updateExportsList())),
       produce(model.subProp(_.search)) { q =>
         ul(ClientConf.style.noBullet)(
           repeat(model.subSeq(_.filteredList)){m =>

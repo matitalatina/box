@@ -5,16 +5,14 @@ package ch.wsl.box.client.views
   */
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.{Navigate, REST}
+import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, REST, UI}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.utils.{ClientConf, Labels, Session, UI}
 import ch.wsl.box.client.{EntitiesState, EntityFormState, EntityTableState}
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.form.UdashForm
 import io.udash.core.Presenter
 import org.scalajs.dom.{Element, Event}
-import ch.wsl.box.client.Context._
 import scalatags.generic
 
 case class Entities(list:Seq[String], currentEntity:Option[String], kind:Option[String], search:String, filteredList:Seq[String])
@@ -39,10 +37,11 @@ case class EntitiesViewPresenter(kind:String, modelName:String, sidebarWidth:Int
 class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[EntitiesState] {
 
 
+  import ch.wsl.box.client.Context._
 
   override def handleState(state: EntitiesState): Unit = {
     model.subProp(_.kind).set(Some(state.kind))
-    REST.entities(state.kind).map{ models =>
+    services.rest.entities(state.kind).map{ models =>
       model.subSeq(_.list).set(models)
       model.subSeq(_.filteredList).set(models)
     }
@@ -62,7 +61,6 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
 }
 
 class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, sidebarWidth:Int, routes:Routes) extends ContainerView {
-  import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
   import io.udash.css.CssView._
@@ -87,7 +85,10 @@ class EntitiesView(model:ModelProperty[Entities], presenter: EntitiesPresenter, 
   private def sidebar: Element = if(UI.showEntitiesSidebar) {
     div(sidebarGrid)(
       div(Labels.entities.search),
-      TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => presenter.updateEntitiesList(), true)),
+      TextInput(model.subProp(_.search))(onkeyup :+= ((ev: Event) => {
+        presenter.updateEntitiesList()
+        true
+      })),
       produceWithNested(model.subProp(_.search)) { (q,releaser) =>
         ul(ClientConf.style.noBullet,
           releaser(repeat(model.subSeq(_.filteredList)){m =>
