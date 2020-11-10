@@ -49,6 +49,7 @@ object Settings {
     val junit = "4.12"
     val scalatest = "3.2.2"
     val selenium = "3.14.0"
+    val testcontainersScalaVersion = "0.35.0"
 
     //logs
     val logback = "1.2.3"
@@ -130,6 +131,8 @@ object Settings {
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium  % "test",
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka      % "test",
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp  % "test",
+    "com.dimafeng"             %% "testcontainers-scala-scalatest" % versions.testcontainersScalaVersion % "test",
+    "com.dimafeng"             %% "testcontainers-scala-postgresql" % versions.testcontainersScalaVersion % "test",
     "com.outr"                 %% "scribe"           % versions.scribe,
     "com.outr"                 %% "scribe-slf4j"     % versions.scribe,
     "nz.co.rossphillips"       %% "scala-thumbnailer" % "0.5.SNAPSHOT",

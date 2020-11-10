@@ -1,7 +1,6 @@
 package ch.wsl.box.rest
 
 import ch.wsl.box.information_schema.{PgColumn, PgInformationSchema}
-import ch.wsl.box.rest.logic.PgColumns
 import org.scalatest.concurrent.ScalaFutures
 import slick.lifted.TableQuery
 import ch.wsl.box.jdbc.PostgresProfile.api._
@@ -17,40 +16,41 @@ import scala.concurrent.duration._
   */
 class InformationSchemaSpec extends BaseSpec {
 
-  val infoSchema = new PgInformationSchema("simple", db)
+  def infoSchema(db:Database) = new PgInformationSchema("simple", db,db)
 
-  "The service" should "query pgcolumn" in {
+  "The service" should "query pgcolumn" in withDB { db =>
 
-    val res: Future[Seq[PgColumn]] = db.run(infoSchema.pgColumns.result)
+    val res: Future[Seq[PgColumn]] = db.run(infoSchema(db).pgColumns.result)
 
-    whenReady(res, timeout(10 seconds)) { r =>
-      assert(r.size > 0)
+    res.map{ r =>
+      println(r)
+      r.nonEmpty shouldBe true
     }
   }
 
-  it should "query pgConstraints" in {
+  it should "query pgConstraints" in withDB { db =>
 
-    val res = db.run(infoSchema.pgConstraints.result)
+    val res = db.run(infoSchema(db).pgConstraints.result)
 
-    whenReady(res, timeout(10 seconds)) { r =>
-      assert(r.size > 0)
+    res.map{ r =>
+      r.nonEmpty shouldBe true
     }
   }
 
-  it should "query pgContraintsUsage" in {
+  it should "query pgContraintsUsage" in withDB { db =>
 
-    val res = db.run(infoSchema.pgContraintsUsage.result)
+    val res = db.run(infoSchema(db).pgContraintsUsage.result)
 
-    whenReady(res, timeout(10 seconds)) { r =>
-      assert(r.size > 0)
+    res.map{ r =>
+      r.nonEmpty shouldBe true
     }
   }
 
-  it should "retrive pk" in {
-      val res1  = db.run(infoSchema.pkQ.result)
-      whenReady(res1, timeout(10 seconds)){r =>
+  it should "retrive pk" in withDB { db =>
+      val res1  = db.run(infoSchema(db).pkQ.result)
+      res1.map{r =>
         print(r)
-        assert(r.size >0)
+        r.nonEmpty shouldBe true
       }
 
   }

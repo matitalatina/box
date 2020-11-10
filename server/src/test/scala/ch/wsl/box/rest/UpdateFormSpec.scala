@@ -52,14 +52,14 @@ class UpdateFormSpec extends BaseSpec {
 
 
 
-  "The service" should "query update nested subforms" in {
+  "The service" should "query update nested subforms" in withUserProfile { implicit up =>
 
 
     val future = for{
       form <- FormMetadataFactory().of("parent","it")
-      actions = FormActions(form,EntityActionsRegistry.tableActions,FormMetadataFactory())
-      i <- db.run(actions.updateIfNeeded(id,json).transactionally)
-      result <- db.run(actions.getById(id))
+      actions = FormActions(form,EntityActionsRegistry.apply,FormMetadataFactory())(up.db,materializer,ec)
+      i <- up.db.run(actions.updateIfNeeded(id,json)(up.db).transactionally)
+      result <- up.db.run(actions.getById(id)(up.db))
     } yield result
 
 
@@ -69,7 +69,7 @@ class UpdateFormSpec extends BaseSpec {
       t.printStackTrace()
     }
 
-    whenReady(future, timeout(100000.seconds)){ result =>
+    future.map{ result =>
       assert(result.get == json)
     }
 

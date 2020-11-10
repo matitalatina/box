@@ -20,7 +20,7 @@ class GeoJsonSpec extends BaseSpec {
       geom = Some(new GeometryFactory().createPoint(new Coordinate(1,1)))
     )
 
-    println(g.asJson)
+    g.asJson.isNull shouldBe false
 
   }
 

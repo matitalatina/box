@@ -9,36 +9,62 @@ import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.testmodel.GenRegistry
-import org.scalatest.flatspec.AnyFlatSpec
+import com.dimafeng.testcontainers.scalatest.TestContainerForAll
+import com.dimafeng.testcontainers.PostgreSQLContainer
+import org.scalatest.flatspec.{AnyFlatSpec, AsyncFlatSpec}
 import org.scalatest.matchers.should.Matchers
 import scribe.{Level, Logger}
 
 
-trait BaseSpec extends AnyFlatSpec with ScalaFutures with Matchers {
+trait BaseSpec extends AsyncFlatSpec with Matchers with TestContainerForAll {
 
   private val executor = AsyncExecutor("public-executor",50,50,1000,50)
 
   Logger.root.clearHandlers().withHandler(minimumLevel = Some(Level.Warn)).replace()
   //Logger.select(className("scala.slick")).setLevel(Level.Debug)
 
-  implicit override val patienceConfig = PatienceConfig(timeout = 10.seconds)
+  override val containerDef = PostgreSQLContainer.Def(
+    mountPostgresDataToTmpfs = true
+  )
 
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-  val dbPath = System.getenv("TEST_DB_URL")
-  val dbSchema = "public"
-  val dbUsername = "postgres"
-  val dbPassword = System.getenv("TEST_DB_PASSWORD")
 
-  implicit val db = Database.forURL(s"$dbPath?currentSchema=$dbSchema",
-    driver="org.postgresql.Driver",
-    user=dbUsername,
-    password=dbPassword,
-    executor = executor
-  )
-  implicit val up  = UserProfile(dbUsername,db,db)
+
+
+
+  private def connectToContainerDB(container:PostgreSQLContainer, schema:String = "public"):Database = {
+
+    val dbPath = container.jdbcUrl
+    val dbUsername = container.username
+    val dbPassword = container.password
+
+
+    Database.forURL(s"$dbPath&currentSchema=$schema",
+      driver="org.postgresql.Driver",
+      user=dbUsername,
+      password=dbPassword,
+      executor = executor
+    )
+  }
+
+  private def createUserProfile(container:PostgreSQLContainer)  = UserProfile(container.username,connectToContainerDB(container),connectToContainerDB(container,"box"))
+
+
+  def withDB[A](runTest: Database => A): A = withContainers{ container =>
+    val db = connectToContainerDB(container)
+    runTest(db)
+
+  }
+
+  def withUserProfile[A](runTest: UserProfile => A): A = withContainers{ container =>
+    runTest(createUserProfile(container))
+  }
+
+
+
 
   Registry.set(new GenRegistry())
 
