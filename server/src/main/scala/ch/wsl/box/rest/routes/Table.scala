@@ -227,7 +227,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
 
   def update(id:JSONID):Route = put {
     entity(as[M]) { e =>
-      onComplete(db.run(dbActions.updateIfNeeded(id, e).transactionally)) {
+      onComplete(db.run(dbActions.upsertIfNeeded(Some(id), e).transactionally)) {
         case Success(entity) => complete(entity)
         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
       }

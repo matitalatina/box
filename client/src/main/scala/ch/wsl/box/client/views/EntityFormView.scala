@@ -131,7 +131,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         logger.debug("saveAction")
         for {
           id <- JSONID.fromString(m.id.getOrElse("")) match {
-            case Some (id) => services.rest.update (m.kind, services.clientSession.lang(), m.name, id, data).map(_ => id)
+            case Some (id) => services.rest.update (m.kind, services.clientSession.lang(), m.name, id, data)
             case None => services.rest.insert (m.kind, services.clientSession.lang (), m.name, data)
           }
           result <- services.rest.get(m.kind, services.clientSession.lang(), m.name, id)

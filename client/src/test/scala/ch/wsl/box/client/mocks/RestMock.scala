@@ -109,7 +109,7 @@ class RestMock extends REST {
     }
   }
 
-  override def update(kind: String, lang: String, entity: String, id: JSONID, data: Json): Future[Int] = {
+  override def update(kind: String, lang: String, entity: String, id: JSONID, data: Json): Future[JSONID] = {
     println("update not implemented")
     ???
   }

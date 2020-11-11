@@ -33,7 +33,7 @@ trait REST{
 
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json]
-  def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[Int]
+  def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[JSONID]
   def insert(kind:String, lang:String, entity:String, data:Json): Future[JSONID]
   def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount]
 
