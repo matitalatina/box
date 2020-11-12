@@ -53,6 +53,10 @@ object JSONQueryFilter{
     def gt(column: String, value: String) = JSONQueryFilter(column, Some(Filter.>), value)
 
     def lt(column: String, value: String) = JSONQueryFilter(column, Some(Filter.<), value)
+
+    def gte(column: String, value: String) = JSONQueryFilter(column, Some(Filter.>=), value)
+
+    def lte(column: String, value: String) = JSONQueryFilter(column, Some(Filter.<=), value)
   }
 
   val AND = WHERE

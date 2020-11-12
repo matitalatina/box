@@ -123,7 +123,7 @@ case class Form(
                   complete {
                     actions(metadata) { fs =>
                       for {
-                        rowsChanged <- db.run(fs.updateIfNeeded(id,e).transactionally)
+                        rowsChanged <- db.run(fs.upsertIfNeeded(Some(id),e).transactionally)
                       } yield rowsChanged
                     }
                   }
