@@ -18,7 +18,7 @@ addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.6")
 
 resolvers += Resolver.bintrayRepo("oyvindberg", "converter")
 
-addSbtPlugin("org.scalablytyped.converter" % "sbt-converter" % "1.0.0-beta26")
+addSbtPlugin("org.scalablytyped.converter" % "sbt-converter" % "1.0.0-beta29")
 addSbtPlugin("ch.epfl.scala" % "sbt-web-scalajs-bundler" % "0.18.0")
 
 libraryDependencies += "org.scala-js" %% "scalajs-env-selenium" % "1.1.0"
