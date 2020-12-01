@@ -53,7 +53,12 @@ lazy val server: Project  = project
       npmAssets ++= NpmAssets.ofProject(client) { nodeModules =>
         (nodeModules / p).allPaths
       }.value
-    }
+    },
+    testOptions in Test ++= Seq(
+      Tests.Argument(TestFrameworks.ScalaTest, "-u", "target/test-reports"),
+      Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports"),
+      Tests.Argument(TestFrameworks.ScalaTest, "-oNDXEHLO")
+    )
   )
   .enablePlugins(
     GitVersioning,

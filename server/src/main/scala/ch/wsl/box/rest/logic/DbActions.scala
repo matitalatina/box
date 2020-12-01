@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
-import ch.wsl.box.jdbc.PostgresProfile
+import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, FormMetadataFactory}
 import scribe.Logging
@@ -37,7 +37,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       }
     }
 
-    def sort(sorting: Seq[JSONSort], lang:String)(implicit db:Database): Query[T, M, Seq] = {
+    def sort(sorting: Seq[JSONSort], lang:String)(implicit db:FullDatabase): Query[T, M, Seq] = {
       sorting.foldRight[Query[T, M, Seq]](base) { case (sort, query) =>
         query.sortBy { x =>
           sort.order match {
@@ -62,11 +62,11 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def count()(implicit db:Database):DBIO[JSONCount] = {
+  def count()(implicit db:FullDatabase):DBIO[JSONCount] = {
     entity.length.result
   }.transactionally.map(JSONCount)
 
-  def count(query:JSONQuery)(implicit db:Database):DBIO[Int] = {
+  def count(query:JSONQuery)(implicit db:FullDatabase):DBIO[Int] = {
     val q = entity.where(query.filter)
 
     (q.length.result).transactionally
@@ -74,7 +74,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def findStreamed(query:JSONQuery)(implicit db:Database): DatabasePublisher[M] = {
+  def findStreamed(query:JSONQuery)(implicit db:FullDatabase): DatabasePublisher[M] = {
 
     val q = entity
       .where(query.filter)
@@ -82,7 +82,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       .page(query.paging)
 
 
-    db.stream(q
+    db.db.stream(q
       .result
       .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
       .transactionally
@@ -90,14 +90,14 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   }
 
-  override def find(query:JSONQuery)(implicit db:Database, mat: Materializer): DBIO[Seq[M]] = {
+  override def find(query:JSONQuery)(implicit db:FullDatabase, mat: Materializer): DBIO[Seq[M]] = {
     val q = entity.where(query.filter).sort(query.sort, query.lang.getOrElse("en"))
     q.page(query.paging).result
   }
 
-  def keys(): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(EntityMetadataFactory.keysOf(entity.baseTableRow.tableName))
+  def keys()(implicit db:FullDatabase): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(EntityMetadataFactory.keysOf(entity.baseTableRow.tableName))
 
-  override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer): DBIO[IDs] = {
+  override def ids(query: JSONQuery)(implicit db: FullDatabase, mat: Materializer): DBIO[IDs] = {
     for{
       data <- find(query)
       keys <- keys()
@@ -128,7 +128,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def getById(id:JSONID)(implicit db:Database) = {
+  def getById(id:JSONID)(implicit db:FullDatabase) = {
     logger.info(s"GET BY ID $id")
     Try(filter(id)).toOption match {
       case Some(f) => for {
@@ -142,7 +142,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     }
   }
 
-  def insert(e: M)(implicit db:Database) = {
+  def insert(e: M)(implicit db:FullDatabase) = {
     logger.info(s"INSERT $e")
     resetMetadataCache()
     for{
@@ -153,19 +153,19 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     } yield new EnhancedModel(result).ID(keys)
   }
 
-  def delete(id:JSONID)(implicit db:Database) = {
+  def delete(id:JSONID)(implicit db:FullDatabase) = {
     logger.info(s"DELETE BY ID $id")
     resetMetadataCache()
     filter(id).delete.transactionally
   }
 
-  def update(id:JSONID, e:M)(implicit db:Database) = {
+  def update(id:JSONID, e:M)(implicit db:FullDatabase) = {
     logger.info(s"UPDATE BY ID $id")
     resetMetadataCache()
     filter(id).update(e).transactionally
   }
 
-  def updateIfNeeded(id:JSONID, e:M)(implicit db:Database) = {
+  def updateIfNeeded(id:JSONID, e:M)(implicit boxDatabase: FullDatabase) = {
     logger.info(s"UPDATE IF NEEDED BY ID $id")
     resetMetadataCache()
     for {
@@ -179,7 +179,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def upsertIfNeeded(id:Option[JSONID], e:M)(implicit db:Database) = {
+  def upsertIfNeeded(id:Option[JSONID], e:M)(implicit boxDatabase: FullDatabase) = {
     logger.info(s"UPSERT IF NEEDED BY ID $id")
     resetMetadataCache()
     for {

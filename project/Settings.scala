@@ -150,7 +150,8 @@ object Settings {
     "org.graalvm.js" % "js" % "20.2.0",
     "org.javadelight" % "delight-graaljs-sandbox" % "0.1.2",
     "org.scalatest" %% "scalatest" % versions.scalatest % "test",
-    "org.scalatest" %% "scalatest-flatspec" % versions.scalatest % "test"
+    "org.scalatest" %% "scalatest-flatspec" % versions.scalatest % "test",
+    "com.vladsch.flexmark" % "flexmark-all" % "0.35.10" % Test,
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))

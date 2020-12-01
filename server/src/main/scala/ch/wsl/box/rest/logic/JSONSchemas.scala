@@ -6,12 +6,12 @@ import ch.wsl.box.rest.metadata.FormMetadataFactory
 import ch.wsl.box.rest.utils.{UserProfile}
 
 import scala.concurrent.{ExecutionContext, Future}
-
+import ch.wsl.box.jdbc.PostgresProfile.api._
 /**
  * Created by andreaminetti on 10/03/16.
  *
  */
-class JSONSchemas(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) {
+class JSONSchemas(boxDb:Database,adminDb:Database)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) {
 
 
 
@@ -22,7 +22,7 @@ class JSONSchemas(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext
         title = Some(field.name)
       ))
       case Some(child) => for{
-        m <- FormMetadataFactory().of(child.objId,lang)
+        m <- FormMetadataFactory(boxDb,adminDb).of(child.objId,lang)
         schema <- of(m)
       } yield field.name -> schema
 

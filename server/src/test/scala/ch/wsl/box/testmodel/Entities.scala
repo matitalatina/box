@@ -39,7 +39,7 @@ object Entities {
     def ? = (Rep.Some(id), name, parent_id).shaped.<>({r=>import r._; _1.map(_=> Child_row.tupled((_1, _2, _3)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
-    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    val id: Rep[Int] = column[Int]("id", O.PrimaryKey)
     /** Database column name SqlType(text), Default(None) */
     val name: Rep[Option[String]] = column[Option[String]]("name", O.Default(None))
     /** Database column parent_id SqlType(int4), Default(None) */
@@ -64,7 +64,7 @@ object Entities {
     def ? = (Rep.Some(id), name).shaped.<>({r=>import r._; _1.map(_=> Parent_row.tupled((_1, _2)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
-    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    val id: Rep[Int] = column[Int]("id", O.PrimaryKey)
     /** Database column name SqlType(text), Default(None) */
     val name: Rep[Option[String]] = column[Option[String]]("name", O.Default(None))
   }

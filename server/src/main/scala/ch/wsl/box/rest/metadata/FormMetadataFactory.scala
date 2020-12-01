@@ -1,7 +1,8 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.information_schema.{PgColumn, PgColumns}
+import ch.wsl.box.information_schema.{PgColumn, PgColumns, PgInformationSchema}
+import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.boxentities.BoxField.{BoxFieldFile_row, BoxField_i18n_row, BoxField_row}
 import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_row}
 import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
@@ -44,7 +45,7 @@ object FormMetadataFactory{
     cacheFormName = cacheFormName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
   }
 
-  def hasGuestAccess(formName:String)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = Auth.boxDB.run{
+  def hasGuestAccess(formName:String,boxDb:Database)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = boxDb.run{
     BoxFormTable.filter(f => f.name === formName && f.guest_user.nonEmpty).result.headOption
   }.map{_.map{ form =>
     Auth.userProfileForUser(form.guest_user.get)
@@ -55,11 +56,12 @@ object FormMetadataFactory{
 
 
 
-case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
+case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
   implicit val db = up.db
+  implicit val database = FullDatabase(up.db,adminDb)
 
-  def list: Future[Seq[String]] = Auth.boxDB.run{
+  def list: Future[Seq[String]] = boxDb.run{
     BoxForm.BoxFormTable.result
   }.map{_.map(_.name)}
 
@@ -139,17 +141,18 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
 
     for{
-      (form,formI18n) <- Auth.boxDB.run( fQuery.result ).map(_.head)
-      fields <- Auth.boxDB.run{fieldQuery(form.form_id.get).result}
+      (form,formI18n) <- boxDb.run( fQuery.result ).map(_.head)
+      fields <- boxDb.run{fieldQuery(form.form_id.get).result}
       fieldsFile <- Future.sequence(fields.map { case (f, _) =>
-        Auth.boxDB.run {
+        boxDb.run {
           BoxField.BoxFieldFileTable.filter(_.field_id === f.field_id).result
         }.map(_.headOption)
       })
-      actions <- Auth.boxDB.run{
+      actions <- boxDb.run{
         BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
       }
-      columns <- Future.sequence(fields.map(f => columns(form,f._1)))
+      cols <- new PgInformationSchema(form.entity).columns
+      columns = fields.map(f => cols.find(_.column_name == f._1.name))
       keys <- keys(form)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
     } yield {
@@ -226,14 +229,6 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
   }
 
-
-  private def columns(form:BoxForm_row, field:BoxField_row): Future[Option[PgColumn]] = {
-    val pgColumns = TableQuery[PgColumns]
-    Auth.adminDB.run{
-      pgColumns.filter(row => row.column_name === field.name && row.table_name === form.entity).result
-    }.map(_.headOption)
-  }
-
   private def fieldsToJsonFields(fields:Seq[(((BoxField_row,Option[BoxField_i18n_row]),Option[BoxFieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
 
     val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
@@ -301,7 +296,7 @@ case class FormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:Exe
 
         field.child_form_id match {
           case None => Future.successful(fieldI18n.flatMap(_.label).getOrElse(field.name))
-          case Some(subformId) => Auth.boxDB.run{
+          case Some(subformId) => boxDb.run{
             {
               for{
                 (form,formI18n) <- BoxForm.BoxFormTable joinLeft BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId

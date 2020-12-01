@@ -16,6 +16,7 @@ object Schema {
       BoxField.BoxField_i18nTable.schema ++
       BoxForm.BoxFormTable.schema ++
       BoxForm.BoxForm_i18nTable.schema ++
+      BoxForm.BoxForm_actions.schema ++
       BoxLabels.BoxLabelsTable.schema ++
       BoxUITable.BoxUITable.schema ++
       BoxUIsrcTable.BoxUIsrcTable.schema ++
