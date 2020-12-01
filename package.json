@@ -1,0 +1,9 @@
+{
+  "name": "test-env",
+  "version": "1.0.0",
+  "description": "Env for running client test headless",
+  "dependencies": {
+    "jsdom": "16.4.0",
+    "canvas": "2.6.1"
+  }
+}

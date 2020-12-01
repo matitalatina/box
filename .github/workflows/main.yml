@@ -26,9 +26,11 @@ jobs:
           sbt server/clean
           sbt client/clean
           sbt server/test
+      - name: Node 10.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10.x
       - name: Setup client test env
-        run: |
-          npm install jsdom
-          npm install canvas
+        run: npm install
       - name: Run tests client
         run: sbt client/test
