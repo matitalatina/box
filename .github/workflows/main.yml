@@ -28,9 +28,12 @@ jobs:
         run: npm install
       - name: Run tests server
         run: |
+          export PATH=./node_modules/.bin:$PATH
           sbt codegen/clean
           sbt server/clean
           sbt client/clean
           sbt server/test
       - name: Run tests client
-        run: sbt client/test
+        run: |
+          export PATH=./node_modules/.bin:$PATH
+          sbt client/test

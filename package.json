@@ -4,6 +4,8 @@
   "description": "Env for running client test headless",
   "dependencies": {
     "jsdom": "16.4.0",
-    "canvas": "2.6.1"
+    "canvas": "2.6.1",
+    "webpack": "4.44.2",
+    "webpack-cli": "3.3.12"
   }
 }
