@@ -19,10 +19,10 @@ jobs:
           sbt codegen/clean
           sbt server/clean
           sbt client/clean
-          sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m server/test
+          sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m -mem 4096 server/test
       - name: Setup client test env
         run: |
           npm install jsdom
           npm install canvas
       - name: Run tests client
-        run: sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m client/test
+        run: sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m -mem 4096 client/test
