@@ -8,6 +8,7 @@ import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.model.boxentities.BoxConf
 import ch.wsl.box.model.{BuildBox, DropBox}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.testmodel.{Entities, GenRegistry}
@@ -16,6 +17,9 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.scalatest.flatspec.{AnyFlatSpec, AsyncFlatSpec}
 import org.scalatest.matchers.should.Matchers
 import scribe.{Level, Logger, Logging}
+import io.circe._
+import io.circe.parser._
+import io.circe.generic.auto._
 
 import scala.concurrent.{Await, Future}
 
@@ -40,19 +44,28 @@ trait BaseSpec extends AsyncFlatSpec with Matchers with TestContainerForAll with
     for {
      _ <- DropBox.fut(db)
      _ <- BuildBox.install(db,username)
-    } yield true
+     _ <- db.run(BoxConf.BoxConfTable.filter(_.key === "cache.enable").map(_.value).update(Some("false")).transactionally) //disable cache for testing
+     result <- db.run(BoxConf.BoxConfTable.filter(_.key === "cache.enable").result) //disable cache for testing
+    } yield {
+      println(s"cache.enable: $result")
+      false
+    }
   }
 
   private def initDb(db:Database):Future[Boolean] = {
 
     val createFK = sqlu"""
-      alter table "public"."child" add constraint "child_parent_id_fk" foreign key("parent_id") references "parent"("id") on update NO ACTION on delete NO ACTION;
-      alter table "public"."subchild" add constraint "subchild_child_id_fk" foreign key("child_id") references "child"("id") on update NO ACTION on delete NO ACTION;
+      alter table "public"."db_child" add constraint "db_child_parent_id_fk" foreign key("parent_id") references "db_parent"("id") on update NO ACTION on delete NO ACTION;
+      alter table "public"."db_subchild" add constraint "db_subchild_child_id_fk" foreign key("child_id") references "db_child"("id") on update NO ACTION on delete NO ACTION;
+      alter table "public"."app_child" add constraint "app_child_parent_id_fk" foreign key("parent_id") references "app_parent"("id") on update NO ACTION on delete NO ACTION;
+      alter table "public"."app_subchild" add constraint "app_subchild_child_id_fk" foreign key("child_id") references "app_child"("id") on update NO ACTION on delete NO ACTION;
       """
 
     val dropFK = sqlu"""
-      alter table if exists "public"."child" drop constraint "child_parent_id_fk";
-      alter table if exists "public"."subchild" drop constraint "subchild_child_id_fk";
+      alter table if exists "public"."db_child" drop constraint "db_child_parent_id_fk";
+      alter table if exists "public"."db_subchild" drop constraint "db_subchild_child_id_fk";
+      alter table if exists "public"."app_child" drop constraint "app_child_parent_id_fk";
+      alter table if exists "public"."app_subchild" drop constraint "app_subchild_child_id_fk";
       """
 
 
@@ -106,6 +119,7 @@ trait BaseSpec extends AsyncFlatSpec with Matchers with TestContainerForAll with
 
     Await.result(init,30.seconds)
 
+    if(schema == "box") BoxConfig.load(db)
 
     db
   }
@@ -133,7 +147,13 @@ trait BaseSpec extends AsyncFlatSpec with Matchers with TestContainerForAll with
     runTest(createUserProfile(container))
   }
 
-
+  def stringToJson(str:String):Json = parse(str) match {
+    case Left(f) => {
+      println(f.message)
+      Json.Null
+    }
+    case Right(json) => json
+  }
 
 
   Registry.set(new GenRegistry())

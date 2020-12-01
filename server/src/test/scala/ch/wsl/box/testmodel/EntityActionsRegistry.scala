@@ -16,10 +16,13 @@ object EntityActionsRegistry extends ActionRegistry {
   import ch.wsl.box.rest.utils.JSONSupport._
 
   override def apply(name: String)(implicit ec: ExecutionContext): TableActions[Json] = name match {
-    case "child" => JSONTableActions[Child,Child_row](Child)
-    case "parent" => JSONTableActions[Parent,Parent_row](Parent)
     case "simple" => JSONTableActions[Simple,Simple_row](Simple)
-    case "subchild" => JSONTableActions[Subchild,Subchild_row](Subchild)
+    case "app_parent" => JSONTableActions[AppParent,AppParent_row](AppParent)
+    case "app_child" => JSONTableActions[AppChild,AppChild_row](AppChild)
+    case "app_subchild" => JSONTableActions[AppSubchild,AppSubchild_row](AppSubchild)
+    case "db_parent" => JSONTableActions[DbParent,DbParent_row](DbParent)
+    case "db_child" => JSONTableActions[DbChild,DbChild_row](DbChild)
+    case "db_subchild" => JSONTableActions[DbSubchild,DbSubchild_row](DbSubchild)
   }
 
 }

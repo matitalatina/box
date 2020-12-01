@@ -107,6 +107,7 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
 
   protected def toM(json: Json):M =json.as[M].fold(
       { fail =>
+        logger.warn(s"$fail original: $json")
         throw new JSONDecoderException(fail,json)
       },
       { x => x }

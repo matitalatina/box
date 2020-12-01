@@ -45,7 +45,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
   def start() =  {
 
 
-    BoxConfig.load()
+    BoxConfig.load(Auth.boxDB)
 
 
     val akkaConf: Config = BoxConfig.akkaHttpSession

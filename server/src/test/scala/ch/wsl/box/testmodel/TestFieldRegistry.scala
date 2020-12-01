@@ -10,16 +10,30 @@ object TestFieldRegistry extends FieldRegistry with Logging {
         "id" -> ColType("Int", true),
         "name" -> ColType("String", true),
       )
-      case "parent" => Map(
+      case "app_parent" => Map(
         "id" -> ColType("Int", true),
         "name" -> ColType("String", true)
       )
-      case "child" => Map(
+      case "app_child" => Map(
         "id" -> ColType("Int", true),
         "name" -> ColType("String", true),
         "parent_id" -> ColType("Int", true)
       )
-      case "subchild" => Map(
+      case "app_subchild" => Map(
+        "id" -> ColType("Int", true),
+        "name" -> ColType("String", true),
+        "child_id" -> ColType("Int", true)
+      )
+      case "db_parent" => Map(
+        "id" -> ColType("Int", true),
+        "name" -> ColType("String", true)
+      )
+      case "db_child" => Map(
+        "id" -> ColType("Int", true),
+        "name" -> ColType("String", true),
+        "parent_id" -> ColType("Int", true)
+      )
+      case "db_subchild" => Map(
         "id" -> ColType("Int", true),
         "name" -> ColType("String", true),
         "child_id" -> ColType("Int", true)
