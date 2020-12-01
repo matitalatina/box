@@ -5,7 +5,7 @@ import utest._
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._
 
-object LoaderTest extends TestSuite with TestBase {
+object LoaderTest extends TestBase {
 
   import Context._
 

@@ -1,12 +1,13 @@
 package ch.wsl.box.client
 
 import org.scalajs.dom.{document, window}
-import scribe.{Level, Logger}
+import scribe.{Level, Logger, Logging}
+import utest.{ArrowAssert, TestSuite}
 import wvlet.airframe.Design
 
 import scala.concurrent.{Future, Promise}
 
-trait TestBase {
+trait TestBase extends TestSuite with Logging {
 
   Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
 
@@ -21,4 +22,12 @@ trait TestBase {
     }, 1000)
     promise.future
   }
+
+  def shouldBe(condition: Boolean) = {
+    if(!condition) {
+
+    }
+    condition ==> true
+  }
+
 }

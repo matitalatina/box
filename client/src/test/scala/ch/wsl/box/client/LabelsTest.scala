@@ -7,7 +7,7 @@ import org.scalajs.dom.ext._
 import org.scalajs.dom.window
 import utest._
 
-object LabelsTest extends TestSuite with TestBase {
+object LabelsTest extends TestBase {
 
   import Context._
 
@@ -20,7 +20,6 @@ object LabelsTest extends TestSuite with TestBase {
   val tests = Tests{
     test("labels test") - {
       Main.setupUI().flatMap { _ =>
-
         assert(ClientConf.langs.length == 2)
         assert(services.clientSession.lang() == "it")
         assert(checkOnHeader(Values.headerLangIt))
