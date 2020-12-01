@@ -7,6 +7,11 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
+    env:
+      # define Java options for both official sbt and sbt-extras
+      JAVA_OPTS: -Xms4G -Xmx4G -Xss10M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8 -XX:+CMSClassUnloadingEnabled
+      JVM_OPTS: -Xms4G -Xmx4G -Xss10M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8 -XX:+CMSClassUnloadingEnabled
+
 
     steps:
       - uses: actions/checkout@v2
@@ -19,10 +24,10 @@ jobs:
           sbt codegen/clean
           sbt server/clean
           sbt client/clean
-          sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m -mem 4096 server/test
+          sbt server/test
       - name: Setup client test env
         run: |
           npm install jsdom
           npm install canvas
       - name: Run tests client
-        run: sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m -mem 4096 client/test
+        run: sbt client/test
