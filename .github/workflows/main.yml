@@ -15,7 +15,11 @@ jobs:
         with:
           java-version: 1.8
       - name: Run tests server
-        run: sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m server/test
+        run: |
+          sbt codegen/clean
+          sbt server/clean
+          sbt client/clean
+          sbt -J-Xmx4G -J-XX:MaxMetaspaceSize=1G -J-XX:+CMSClassUnloadingEnabled -J-Xss10m server/test
       - name: Setup client test env
         run: |
           npm install jsdom
