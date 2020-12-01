@@ -121,11 +121,23 @@ case class FormActions(metadata:JSONMetadata,
     }
   }
 
+  def attachParentId(jsonToInsert:Seq[Json],parentJson:Json, child:Child):Seq[Json] = {
+    val values = child.masterFields.split(",").map(_.trim).zip(child.childFields.split(",").map(_.trim)).map{ case (parentKey,childKey) =>
+      childKey -> parentJson.js(parentKey)
+    }.toMap
+
+    jsonToInsert.map{ jsonRow =>
+      jsonRow.deepMerge(values.asJson) //overwrite field value with array index
+    }
+  }
+
   def subAction[T](e:Json, action: FormActions => ((Option[JSONID],Json) => DBIO[_])): Seq[DBIO[Seq[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
       form <- DBIO.from(metadataFactory.of(field.child.get.objId, metadata.lang))
       dbSubforms <- getChild(e,field,form,field.child.get)
-      subJson = attachArrayIndex(e.seq(field.name),form)
+      subs = e.seq(field.name)
+      subJsonWithIndexs = attachArrayIndex(subs,form)
+      subJson = attachParentId(subJsonWithIndexs,e,field.child.get)
       deleted <- DBIO.sequence(deleteChild(form,subJson,dbSubforms))
       result <- DBIO.sequence(subJson.map{ json => //order matters so we do it synchro
           action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys),json).map(x => Some(x))

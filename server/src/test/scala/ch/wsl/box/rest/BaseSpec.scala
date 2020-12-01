@@ -45,11 +45,7 @@ trait BaseSpec extends AsyncFlatSpec with Matchers with TestContainerForAll with
      _ <- DropBox.fut(db)
      _ <- BuildBox.install(db,username)
      _ <- db.run(BoxConf.BoxConfTable.filter(_.key === "cache.enable").map(_.value).update(Some("false")).transactionally) //disable cache for testing
-     result <- db.run(BoxConf.BoxConfTable.filter(_.key === "cache.enable").result) //disable cache for testing
-    } yield {
-      println(s"cache.enable: $result")
-      false
-    }
+    } yield true
   }
 
   private def initDb(db:Database):Future[Boolean] = {
