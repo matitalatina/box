@@ -109,10 +109,56 @@ object Values {
         JSONFieldTypes.STRING,
         name = "text",
         nullable = true
+      ),
+      JSONField(
+        JSONFieldTypes.CHILD,
+        name = "subchild",
+        widget = Some(WidgetsNames.tableChild),
+        nullable = false,
+        child = Some(Child(
+          objId = 3,
+          key = "subchild",
+          masterFields = "id",
+          childFields = "child_id",
+          None
+        ))
       )
     ),
-    layout = Layout(Seq(LayoutBlock(None,12,Seq(Left("id"),Left("parent_id"),Left("text"))))),
+    layout = Layout(Seq(LayoutBlock(None,12,Seq(Left("id"),Left("parent_id"),Left("text"),Left("subchild"))))),
     entity = "test_child",
+    lang = "it",
+    tabularFields = Seq("id"),
+    rawTabularFields = Seq("id"),
+    keys = Seq("id"),
+    query = None,
+    exportFields = Seq("id"),
+    view = None,
+    action = FormActionsMetadata.default
+  )
+
+  val subchildMetadata = JSONMetadata(
+    3,
+    "subchild",
+    "SubChild form",
+    fields = Seq(
+      JSONField(
+        JSONFieldTypes.NUMBER,
+        "id",
+        false
+      ),
+      JSONField(
+        JSONFieldTypes.NUMBER,
+        name = "child_id",
+        nullable = false
+      ),
+      JSONField(
+        JSONFieldTypes.STRING,
+        name = "text_subchild",
+        nullable = true
+      )
+    ),
+    layout = Layout(Seq(LayoutBlock(None,12,Seq(Left("id"),Left("child_id"),Left("text_subchild"))))),
+    entity = "test_subchild",
     lang = "it",
     tabularFields = Seq("id"),
     rawTabularFields = Seq("id"),

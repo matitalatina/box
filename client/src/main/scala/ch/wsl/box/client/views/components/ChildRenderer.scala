@@ -2,7 +2,7 @@ package ch.wsl.box.client.views.components
 
 import java.util.UUID
 
-import ch.wsl.box.client.services.{ClientConf, Labels, REST}
+import ch.wsl.box.client.services.{ClientConf, ClientSession, Labels, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles, Icons}
 import ch.wsl.box.client.utils.TestHooks
 import ch.wsl.box.client.views.components.widget.{ChildWidget, ComponentWidgetFactory, Widget}
@@ -20,6 +20,7 @@ import scala.util.{Random, Success}
 import scalatags.JsDom.all._
 import scalacss.ScalatagsCss._
 import scalatags.JsDom
+import ch.wsl.box.client.Context._
 
 /**
   * Created by andre on 6/1/2017.
@@ -123,7 +124,15 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
       val out = Future.sequence(childWidgets.zipWithIndex.map { case (cw,i) =>
 
-        val d = rows.lift(i).getOrElse(Json.Null).deepMerge(cw.widget.data.get)
+        val oldData = cw.widget.data.get
+        val newData = rows.lift(i).getOrElse(Json.obj())
+
+        logger.debug(s"olddata: $oldData")
+        logger.debug(s"newdata: $newData")
+
+        val d = oldData.deepMerge(newData)
+
+        logger.debug(s"result: $newData")
 
         f(cw.widget)(d, childMetadata).map{ r =>
           r
@@ -138,7 +147,22 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
       Map(child.key -> jsChilds.asJson).asJson
     }
 
-    override def afterSave(data: Json, metadata: JSONMetadata): Future[Json] = {
+    override def afterSave(data: Json, m: JSONMetadata): Future[Json] = {
+      logger.info(data.toString())
+      metadata.foreach { met =>
+        //Set new inserted records open by default
+        val oldData: Seq[JSONID] = this.prop.get.as[Seq[Json]].getOrElse(Seq()).flatMap(x => JSONID.fromData(x, met))
+        val newData: Seq[JSONID] = data.seq(field.name).flatMap(x => JSONID.fromData(x, met))
+
+        newData.foreach{ id =>
+          if(!oldData.contains(id)) {
+            services.clientSession.setTableChildOpen(ClientSession.TableChildElement(field.name,met.objId,Some(id)))
+          }
+        }
+
+      }
+
+
       propagate(data, _.afterSave).map(collectData)
     }
 
@@ -169,7 +193,15 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
         childWidgets.clear()
         entity.clear()
         val entityData = splitJson(prop.get)
-        entityData.foreach(x => add(x, false))
+
+        entityData.foreach { x =>
+          val isOpen:Boolean = services.clientSession.isTableChildOpen(ClientSession.TableChildElement(
+            field.name,
+            metadata.map(_.objId).getOrElse(-1),
+            metadata.flatMap(m => JSONID.fromData(x,m))
+          ))
+          add(x, isOpen)
+        }
       }, immediate)
     }
 
@@ -254,20 +286,27 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
                   ent.map { e =>
                     val widget = childWidgets.find(_.id == e)
                     val open = Property(widget.get.open)
+
+                    def toggleRow() = {
+                      val tableChildElement = ClientSession.TableChildElement(field.name,f.objId,widget.get.rowId)
+                      open.set(!open.get)
+                      if (open.get) {
+                        services.clientSession.setTableChildOpen(tableChildElement)
+                        widget.get.widget.afterRender()
+                      } else {
+                        services.clientSession.setTableChildClose(tableChildElement)
+                      }
+                    }
+
                     frag(
                       tr(`class` := TestHooks.tableChildRow,ClientConf.style.childTableTr,
                         td(ClientConf.style.childTableTd, ClientConf.style.childTableAction, a(id := TestHooks.tableChildButtonId(f.objId,widget.get.rowId), produce(open) {
                           case true => span(Icons.caretDown).render
                           case false => span(Icons.caretRight).render
-                        }, onclick :+= ((e: Event) => {
-                          open.set(!open.get)
-                          if (open.get) {
-                            widget.get.widget.afterRender()
-                          }
-                        }))),
+                        }, onclick :+= ((e: Event) => toggleRow()))),
                         autoRelease(produce(widget.get.data) { data => fields.map(x => td(ClientConf.style.childTableTd, data.get(x.name))).render }),
                       ),
-                      tr(ClientConf.style.childTableTr, ClientConf.style.childFormTableTr,
+                      tr(ClientConf.style.childTableTr, ClientConf.style.childFormTableTr, id := TestHooks.tableChildRowId(f.objId,widget.get.rowId),
                         autoRelease(produce(open) { o =>
                           if (!o) frag().render else
                             td(ClientConf.style.childFormTableTd, colspan := fields.length + 1,

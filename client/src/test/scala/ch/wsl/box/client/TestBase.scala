@@ -1,5 +1,7 @@
 package ch.wsl.box.client
 
+import ch.wsl.box.client.mocks.RestMock
+import ch.wsl.box.client.services.REST
 import org.scalajs.dom.{document, window}
 import scribe.{Level, Logger, Logging}
 import utest.{ArrowAssert, TestSuite}
@@ -11,7 +13,9 @@ trait TestBase extends TestSuite with Logging {
 
   Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
 
-  def injector:Design = TestModule.test
+  def rest:REST = new RestMock
+
+  def injector:Design = TestModule(rest).test
 
   Context.init(injector)
 
