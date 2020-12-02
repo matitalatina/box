@@ -27,7 +27,7 @@ trait TestBase extends TestSuite with Logging {
 
   def shouldBe(condition: Boolean) = {
     if(!condition) {
-
+      println(document.documentElement.outerHTML)
     }
     condition ==> true
   }

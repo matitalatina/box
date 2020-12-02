@@ -1,6 +1,7 @@
 package ch.wsl.box.client.mocks
 
-import ch.wsl.box.model.shared.{Child, FormActionsMetadata, JSONField, JSONFieldTypes, JSONID, JSONKeyValue, JSONMetadata, Layout, LayoutBlock, WidgetsNames}
+import ch.wsl.box.model.shared.{Child, ConditionalField, FormActionsMetadata, JSONField, JSONFieldTypes, JSONID, JSONKeyValue, JSONMetadata, Layout, LayoutBlock, WidgetsNames}
+import io.circe._, io.circe.syntax._
 
 object Values {
   val headerLangEn = "test header en"
@@ -21,6 +22,10 @@ object Values {
 
   val testFormName = "test_form"
   val testFormTitle = "test form"
+
+  val conditionerField = "test_conditioner"
+  val conditionalField = "test_conditional"
+  val conditionalValue = "active"
 
   val formEntities = Seq(testFormName)
 
@@ -44,6 +49,17 @@ object Values {
         readOnly = true
       ),
       JSONField(
+        JSONFieldTypes.STRING,
+        name = conditionerField,
+        nullable = true
+      ),
+      JSONField(
+        JSONFieldTypes.STRING,
+        name = conditionalField,
+        nullable = true,
+        condition = Some(ConditionalField(conditionerField,Seq(conditionalValue.asJson)))
+      ),
+      JSONField(
         JSONFieldTypes.CHILD,
         name = "child",
         widget = Some(WidgetsNames.tableChild),
@@ -57,7 +73,12 @@ object Values {
         ))
       )
     ),
-    layout = Layout(Seq(LayoutBlock(None,12,Seq(Left("child"),Left(readOnlyField))))),
+    layout = Layout(Seq(LayoutBlock(None,12,Seq(
+      Left("child"),
+      Left(readOnlyField),
+      Left(conditionerField),
+      Left(conditionalField),
+    )))),
     entity = "test",
     lang = "it",
     tabularFields = Seq("id"),
