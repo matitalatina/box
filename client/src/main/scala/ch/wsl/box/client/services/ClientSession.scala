@@ -151,10 +151,17 @@ class ClientSession(rest:REST) extends Logging {
   def setIDs(ids:IDs) = set(IDS, ids)
   def resetIDs() = set(IDS, None)
 
-  def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).toOption match {
-    case Some(lang) if ClientConf.langs.contains(lang)  => lang
-    case _ if ClientConf.langs.nonEmpty => ClientConf.langs.head
-    case _ => "en"
+  def lang():String = {
+
+    val sessionLang = Try(dom.window.sessionStorage.getItem(LANG)).toOption
+    val browserLang = dom.window.navigator.language
+
+    (sessionLang,browserLang) match {
+      case (Some(lang),_) if ClientConf.langs.contains(lang)  => lang
+      case (_,lang) if ClientConf.langs.contains(lang)  => lang
+      case _ if ClientConf.langs.nonEmpty => ClientConf.langs.head
+      case _ => "en"
+    }
   }
   def setLang(lang:String) = rest.labels(lang).map{ labels =>
     Labels.load(labels)

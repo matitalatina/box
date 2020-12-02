@@ -15,7 +15,7 @@ object Values {
   )
 
   val conf = Map(
-    "langs" -> "en,it",
+    "langs" -> "it,en",
     "display.index.html" -> "true"
   )
 

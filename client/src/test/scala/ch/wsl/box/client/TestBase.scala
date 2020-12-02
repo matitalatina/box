@@ -18,8 +18,10 @@ trait TestBase extends TestSuite with Logging {
   def waitCycle:Future[Boolean] = {
     val promise = Promise[Boolean]
     window.setTimeout(() => {
-      promise.success(true)
-    }, 1000)
+      window.setTimeout(() => {
+        promise.success(true)
+      }, 2000)
+    }, 2000)
     promise.future
   }
 
