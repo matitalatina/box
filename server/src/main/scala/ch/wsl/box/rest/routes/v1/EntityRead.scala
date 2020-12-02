@@ -12,9 +12,10 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONViewActions, Lookup, TableActions, ViewActions}
-import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, JSONSupport, UserProfile}
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
 import scribe.Logging
@@ -47,6 +48,7 @@ object EntityRead extends Logging  {
     import JSONData._
 
     implicit val db = up.db
+    implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
 
 
     pathPrefix("lookup") {

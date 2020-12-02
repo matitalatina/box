@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
+import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.boxentities.BoxExportField.{BoxExportField_i18n_row, BoxExportField_row}
 import ch.wsl.box.model.boxentities.{BoxExport, BoxExportField}
 import ch.wsl.box.model.shared._
@@ -19,6 +20,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
   import io.circe.generic.auto._
 
   implicit val db = up.db
+  implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
 
   def list: Future[Seq[String]] = Auth.boxDB.run{
     BoxExport.BoxExportTable.result

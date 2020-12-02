@@ -10,7 +10,7 @@ import utest._
 
 import scala.concurrent.Future
 
-object ChildTest extends TestSuite with TestBase {
+object ChildTest extends TestBase {
 
   import Context._
 

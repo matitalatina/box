@@ -90,7 +90,7 @@ case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:
       FormMetadataFactory.resetCache()
       EntityMetadataFactory.resetCache()
       RuntimeFunction.resetCache()
-      BoxConfig.load()
+      BoxConfig.load(Auth.boxDB)
       complete(
         HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"reset cache"))
       )

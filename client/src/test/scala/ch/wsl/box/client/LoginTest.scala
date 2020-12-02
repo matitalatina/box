@@ -7,7 +7,7 @@ import org.scalajs.dom.document
 import org.scalajs.dom.window
 
 
-object LoginTest extends TestSuite with TestBase {
+object LoginTest extends TestBase {
 
   import Context._
 

@@ -49,6 +49,7 @@ object Settings {
     val junit = "4.12"
     val scalatest = "3.2.2"
     val selenium = "3.14.0"
+    val testcontainersScalaVersion = "0.35.0"
 
     //logs
     val logback = "1.2.3"
@@ -130,6 +131,8 @@ object Settings {
     "org.seleniumhq.selenium"  %  "selenium-java"    % versions.selenium  % "test",
     "com.typesafe.akka"        %% "akka-testkit"     % versions.akka      % "test",
     "com.typesafe.akka"        %% "akka-http-testkit"% versions.akkaHttp  % "test",
+    "com.dimafeng"             %% "testcontainers-scala-scalatest" % versions.testcontainersScalaVersion % "test",
+    "com.dimafeng"             %% "testcontainers-scala-postgresql" % versions.testcontainersScalaVersion % "test",
     "com.outr"                 %% "scribe"           % versions.scribe,
     "com.outr"                 %% "scribe-slf4j"     % versions.scribe,
     "nz.co.rossphillips"       %% "scala-thumbnailer" % "0.5.SNAPSHOT",
@@ -147,7 +150,8 @@ object Settings {
     "org.graalvm.js" % "js" % "20.2.0",
     "org.javadelight" % "delight-graaljs-sandbox" % "0.1.2",
     "org.scalatest" %% "scalatest" % versions.scalatest % "test",
-    "org.scalatest" %% "scalatest-flatspec" % versions.scalatest % "test"
+    "org.scalatest" %% "scalatest-flatspec" % versions.scalatest % "test",
+    "com.vladsch.flexmark" % "flexmark-all" % "0.35.10" % Test,
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))

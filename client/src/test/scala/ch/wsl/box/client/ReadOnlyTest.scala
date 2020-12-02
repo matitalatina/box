@@ -10,7 +10,7 @@ import utest.{TestSuite, Tests, assert, test}
 
 import scala.concurrent.Future
 
-object ReadOnlyTest extends TestSuite with TestBase {
+object ReadOnlyTest extends TestBase {
 
   import Context._
 

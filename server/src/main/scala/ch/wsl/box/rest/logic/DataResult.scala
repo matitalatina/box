@@ -9,6 +9,10 @@ case class DataResultTable(headers:Seq[String],rows:Seq[Seq[String]]) extends Da
 
   lazy val toMap: Seq[Map[String, String]] = rows.map(r => headers.zip(r).toMap)
 
+  def col(name:String):Seq[String] = toMap.flatMap(_.get(name))
+
+  lazy val colMap:Map[String,Seq[String]] = headers.map(h => h -> col(h)).toMap
+
   def json = {
     toMap.asJson
   }

@@ -7,9 +7,10 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
+import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.utils.{JSONSupport, Timer, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, JSONSupport, Timer, UserProfile}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
@@ -45,6 +46,7 @@ case class Form(
 
 
     implicit val implicitDB = db
+    implicit val boxDb = FullDatabase(db,Auth.adminDB)
 
     private def actions[T](futureForm:Future[JSONMetadata])(f:FormActions => T):Future[T] = for{
       form <- futureForm
@@ -123,7 +125,7 @@ case class Form(
                   complete {
                     actions(metadata) { fs =>
                       for {
-                        rowsChanged <- db.run(fs.updateIfNeeded(id,e).transactionally)
+                        rowsChanged <- db.run(fs.upsertIfNeeded(Some(id),e).transactionally)
                       } yield rowsChanged
                     }
                   }
@@ -164,7 +166,7 @@ case class Form(
     path("schema") {
       get {
         complete {
-          metadata.map(new JSONSchemas().of)
+          metadata.map(new JSONSchemas(Auth.boxDB,Auth.adminDB).of)
         }
       }
     } ~

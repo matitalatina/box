@@ -13,10 +13,10 @@ object DropBox extends App {
 
   println("Dropping box tables")
 
-  val fut = for {
-    _ <- Auth.boxDB.run(Schema.box.drop)
+  def fut(db:Database) = for {
+    _ <- db.run(Schema.box.dropIfExists)
   } yield true
 
-  Await.result(fut,10 seconds)
+  Await.result(fut(Auth.boxDB),10 seconds)
 
 }

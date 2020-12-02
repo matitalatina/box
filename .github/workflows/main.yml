@@ -7,25 +7,33 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
+    env:
+      # define Java options for both official sbt and sbt-extras
+      JAVA_OPTS: -Xms4G -Xmx4G -Xss10M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8 -XX:+CMSClassUnloadingEnabled
+      JVM_OPTS: -Xms4G -Xmx4G -Xss10M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8 -XX:+CMSClassUnloadingEnabled
+      NODE_OPTIONS: --max-old-space-size=2048
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup Scala
+        uses: olafurpg/setup-scala@v10
         with:
-          java-version: 1.8
-#      - name: Copy config
-#        run: cp resources/application.template.conf resources/application.conf
-#      - name: Run tests
-#        env:
-#          TEST_DB_URL: ${{ secrets.TEST_DB_URL }}
-#          TEST_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-#          DB_URL: ${{ secrets.TEST_DB_URL }}
-#          DB_SCHEMA: 'public'
-#          DB_USER: 'postgres'
-#          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-#          BOX_DB_URL: ${{ secrets.TEST_DB_URL }}
-#          BOX_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-#          BOX_DB_SCHEMA: 'box'
-#          BOX_DB_USER: 'postgres'
-#        run: sbt server/test
+          java-version: "adopt@1.8"
+      - name: Node 10.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10.19.0
+      - name: Setup client test env
+        run: npm install
+      - name: Run tests server
+        run: |
+          export PATH=./node_modules/.bin:$PATH
+          sbt codegen/clean
+          sbt server/clean
+          sbt client/clean
+          sbt server/test
+      - name: Run tests client
+        run: |
+          export PATH=./node_modules/.bin:$PATH
+          sbt client/test

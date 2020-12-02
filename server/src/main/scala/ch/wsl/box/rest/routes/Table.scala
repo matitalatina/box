@@ -13,9 +13,10 @@ import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromRequestUnma
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
+import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, FormActions, JSONTableActions, Lookup}
-import ch.wsl.box.rest.utils.{BoxConfig, JSONSupport, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, BoxConfig, JSONSupport, UserProfile}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
@@ -59,6 +60,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
   import ch.wsl.box.model.shared.EntityKind
 
     implicit val db = up.db
+    implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
 
     isBoxTable match{
       case false => Table.tables = Set(name) ++ Table.tables
@@ -227,7 +229,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
 
   def update(id:JSONID):Route = put {
     entity(as[M]) { e =>
-      onComplete(db.run(dbActions.updateIfNeeded(id, e).transactionally)) {
+      onComplete(db.run(dbActions.upsertIfNeeded(Some(id), e).transactionally)) {
         case Success(entity) => complete(entity)
         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
       }

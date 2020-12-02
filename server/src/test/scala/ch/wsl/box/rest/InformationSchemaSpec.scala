@@ -1,7 +1,7 @@
 package ch.wsl.box.rest
 
 import ch.wsl.box.information_schema.{PgColumn, PgInformationSchema}
-import ch.wsl.box.rest.logic.PgColumns
+import ch.wsl.box.jdbc.FullDatabase
 import org.scalatest.concurrent.ScalaFutures
 import slick.lifted.TableQuery
 import ch.wsl.box.jdbc.PostgresProfile.api._
@@ -17,42 +17,42 @@ import scala.concurrent.duration._
   */
 class InformationSchemaSpec extends BaseSpec {
 
-  val infoSchema = new PgInformationSchema("simple", db)
+  def infoSchema(table:String = "simple")(implicit bdb:FullDatabase) = new PgInformationSchema(table)
 
-  "The service" should "query pgcolumn" in {
+  "The service" should "query pgcolumn" in withFullDB { implicit db =>
 
-    val res: Future[Seq[PgColumn]] = db.run(infoSchema.pgColumns.result)
+    val res: Future[Seq[PgColumn]] = infoSchema().columns
 
-    whenReady(res, timeout(10 seconds)) { r =>
-      assert(r.size > 0)
+    res.map{ r =>
+      r.nonEmpty shouldBe true
+      r.length shouldBe 2
+      r.exists(_.column_name == "id") shouldBe true
+      r.exists(_.column_name == "name") shouldBe true
     }
   }
 
-  it should "query pgConstraints" in {
+  it should "query foreign keys" in withFullDB { implicit db =>
 
-    val res = db.run(infoSchema.pgConstraints.result)
+    val res = infoSchema("app_child").fks
 
-    whenReady(res, timeout(10 seconds)) { r =>
-      assert(r.size > 0)
+    res.map{ r =>
+      r.nonEmpty shouldBe true
+      r.length shouldBe 1
+      r.head.keys.length shouldBe 1
+      r.head.keys.head shouldBe "parent_id"
     }
   }
 
-  it should "query pgContraintsUsage" in {
+  it should "query primary key" in withFullDB { implicit db =>
 
-    val res = db.run(infoSchema.pgContraintsUsage.result)
+    val res = infoSchema().pk
 
-    whenReady(res, timeout(10 seconds)) { r =>
-      assert(r.size > 0)
+    res.map{ pk =>
+      pk.keys.nonEmpty shouldBe true
+      pk.keys.length shouldBe 1
+      pk.keys.head shouldBe "id"
     }
   }
 
-  it should "retrive pk" in {
-      val res1  = db.run(infoSchema.pkQ.result)
-      whenReady(res1, timeout(10 seconds)){r =>
-        print(r)
-        assert(r.size >0)
-      }
-
-  }
 
 }

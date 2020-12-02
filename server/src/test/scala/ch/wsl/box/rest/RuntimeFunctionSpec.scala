@@ -9,11 +9,11 @@ import ch.wsl.box.rest.logic.functions.{Context, RuntimeFunction, RuntimePSQL, R
 import ch.wsl.box.rest.utils.{Lang, UserProfile}
 import io.circe.Json
 
+import ch.wsl.box.jdbc.PostgresProfile.api._
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class RuntimeFunctionSpec extends BaseSpec {
-
-  import ch.wsl.box.jdbc.PostgresProfile.api._
 
 
   val dr = DataResultTable(Seq("aa"),Seq(Seq("aa","bb")))
@@ -34,32 +34,35 @@ class RuntimeFunctionSpec extends BaseSpec {
     }
     )
 
-  "Function" should "be parsed and evaluated" in {
+  "Function" should "be parsed and evaluated" in withUserProfile { implicit up =>
 
     val code =
       """
         |Future.successful(DataResultTable(Seq(),Seq(Seq("test"))))
       """.stripMargin
+
+    assert(true)
+
     val f = RuntimeFunction("test1",code)
-    whenReady(f(context,"en")) { result =>
+    f(context,"en").map{ result =>
       assert(result.asInstanceOf[DataResultTable].rows.head.head == "test")
     }
   }
 
-  "Function" should "with external call should be parsed and evaluated" in {
+  it should "with external call should be parsed and evaluated" in withUserProfile { implicit up =>
 
     val code =
       """
         |context.psql.function("",Seq()).map(_.get)
       """.stripMargin
     val f = RuntimeFunction("test2",code)
-    whenReady(f(context,"en")) { result =>
+    f(context,"en").map{ result =>
       assert(result == dr)
     }
   }
 
 
-  "Function" should "with ws call should be parsed and evaluated" in {
+  it should "with ws call should be parsed and evaluated" in withUserProfile { implicit up =>
 
     val code =
       """
@@ -68,7 +71,7 @@ class RuntimeFunctionSpec extends BaseSpec {
         |} yield DataResultTable(Seq(result),Seq())
       """.stripMargin
     val f = RuntimeFunction("test3",code)
-    whenReady(f(RuntimeFunction.context(Json.Null),"en")) { result =>
+    f(RuntimeFunction.context(Json.Null),"en").map{ result =>
       assert(result.asInstanceOf[DataResultTable].headers.nonEmpty)
     }
   }
@@ -76,7 +79,7 @@ class RuntimeFunctionSpec extends BaseSpec {
 
 
 
-  "Function" should "do a POST call as well" in {
+  it should "do a POST call as well" in withUserProfile { implicit up =>
     val code =
       """
         |for{
@@ -84,7 +87,7 @@ class RuntimeFunctionSpec extends BaseSpec {
         |} yield DataResultTable(Seq(result),Seq())
       """.stripMargin
     val f = RuntimeFunction("test4",code)
-    whenReady(f(RuntimeFunction.context(Json.Null),"en")) { result =>
+    f(RuntimeFunction.context(Json.Null),"en").map{ result =>
       assert(result.asInstanceOf[DataResultTable].headers.head.contains("data"))
     }
   }

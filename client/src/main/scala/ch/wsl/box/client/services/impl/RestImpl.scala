@@ -56,7 +56,7 @@ class RestImpl(httpClient:HttpClient) extends REST with Logging {
 
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json] = httpClient.get[Json](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"))
-  def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[Int] = httpClient.put[Json,Int](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"),data)
+  def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[JSONID] = httpClient.put[Json,JSONID](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"),data)
   def insert(kind:String, lang:String, entity:String, data:Json): Future[JSONID] = httpClient.post[Json,JSONID](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity"),data)
   def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount] = httpClient.delete[JSONCount](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"))
 

@@ -19,13 +19,13 @@ object BoxConfig extends Logging {
 
   private var conf: Map[String, String] = Map()
 
-  def load()(implicit ec: ExecutionContext) = {
+  def load(boxDb:Database)(implicit ec: ExecutionContext) = {
 
     val query = for {
       row <- ch.wsl.box.model.boxentities.BoxConf.BoxConfTable
     } yield row
 
-    conf = Await.result(Auth.boxDB.run(query.result).map {
+    conf = Await.result(boxDb.run(query.result).map {
       _.map { row =>
         row.key -> row.value.getOrElse("")
       }.toMap
@@ -87,7 +87,10 @@ object BoxConfig extends Logging {
   def logDB = Try(conf("log.db").equals("true")).getOrElse(false)
 
 
-  def enableCache:Boolean = Try(conf("cache.enable").equals("true")).getOrElse(true)
+  def enableCache:Boolean = {
+    val result = Try(conf("cache.enable").equals("true")).getOrElse(true)
+    result
+  }
 
 
   def dtFormatDatetime = Try(conf("dtformat.datetime")).getOrElse("yyyy-MM-dd HH:mm")
