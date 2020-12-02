@@ -4,10 +4,10 @@ import ch.wsl.box.client.mocks.{HttpClientMock, RestMock}
 import ch.wsl.box.client.services.{ClientSession, HttpClient, Navigator, REST}
 import wvlet.airframe._
 
-object TestModule {
+case class TestModule(rest:REST)  {
   val test = newDesign
     .bind[HttpClient].to[HttpClientMock]
-    .bind[REST].to[RestMock]
+    .bind[REST].toInstance(rest)
     .bind[ClientSession].toSingleton
     .bind[Navigator].toSingleton
 }

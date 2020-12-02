@@ -163,7 +163,7 @@ case class FormActions(metadata:JSONMetadata,
     logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
     dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
       logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")
-      Registry().actions(child.entity).delete(idsToDelete)
+      jsonActions(child.entity).delete(idsToDelete)
     }
   }
 

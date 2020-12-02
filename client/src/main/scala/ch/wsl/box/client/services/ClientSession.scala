@@ -1,7 +1,7 @@
 package ch.wsl.box.client.services
 
 import ch.wsl.box.client.{Context, IndexState, LoginState}
-import ch.wsl.box.model.shared.{IDs, JSONQuery, LoginRequest}
+import ch.wsl.box.model.shared.{IDs, JSONID, JSONQuery, LoginRequest}
 import io.udash.properties.single.Property
 import org.scalajs.dom
 import scribe.Logging
@@ -25,6 +25,9 @@ object ClientSession {
   final val LANG = "lang"
   final val LABELS = "labels"
   final val STATE = "state"
+  final val TABLECHILD_OPEN = "tablechild_open"
+
+  case class TableChildElement(field:String,childFormId:Int,id:Option[JSONID])
 }
 
 class ClientSession(rest:REST) extends Logging {
@@ -151,14 +154,36 @@ class ClientSession(rest:REST) extends Logging {
   def setIDs(ids:IDs) = set(IDS, ids)
   def resetIDs() = set(IDS, None)
 
-  def lang():String = Try(dom.window.sessionStorage.getItem(LANG)).toOption match {
-    case Some(lang) if ClientConf.langs.contains(lang)  => lang
-    case _ if ClientConf.langs.nonEmpty => ClientConf.langs.head
-    case _ => "en"
+
+
+  def isTableChildOpen(tc:TableChildElement):Boolean = get[Seq[TableChildElement]](TABLECHILD_OPEN).toSeq.flatten.contains(tc)
+  def setTableChildOpen(tc:TableChildElement) = set(
+    TABLECHILD_OPEN,
+    (get[Seq[TableChildElement]](TABLECHILD_OPEN).toSeq.flatten ++ Seq(tc)).distinct
+  )
+  def setTableChildClose(tc:TableChildElement) = set(
+    TABLECHILD_OPEN,
+    get[Seq[TableChildElement]](TABLECHILD_OPEN).toSeq.flatten.filterNot(_ == tc)
+  )
+
+  def lang():String = {
+
+    val sessionLang = Try(dom.window.sessionStorage.getItem(LANG)).toOption
+    val browserLang = dom.window.navigator.language
+
+    (sessionLang,browserLang) match {
+      case (Some(lang),_) if ClientConf.langs.contains(lang)  => lang
+      case (_,lang) if ClientConf.langs.contains(lang)  => lang
+      case _ if ClientConf.langs.nonEmpty => ClientConf.langs.head
+      case _ => "en"
+    }
   }
   def setLang(lang:String) = rest.labels(lang).map{ labels =>
     Labels.load(labels)
     dom.window.sessionStorage.setItem(LANG,lang)
     Context.applicationInstance.reload()
   }
+
+
+
 }
