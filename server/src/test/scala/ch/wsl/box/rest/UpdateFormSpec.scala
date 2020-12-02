@@ -1,21 +1,15 @@
 package ch.wsl.box.rest
 
-import java.util.UUID
 
 import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.rest.logic.FormActions
-import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, JSONID, JSONKeyValue, JSONMetadata}
-import ch.wsl.box.rest.metadata.FormMetadataFactory
+import ch.wsl.box.model.shared.{JSONID, JSONKeyValue}
+import ch.wsl.box.rest.metadata.{ FormMetadataFactory}
 import ch.wsl.box.testmodel.EntityActionsRegistry
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.model.boxentities.BoxField.{BoxFieldTable, BoxField_i18n_row, BoxField_row}
-import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_i18n_row, BoxForm_row}
+import ch.wsl.box.rest.fixtures.{AppManagedIdFixtures, DbManagedIdFixtures, FormFixtures}
 import ch.wsl.box.rest.utils.UserProfile
 import io.circe.Json
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
-
 import ch.wsl.box.shared.utils.JSONUtils._
 
 
@@ -39,7 +33,6 @@ class UpdateFormSpec extends BaseSpec {
       i <- up.db.run(actions.upsertIfNeeded(id,json).transactionally)
       result <- up.db.run(actions.getById(i))
     } yield result
-
   }
 
   def appManagedUpsert(id:JSONID, json:Json)(implicit up:UserProfile, fdb: FullDatabase) = {
@@ -120,190 +113,4 @@ class UpdateFormSpec extends BaseSpec {
 
   }
 
-
-}
-
-class FormFixtures(tablePrefix:String)(implicit ec:ExecutionContext) {
-
-  val parentName = tablePrefix + "parent"
-  val childName = tablePrefix + "child"
-  val subchildName = tablePrefix + "subchild"
-
-  private val parentForm = BoxForm_row(
-    name = parentName,
-    entity = parentName,
-    layout = Some(
-      """
-        |{
-        |  "blocks" : [
-        |    {
-        |      "title" : null,
-        |      "width" : 6,
-        |      "fields" : [
-        |       "id",
-        |       "name",
-        |       "childs"
-        |      ]
-        |    }
-        |  ]
-        |}
-        |""".stripMargin)
-  )
-
-  private val childForm = BoxForm_row(
-    name = childName,
-    entity = childName,
-    layout = Some(
-      """
-        |{
-        |  "blocks" : [
-        |    {
-        |      "title" : null,
-        |      "width" : 6,
-        |      "fields" : [
-        |       "id",
-        |       "name",
-        |       "subchilds"
-        |      ]
-        |    }
-        |  ]
-        |}
-        |""".stripMargin)
-  )
-
-  private val subchildForm = BoxForm_row(
-    name = subchildName,
-    entity = subchildName,
-    layout = Some(
-      """
-        |{
-        |  "blocks" : [
-        |    {
-        |      "title" : null,
-        |      "width" : 6,
-        |      "fields" : [
-        |       "id",
-        |       "name"
-        |      ]
-        |    }
-        |  ]
-        |}
-        |""".stripMargin)
-  )
-
-  private def parentFormFields(parentFormId:Int,childFormId:Int) = Seq(
-    BoxField_row(form_id = parentFormId, `type` = JSONFieldTypes.NUMBER, name = "id"),
-    BoxField_row(form_id = parentFormId, `type` = JSONFieldTypes.STRING, name = "name"),
-    BoxField_row(form_id = parentFormId, `type` = JSONFieldTypes.CHILD, name = "childs",child_form_id = Some(childFormId),masterFields = Some("id"),childFields = Some("parent_id"))
-  )
-
-  private def childFormFields(childFormId:Int,subchildFormId:Int) = Seq(
-    BoxField_row(form_id = childFormId, `type` = JSONFieldTypes.NUMBER, name = "id"),
-    BoxField_row(form_id = childFormId, `type` = JSONFieldTypes.STRING, name = "name"),
-    BoxField_row(form_id = childFormId, `type` = JSONFieldTypes.NUMBER, name = "parent_id"),
-    BoxField_row(form_id = childFormId, `type` = JSONFieldTypes.CHILD, name = "subchilds",child_form_id = Some(subchildFormId),masterFields = Some("id"),childFields = Some("child_id")),
-  )
-
-  private def subchildFormFields(subchildFormId:Int) = Seq(
-    BoxField_row(form_id = subchildFormId, `type` = JSONFieldTypes.NUMBER, name = "id"),
-    BoxField_row(form_id = subchildFormId, `type` = JSONFieldTypes.STRING, name = "name"),
-    BoxField_row(form_id = subchildFormId, `type` = JSONFieldTypes.NUMBER, name = "child_id"),
-  )
-
-
-  def insertForm()(implicit up:UserProfile) = for{
-    _ <- up.boxDb.run(BoxFormTable.filter(x => x.name === parentName || x.name === childName ).delete)
-    parentId <- up.boxDb.run( (BoxFormTable returning BoxFormTable.map(_.form_id)) += parentForm)
-    childId <- up.boxDb.run( (BoxFormTable returning BoxFormTable.map(_.form_id)) += childForm)
-    subchildId <- up.boxDb.run( (BoxFormTable returning BoxFormTable.map(_.form_id)) += subchildForm)
-    _ <- up.boxDb.run(DBIO.sequence(parentFormFields(parentId,childId).map(x => BoxFieldTable += x)))
-    _ <- up.boxDb.run(DBIO.sequence(childFormFields(childId,subchildId).map(x => BoxFieldTable += x)))
-    _ <- up.boxDb.run(DBIO.sequence(subchildFormFields(subchildId).map(x => BoxFieldTable += x)))
-  } yield {
-    parentForm.name
-  }
-}
-
-object AppManagedIdFixtures{
-  val layers = Map(
-    1 -> s"""
-            |{
-            |  "id": 1,
-            |  "name": "parent",
-            |  "childs" : [
-            |  ]
-            |}
-    """.stripMargin.trim,
-    2 -> s"""
-            |{
-            |  "id": 1,
-            |  "name": "parent",
-            |  "childs": [
-            |     {
-            |       "id": 1,
-            |       "name": "child",
-            |       "parent_id": 1,
-            |       "subchilds": []
-            |     }
-            |  ]
-            |}
-    """.stripMargin.trim,
-    3 -> s"""
-            |{
-            |  "id": 1,
-            |  "name": "parent",
-            |  "childs": [
-            |     {
-            |       "id": 1,
-            |       "name": "child",
-            |       "parent_id": 1,
-            |       "subchilds": [
-            |         {
-            |           "id": 1,
-            |           "name": "subchild",
-            |           "child_id": 1
-            |         }
-            |       ]
-            |     }
-            |  ]
-            |}
-    """.stripMargin.trim
-  )
-}
-
-object DbManagedIdFixtures{
-  val layers = Map(
-    1 -> s"""
-            |{
-            |  "name": "parent",
-            |  "childs" : [
-            |  ]
-            |}
-    """.stripMargin.trim,
-    2 -> s"""
-            |{
-            |  "name": "parent",
-            |  "childs": [
-            |     {
-            |       "name": "child"
-            |     }
-            |  ]
-            |}
-    """.stripMargin.trim,
-    3 -> s"""
-            |{
-            |  "name": "parent",
-            |  "childs": [
-            |     {
-            |       "name": "child",
-            |       "subchilds": [
-            |         {
-            |           "name": "subchild"
-            |         }
-            |       ]
-            |     }
-            |  ]
-            |}
-    """.stripMargin.trim
-  )
 }
