@@ -74,7 +74,7 @@ class RestMock extends REST with Logging {
     ???
   }
 
-  override def metadata(kind: String, lang: String, entity: String): Future[JSONMetadata] = Future.successful{
+  override def metadata(kind: String, lang: String, entity: String, public:Boolean): Future[JSONMetadata] = Future.successful{
     Values.metadata
   }
 
@@ -83,7 +83,7 @@ class RestMock extends REST with Logging {
     ???
   }
 
-  override def children(kind: String, entity: String, lang: String): Future[Seq[JSONMetadata]] = Future.successful{
+  override def children(kind: String, entity: String, lang: String, public:Boolean): Future[Seq[JSONMetadata]] = Future.successful{
     Seq(Values.childMetadata,Values.subchildMetadata)
   }
 
@@ -116,7 +116,7 @@ class RestMock extends REST with Logging {
     ???
   }
 
-  override def insert(kind: String, lang: String, entity: String, data: Json): Future[JSONID] = Future.successful{
+  override def insert(kind: String, lang: String, entity: String, data: Json, public:Boolean): Future[JSONID] = Future.successful{
     JSONID(id = Vector(JSONKeyValue("id","1")))
   }
 

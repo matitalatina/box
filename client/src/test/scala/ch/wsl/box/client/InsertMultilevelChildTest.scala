@@ -20,7 +20,7 @@ object InsertMultilevelChildTest extends TestBase {
   val subchildText = "Test Sub"
 
   class ExpectingMock extends RestMock {
-    override def insert(kind: String, lang: String, entity: String, data: Json): Future[JSONID] = {
+    override def insert(kind: String, lang: String, entity: String, data: Json, public:Boolean): Future[JSONID] = {
 
       logger.info(data.toString())
 
@@ -45,7 +45,7 @@ object InsertMultilevelChildTest extends TestBase {
         _ <- Context.services.clientSession.login("test", "test")
         _ <- waitCycle
         _ <- Future {
-          Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", None))
+          Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", None,false))
         }
         _ <- waitCycle
         _ <- Future {

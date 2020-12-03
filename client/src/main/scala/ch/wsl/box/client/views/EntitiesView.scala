@@ -41,9 +41,11 @@ class EntitiesPresenter(model:ModelProperty[Entities]) extends Presenter[Entitie
 
   override def handleState(state: EntitiesState): Unit = {
     model.subProp(_.kind).set(Some(state.kind))
-    services.rest.entities(state.kind).map{ models =>
-      model.subSeq(_.list).set(models)
-      model.subSeq(_.filteredList).set(models)
+    if(services.clientSession.logged.get) {
+      services.rest.entities(state.kind).map { models =>
+        model.subSeq(_.list).set(models)
+        model.subSeq(_.filteredList).set(models)
+      }
     }
 
     if(state.currentEntity != "") {

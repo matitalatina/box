@@ -38,7 +38,8 @@ case class EntityFormState(
                             kind:String,
                             entity:String,
                             write:String,
-                            _id:Option[String]
+                            _id:Option[String],
+                            public:Boolean
                           ) extends FinalRoutingState(Some(EntitiesState(kind,entity))) {
   def id = {
     val t = _id.map(URIUtils.decodeURI)

@@ -59,7 +59,10 @@ class ClientSession(rest:REST) extends Logging {
       case false => {
         logger.info("No valid session found")
         dom.window.sessionStorage.removeItem(USER)
-        logoutAndSaveState()
+        logger.info(Context.applicationInstance.currentState.url(applicationInstance))
+        if(!Context.applicationInstance.currentState.url(applicationInstance).startsWith("/public")) {
+          logoutAndSaveState()
+        }
       }
     }
   }

@@ -11,7 +11,7 @@ class StatesToViewPresenterDef extends ViewFactoryRegistry[RoutingState] {
     case LoginState => LoginViewPresenter
     case EntitiesState(kind,currentEntity) => EntitiesViewPresenter(kind,currentEntity,2)
     case EntityTableState(kind,entity) => EntityTableViewPresenter(Routes(kind,entity))
-    case EntityFormState(kind,entity,write,id) => EntityFormViewPresenter
+    case EntityFormState(kind,entity,write,id,public) => EntityFormViewPresenter
     //case MasterChildState(_,master,child) => MasterChildViewPresenter(master,child)
     case DataState(_,_) => DataViewPresenter
     case DataListState(_,currentExport) => DataListViewPresenter(currentExport)

@@ -25,9 +25,9 @@ object Routes {
   }
 
   def apply(kind:String, entityName:String) = new Routes{
-    def add() = EntityFormState(kind,entityName,"true",None)
-    def edit(id:String) = EntityFormState(kind,entityName,"true",Some(id))
-    def show(id:String) = EntityFormState(kind,entityName,"false",Some(id))
+    def add() = EntityFormState(kind,entityName,"true",None,false)
+    def edit(id:String) = EntityFormState(kind,entityName,"true",Some(id),false)
+    def show(id:String) = EntityFormState(kind,entityName,"false",Some(id),false)
     def entity() = EntityTableState(kind,entityName)
     def entity(name:String) = EntityTableState(kind,name)
   }

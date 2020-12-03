@@ -34,14 +34,15 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {
     case "/exports"  => DataListState(DataKind.EXPORT,"")
     case "/box" / "export" / exportFunction  => DataState(DataKind.EXPORT,exportFunction)
     case "/box" / "function" / exportFunction  => DataState(DataKind.FUNCTION,exportFunction)
-    case "/box" / kind / entity / "insert" => EntityFormState(kind,entity,"true",None)
-    case "/box" / kind / entity / "row" / write / id  => EntityFormState(kind,entity,write,Some(id))
+    case "/box" / kind / entity / "insert" => EntityFormState(kind,entity,"true",None,false)
+    case "/box" / kind / entity / "row" / write / id  => EntityFormState(kind,entity,write,Some(id),false)
     case "/box" / kind / entity / "child" / childEntity => MasterChildState(kind,entity,childEntity)
     case "/box" / kind / entity => EntityTableState(kind,entity)
     case "/admin"  => AdminState
   }
 
   private val (loggedOutUrl2State, loggedOutState2Url) = bidirectional {
+    case "/public" / "box" / kind / entity / "insert" => EntityFormState(kind,entity,"true",None,true)
     case "" => LoginState
   }
 }
