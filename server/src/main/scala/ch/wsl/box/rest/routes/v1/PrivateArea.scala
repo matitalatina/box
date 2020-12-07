@@ -98,6 +98,7 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
       forms ~
       form ~
       news ~
+      new WebsocketNotifications().route ~
       Admin(session).route
   }
 }

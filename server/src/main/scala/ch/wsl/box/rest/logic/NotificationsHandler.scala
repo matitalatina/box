@@ -4,6 +4,7 @@ import java.sql.Connection
 
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import org.postgresql.PGConnection
+import scribe.Logging
 
 trait PgNotifier{
   def stop()
@@ -11,7 +12,7 @@ trait PgNotifier{
 
 object NotificationsHandler {
 
-  def create(db:Database,channel:String,callback: () => Unit):PgNotifier = new PgNotifier {
+  def create(db:Database,channel:String,callback: (String) => Unit):PgNotifier = new PgNotifier {
     val listener = new Listener(db.source.createConnection(),channel,callback)
     listener.start()
     override def stop(): Unit = listener.stopRunning()
@@ -21,13 +22,15 @@ object NotificationsHandler {
 
 import java.sql.SQLException
 
-class Listener(conn: Connection,channel:String,callback: () => Unit) extends Thread {
+class Listener(conn: Connection,channel:String,callback: (String) => Unit) extends Thread with Logging {
   private var running = true
   def stopRunning() = {
     running = false
   }
   private val stmt = conn.createStatement
-  stmt.execute(s"LISTEN $channel")
+  val listenQuery = s"LISTEN $channel"
+  logger.info(listenQuery)
+  stmt.execute(listenQuery)
   stmt.close
   private val pgconn:PGConnection = conn.unwrap(classOf[PGConnection])
 
@@ -38,8 +41,13 @@ class Listener(conn: Connection,channel:String,callback: () => Unit) extends Thr
       // receive notifications immediately:
       val notifications = pgconn.getNotifications(10000)
       if(notifications != null) {
-        notifications.foreach{ _ =>
-          callback()
+        notifications.foreach{ n =>
+          println(s"""
+             |Recived notification:
+             |name: ${n.getName}
+             |parameter: ${n.getParameter}
+             |""".stripMargin)
+          callback(n.getParameter)
         }
       }
       // wait a while before checking again for new
