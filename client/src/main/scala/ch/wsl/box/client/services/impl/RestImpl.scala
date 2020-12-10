@@ -39,11 +39,17 @@ class RestImpl(httpClient:HttpClient) extends REST with Logging {
   def count(kind:String, lang:String, entity:String): Future[Int] = httpClient.get[Int](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/count"))
   def keys(kind:String, lang:String, entity:String): Future[Seq[String]] = httpClient.get[Seq[String]](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/keys"))
   def ids(kind:String, lang:String, entity:String, q:JSONQuery): Future[IDs] = httpClient.post[JSONQuery,IDs](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/ids"),q)
-  def metadata(kind:String, lang:String, entity:String): Future[JSONMetadata] = httpClient.get[JSONMetadata](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/metadata"))
+  def metadata(kind:String, lang:String, entity:String, public:Boolean): Future[JSONMetadata] = {
+    val prefix = if(public) "/public" else ""
+    httpClient.get[JSONMetadata](Routes.apiV1(s"$prefix/${EntityKind(kind).entityOrForm}/$lang/$entity/metadata"))
+  }
   def tabularMetadata(kind:String, lang:String, entity:String): Future[JSONMetadata] = httpClient.get[JSONMetadata](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/tabularMetadata"))
 
   //only for forms
-  def children(kind:String, entity:String, lang:String): Future[Seq[JSONMetadata]] = httpClient.get[Seq[JSONMetadata]](Routes.apiV1(s"/$kind/$lang/$entity/children"))
+  def children(kind:String, entity:String, lang:String, public:Boolean): Future[Seq[JSONMetadata]] = {
+    val prefix = if(public) "/public" else ""
+    httpClient.get[Seq[JSONMetadata]](Routes.apiV1(s"$prefix/$kind/$lang/$entity/children"))
+  }
   def lookup(lang:String,lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]] = {
     queryWithSubstitutions.as[JSONQuery] match {
       case Right(query) => httpClient.post[JSONQuery, Seq[JSONLookup]](Routes.apiV1(s"/entity/$lang/$lookupEntity/lookup/${map.textProperty}/${map.valueProperty}"), query)
@@ -57,7 +63,10 @@ class RestImpl(httpClient:HttpClient) extends REST with Logging {
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json] = httpClient.get[Json](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"))
   def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[JSONID] = httpClient.put[Json,JSONID](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"),data)
-  def insert(kind:String, lang:String, entity:String, data:Json): Future[JSONID] = httpClient.post[Json,JSONID](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity"),data)
+  def insert(kind:String, lang:String, entity:String, data:Json, public:Boolean): Future[JSONID] = {
+    val prefix = if(public) "/public" else ""
+    httpClient.post[Json,JSONID](Routes.apiV1(s"$prefix/${EntityKind(kind).entityOrForm}/$lang/$entity"),data)
+  }
   def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount] = httpClient.delete[JSONCount](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"))
 
   //files

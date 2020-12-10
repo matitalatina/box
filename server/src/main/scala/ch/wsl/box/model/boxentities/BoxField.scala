@@ -37,7 +37,7 @@ object BoxField {
     def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues,params,read_only) <> (BoxField_row.tupled, BoxField_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
-    val field_id: Rep[Int] = column[Int]("field_id", O.AutoInc, O.PrimaryKey)
+    val field_id: Rep[Int] = column[Int]("field_id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
     /** Database column form_id SqlType(int4) */
     val form_id: Rep[Int] = column[Int]("form_id")
     /** Database column type SqlType(text)
@@ -90,7 +90,7 @@ object BoxField {
     def ? = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField).shaped.<>({ r=>import r._; _1.map(_=> BoxField_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
-    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
     /** Database column field_id SqlType(int4), Default(None) */
     val field_id: Rep[Option[Int]] = column[Option[Int]]("field_id", O.Default(None))
     /** Database column lang SqlType(bpchar), Length(2,false), Default(None) */

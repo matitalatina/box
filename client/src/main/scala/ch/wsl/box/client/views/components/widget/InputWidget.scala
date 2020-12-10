@@ -102,7 +102,11 @@ object InputWidget extends Logging {
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
 
 
-    val allModifiers = inputRendererDefaultModifiers++ph++ WidgetUtils.toNullable(field.nullable) ++modifiers
+    val allModifiers:Seq[Modifier] =  inputRendererDefaultModifiers++
+                        ph ++
+                        WidgetUtils.toNullable(field.nullable) ++
+                        Seq(`class` := TestHooks.formField(field.name)) ++
+                        modifiers
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin,
       if(reallyWithLabel) WidgetUtils.toLabel(field, skipRequiredInfo) else {},
@@ -123,7 +127,7 @@ object InputWidget extends Logging {
     override def edit() = editMe(field,true, false, modifiers){ case y =>
 
       val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
-      TextInput(stringModel)(y ++ Seq(`class` := TestHooks.formField(field.name)):_*).render
+      TextInput(stringModel)(y:_*).render
     }
     override protected def show(): JsDom.all.Modifier = {
       autoRelease(showMe(prop,field,true, modifiers))

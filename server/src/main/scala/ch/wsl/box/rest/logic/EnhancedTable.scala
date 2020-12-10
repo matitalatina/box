@@ -23,17 +23,16 @@ case class Col(rep:Rep[_],`type`:ColType)
   * to retrieve the instance of a column
  */
 
+object EnhancedTable  extends Logging {
 
-object EnhancedTable extends Logging {
+    implicit class EnTable[T](t: Table[_]) {
 
-  implicit class EnTable[T](t: Table[_]) {
+      val table = t
 
-    val table = t
+      private val rm = scala.reflect.runtime.currentMirror
 
-    private val rm = scala.reflect.runtime.currentMirror
-
-    private def accessor(field:String):MethodSymbol = {
-      try {
+      private def accessor(field: String): MethodSymbol = {
+        try {
 
           rm.classSymbol(t.getClass).toType.members.collectFirst {
             case m: MethodSymbol if m.name.toString == field => m
@@ -47,21 +46,23 @@ object EnhancedTable extends Logging {
       }
 
 
-    private def rep(field:String) = rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[ch.wsl.box.jdbc.PostgresProfile.api.Rep[_]]
+      private def rep(field: String) = rm.reflect(t).reflectMethod(accessor(field)).apply().asInstanceOf[ch.wsl.box.jdbc.PostgresProfile.api.Rep[_]]
 
-    def col(field: String)(implicit ec:ExecutionContext):Col = {
-      Col(
-        rep(field),
-        typ(field)
-      )
+      def col(field: String)(implicit ec: ExecutionContext): Col = {
+        Col(
+          rep(field),
+          typ(field)
+        )
+      }
+
+      def typ(field: String) = {
+        EntityMetadataFactory.fieldType(t.tableName, field)
+      }
+
+
     }
 
-    def typ(field:String) = {
-      EntityMetadataFactory.fieldType(t.tableName,field)
-    }
 
-
-  }
 
 }
 

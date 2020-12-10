@@ -38,7 +38,7 @@ object BoxForm {
     def * = (Rep.Some(form_id), name, entity, description, layout, tabularFields, query,exportFields,guest_user,edit_key_field) <> (BoxForm_row.tupled, BoxForm_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
-    val form_id: Rep[Int] = column[Int]("form_id", O.AutoInc, O.PrimaryKey)
+    val form_id: Rep[Int] = column[Int]("form_id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
     /** Database column name SqlType(text), Default(None) */
     val name: Rep[String] = column[String]("name")
     val entity: Rep[String] = column[String]("entity")
@@ -75,7 +75,7 @@ object BoxForm {
     def * = (Rep.Some(id), form_id, lang, label, tooltip, hint,viewTable) <> (BoxForm_i18n_row.tupled, BoxForm_i18n_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
-    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
     /** Database column field_id SqlType(int4), Default(None) */
     val form_id: Rep[Option[Int]] = column[Option[Int]]("form_id", O.Default(None))
     /** Database column lang SqlType(bpchar), Length(2,false), Default(None) */
@@ -109,7 +109,7 @@ object BoxForm {
   class BoxForm_actions(_tableTag: Tag) extends profile.api.Table[BoxForm_actions_row](_tableTag, "form_actions") {
     def * = (Rep.Some(id), form_id, action, importance, after_action_goto, label, update_only, insert_only, reload,confirm_text) <> (BoxForm_actions_row.tupled, BoxForm_actions_row.unapply)
 
-    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
     val form_id: Rep[Option[Int]] = column[Option[Int]]("form_id", O.Default(None))
     val action: Rep[String] = column[String]("action")
     val importance: Rep[String] = column[String]("importance")

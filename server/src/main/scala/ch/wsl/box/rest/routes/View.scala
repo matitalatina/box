@@ -10,9 +10,10 @@ import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
+import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONTableActions, JSONViewActions, Lookup}
-import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, JSONSupport, UserProfile}
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
 import scribe.Logging
@@ -55,7 +56,8 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   import ch.wsl.box.model.shared.EntityKind
   import JSONData._
 
-  implicit val db  = up.db
+  implicit val db = up.db
+  implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
 
   val dbActions = new DbActions[T,M](table)
   val jsonActions = JSONTableActions[T,M](table)

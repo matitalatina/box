@@ -2,13 +2,15 @@ package ch.wsl.box.client.mocks
 
 import ch.wsl.box.client.services.REST
 import ch.wsl.box.model.shared.{Child, ExportDef, FormActionsMetadata, IDs, JSONCount, JSONField, JSONFieldMap, JSONFieldTypes, JSONID, JSONKeyValue, JSONLookup, JSONMetadata, JSONQuery, Layout, LayoutBlock, LoginRequest, NewsEntry, SharedLabels, WidgetsNames}
+import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
 import io.circe.syntax._
 import org.scalajs.dom.File
+import scribe.Logging
 
 import scala.concurrent.Future
 
-class RestMock extends REST {
+class RestMock extends REST with Logging {
   override def version(): Future[String] = Future.successful("version")
 
   override def appVersion(): Future[String] = Future.successful("appVersion")
@@ -72,7 +74,7 @@ class RestMock extends REST {
     ???
   }
 
-  override def metadata(kind: String, lang: String, entity: String): Future[JSONMetadata] = Future.successful{
+  override def metadata(kind: String, lang: String, entity: String, public:Boolean): Future[JSONMetadata] = Future.successful{
     Values.metadata
   }
 
@@ -81,8 +83,8 @@ class RestMock extends REST {
     ???
   }
 
-  override def children(kind: String, entity: String, lang: String): Future[Seq[JSONMetadata]] = Future.successful{
-    Seq(Values.childMetadata)
+  override def children(kind: String, entity: String, lang: String, public:Boolean): Future[Seq[JSONMetadata]] = Future.successful{
+    Seq(Values.childMetadata,Values.subchildMetadata)
   }
 
   override def lookup(lang: String, lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]] = {
@@ -96,7 +98,7 @@ class RestMock extends REST {
         "id" -> 1.asJson,
         Values.readOnlyField -> Values.readOnlyValue.asJson,
         "child" -> Seq(
-          Map("parent_id" -> 1.asJson, "id" -> 1.asJson, "text" -> "test".asJson )
+          Map("parent_id" -> 1.asJson, "id" -> 1.asJson, "text" -> "test".asJson)
         ).asJson
       ).asJson
       case Values.ids.main.doubleChild => Map(
@@ -114,7 +116,7 @@ class RestMock extends REST {
     ???
   }
 
-  override def insert(kind: String, lang: String, entity: String, data: Json): Future[JSONID] = Future.successful{
+  override def insert(kind: String, lang: String, entity: String, data: Json, public:Boolean): Future[JSONID] = Future.successful{
     JSONID(id = Vector(JSONKeyValue("id","1")))
   }
 

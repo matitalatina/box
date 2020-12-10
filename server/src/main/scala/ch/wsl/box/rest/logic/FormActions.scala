@@ -5,13 +5,12 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import ch.wsl.box
 import ch.wsl.box.jdbc
-import ch.wsl.box.jdbc.PostgresProfile
+import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile}
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.routes.enablers.CSVDownload
 import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
-
 import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher
@@ -29,7 +28,7 @@ case class Reference(association:Seq[ReferenceKey])
 case class FormActions(metadata:JSONMetadata,
                        jsonActions: String => TableActions[Json],
                        metadataFactory: MetadataFactory
-                      )(implicit db:Database, mat:Materializer, ec:ExecutionContext) extends DBFiltersImpl with Logging with TableActions[Json] {
+                      )(implicit db:FullDatabase, mat:Materializer, ec:ExecutionContext) extends DBFiltersImpl with Logging with TableActions[Json] {
 
   import ch.wsl.box.shared.utils.JSONUtils._
 
@@ -39,7 +38,7 @@ case class FormActions(metadata:JSONMetadata,
 
 
 
-  def getById(id:JSONID)(implicit db: Database) = {
+  def getById(id:JSONID)(implicit db: FullDatabase) = {
     logger.info("Getting Form data")
     DBIO.from(get(id.query))
   }
@@ -58,7 +57,7 @@ case class FormActions(metadata:JSONMetadata,
 
     Source
       .fromPublisher(jsonAction.findStreamed(q))
-      .flatMapConcat( json => Source.fromFuture(db.run{ expandJson(json) }))
+      .flatMapConcat( json => Source.fromFuture(db.db.run{ expandJson(json) }))
   }
 
 
@@ -122,11 +121,23 @@ case class FormActions(metadata:JSONMetadata,
     }
   }
 
+  def attachParentId(jsonToInsert:Seq[Json],parentJson:Json, child:Child):Seq[Json] = {
+    val values = child.masterFields.split(",").map(_.trim).zip(child.childFields.split(",").map(_.trim)).map{ case (parentKey,childKey) =>
+      childKey -> parentJson.js(parentKey)
+    }.toMap
+
+    jsonToInsert.map{ jsonRow =>
+      jsonRow.deepMerge(values.asJson) //overwrite field value with array index
+    }
+  }
+
   def subAction[T](e:Json, action: FormActions => ((Option[JSONID],Json) => DBIO[_])): Seq[DBIO[Seq[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
       form <- DBIO.from(metadataFactory.of(field.child.get.objId, metadata.lang))
       dbSubforms <- getChild(e,field,form,field.child.get)
-      subJson = attachArrayIndex(e.seq(field.name),form)
+      subs = e.seq(field.name)
+      subJsonWithIndexs = attachArrayIndex(subs,form)
+      subJson = attachParentId(subJsonWithIndexs,e,field.child.get)
       deleted <- DBIO.sequence(deleteChild(form,subJson,dbSubforms))
       result <- DBIO.sequence(subJson.map{ json => //order matters so we do it synchro
           action(FormActions(form,jsonActions,metadataFactory))(json.ID(form.keys),json).map(x => Some(x))
@@ -152,12 +163,12 @@ case class FormActions(metadata:JSONMetadata,
     logger.debug(s"child: ${child.name} received: ${receivedID.map(_.asString)} db: ${dbID.map(_.asString)}")
     dbID.filterNot(k => receivedID.contains(k)).map{ idsToDelete =>
       logger.info(s"Deleting child ${child.name}, with key: $idsToDelete")
-      Registry().actions(child.entity).delete(idsToDelete)
+      jsonActions(child.entity).delete(idsToDelete)
     }
   }
 
 
-  def delete(id:JSONID)(implicit db: PostgresProfile.api.Database) = {
+  def delete(id:JSONID)(implicit db: FullDatabase) = {
     for{
       json <- getById(id)
       subs <- DBIO.sequence(subAction(json.get,x => (id,json) => x.deleteSingle(id.get,json)))
@@ -165,7 +176,7 @@ case class FormActions(metadata:JSONMetadata,
     } yield current + subs.size
   }
 
-  def insert(e:Json)(implicit db: PostgresProfile.api.Database) = for{
+  def insert(e:Json)(implicit db: FullDatabase) = for{
     insertedId <- jsonAction.insert(e)
     inserted <- jsonAction.getById(insertedId).map(_.get)
     _ <- DBIO.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
@@ -184,14 +195,14 @@ case class FormActions(metadata:JSONMetadata,
 
 
 
-  def update(id:JSONID, e:Json)(implicit db: Database) = {
+  def update(id:JSONID, e:Json)(implicit db: FullDatabase) = {
     for{
       _ <- DBIO.sequence(subAction(e,_.upsertIfNeeded))  //need upsert to add new child records
       result <- jsonAction.update(id,e)
     } yield result
   }
 
-  def updateIfNeeded(id:JSONID, e:Json)(implicit db: Database) = {
+  def updateIfNeeded(id:JSONID, e:Json)(implicit db: FullDatabase) = {
 
     for{
       _ <- DBIO.sequence(subAction(e,_.upsertIfNeeded))  //need upsert to add new child records
@@ -199,7 +210,7 @@ case class FormActions(metadata:JSONMetadata,
     } yield result
   }
 
-  def upsertIfNeeded(id:Option[JSONID],e:Json)(implicit db:Database) = {
+  def upsertIfNeeded(id:Option[JSONID],e:Json)(implicit db:FullDatabase) = {
 
     for{
       newId <- jsonAction.upsertIfNeeded(id,e)
@@ -251,15 +262,15 @@ case class FormActions(metadata:JSONMetadata,
 
 
 
-  override def findStreamed(query: JSONQuery)(implicit db: PostgresProfile.api.Database): DatabasePublisher[Json] = jsonAction.findStreamed(query)
+  override def findStreamed(query: JSONQuery)(implicit db: FullDatabase): DatabasePublisher[Json] = jsonAction.findStreamed(query)
 
 
-  override def find(query: JSONQuery)(implicit db: jdbc.PostgresProfile.api.Database, mat: Materializer): DBIO[Seq[Json]] = jsonAction.find(query)
+  override def find(query: JSONQuery)(implicit db: FullDatabase, mat: Materializer): DBIO[Seq[Json]] = jsonAction.find(query)
 
-  override def count()(implicit db: PostgresProfile.api.Database) = jsonAction.count()
-  override def count(query: JSONQuery)(implicit db: box.jdbc.PostgresProfile.api.Database) = jsonAction.count(query)
+  override def count()(implicit db: FullDatabase) = jsonAction.count()
+  override def count(query: JSONQuery)(implicit db: FullDatabase) = jsonAction.count(query)
 
-  override def ids(query: JSONQuery)(implicit db: PostgresProfile.api.Database, mat: Materializer) = {
+  override def ids(query: JSONQuery)(implicit db: FullDatabase, mat: Materializer) = {
     metadata.view.map(v => Registry().actions(v)) match {
       case None => jsonAction.ids(query)
       case Some(v) => for {

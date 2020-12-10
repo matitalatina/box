@@ -1,5 +1,7 @@
 package ch.wsl.box.client.services
 
+import org.scalajs.dom.WebSocket
+
 import scala.util.Try
 
 object UI {
@@ -12,6 +14,9 @@ object UI {
 
   def load(ui:Map[String,String]) = {
     this.ui = ui
+    println("AAAAAAA")
+    val exampleSocket = new WebSocket("ws://localhost:8080/api/v1/notifications/test");
+    exampleSocket.onmessage = (msg => println(msg.data))
   }
 
   case class MenuEntry(name:String,url:String)

@@ -9,6 +9,7 @@ import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
 import ch.wsl.box.rest.utils.{Auth, BoxConfig}
+import ch.wsl.box.rest.logic.NotificationsHandler
 import com.typesafe.config.Config
 import scribe._
 import scribe.writer.ConsoleWriter
@@ -45,7 +46,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
   def start() =  {
 
 
-    BoxConfig.load()
+    BoxConfig.load(Auth.boxDB)
 
 
     val akkaConf: Config = BoxConfig.akkaHttpSession

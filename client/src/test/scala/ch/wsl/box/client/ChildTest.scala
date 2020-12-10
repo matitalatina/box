@@ -10,7 +10,7 @@ import utest._
 
 import scala.concurrent.Future
 
-object ChildTest extends TestSuite with TestBase {
+object ChildTest extends TestBase {
 
   import Context._
 
@@ -50,19 +50,38 @@ object ChildTest extends TestSuite with TestBase {
           _ <- Future { //test if element is still present after save
             assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.main.singleChild))).isInstanceOf[HTMLElement])
             assert(countChilds(2) == 1)
+
+            //check that the child is keept open after save
+            val editedChild = document.getElementById(TestHooks.tableChildRowId(2,Some(Values.ids.main.singleChild))).asInstanceOf[HTMLElement]
+            assert(editedChild.innerHTML.length > 0)
+
             //navigate to another record
-            val otherId = Some(JSONID.fromMap(Map("id" -> "2")).asString)
             Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.doubleChild.asString)))
           }
           _ <- waitCycle
           _ <- Future {
             assert(countChilds(2) == 2)
             assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.childs.thirdChild))).isInstanceOf[HTMLElement])
+
+            //navigate back to the first record
+            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.singleChild.asString)))
+          }
+          _ <- waitCycle
+          _ <- Future {
+            //check that the childs is still one
+            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.main.singleChild))).isInstanceOf[HTMLElement])
+            assert(countChilds(2) == 1)
+
+            //check that the child is kept open when navigating back
+            val editedChild = document.getElementById(TestHooks.tableChildRowId(2,Some(Values.ids.main.singleChild))).asInstanceOf[HTMLElement]
+            assert(editedChild.innerHTML.length > 0)
+
           }
 
         } yield true
 
     }
+
   }
 
 }

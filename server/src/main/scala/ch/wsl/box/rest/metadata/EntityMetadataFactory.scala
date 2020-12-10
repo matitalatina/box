@@ -11,22 +11,20 @@ import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.jdbc.TypeMapping
+import ch.wsl.box.jdbc.{FullDatabase, TypeMapping}
 import ch.wsl.box.model.BoxFieldAccessRegistry
 import ch.wsl.box.rest.runtime.{ColType, Registry}
+import com.avsystem.commons.Try
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 
-
 object EntityMetadataFactory extends Logging {
 
-  val dbConf: Config = com.typesafe.config.ConfigFactory.load().as[com.typesafe.config.Config]("db")
-//  private val tables:Seq[String] = dbConf.as[Seq[String]]("generator.tables")
-//  private val views:Seq[String] = dbConf.as[Seq[String]]("generator.views")
-//  private val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes")
-  private val excludeFields:Seq[String] = dbConf.as[Seq[String]]("generator.excludeFields")
 
+  val excludeFields:Seq[String] = Try{
+    com.typesafe.config.ConfigFactory.load().as[Seq[String]]("db.generator.excludeFields")
+  }.getOrElse(Seq())
   private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()   //  (up.name, table, lang,lookupMaxRows)
   private var cacheKeys = Map[String, Future[Seq[String]]]()                            //  (table)
 
@@ -55,10 +53,10 @@ object EntityMetadataFactory extends Logging {
   }
 
 
-  def lookup(table:String, column:String, lang:String)(implicit db:Database,  ec:ExecutionContext):Future[Option[JSONFieldLookup]] = {
+  def lookup(table:String, column:String, lang:String)(implicit db:FullDatabase, ec:ExecutionContext):Future[Option[JSONFieldLookup]] = {
 
 
-    val schema = new PgInformationSchema(table, db,Auth.adminDB, excludeFields)
+    val schema = new PgInformationSchema(table, excludeFields)
 
     for {
       fkOpt <- schema.findFk(column)
@@ -80,7 +78,7 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[JSONMetadata] = {
+  def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext,boxDatabase: FullDatabase):Future[JSONMetadata] = {
 
     implicit val db = up.db
 
@@ -91,7 +89,7 @@ object EntityMetadataFactory extends Logging {
       case None => {
         logger.info(s"Metadata table cache miss! cache key: ($table, $lang, $lookupMaxRows), cache: ${cacheTable}")
 
-        val schema = new PgInformationSchema(table, db,Auth.adminDB, excludeFields)
+        val schema = new PgInformationSchema(table, excludeFields)
 
         //    println(schema.fk)
 
@@ -204,14 +202,14 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def keysOf(table:String)(implicit ec:ExecutionContext):Future[Seq[String]] = {
+  def keysOf(table:String)(implicit ec:ExecutionContext, boxDb:FullDatabase):Future[Seq[String]] = {
     logger.info("Getting " + table + " keys")
     cacheKeys.lift((table)) match {
       case Some(r) => r
       case None => {
         logger.info(s"Metadata keys cache miss! cache key: ($table), cache: ${cacheKeys}")
 
-        val result = new PgInformationSchema(table, Auth.adminDB,Auth.adminDB).pk.map { pk => //map to enter the future
+        val result = new PgInformationSchema(table).pk.map { pk => //map to enter the future
           logger.info(pk.toString)
           pk.boxKeys
         }
@@ -227,9 +225,9 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def firstNoPKField(table:String)(implicit db:Database, ec:ExecutionContext):Future[Option[String]] = {
+  def firstNoPKField(table:String)(implicit db:FullDatabase, ec:ExecutionContext):Future[Option[String]] = {
     logger.info("Getting first field of " + table + " that is not PK")
-    val schema = new PgInformationSchema(table, Auth.adminDB,Auth.adminDB, excludeFields)
+    val schema = new PgInformationSchema(table,excludeFields)
     for {
       pks <- schema.pk.map(_.boxKeys) //todo: or boxKeys?
       c <- schema.columns
@@ -254,8 +252,8 @@ object EntityMetadataFactory extends Logging {
 
 
 
-  def isView(table:String)(implicit ec:ExecutionContext):Future[Boolean] =
-    new PgInformationSchema(table,Auth.adminDB,Auth.adminDB).pgTable.map(_.isView)  //map to enter the future
+  def isView(table:String)(implicit ec:ExecutionContext,boxDatabase: FullDatabase):Future[Boolean] =
+    new PgInformationSchema(table).pgTable.map(_.isView)  //map to enter the future
 
 
 

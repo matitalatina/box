@@ -5,7 +5,7 @@ import ch.wsl.box.client.styles.OpenLayersStyles
 import ch.wsl.box.client.utils._
 import io.udash.wrappers.jquery._
 import org.scalajs.dom
-import org.scalajs.dom.{Element, document}
+import org.scalajs.dom.{Element, WebSocket, document}
 import scribe.{Level, Logger, Logging}
 
 import scala.concurrent.Future
@@ -43,6 +43,7 @@ object Main extends Logging {
   }
 
   def setupUI(): Future[Unit] = {
+
 
     for {
       appVersion <- services.rest.appVersion()

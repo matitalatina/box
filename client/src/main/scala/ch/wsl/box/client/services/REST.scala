@@ -23,18 +23,18 @@ trait REST{
   def count(kind:String, lang:String, entity:String): Future[Int]
   def keys(kind:String, lang:String, entity:String): Future[Seq[String]]
   def ids(kind:String, lang:String, entity:String, q:JSONQuery): Future[IDs]
-  def metadata(kind:String, lang:String, entity:String): Future[JSONMetadata]
+  def metadata(kind:String, lang:String, entity:String, public:Boolean): Future[JSONMetadata]
   def tabularMetadata(kind:String, lang:String, entity:String): Future[JSONMetadata]
 
   //only for forms
-  def children(kind:String, entity:String, lang:String): Future[Seq[JSONMetadata]]
+  def children(kind:String, entity:String, lang:String, public:Boolean): Future[Seq[JSONMetadata]]
   def lookup(lang:String,lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]]
 
 
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json]
   def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[JSONID]
-  def insert(kind:String, lang:String, entity:String, data:Json): Future[JSONID]
+  def insert(kind:String, lang:String, entity:String, data:Json, public:Boolean): Future[JSONID]
   def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount]
 
   //files

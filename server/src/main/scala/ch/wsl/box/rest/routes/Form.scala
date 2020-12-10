@@ -7,9 +7,10 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
+import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.utils.{JSONSupport, Timer, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, JSONSupport, Timer, UserProfile}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
@@ -30,7 +31,8 @@ case class Form(
                  jsonActions: String => TableActions[Json], //EntityActionsRegistry().tableActions
                  metadataFactory: MetadataFactory, //JSONFormMetadataFactory(),
                  db:Database,
-                 kind:String
+                 kind:String,
+                 public: Boolean = false
                )(implicit up:UserProfile, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload with Logging {
 
     import JSONSupport._
@@ -45,6 +47,7 @@ case class Form(
 
 
     implicit val implicitDB = db
+    implicit val boxDb = FullDatabase(db,Auth.adminDB)
 
     private def actions[T](futureForm:Future[JSONMetadata])(f:FormActions => T):Future[T] = for{
       form <- futureForm
@@ -106,35 +109,49 @@ case class Form(
 
     }
 
+    def privateOnly(r: => Route):Route = {
+      if(public) {
+        complete(StatusCodes.Unauthorized,"Not authorized to do that action without authentication")
+      } else {
+        r
+      }
+    }
+
     def route = pathPrefix("id") {
       path(Segment) { strId =>
         JSONID.fromString(strId) match {
           case Some(id) =>
             get {
-              complete(actions(metadata) { fs =>
-                db.run(fs.getById(id).transactionally).map { record =>
-                  logger.info(record.toString)
-                  HttpEntity(ContentTypes.`application/json`, record.asJson)
-                }
-              })
+              privateOnly {
+                complete(actions(metadata) { fs =>
+                  db.run(fs.getById(id).transactionally).map { record =>
+                    logger.info(record.toString)
+                    HttpEntity(ContentTypes.`application/json`, record.asJson)
+                  }
+                })
+              }
             } ~
               put {
-                entity(as[Json]) { e =>
-                  complete {
-                    actions(metadata) { fs =>
-                      for {
-                        rowsChanged <- db.run(fs.upsertIfNeeded(Some(id),e).transactionally)
-                      } yield rowsChanged
+                privateOnly {
+                  entity(as[Json]) { e =>
+                    complete {
+                      actions(metadata) { fs =>
+                        for {
+                          rowsChanged <- db.run(fs.upsertIfNeeded(Some(id), e).transactionally)
+                        } yield rowsChanged
+                      }
                     }
                   }
                 }
               } ~
               delete {
-                complete {
-                  actions(metadata) { fs =>
-                    for {
-                      count <- db.run(fs.delete(id).transactionally)
-                    } yield JSONCount(count)
+                privateOnly {
+                  complete {
+                    actions(metadata) { fs =>
+                      for {
+                        count <- db.run(fs.delete(id).transactionally)
+                      } yield JSONCount(count)
+                    }
                   }
                 }
               }
@@ -164,7 +181,7 @@ case class Form(
     path("schema") {
       get {
         complete {
-          metadata.map(new JSONSchemas().of)
+          metadata.map(new JSONSchemas(Auth.boxDB,Auth.adminDB).of)
         }
       }
     } ~
@@ -183,14 +200,16 @@ case class Form(
       }
     } ~
     path("ids") {
-      post {
-        entity(as[JSONQuery]) { query =>
-          complete {
-            for{
-              metadata <- tabularMetadata()
-              formActions = FormActions(metadata, jsonActions, metadataFactory)
-              data <- db.run(formActions.ids(query))
-            } yield data
+      privateOnly {
+        post {
+          entity(as[JSONQuery]) { query =>
+            complete {
+              for {
+                metadata <- tabularMetadata()
+                formActions = FormActions(metadata, jsonActions, metadataFactory)
+                data <- db.run(formActions.ids(query))
+              } yield data
+            }
           }
         }
       }
@@ -206,60 +225,66 @@ case class Form(
     } ~
     path("list") {
       post {
-        entity(as[JSONQuery]) { query =>
-          logger.info("list")
-          complete(
-            for{
-              metadata <- tabularMetadata()
-              formActions = FormActions(metadata,jsonActions,metadataFactory)
-              fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
-              result <- formActions.list(query,fkValues)
-            } yield {
-              result
-            }
-          )
+        privateOnly {
+          entity(as[JSONQuery]) { query =>
+            logger.info("list")
+            complete(
+              for {
+                metadata <- tabularMetadata()
+                formActions = FormActions(metadata, jsonActions, metadataFactory)
+                fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
+                result <- formActions.list(query, fkValues)
+              } yield {
+                result
+              }
+            )
+          }
         }
       }
     } ~
     xls ~
     path("csv") {
       post {
-        entity(as[JSONQuery]) { query =>
-          logger.info("csv")
-          complete{
-            for{
-              metadata <- tabularMetadata()
-            } yield {
-              val formActions = FormActions(metadata,jsonActions,metadataFactory)
-              formActions.csv(query,None).log("csv")
+        privateOnly {
+          entity(as[JSONQuery]) { query =>
+            logger.info("csv")
+            complete {
+              for {
+                metadata <- tabularMetadata()
+              } yield {
+                val formActions = FormActions(metadata, jsonActions, metadataFactory)
+                formActions.csv(query, None).log("csv")
+              }
             }
           }
         }
       } ~
       respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
         get {
-          parameters('q, 'fk.?,'fields.?) { (q,fk,fields) =>
-            val query = parse(q).right.get.as[JSONQuery].right.get
-            val tabMetadata = tabularMetadata(fields.map(_.split(",").toSeq))
-            complete{
-              for {
-                metadata <- tabMetadata
-                fkValues <- fk match {
-                  case Some(ExportMode.RESOLVE_FK) => Lookup.valuesForEntity(metadata).map(Some(_))
-                  case _ => Future.successful(None)
+          privateOnly {
+            parameters('q, 'fk.?, 'fields.?) { (q, fk, fields) =>
+              val query = parse(q).right.get.as[JSONQuery].right.get
+              val tabMetadata = tabularMetadata(fields.map(_.split(",").toSeq))
+              complete {
+                for {
+                  metadata <- tabMetadata
+                  fkValues <- fk match {
+                    case Some(ExportMode.RESOLVE_FK) => Lookup.valuesForEntity(metadata).map(Some(_))
+                    case _ => Future.successful(None)
+                  }
+                } yield {
+
+                  logger.info(s"fk: ${fkValues.toString.take(50)}...")
+                  val formActions = FormActions(metadata, jsonActions, metadataFactory)
+
+                  val headers = metadata.exportFields.map(ef => metadata.fields.find(_.name == ef).map(_.title).getOrElse(ef))
+
+                  import kantan.csv._
+                  import kantan.csv.ops._
+
+                  Source.fromFuture(Future.successful(Seq(headers).asCsv(rfc)))
+                    .concat(formActions.csv(query, fkValues, _.exportFields))
                 }
-              } yield {
-
-                logger.info(s"fk: ${fkValues.toString.take(50)}...")
-                val formActions = FormActions(metadata,jsonActions,metadataFactory)
-
-                val headers = metadata.exportFields.map(ef => metadata.fields.find(_.name == ef).map(_.title).getOrElse(ef))
-
-                import kantan.csv._
-                import kantan.csv.ops._
-
-                Source.fromFuture(Future.successful(Seq(headers).asCsv(rfc)))
-                  .concat(formActions.csv(query,fkValues,_.exportFields))
               }
             }
           }

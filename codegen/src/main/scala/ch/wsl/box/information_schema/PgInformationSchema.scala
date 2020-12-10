@@ -1,6 +1,6 @@
 package ch.wsl.box.information_schema
 
-import ch.wsl.box.jdbc.PostgresProfile
+import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile}
 import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -8,12 +8,12 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class PgInformationSchema(table:String, db:Database, adminDB:Database, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext) {
+class PgInformationSchema(table:String, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext,boxDb:FullDatabase) {
 
   def runWithSession[T](d:Session => DBIOAction[T,NoStream,Nothing]): Future[T] = Future{
-    val session = db.createSession()
+    val session = boxDb.db.createSession()
     try{
-      db.run{d(session)}
+      boxDb.db.run{d(session)}
     } finally {
       session.close()
     }
@@ -22,12 +22,12 @@ class PgInformationSchema(table:String, db:Database, adminDB:Database, excludeFi
   private val FOREIGNKEY = "FOREIGN KEY"
   private val PRIMARYKEY = "PRIMARY KEY"
 
-  val pgTables = TableQuery[PgTables]
-  val pgColumns = TableQuery[PgColumns]
-  val pgConstraints = TableQuery[PgConstraints]
-  val pgConstraintsReference = TableQuery[PgConstraintReferences]
-  val pgContraintsUsage = TableQuery[PgConstraintUsages]
-  val pgKeyUsage = TableQuery[PgKeyUsages]
+  private val pgTables = TableQuery[PgTables]
+  private val pgColumns = TableQuery[PgColumns]
+  private val pgConstraints = TableQuery[PgConstraints]
+  private val pgConstraintsReference = TableQuery[PgConstraintReferences]
+  private val pgContraintsUsage = TableQuery[PgConstraintUsages]
+  private val pgKeyUsage = TableQuery[PgKeyUsages]
 
   case class PrimaryKey(keys: Seq[String], constraintName: String) {
     def boxKeys = keys
@@ -58,12 +58,12 @@ class PgInformationSchema(table:String, db:Database, adminDB:Database, excludeFi
 
 
 
-  val pkQ = for{
+  private val pkQ = for{
     constraint <- pgConstraints if constraint.table_name === table && constraint.constraint_type === PRIMARYKEY
     usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
   } yield (usage.column_name, usage.constraint_name)
 
-  val pk:Future[PrimaryKey] = adminDB.run{ //needs admin right to access information_schema.constraint_column_usage
+  val pk:Future[PrimaryKey] = boxDb.adminDb.run{ //needs admin right to access information_schema.constraint_column_usage
       pkQ.result
         .map(x => x.unzip)    //change seq of tuple into tuple of seqs
         .map(x => PrimaryKey(x._1, x._2.headOption.getOrElse("")))   //as constraint_name take only first element (should be the same)
@@ -84,9 +84,9 @@ class PgInformationSchema(table:String, db:Database, adminDB:Database, excludeFi
 
   lazy val fks:Future[Seq[ForeignKey]] =  {
 
-    adminDB.run(fkQ1.result).flatMap { references =>
+    boxDb.adminDb.run(fkQ1.result).flatMap { references =>
       Future.sequence(references.map { case (c, ref) =>
-        adminDB.run(fkQ2(c,ref).result).map{ keys =>
+        boxDb.adminDb.run(fkQ2(c,ref).result).map{ keys =>
           ForeignKey(keys.map(_._1),keys.map(_._2),ref.table_name, c.constraint_name)
         }
       })

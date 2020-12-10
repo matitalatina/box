@@ -61,16 +61,34 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
     }
   }
 
+  def auth(session:BoxSession) = pathPrefix("auth") {
+    path("token") {
+      get {
+        respondWithHeader(sessionManager.clientSessionManager.createHeader(session)) {
+          complete("ok")
+        }
+      }
+    } ~
+    path("cookie") {
+      get{
+        setCookie(sessionManager.clientSessionManager.createCookie(session)) {
+          complete("ok")
+        }
+      }
+
+    }
+  }
+
   def forms(implicit up:UserProfile) = path("forms") {
     get {
-      complete(FormMetadataFactory().list)
+      complete(FormMetadataFactory(Auth.boxDB,Auth.adminDB).list)
     }
   }
 
   def form(implicit up:UserProfile) = pathPrefix("form") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        Form(name, lang,x => Registry().actions(x),FormMetadataFactory(),up.db,EntityKind.FORM.kind).route
+        Form(name, lang,x => Registry().actions(x),FormMetadataFactory(Auth.boxDB,Auth.adminDB),up.db,EntityKind.FORM.kind).route
       }
     }
   }
@@ -98,6 +116,8 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
       forms ~
       form ~
       news ~
+      auth(session) ~
+      new WebsocketNotifications().route ~
       Admin(session).route
   }
 }

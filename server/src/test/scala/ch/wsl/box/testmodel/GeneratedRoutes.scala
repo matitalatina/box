@@ -18,10 +18,13 @@ object GeneratedRoutes extends GeneratedRoutes {
   def apply(lang: String)(implicit up: UserProfile, mat: Materializer, ec: ExecutionContext):Route = {
   implicit val db = up.db
 
-    Table[Child,Child_row]("child",Child, lang).route ~ 
-    Table[Parent,Parent_row]("parent",Parent, lang).route ~ 
     Table[Simple,Simple_row]("simple",Simple, lang).route ~ 
-    Table[Subchild,Subchild_row]("subchild",Subchild, lang).route
+    Table[AppParent,AppParent_row]("app_parent",AppParent, lang).route ~ 
+    Table[AppChild,AppChild_row]("app_child",AppChild, lang).route ~ 
+    Table[AppSubchild,AppSubchild_row]("app_subchild",AppSubchild, lang).route ~ 
+    Table[DbParent,DbParent_row]("db_parent",DbParent, lang).route ~ 
+    Table[DbChild,DbChild_row]("db_child",DbChild, lang).route ~ 
+    Table[DbSubchild,DbSubchild_row]("db_subchild",DbSubchild, lang).route
   }
 }
            

@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared.JSONID
 import ch.wsl.box.rest.logic.DbActions
 import ch.wsl.box.rest.routes.File.FileHandler
@@ -18,6 +19,7 @@ import nz.co.rossphillips.thumbnailer.Thumbnailer
 import nz.co.rossphillips.thumbnailer.thumbnailers.{DOCXThumbnailer, ImageThumbnailer, PDFThumbnailer, TextThumbnailer}
 import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.utils.Auth
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -57,6 +59,8 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
 
   val dbActions = new DbActions[T,M](table)
+  implicit val boxDb = FullDatabase(db,Auth.adminDB)
+
 
   def createThumbnail(file:Array[Byte],contentType:String):Option[Array[Byte]] = Try{
     val thumbnailer = new Thumbnailer(new PDFThumbnailer, new TextThumbnailer, new ImageThumbnailer, new DOCXThumbnailer)
