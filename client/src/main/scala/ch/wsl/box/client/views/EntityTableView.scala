@@ -41,11 +41,11 @@ case class Row(data: Seq[String])
 case class FieldQuery(field:JSONField, sort:String, sortOrder:Option[Int], filterValue:String, filterOperator:String)
 
 case class EntityTableModel(name:String, kind:String, rows:Seq[Row], fieldQueries:Seq[FieldQuery],
-                            metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDsVM, pages:Int, write:Boolean)
+                            metadata:Option[JSONMetadata], selectedRow:Option[Row], ids: IDsVM, pages:Int, access:TableAccess)
 
 
 object EntityTableModel extends HasModelPropertyCreator[EntityTableModel]{
-  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDsVMFactory.empty,1, false)
+  def empty = EntityTableModel("","",Seq(),Seq(),None,None,IDsVMFactory.empty,1, TableAccess(false,false,false))
   implicit val blank: Blank[EntityTableModel] =
     Blank.Simple(empty)
 }
@@ -132,7 +132,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
       qEncoded = encodeFk(fields,query)
 
-      access <- services.rest.writeAccess(form.entity,state.kind)
+      access <- services.rest.tableAccess(form.entity,state.kind)
 //      csv <- REST.csv(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
 //      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
@@ -161,7 +161,7 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
         selectedRow = None,
         ids = IDsVMFactory.empty,
         pages = Navigation.pageCount(0),
-        write = access
+        access = access
       )
 
       saveIds(IDs(true,1,Seq(),0),query)
@@ -474,15 +474,16 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
         pagination.render
       ),
       div(BootstrapStyles.Visibility.clearfix),
-      produceWithNested(model.subProp(_.write)) { (w,realeser) =>
-        if(!w) Seq() else
+      produceWithNested(model.subProp(_.access)) { (a, releaser) =>
+        if(a.insert)
           div(BootstrapStyles.Float.left())(
-            realeser(produce(model.subProp(_.name)) { m =>
+            releaser(produce(model.subProp(_.name)) { m =>
               div(
                 button(ClientConf.style.boxButtonImportant, Navigate.click(Routes(model.subProp(_.kind).get, m).add()))(Labels.entities.`new`)
               ).render
             })
           ).render
+          else Seq()
       },
       div(BootstrapStyles.Visibility.clearfix),
       div(id := "box-table", ClientConf.style.fullHeightMax,
@@ -535,22 +536,23 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
               true
             }),
               td(ClientConf.style.smallCells)(
-                (hasKey,model.get.write) match{
-                  case (false,_) => p(color := "grey")(Labels.entity.no_action)
-                  case (true,false) => a(
+                (hasKey, model.get.access.update, model.get.access.delete) match{
+                  case (false, _, _)=> p(color := "grey")(Labels.entity.no_action)
+                  case (true, false, _) => a(
                     cls := "primary action",
                     onclick :+= ((ev: Event) => {
                       presenter.show(el.get)
                       true
                     })
                   )(Labels.entity.show)
-                  case (true,true) => Seq(a(
+                  case (true, true, _) => a(
                     cls := "primary action",
                     onclick :+= ((ev: Event) => {
                       presenter.edit(el.get)
                       true
                     })
-                  )(Labels.entity.edit),span(" "),a(
+                  )(Labels.entity.edit)
+                  case (true, _, true)=> Seq(span(" "),a(
                     cls := "danger action",
                     onclick :+= ((ev: Event) => {
                       presenter.delete(el.get)

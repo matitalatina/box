@@ -55,7 +55,7 @@ trait REST{
   def dataList(kind:String,lang:String):Future[Seq[ExportDef]]
   def data(kind:String,name:String,params:Json,lang:String):Future[Seq[Seq[String]]]
 
-  def writeAccess(table:String,kind:String):Future[Boolean]
+  def tableAccess(table:String, kind:String):Future[TableAccess]
 
   //admin
   def generateStub(entity:String):Future[Boolean]

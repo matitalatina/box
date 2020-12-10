@@ -1,7 +1,7 @@
 package ch.wsl.box.client.mocks
 
 import ch.wsl.box.client.services.REST
-import ch.wsl.box.model.shared.{Child, ExportDef, FormActionsMetadata, IDs, JSONCount, JSONField, JSONFieldMap, JSONFieldTypes, JSONID, JSONKeyValue, JSONLookup, JSONMetadata, JSONQuery, Layout, LayoutBlock, LoginRequest, NewsEntry, SharedLabels, WidgetsNames}
+import ch.wsl.box.model.shared.{Child, ExportDef, FormActionsMetadata, IDs, JSONCount, JSONField, JSONFieldMap, JSONFieldTypes, JSONID, JSONKeyValue, JSONLookup, JSONMetadata, JSONQuery, Layout, LayoutBlock, LoginRequest, NewsEntry, SharedLabels, TableAccess, WidgetsNames}
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
 import io.circe.syntax._
@@ -183,8 +183,8 @@ class RestMock extends REST with Logging {
     ???
   }
 
-  override def writeAccess(table: String, kind: String): Future[Boolean] = {
-    println("writeAccess not implemented")
+  override def tableAccess(table: String, kind: String): Future[TableAccess] = {
+    println("table Access not implemented")
     ???
   }
 

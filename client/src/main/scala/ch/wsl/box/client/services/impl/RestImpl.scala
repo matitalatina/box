@@ -2,7 +2,7 @@ package ch.wsl.box.client.services.impl
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{HttpClient, REST}
-import ch.wsl.box.model.shared.{EntityKind, ExportDef, IDs, JSONCount, JSONFieldMap, JSONID, JSONLookup, JSONMetadata, JSONQuery, LoginRequest, NewsEntry}
+import ch.wsl.box.model.shared.{EntityKind, ExportDef, IDs, JSONCount, JSONFieldMap, JSONID, JSONLookup, JSONMetadata, JSONQuery, LoginRequest, NewsEntry, TableAccess}
 import io.circe.{Decoder, Encoder, Json}
 import kantan.csv.rfc
 import kantan.csv._
@@ -90,7 +90,7 @@ class RestImpl(httpClient:HttpClient) extends REST with Logging {
     result.asUnsafeCsvReader[Seq[String]](rfc).toSeq
   }
 
-  def writeAccess(table:String,kind:String) = httpClient.get[Boolean](Routes.apiV1(s"/access/$kind/$table/write"))
+  def tableAccess(table:String, kind:String) = httpClient.get[TableAccess](Routes.apiV1(s"/access/$kind/$table/table-access"))
 
   //admin
   def generateStub(entity:String) = httpClient.get[Boolean](Routes.apiV1(s"/create-stub/$entity"))

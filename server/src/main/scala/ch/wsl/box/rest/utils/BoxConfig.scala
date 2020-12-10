@@ -52,6 +52,9 @@ object BoxConfig extends Logging {
 
   def fksLookupRowsLimit = Try(conf("fks.lookup.rowsLimit").toInt).getOrElse(50)
 
+
+
+
   def akkaHttpSession = {
     val cookieName = Try(conf("cookie.name")).getOrElse("_boxsession_myapp")
     val maxAge = Try(conf("max-age")).getOrElse("2000")
