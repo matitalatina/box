@@ -531,34 +531,43 @@ case class EntityTableView(model:ModelProperty[EntityTableModel], presenter:Enti
             val hasKey = model.get.metadata.exists(_.keys.nonEmpty)
             val selected = model.subProp(_.selectedRow).transform(_.exists(_ == el.get))
 
+            def show = a(
+                cls := "primary action",
+                onclick :+= ((ev: Event) => {
+                  presenter.show(el.get)
+                  true
+                })
+              )(Labels.entity.show)
+
+            def edit = a(
+                cls := "primary action",
+                onclick :+= ((ev: Event) => {
+                  presenter.edit(el.get)
+                  true
+                })
+              )(Labels.entity.edit)
+
+            def delete = a(
+              cls := "danger action",
+              onclick :+= ((ev: Event) => {
+                presenter.delete(el.get)
+                true
+              })
+            )(Labels.entity.delete)
+
+            def noAction = p(color := "grey")(Labels.entity.no_action)
+
             tr((`class` := "info").attrIf(selected), ClientConf.style.rowStyle, onclick :+= ((e:Event) => {
               presenter.selected(el.get)
               true
             }),
               td(ClientConf.style.smallCells)(
                 (hasKey, model.get.access.update, model.get.access.delete) match{
-                  case (false, _, _)=> p(color := "grey")(Labels.entity.no_action)
-                  case (true, false, _) => a(
-                    cls := "primary action",
-                    onclick :+= ((ev: Event) => {
-                      presenter.show(el.get)
-                      true
-                    })
-                  )(Labels.entity.show)
-                  case (true, true, _) => a(
-                    cls := "primary action",
-                    onclick :+= ((ev: Event) => {
-                      presenter.edit(el.get)
-                      true
-                    })
-                  )(Labels.entity.edit)
-                  case (true, _, true)=> Seq(span(" "),a(
-                    cls := "danger action",
-                    onclick :+= ((ev: Event) => {
-                      presenter.delete(el.get)
-                      true
-                    })
-                  )(Labels.entity.delete))
+                  case (false, _, _) => noAction
+                  case (true, false, false) => show
+                  case (true, false, true)=> Seq(show,span(" "),delete)
+                  case (true, true, true) => Seq(edit,span(" "),delete)
+                  case (true, true, false)=> Seq(edit)
                 }
               ),
               produce(model.subSeq(_.fieldQueries)) { fieldQueries =>
