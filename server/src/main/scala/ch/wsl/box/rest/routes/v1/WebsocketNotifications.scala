@@ -54,6 +54,7 @@ class NotificationChannel(user:String,topic:String)(implicit mat: Materializer) 
 object NotificationChannels extends Logging {
   private var notificationChannels: ListBuffer[NotificationChannel] = ListBuffer.empty[NotificationChannel]
   def add(user:String,topic: String)(implicit mat: Materializer) = {
+    logger.info(s"Added notification channel for $user on topic $topic")
     val nc = new NotificationChannel(user,topic)
     notificationChannels += nc
     nc

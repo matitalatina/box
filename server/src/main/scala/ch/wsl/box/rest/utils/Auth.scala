@@ -50,8 +50,8 @@ object Auth extends Logging {
     .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
     .withValue("user",ConfigValueFactory.fromAnyRef(dbConf.as[String]("user")))
     .withValue("password",ConfigValueFactory.fromAnyRef(dbConf.as[String]("password")))
-    .withValue("numThreads",ConfigValueFactory.fromAnyRef(3))
-    .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(3))
+    .withValue("numThreads",ConfigValueFactory.fromAnyRef(5))
+    .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(5))
   )
 
   val boxDB = Database.forConfig("",ConfigFactory.empty()

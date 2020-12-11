@@ -59,7 +59,7 @@ object Settings {
 
     //database
     val postgres = "42.2.11"
-    val slick = "3.3.2"
+    val slick = "3.3.3"
     val slickPg = "0.19.3"
 
     //frontend

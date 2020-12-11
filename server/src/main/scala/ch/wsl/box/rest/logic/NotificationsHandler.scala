@@ -1,6 +1,7 @@
 package ch.wsl.box.rest.logic
 
 import java.sql.Connection
+import java.util.Date
 
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import org.postgresql.PGConnection
@@ -42,8 +43,9 @@ class Listener(conn: Connection,channel:String,callback: (String) => Unit) exten
       val notifications = pgconn.getNotifications(10000)
       if(notifications != null) {
         notifications.foreach{ n =>
-          println(s"""
+          logger.info(s"""
              |Recived notification:
+             |timestamp: ${new Date().toString}
              |name: ${n.getName}
              |parameter: ${n.getParameter}
              |""".stripMargin)

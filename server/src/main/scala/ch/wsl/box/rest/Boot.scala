@@ -66,6 +66,8 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
       case false => ConsoleWriter
       case true => new DbWriter(Auth.boxDB)
     }
+    println(s"Logger level: ${BoxConfig.loggerLevel}")
+
     Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConfig.loggerLevel), writer = loggerWriter).replace()
 
 
