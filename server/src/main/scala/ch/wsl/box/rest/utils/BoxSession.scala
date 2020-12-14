@@ -3,10 +3,11 @@ package ch.wsl.box.rest.utils
 import ch.wsl.box.model.shared.LoginRequest
 import com.softwaremill.session.{SessionSerializer, SingleValueSessionSerializer}
 
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 case class BoxSession(username:String,password:String) {
-  def userProfile = Auth.getUserProfile(username,password)
+  def userProfile(implicit ec:ExecutionContext) = Auth.getUserProfile(username,password)
 }
 
 object BoxSession {
