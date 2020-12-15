@@ -53,30 +53,30 @@ object EntityMetadataFactory extends Logging {
   }
 
 
-  def lookup(table:String, column:String, lang:String)(implicit db:FullDatabase, ec:ExecutionContext):Future[Option[JSONFieldLookup]] = {
-
-
-    val schema = new PgInformationSchema(table, excludeFields)
-
-    for {
-      fkOpt <- schema.findFk(column)
-      firstNoPK <- fkOpt match {
-        case Some(f) => firstNoPKField(f.referencingTable)
-        case None => Future.successful(None)
-      }
-    } yield {
-      for{
-        fk <- fkOpt
-      } yield {
-        val text = lookupField(fk.referencingTable, lang, firstNoPK)
-        val model = fk.referencingTable
-        val value = fk.referencingKeys.head //todo verify for multiple key
-
-        JSONFieldLookup(model, JSONFieldMap(value, text), Seq())
-
-      }
-    }
-  }
+//  def lookup(table:String, column:String, lang:String)(implicit db:FullDatabase, ec:ExecutionContext):Future[Option[JSONFieldLookup]] = {
+//
+//
+//    val schema = new PgInformationSchema(table, excludeFields)
+//
+//    for {
+//      fkOpt <- schema.findFk(column)
+//      firstNoPK <- fkOpt match {
+//        case Some(f) => firstNoPKField(f.referencingTable)
+//        case None => Future.successful(None)
+//      }
+//    } yield {
+//      for{
+//        fk <- fkOpt
+//      } yield {
+//        val text = lookupField(fk.referencingTable, lang, firstNoPK)
+//        val model = fk.referencingTable
+//        val value = fk.referencingKeys.head //todo verify for multiple key
+//
+//        JSONFieldLookup(model, JSONFieldMap(value, text, f), Seq())
+//
+//      }
+//    }
+//  }
 
   def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext,boxDatabase: FullDatabase):Future[JSONMetadata] = {
 
@@ -138,7 +138,7 @@ object EntityMetadataFactory extends Logging {
                         nullable = field.nullable,
                         placeholder = Some(fk.referencingTable + " Lookup"),
                         //widget = Some(WidgetsNames.select),
-                        lookup = Some(JSONFieldLookup(model, JSONFieldMap(value, text), options))
+                        lookup = Some(JSONFieldLookup(model, JSONFieldMap(value, text, field.boxName), options))
                       )
                     }
 

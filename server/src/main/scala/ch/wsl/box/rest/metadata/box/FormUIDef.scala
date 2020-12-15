@@ -92,7 +92,7 @@ object FormUIDef {
         )),
         condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson)))
       ),
-      JSONField(JSONFieldTypes.STRING,"masterFields",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson)))),
+      JSONField(JSONFieldTypes.STRING,"masterFields",true,label=Some("Parent field"),condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson,JSONFieldTypes.LOOKUP_LABEL.asJson)))),
       JSONField(JSONFieldTypes.STRING,"childFields",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson)))),
       JSONField(JSONFieldTypes.STRING,"childQuery",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson)))),
       JSONField(JSONFieldTypes.STRING,"default",true),

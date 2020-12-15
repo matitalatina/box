@@ -30,6 +30,8 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
   val modifiers:Seq[Modifier] = Seq()
 
 
+
+
   val selectModel = data.bitransform(value2Label)(label2Value)
 
   import io.circe.syntax._
@@ -48,7 +50,7 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
   }
 
 
-  override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
+  override protected def show(): JsDom.all.Modifier = autoRelease(showIf(selectModel.transform(_.nonEmpty)){
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       lab(field.title),
       div(BootstrapStyles.Float.right(), bind(selectModel)),

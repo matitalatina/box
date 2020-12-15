@@ -260,7 +260,7 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
 //            JSONLookup(lookupRow.get(value),lookupRow.get(text))
 //          }
 //          Some(JSONFieldLookup(refEntity, JSONFieldMap(value,text),options))
-          Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text), lookupData,field.lookupQuery))
+          Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text,field.masterFields.getOrElse(field.name)), lookupData,field.lookupQuery))
         }
 
       }} match {
