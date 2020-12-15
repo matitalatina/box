@@ -1,6 +1,6 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.services.{ClientConf, Labels, REST, UI}
+import ch.wsl.box.client.services.{ClientConf, Labels, Notification, REST, UI}
 import ch.wsl.box.client.styles.OpenLayersStyles
 import ch.wsl.box.client.utils._
 import io.udash.wrappers.jquery._
@@ -39,6 +39,7 @@ object Main extends Logging {
 
     document.addEventListener("DOMContentLoaded", { (e: dom.Event) =>
       setupUI()
+      Notification.setUpWebsocket()
     })
   }
 
