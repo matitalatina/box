@@ -5,6 +5,7 @@ import ch.wsl.box.client.services.{ClientConf, Labels}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.views.components
 import ch.wsl.box.client.views.components.widget._
+import ch.wsl.box.client.views.components.widget.labels.{StaticTextWidget, TitleWidget}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
@@ -98,6 +99,12 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           metadata.keys.contains(field.name) & !( ClientConf.manualEditKeyFields || ClientConf.manualEditSingleKeyFields.contains(metadata.entity + "." + field.name)),
           field.child) match {
           //  TYPE, WIDGET NAME, LOOKUP, IS KEY NOT MANUAL EDITABLE, CHILDS
+          case (_,Some(WidgetsNames.h1),_,_,_)                        => TitleWidget(1)
+          case (_,Some(WidgetsNames.h2),_,_,_)                        => TitleWidget(2)
+          case (_,Some(WidgetsNames.h3),_,_,_)                        => TitleWidget(3)
+          case (_,Some(WidgetsNames.h4),_,_,_)                        => TitleWidget(4)
+          case (_,Some(WidgetsNames.h5),_,_,_)                        => TitleWidget(5)
+          case (_,Some(WidgetsNames.staticText),_,_,_)                => StaticTextWidget
           case (_, Some(WidgetsNames.hidden), _, _, _)                => HiddenWidget
           case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidthFactory(data)
           case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidgetFactory(data)
@@ -126,8 +133,8 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (_,Some(WidgetsNames.mapPoint),_,_,_)                  => OlMapWidget
           case (_,Some(WidgetsNames.map),_,_,_)                       => OlMapWidget
           case (_,Some(WidgetsNames.code),_,_,_) => MonacoWidget
-          case (_,Some(WidgetsNames.richTextEditor),_,_,_)   => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)
-          case (_,Some(WidgetsNames.richTextEditorFull),_,_,_)  => RichTextEditorWidgetFactory(RichTextEditorWidget.Full)
+          case (_,Some(WidgetsNames.richTextEditor),_,_,_)            => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)
+          case (_,Some(WidgetsNames.richTextEditorFull),_,_,_)        => RichTextEditorWidgetFactory(RichTextEditorWidget.Full)
           case (_, _, _, _, _)                                        => InputWidgetFactory.Text
     }
 
