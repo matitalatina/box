@@ -8,7 +8,7 @@ class StatesToViewPresenterDef extends ViewFactoryRegistry[RoutingState] {
   def matchStateToResolver(state: RoutingState): ViewFactory[_ <: RoutingState] = state match {
     case RootState => RootViewPresenter
     case IndexState => IndexViewPresenter
-    case LoginState => LoginViewPresenter
+    case l:LoginStateAbstract => LoginViewPresenter
     case EntitiesState(kind,currentEntity) => EntitiesViewPresenter(kind,currentEntity,2)
     case EntityTableState(kind,entity) => EntityTableViewPresenter(Routes(kind,entity))
     case EntityFormState(kind,entity,write,id,public) => EntityFormViewPresenter

@@ -30,6 +30,7 @@ object Labels {
 
   object error{
     def notfound = get("error.notfound")
+    def session_expired = get("error.session_expired")
   }
 
   object login{

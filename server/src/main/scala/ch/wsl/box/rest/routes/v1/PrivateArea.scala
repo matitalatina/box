@@ -1,6 +1,8 @@
 package ch.wsl.box.rest.routes.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives.{complete, get, path, pathPrefix}
 import akka.stream.Materializer
@@ -11,7 +13,7 @@ import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, St
 import ch.wsl.box.rest.routes.{BoxFileRoutes, BoxRoutes, Export, Form, Functions, Table, View}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Auth, BoxSession, UserProfile}
-import com.softwaremill.session.SessionDirectives.touchRequiredSession
+import com.softwaremill.session.SessionDirectives.touchOptionalSession
 import com.softwaremill.session.SessionManager
 import com.softwaremill.session.SessionOptions.{oneOff, usingCookiesOrHeaders}
 
@@ -101,23 +103,26 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
     }
   }
 
-  val route = touchRequiredSession(oneOff, usingCookiesOrHeaders) { session =>
-    implicit val up = session.userProfile
-    implicit val db = up.db
+  val route = touchOptionalSession(oneOff, usingCookiesOrHeaders) {
+    case Some(session) => {
+      implicit val up = session.userProfile
+      implicit val db = up.db
 
-    Access(session).route ~
-      export ~
-      function ~
-      file ~
-      entity ~
-      entities ~
-      tables ~
-      views ~
-      forms ~
-      form ~
-      news ~
-      auth(session) ~
-      new WebsocketNotifications().route ~
-      Admin(session).route
+      Access(session).route ~
+        export ~
+        function ~
+        file ~
+        entity ~
+        entities ~
+        tables ~
+        views ~
+        forms ~
+        form ~
+        news ~
+        auth(session) ~
+        new WebsocketNotifications().route ~
+        Admin(session).route
+    }
+    case None => complete(StatusCodes.Unauthorized,"User not authenticated or session expired")
   }
 }

@@ -20,7 +20,12 @@ sealed abstract class ContainerRoutingState(parentState: Option[ContainerRouting
 sealed abstract class FinalRoutingState(parentState: Option[ContainerRoutingState]) extends RoutingState(parentState)
 
 
-case object LoginState extends FinalRoutingState(Some(RootState))
+sealed abstract class LoginStateAbstract(parentState: Option[ContainerRoutingState]) extends FinalRoutingState(parentState)
+case class LoginState(url:String) extends LoginStateAbstract(Some(RootState))
+case class LoginState1param(url:String,p1:String) extends LoginStateAbstract(Some(RootState))
+case class LoginState2params(url:String,p1:String,p2:String) extends LoginStateAbstract(Some(RootState))
+case class LoginState3params(url:String,p1:String,p2:String,p3:String) extends LoginStateAbstract(Some(RootState))
+case class LoginState4params(url:String,p1:String,p2:String,p3:String,p4:String) extends LoginStateAbstract(Some(RootState))
 
 case object RootState extends ContainerRoutingState(None)
 

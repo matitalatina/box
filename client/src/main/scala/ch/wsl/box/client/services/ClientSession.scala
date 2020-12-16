@@ -3,6 +3,7 @@ package ch.wsl.box.client.services
 import ch.wsl.box.client.{Context, IndexState, LoginState}
 import ch.wsl.box.model.shared.{IDs, JSONID, JSONQuery, LoginRequest}
 import io.udash.properties.single.Property
+import io.udash.routing.RoutingRegistry
 import org.scalajs.dom
 import scribe.Logging
 
@@ -24,13 +25,12 @@ object ClientSession {
   final val USER = "user"
   final val LANG = "lang"
   final val LABELS = "labels"
-  final val STATE = "state"
   final val TABLECHILD_OPEN = "tablechild_open"
 
   case class TableChildElement(field:String,childFormId:Int,id:Option[JSONID])
 }
 
-class ClientSession(rest:REST) extends Logging {
+class ClientSession(rest:REST,httpClient: HttpClient) extends Logging {
 
   import Context._
   import io.circe._
@@ -58,14 +58,18 @@ class ClientSession(rest:REST) extends Logging {
       }
       case false => {
         logger.info("No valid session found")
-        dom.window.sessionStorage.removeItem(USER)
-        logger.info(Context.applicationInstance.currentState.url(applicationInstance))
-        if(!Context.applicationInstance.currentState.url(applicationInstance).startsWith("/public")) {
-          logoutAndSaveState()
+        if(isSet(ClientSession.USER)) {
+          dom.window.sessionStorage.removeItem(USER)
+          dom.window.location.reload(true)
         }
       }
     }
   }
+
+  httpClient.setHandleAuthFailure(() => {
+    logger.info("Authentication failure, trying to get a new valid session")
+    LoginPopup.show()
+  })
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
     logger.info(s"Setting $key")
@@ -92,6 +96,13 @@ class ClientSession(rest:REST) extends Logging {
   }
 
   def login(username:String,password:String):Future[Boolean] = {
+    createSession(username,password).map{ _ =>
+      Context.applicationInstance.reload()
+      true
+    }
+  }
+
+  def createSession(username:String,password:String):Future[Boolean] = {
     dom.window.sessionStorage.setItem(USER,username)
     val fut = for{
       _ <- rest.login(LoginRequest(username,password))
@@ -99,21 +110,11 @@ class ClientSession(rest:REST) extends Logging {
     } yield {
       UI.load(ui)
       logged.set(true)
-      if(Option(dom.window.sessionStorage.getItem(STATE)).isDefined && dom.window.sessionStorage.getItem(STATE).trim.length > 0) {
-        val state = dom.window.sessionStorage.getItem(STATE).replaceAll("#","")
-        logger.info(s"navigate to $state")
-        Navigate.toUrl(state)
-        dom.window.sessionStorage.removeItem(STATE)
-      } else {
-        dom.window.sessionStorage.removeItem(STATE)
-        Navigate.to(IndexState)
-      }
       true
     }
 
     fut.recover{ case t =>
       dom.window.sessionStorage.removeItem(USER)
-      dom.window.sessionStorage.removeItem(STATE) // don't persist state if something is wrong
       logged.set(false)
       t.printStackTrace()
       false
@@ -121,26 +122,17 @@ class ClientSession(rest:REST) extends Logging {
   }
 
 
-  def logoutAndSaveState() = {
-    Try{
-      dom.window.sessionStorage.setItem(STATE,Context.applicationInstance.currentState.url(applicationInstance))
-    }
-    logout(false)
-  }
 
-  def logout(invalidateSession:Boolean = true) = {
+  def logout() = {
     Navigate.toAction{ () =>
       dom.window.sessionStorage.removeItem(USER)
       for{
-        _ <- invalidateSession match {
-          case true => rest.logout()
-          case false => Future.successful()
-        }
+        _ <- rest.logout()
         ui <- rest.ui()
       } yield {
         UI.load(ui)
         logged.set(false)
-        Navigate.to(LoginState)
+        Navigate.to(LoginState(""))
       }
     }
   }

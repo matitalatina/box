@@ -56,8 +56,8 @@ class HttpClientImpl extends HttpClient with Logging {
           }
         } else if (xhr.status == 401 || xhr.status == 403) {
           logger.info("Not authorized")
+          handleAuthFailure()
           promise.failure(new Exception("HTTP status" + xhr.status))
-          dom.window.location.reload()
         } else {
           promise.success(Left(manageError(xhr)))
         }
@@ -68,7 +68,7 @@ class HttpClientImpl extends HttpClient with Logging {
         if (xhr.status == 401 || xhr.status == 403) {
           logger.info("Not authorized")
           promise.failure(new Exception("HTTP status" + xhr.status))
-          dom.window.location.reload()
+          handleAuthFailure()
         } else {
           promise.success(Left(manageError(xhr)))
         }
@@ -146,10 +146,8 @@ class HttpClientImpl extends HttpClient with Logging {
 
   }
 
-
-
-
-
-
-
+  private var handleAuthFailure: () => Unit = () => {}
+  override def setHandleAuthFailure(f: () => Unit): Unit = {
+    handleAuthFailure = f
+  }
 }
