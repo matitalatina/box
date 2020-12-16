@@ -19,7 +19,8 @@ case class JSONField(
                       file: Option[FileReference] = None,
                       condition: Option[ConditionalField] = None,
                       tooltip: Option[String] = None,
-                      params: Option[Json] = None
+                      params: Option[Json] = None,
+                      linked: Option[LinkedForm] = None
                     ) {
   def title = label.getOrElse(name)
 }
@@ -28,6 +29,7 @@ object JSONField{
   val empty = JSONField("","",true,true)
 }
 
+case class LinkedForm(name:String,parentValueFields:Seq[String], childValueFields:Seq[String], parentLabelFields:Seq[String])
 
 case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSONLookup] = Seq(), lookupQuery:Option[String] = None)
 
@@ -64,6 +66,7 @@ object JSONFieldTypes{
   val STRING = "string"
   val CHILD = "child"
   val LOOKUP_LABEL = "lookup_label"
+  val LINKED_FORM = "linked_form"
   val FILE = "file"
   val DATE = "date"
   val DATETIME = "datetime"
@@ -75,5 +78,5 @@ object JSONFieldTypes{
   val GEOMETRY = "geometry"
   val JSON = "json"
 
-  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD,GEOMETRY,JSON,LOOKUP_LABEL)
+  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD,GEOMETRY,JSON,LOOKUP_LABEL,LINKED_FORM)
 }

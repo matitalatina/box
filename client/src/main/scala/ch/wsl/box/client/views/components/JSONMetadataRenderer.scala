@@ -5,7 +5,7 @@ import ch.wsl.box.client.services.{ClientConf, Labels}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.views.components
 import ch.wsl.box.client.views.components.widget._
-import ch.wsl.box.client.views.components.widget.labels.{StaticTextWidget, TitleWidget}
+import ch.wsl.box.client.views.components.widget.labels.{LinkedFormWidget, StaticTextWidget, TitleWidget}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
@@ -105,6 +105,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (_,Some(WidgetsNames.h4),_,_,_)                        => TitleWidget(4)
           case (_,Some(WidgetsNames.h5),_,_,_)                        => TitleWidget(5)
           case (_,Some(WidgetsNames.staticText),_,_,_)                => StaticTextWidget
+          case (_,Some(WidgetsNames.linkedForm),_,_,_)      => LinkedFormWidget(field.linked.get,data)
           case (_, Some(WidgetsNames.hidden), _, _, _)                => HiddenWidget
           case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidthFactory(data)
           case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidgetFactory(data)

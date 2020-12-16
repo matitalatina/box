@@ -34,6 +34,7 @@ object WidgetsNames {
   val h4 = "title_h4"
   val h5 = "title_h5"
   val staticText = "static_text"
+  val linkedForm = "linked_form"
 
   val all = Seq(
     textinput,
@@ -64,6 +65,7 @@ object WidgetsNames {
     h3,
     h4,
     h5,
-    staticText
+    staticText,
+    linkedForm
   ).sorted
 }
