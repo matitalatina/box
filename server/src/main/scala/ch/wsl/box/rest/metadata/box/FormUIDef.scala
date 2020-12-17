@@ -78,7 +78,7 @@ object FormUIDef {
         JSONFieldTypes.ALL.sorted.map(x => JSONLookup(x,x))
       ))),
       JSONField(JSONFieldTypes.CHILD,"field_i18n",true,child = Some(Child(FORM_FIELD_I18N,"field_i18n","field_id","field_id",Some(JSONQuery.sortByKeys(Seq("field_id"))))), widget = Some(WidgetsNames.tableChild)),
-      JSONField(JSONFieldTypes.CHILD,"field_file",true,child = Some(Child(FORM_FIELD_FILE,"field_file","field_id","field_id",None)),condition = Some(ConditionalField("type",Seq(JSONFieldTypes.FILE.asJson)))),
+      JSONField(JSONFieldTypes.CHILD,"field_file",true,child = Some(Child(FORM_FIELD_FILE,"field_file","field_id","field_id",None)),condition = Some(ConditionalField("type",Seq(JSONFieldTypes.FILE.asJson))), params = None),//Some(Map("min" -> 1, "max" -> 1).asJson)),
       JSONField(JSONFieldTypes.STRING,"lookupEntity",true,lookup = Some(JSONFieldLookup.prefilled(
         tables.map(x => JSONLookup(x,x))
       ))),

@@ -47,6 +47,9 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
     def prop: Property[Json]
     def field:JSONField
 
+    val min:Int = field.params.flatMap(_.js("min").as[Int].toOption).getOrElse(0)
+    val max:Option[Int] = field.params.flatMap(_.js("max").as[Int].toOption)
+
     val childWidgets: scala.collection.mutable.ListBuffer[ChildRow] = scala.collection.mutable.ListBuffer()
     val entity: SeqProperty[String] = SeqProperty(Seq())
     val metadata = children.find(_.objId == child.objId)
@@ -194,6 +197,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
         entity.clear()
         val entityData = splitJson(prop.get)
 
+
         entityData.foreach { x =>
           val isOpen:Boolean = services.clientSession.isTableChildOpen(ClientSession.TableChildElement(
             field.name,
@@ -201,6 +205,13 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
             metadata.flatMap(m => JSONID.fromData(x,m))
           ))
           add(x, isOpen)
+        }
+
+        for(i <- 0 until (min - entityData.length)) yield {
+          logger.info(i.toString)
+          metadata.map { m =>
+            addItem(child, m)
+          }
         }
       }, immediate)
     }
@@ -235,18 +246,26 @@ case class SimpleChildFactory(child:Child, children:Seq[JSONMetadata], masterDat
                 val widget = childWidgets.find(_.id == e.get)
                 div(ClientConf.style.subform,
                   widget.get.widget.render(write, Property(true)),
-                  if (write) div(
-                    BootstrapStyles.Grid.row,
-                    div(BootstrapCol.md(12), ClientConf.style.block,
-                      div(BootstrapStyles.Float.right(),
-                        a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
-                      )
-                    )
-                  ) else frag()
+                  if (write) {
+                    autoRelease(showIf(entity.transform(_.length > min)) {
+                      div(
+                        BootstrapStyles.Grid.row,
+                        div(BootstrapCol.md(12), ClientConf.style.block,
+                          div(BootstrapStyles.Float.right(),
+                            a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
+                          )
+                        )
+                      ).render
+                    })
+                  } else frag()
                 ).render
               })
             ).render,
-            if (write) a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add) else frag()
+            if (write) {
+              autoRelease(showIf(entity.transform(e => max.forall(_ > e.length))) {
+                a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add).render
+              })
+            } else frag()
           )
 
         }
