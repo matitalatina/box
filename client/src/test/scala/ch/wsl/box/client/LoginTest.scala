@@ -22,7 +22,6 @@ object LoginTest extends TestBase {
           } yield {
             assert(beforeLogin != document.body.innerHTML)
             assert(document.querySelectorAll(s"#${TestHooks.logoutButton}").length == 1)
-            assert(window.location.href.contains("home") == true)
             assert(document.getElementById(Values.titleId).textContent == Values.titleText)
           }
       }
