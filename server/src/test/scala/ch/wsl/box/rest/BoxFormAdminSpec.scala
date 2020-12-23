@@ -23,7 +23,7 @@ class BoxFormAdminSpec extends BaseSpec {
 
     for{
       _ <- new FormFixtures("db_").insertForm()
-      form <- BoxFormMetadataFactory().of("Interface builder","it")
+      form <- BoxFormMetadataFactory().of("form","it")
       actions = FormActions(form,BoxActionsRegistry.apply.tableActions,BoxFormMetadataFactory())
       f <- up.boxDb.run(actions.getById(JSONID.fromMap(Map("form_id" -> "1" ))))
       fieldsBefore <- up.boxDb.run(BoxField.BoxFieldTable.length.result)
