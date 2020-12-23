@@ -12,7 +12,7 @@ object FormUIDef {
 
   def main(tables:Seq[String], users:Seq[BoxUser_row]) = JSONMetadata(
     objId = FORM,
-    name = "Interface builder",
+    name = "form",
     label = "Interface builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"form_id",false),

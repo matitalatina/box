@@ -108,6 +108,7 @@ case class DataView(model:ModelProperty[DataModel], presenter:DataPresenter) ext
   def table = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.TABLE))
   def pdf = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.PDF))
   def html = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.HTML))
+  def shp = model.transform(_.exportDef.exists(_.mode == FunctionKind.Modes.SHP))
 
   override def getTemplate = div(
     produce(model.subProp(_.metadata)) {

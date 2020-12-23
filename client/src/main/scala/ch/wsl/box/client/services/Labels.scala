@@ -96,6 +96,7 @@ object Labels {
     def csv = get ("exports.csv")
     def pdf = get ("exports.pdf")
     def html = get ("exports.html")
+    def shp = get ("exports.shp")
   }
 
   object entity{

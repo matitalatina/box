@@ -12,12 +12,12 @@ object NewsLoader {
 
   def get(lang:String)(implicit userProfile: UserProfile, ec:ExecutionContext): Future[Seq[NewsEntry]] = {
     val q = for{
-      news <- BoxNews.BoxNews
-      news_i18n <- BoxNews.News_i18n if news_i18n.lang === lang && news.news_id === news_i18n.news_id
+      news <- BoxNews.BoxNewsTable
+      news_i18n <- BoxNews.BoxNews_i18nTable if news_i18n.lang === lang && news.news_id === news_i18n.news_id
     } yield (news.datetime,news_i18n.title,news_i18n.text,news.author)
 
     Auth.adminUserProfile.boxDb.run{
-      q.result
+      q.sortBy( _._1.desc).result
     }.map{ _.map{ x =>
       NewsEntry(DateTimeFormatters.timestamp.format(x._1),x._2,x._3,x._4)
     }}

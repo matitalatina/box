@@ -322,8 +322,12 @@ object DefaultLabels {
       |de	table.csv	CSV herunterladen
       |en	table.confirmDelete	Do you really want to delete the record?
       |it	table.confirmDelete	Vuole veramente cancellare i dati?
-      |fr	table.confirmDelete	Voulvez-vous vraiment effacer las données?
+      |fr	table.confirmDelete	Voulez-vous vraiment effacer las données?
       |de	table.confirmDelete	Möchten Sie den Datensatz wirklich löschen?
+      |en	table.confirmRevert	Do you really want to discard the changes?
+      |it	table.confirmRevert	Vuole veramente annullare i cambiamenti?
+      |fr	table.confirmRevert	Voulez-vous vraiment annuler les changements?
+      |de	table.confirmRevert	Möchten Sie die Änderungen wirklich verwerfen?
       |en	table.delete	Delete
       |it	table.delete	Elimina
       |fr	table.delete	Supprimer

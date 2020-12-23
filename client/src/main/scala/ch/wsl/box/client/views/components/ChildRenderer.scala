@@ -26,7 +26,7 @@ import ch.wsl.box.client.Context._
   * Created by andre on 6/1/2017.
   */
 
-case class ChildRow(widget:ChildWidget,id:String, data:ReadableProperty[Json], open:Boolean, rowId:Option[JSONID])
+case class ChildRow(widget:ChildWidget,id:String, data:ReadableProperty[Json], open:Boolean, rowId:Option[JSONID], deleted:Boolean=false)
 
 trait ChildRendererFactory extends ComponentWidgetFactory {
 
@@ -91,7 +91,8 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
       logger.info("removing item")
       if (org.scalajs.dom.window.confirm(Labels.messages.confirm)) {
         entity.remove(itemToRemove)
-        childWidgets.remove(childWidgets.zipWithIndex.find(x => x._1.id == itemToRemove).get._2)
+        val childToDelete = childWidgets.zipWithIndex.find(x => x._1.id == itemToRemove).get
+        childWidgets.update(childToDelete._2, childToDelete._1.copy(deleted = true))
       }
     }
 
@@ -125,7 +126,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
       val rows = data.seq(child.key)
 
 
-      val out = Future.sequence(childWidgets.zipWithIndex.map { case (cw,i) =>
+      val out = Future.sequence(childWidgets.zipWithIndex.filterNot(x => x._1.deleted).map { case (cw,i) =>
 
         val oldData = cw.widget.data.get
         val newData = rows.lift(i).getOrElse(Json.obj())

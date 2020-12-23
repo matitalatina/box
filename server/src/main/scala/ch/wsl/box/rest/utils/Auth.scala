@@ -154,7 +154,7 @@ object Auth extends Logging {
   def onlyAdminstrator(s:BoxSession)(r:Route)(implicit ec: ExecutionContext):Route = {
 
     onSuccess(s.userProfile.accessLevel){
-      case 1000 => r
+      case i:Int if i>=900 => r
       case al => get {
         complete("You don't have the rights (access level = " + al + ")")
       }

@@ -353,7 +353,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
     def confirm(cb: () => Any) =  action.confirmText match {
       case Some(ct) => {
-        val confim = window.confirm(ct)
+        val confim = window.confirm(Labels(ct))
         if(confim) {
           cb()
         }
