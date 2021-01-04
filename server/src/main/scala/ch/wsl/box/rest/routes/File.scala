@@ -103,6 +103,50 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     }
   }
 
+  def width(fileId: FileId):Route = pathPrefix("width") {
+    path(Segment) { w =>
+      get {
+        def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
+
+        val thumb = services.imageCacher.width(fileId, file, w.toInt)
+        onSuccess(thumb) { result =>
+          File.completeFile(boxFile(fileId, Some(result)))
+        }
+      }
+    }
+  }
+
+  def cover(fileId: FileId):Route = path("cover") {
+    path(Segment) { w =>
+      path(Segment) { h =>
+        get {
+          def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
+          val thumb = services.imageCacher.cover(fileId, file, w.toInt, h.toInt)
+          onSuccess(thumb) { result =>
+            File.completeFile(boxFile(fileId, Some(result)))
+          }
+        }
+      }
+    }
+  }
+
+  def fit(fileId: FileId):Route = path("fit") {
+    path(Segment) { w =>
+      path(Segment) { h =>
+        parameterMap { params =>
+          get {
+            def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
+
+            val thumb = services.imageCacher.fit(fileId, file, w.toInt, h.toInt, params.getOrElse("color",""))
+            onSuccess(thumb) { result =>
+              File.completeFile(boxFile(fileId, Some(result)))
+            }
+          }
+        }
+      }
+    }
+  }
+
   def route:Route = {
     pathPrefix(field) {
 
@@ -113,6 +157,9 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
             val fileId = FileId(id,field)
             upload(id) ~
             thumb(fileId) ~
+            width(fileId) ~
+            cover(fileId) ~
+            fit(fileId) ~
             getFile(fileId)
           }
           case None => complete(StatusCodes.BadRequest,s"JSONID $idstr not valid")
