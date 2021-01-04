@@ -37,7 +37,7 @@ object Settings {
     val ficus = "1.4.7"
 
     val macWire = "2.3.7"
-    val airframe = "20.10.0"
+    val airframe = "20.12.1"
 
     //HTTP actors
     val akka = "2.6.4"
@@ -147,6 +147,9 @@ object Settings {
     "io.github.cquiroz" %% "scala-java-time" % "2.0.0",
     "org.flywaydb" % "flyway-core" % "6.5.5",
     "com.nrinaudo" %% "kantan.csv" % versions.kantan,
+    "org.wvlet.airframe" %%% "airframe" % versions.airframe,
+    "org.apache.tika" % "tika-core" % "1.25",
+    "com.sksamuel.scrimage" % "scrimage-core" % "4.0.12",
     "org.graalvm.js" % "js" % "20.2.0",
     "org.javadelight" % "delight-graaljs-sandbox" % "0.1.2",
     "org.scalatest" %% "scalatest" % versions.scalatest % "test",

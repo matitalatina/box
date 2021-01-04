@@ -10,14 +10,13 @@ import akka.util.ByteString
 import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.utils.{Auth, JSONSupport, Timer, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, JSONSupport, Timer, UserProfile, XLSExport, XLSTable}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, MetadataFactory}
 import ch.wsl.box.rest.runtime.Registry
-import ch.wsl.box.rest.services.{XLSExport, XLSTable}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}

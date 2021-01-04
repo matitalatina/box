@@ -1,9 +1,9 @@
-package ch.wsl.box.rest.services
+package ch.wsl.box.rest.utils
 
 import java.io.OutputStream
 
+import com.norbitltd.spoiwo.model._
 import com.norbitltd.spoiwo.model.enums.CellFill
-import com.norbitltd.spoiwo.model.{CellStyle, Color, Font, Row, Sheet}
 import com.norbitltd.spoiwo.natures.xlsx.Model2XlsxConversions._
 
 case class XLSTable(title: String,header:Seq[String],rows:Seq[Seq[String]])

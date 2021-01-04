@@ -10,6 +10,7 @@ import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
 import ch.wsl.box.rest.utils.{Auth, BoxConfig}
 import ch.wsl.box.rest.logic.NotificationsHandler
+import ch.wsl.box.services.Services
 import com.typesafe.config.Config
 import scribe._
 import scribe.writer.ConsoleWriter
@@ -18,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 
-class Box(name:String,version:String)(implicit val executionContext: ExecutionContext) {
+class Box(name:String,version:String)(implicit val executionContext: ExecutionContext, services: Services) {
   private var server:Http.ServerBinding = null
 
   implicit val system: ActorSystem = ActorSystem()
@@ -116,8 +117,10 @@ object Boot extends App  {
     new java.util.concurrent.ForkJoinPool(Runtime.getRuntime.availableProcessors())
   )
 
-  val server = new Box(name,app_version)(executionContext)
+  DefaultModule.injector.build[Services] { services =>
+    val server = new Box(name, app_version)(executionContext,services)
 
-  server.start()
+    server.start()
+  }
 }
 

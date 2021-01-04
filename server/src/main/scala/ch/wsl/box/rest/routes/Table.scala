@@ -16,13 +16,12 @@ import akka.util.ByteString
 import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, FormActions, JSONTableActions, Lookup}
-import ch.wsl.box.rest.utils.{Auth, BoxConfig, JSONSupport, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, BoxConfig, JSONSupport, UserProfile, XLSExport, XLSTable}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.EntityMetadataFactory
-import ch.wsl.box.rest.services.{XLSExport, XLSTable}
 import io.circe.parser.decode
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}

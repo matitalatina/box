@@ -13,13 +13,14 @@ import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, St
 import ch.wsl.box.rest.routes.{BoxFileRoutes, BoxRoutes, Export, Form, Functions, Table, View}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Auth, BoxSession, UserProfile}
+import ch.wsl.box.services.Services
 import com.softwaremill.session.SessionDirectives.touchOptionalSession
 import com.softwaremill.session.SessionManager
 import com.softwaremill.session.SessionOptions.{oneOff, usingCookiesOrHeaders}
 
 import scala.concurrent.ExecutionContext
 
-case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem) {
+case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem, services: Services) {
 
   import Directives._
   import ch.wsl.box.rest.utils.Auth
