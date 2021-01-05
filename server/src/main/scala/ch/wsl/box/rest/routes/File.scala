@@ -21,7 +21,7 @@ import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.utils.Auth
 import ch.wsl.box.services.Services
-import ch.wsl.box.services.files.FileId
+import ch.wsl.box.services.file.FileId
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try

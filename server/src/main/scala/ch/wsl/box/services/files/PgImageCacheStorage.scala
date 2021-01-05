@@ -4,6 +4,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.model.boxentities.BoxImageCache
 import ch.wsl.box.model.shared.JSONID
 import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.services.file.{FileCacheKey, FileId, ImageCacheStorage}
 
 class PgImageCacheStorage extends ImageCacheStorage {
   override def save(fileId: FileCacheKey, data: Array[Byte])(implicit ex:ExecutionContext): Future[Boolean] = Auth.boxDB.run{

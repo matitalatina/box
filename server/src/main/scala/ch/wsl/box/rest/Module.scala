@@ -1,7 +1,8 @@
 package ch.wsl.box.rest
 
 import ch.wsl.box.services.Services
-import ch.wsl.box.services.files.{ImageCacheStorage, InMemoryImageCacheStorage, PgImageCacheStorage}
+import ch.wsl.box.services.file.ImageCacheStorage
+import ch.wsl.box.services.files.{ InMemoryImageCacheStorage, PgImageCacheStorage}
 import wvlet.airframe._
 
 trait Module{
