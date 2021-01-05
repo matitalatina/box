@@ -61,12 +61,12 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   val dbActions = new DbActions[T,M](table)
   implicit val boxDb = FullDatabase(db,Auth.adminDB)
 
-  private def boxFile(fileId: FileId,data:Option[Array[Byte]]):BoxFile = {
+  private def boxFile(fileId: FileId,data:Option[Array[Byte]],tpe:String):BoxFile = {
     val mime = data.map(services.imageCacher.mime)
     BoxFile(
       file = data,
       mime = mime,
-      name = fileId.name(mime)
+      name = fileId.name(mime,tpe)
     )
   }
 
@@ -78,6 +78,7 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
           row <- dbActions.getById(id)
           rowWithFile = handler.inject(row.get,bytea)
           result <- dbActions.update(id,rowWithFile)
+          _ <- DBIO.from(services.imageCacher.clear(FileId(id,field)))
         } yield result
       }.transactionally}
       complete(result)
@@ -89,7 +90,7 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
       val thumb = services.imageCacher.thumbnail(fileId,file,450,300)
       onSuccess(thumb) { result =>
-        File.completeFile(boxFile(fileId,Some(result)))
+        File.completeFile(boxFile(fileId,Some(result),"thumb"))
       }
     }
   }
@@ -98,7 +99,7 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     get {
       onSuccess(db.run(dbActions.getById(fileId.rowId))) { result =>
         val f = handler.extract(result.head)
-        File.completeFile(boxFile(fileId,f))
+        File.completeFile(boxFile(fileId,f,"file"))
       }
     }
   }
@@ -110,36 +111,36 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
         val thumb = services.imageCacher.width(fileId, file, w.toInt)
         onSuccess(thumb) { result =>
-          File.completeFile(boxFile(fileId, Some(result)))
+          File.completeFile(boxFile(fileId, Some(result),"width"))
         }
       }
     }
   }
 
-  def cover(fileId: FileId):Route = path("cover") {
-    path(Segment) { w =>
+  def cover(fileId: FileId):Route = pathPrefix("cover") {
+    pathPrefix(Segment) { w =>
       path(Segment) { h =>
         get {
           def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
           val thumb = services.imageCacher.cover(fileId, file, w.toInt, h.toInt)
           onSuccess(thumb) { result =>
-            File.completeFile(boxFile(fileId, Some(result)))
+            File.completeFile(boxFile(fileId, Some(result),"cover"))
           }
         }
       }
     }
   }
 
-  def fit(fileId: FileId):Route = path("fit") {
-    path(Segment) { w =>
+  def fit(fileId: FileId):Route = pathPrefix("fit") {
+    pathPrefix(Segment) { w =>
       path(Segment) { h =>
         parameterMap { params =>
           get {
             def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
 
-            val thumb = services.imageCacher.fit(fileId, file, w.toInt, h.toInt, params.getOrElse("color",""))
+            val thumb = services.imageCacher.fit(fileId, file, w.toInt, h.toInt, params.get("color").map(x => "#"+x).getOrElse(""))
             onSuccess(thumb) { result =>
-              File.completeFile(boxFile(fileId, Some(result)))
+              File.completeFile(boxFile(fileId, Some(result),"fit"))
             }
           }
         }

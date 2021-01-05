@@ -17,25 +17,32 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
 case class FileId(rowId:JSONID,column:String) {
-  def name(mime:Option[String]):String = {
-    val extenstion = mime match {
+  def name(mime:Option[String],tpe:String):String = {
+    val extension = mime match {
       case Some(s) if s.endsWith("jpeg") => ".jpg"
       case Some(s) if s.endsWith("png") => ".png"
       case _ => ""
     }
 
-    s"${rowId.asString}-$column$extenstion"
+    asString(tpe) + extension
 
   }
+
+  def asString(tpe:String):String = s"$column-${rowId.asString}-$tpe"
 }
 
 sealed trait FileCacheKey{
   def id:FileId
+
+  def asString() = id.asString(this.getClass.getSimpleName.toLowerCase)
+
 }
-case class ThumbnailCacheKey(id:FileId,width:Int,height:Int) extends FileCacheKey
-case class WidthCacheKey(id:FileId,width:Int) extends FileCacheKey
-case class CoverCacheKey(id:FileId,width:Int,height:Int) extends FileCacheKey
-case class FitCacheKey(id:FileId,width:Int,height:Int,color:String) extends FileCacheKey
+case class Thumbnail(id:FileId,width:Int,height:Int) extends FileCacheKey
+case class Width(id:FileId,width:Int) extends FileCacheKey
+case class Cover(id:FileId,width:Int,height:Int) extends FileCacheKey
+case class Fit(id:FileId,width:Int,height:Int,color:String) extends FileCacheKey {
+  override def asString(): String = super.asString() + "-" + color
+}
 
 
 trait ImageCache extends Logging {
@@ -105,6 +112,8 @@ trait ImageCache extends Logging {
     process(data,key,f)
   }
 
+  def clear(id:FileId)(implicit ec:ExecutionContext) = storage.clearField(id)
+
   def mime(data:Array[Byte]):String = {
     val mime = tika.detect(data.take(4096))
     logger.info(s"Detected file with mime: $mime")
@@ -112,43 +121,19 @@ trait ImageCache extends Logging {
   }
 
   def thumbnail(id:FileId,data: => Future[Option[Array[Byte]]],width:Int,height:Int)(implicit ec:ExecutionContext):Future[Array[Byte]] = {
-    process(data,ThumbnailCacheKey(id, width, height),createThumbnail(width, height))
+    process(data,Thumbnail(id, width, height),createThumbnail(width, height))
   }
 
   def width(id:FileId,data: => Future[Option[Array[Byte]]],width:Int)(implicit ec:ExecutionContext):Future[Array[Byte]] = {
-    processImage(data,WidthCacheKey(id, width),createWidth(width))
+    processImage(data,Width(id, width),createWidth(width))
   }
 
   def cover(id:FileId,data: => Future[Option[Array[Byte]]],width:Int,height:Int)(implicit ec:ExecutionContext):Future[Array[Byte]] = {
-    processImage(data,CoverCacheKey(id, width,height),createCover(width, height))
+    processImage(data,Cover(id, width,height),createCover(width, height))
   }
 
   def fit(id:FileId,data: => Future[Option[Array[Byte]]],width:Int,height:Int,color:String)(implicit ec:ExecutionContext):Future[Array[Byte]] = {
-    processImage(data,FitCacheKey(id, width, height, color),createFit(width, height, color))
+    processImage(data,Fit(id, width, height, color),createFit(width, height, color))
   }
 }
 
-trait ImageCacheStorage {
-  def save(fileId: FileCacheKey,data:Array[Byte]):Future[Boolean]
-  def delete(fileId: FileCacheKey):Future[Boolean]
-  def get(fileId: FileCacheKey):Future[Option[Array[Byte]]]
-}
-
-class InMemoryImageCacheStorage extends ImageCacheStorage {
-
-  private val store:scala.collection.mutable.Map[FileCacheKey,Array[Byte]] = scala.collection.mutable.Map[FileCacheKey,Array[Byte]]()
-
-  override def save(fileId: FileCacheKey, data: Array[Byte]): Future[Boolean] = Future.successful{
-    store.update(fileId,data)
-    true
-  }
-
-  override def delete(fileId: FileCacheKey): Future[Boolean] = Future.successful{
-    store.remove(fileId)
-    true
-  }
-
-  override def get(fileId: FileCacheKey): Future[Option[Array[Byte]]] = Future.successful{
-    store.get(fileId)
-  }
-}
