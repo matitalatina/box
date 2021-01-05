@@ -37,7 +37,7 @@ object Settings {
     val ficus = "1.4.7"
 
     val macWire = "2.3.7"
-    val airframe = "20.10.0"
+    val airframe = "20.12.1"
 
     //HTTP actors
     val akka = "2.6.4"
@@ -59,7 +59,7 @@ object Settings {
 
     //database
     val postgres = "42.2.11"
-    val slick = "3.3.2"
+    val slick = "3.3.3"
     val slickPg = "0.19.3"
 
     //frontend
@@ -110,6 +110,10 @@ object Settings {
     "com.outr" %% "scribe" % versions.scribe,
   ))
 
+  val serverCacheRedisDependecies = Def.setting(Seq(
+    "com.github.scredis" %% "scredis" % "2.4.3"
+  ))
+
   /** Dependencies only used by the JVM project */
   val jvmDependencies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(
     "org.scala-lang"           % "scala-reflect"     % versions.scala212,
@@ -147,6 +151,9 @@ object Settings {
     "io.github.cquiroz" %% "scala-java-time" % "2.0.0",
     "org.flywaydb" % "flyway-core" % "6.5.5",
     "com.nrinaudo" %% "kantan.csv" % versions.kantan,
+    "org.wvlet.airframe" %%% "airframe" % versions.airframe,
+    "org.apache.tika" % "tika-core" % "1.25",
+    "com.sksamuel.scrimage" % "scrimage-core" % "4.0.12",
     "org.graalvm.js" % "js" % "20.2.0",
     "org.javadelight" % "delight-graaljs-sandbox" % "0.1.2",
     "org.scalatest" %% "scalatest" % versions.scalatest % "test",

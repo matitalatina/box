@@ -1,5 +1,6 @@
 package ch.wsl.box.client.services
 
+
 import scala.util.Try
 
 object UI {

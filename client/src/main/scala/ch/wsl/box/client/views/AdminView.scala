@@ -61,7 +61,7 @@ class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresente
   private val content = div(BootstrapStyles.Grid.row)(
     div(BootstrapCol.md(12),h2("Admin")),
     div(BootstrapCol.md(3),h3("Forms"),
-      a("Interface builder", Navigate.click(EntityTableState(EntityKind.BOX.kind,"Interface builder"))),
+      a("Interface builder", Navigate.click(EntityTableState(EntityKind.BOX.kind,"form"))),
       div(BootstrapStyles.Card.card,
         label("Generate STUB for"),br,
         Select( entityForStub, viewModel.subSeq(_.entities))(Select.defaultLabel).render,
@@ -70,10 +70,11 @@ class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresente
       )
     ),
     div(BootstrapCol.md(3),h3("Functions"),
-      a("Function builder", Navigate.click(EntityTableState(EntityKind.BOX.kind,"Function builder")))
+      a("Function builder", Navigate.click(EntityTableState(EntityKind.BOX.kind,"function")))
     ),
-    div(BootstrapCol.md(3),h3("Exports")),
-    div(BootstrapCol.md(3),h3("Users")),
+    div(BootstrapCol.md(3),h3("News"),
+      a("News editor", Navigate.click(EntityTableState(EntityKind.BOX.kind,"news")))
+    )
   )
 
 

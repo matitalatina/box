@@ -25,15 +25,16 @@ import ch.wsl.box.rest.runtime.Registry
 import com.softwaremill.session.{HeaderConfig, InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
 import com.typesafe.config.Config
 import scribe.Logging
-import ch.wsl.box.rest.Box
+import ch.wsl.box.rest.{Box, Module}
 import ch.wsl.box.rest.routes.v1.ApiV1
+import ch.wsl.box.services.Services
 
 import scala.util.{Failure, Success}
 
 /**
   * Created by andreaminetti on 15/03/16.
   */
-case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:Seq[String])(implicit materializer:Materializer,executionContext:ExecutionContext,system: ActorSystem) extends Logging {
+case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:Seq[String])(implicit materializer:Materializer,executionContext:ExecutionContext,system: ActorSystem,services: Services) extends Logging {
 
 
   lazy val sessionConfig = SessionConfig.fromConfig(akkaConf)
@@ -43,9 +44,6 @@ case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:
   val cors = new CORSHandler(authHeaderName,origins)
 
   implicit lazy val sessionManager = new SessionManager[BoxSession](sessionConfig.copy(sessionHeaderConfig = HeaderConfig(authHeaderName,authHeaderName)))
-  implicit lazy val refreshTokenStorage = new InMemoryRefreshTokenStorage[BoxSession] {
-    override def log(msg: String): Unit = {}
-  }
 
   import Directives._
   import ch.wsl.box.rest.utils.JSONSupport._

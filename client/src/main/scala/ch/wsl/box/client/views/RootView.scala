@@ -1,6 +1,6 @@
 package ch.wsl.box.client.views
 
-import ch.wsl.box.client.services.{ClientConf, Notification, REST, UI}
+import ch.wsl.box.client.services.{ClientConf, LoginPopup, Notification, REST, UI}
 import ch.wsl.box.client.styles.GlobalStyles
 import io.udash._
 import ch.wsl.box.client._
@@ -49,7 +49,8 @@ class RootView() extends ContainerView {
         child
       )
     ),
-    Footer.template(UI.logo)
+    Footer.template(UI.logo),
+    LoginPopup.render
   )
 
   override def getTemplate: Modifier = content

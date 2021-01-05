@@ -26,7 +26,7 @@ import ch.wsl.box.client.Context._
   * Created by andre on 6/1/2017.
   */
 
-case class ChildRow(widget:ChildWidget,id:String, data:ReadableProperty[Json], open:Boolean, rowId:Option[JSONID])
+case class ChildRow(widget:ChildWidget,id:String, data:ReadableProperty[Json], open:Boolean, rowId:Option[JSONID], deleted:Boolean=false)
 
 trait ChildRendererFactory extends ComponentWidgetFactory {
 
@@ -46,6 +46,9 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
     def row_id: Property[Option[String]]
     def prop: Property[Json]
     def field:JSONField
+
+    val min:Int = field.params.flatMap(_.js("min").as[Int].toOption).getOrElse(0)
+    val max:Option[Int] = field.params.flatMap(_.js("max").as[Int].toOption)
 
     val childWidgets: scala.collection.mutable.ListBuffer[ChildRow] = scala.collection.mutable.ListBuffer()
     val entity: SeqProperty[String] = SeqProperty(Seq())
@@ -88,7 +91,8 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
       logger.info("removing item")
       if (org.scalajs.dom.window.confirm(Labels.messages.confirm)) {
         entity.remove(itemToRemove)
-        childWidgets.remove(childWidgets.zipWithIndex.find(x => x._1.id == itemToRemove).get._2)
+        val childToDelete = childWidgets.zipWithIndex.find(x => x._1.id == itemToRemove).get
+        childWidgets.update(childToDelete._2, childToDelete._1.copy(deleted = true))
       }
     }
 
@@ -122,7 +126,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
       val rows = data.seq(child.key)
 
 
-      val out = Future.sequence(childWidgets.zipWithIndex.map { case (cw,i) =>
+      val out = Future.sequence(childWidgets.zipWithIndex.filterNot(x => x._1.deleted).map { case (cw,i) =>
 
         val oldData = cw.widget.data.get
         val newData = rows.lift(i).getOrElse(Json.obj())
@@ -194,6 +198,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
         entity.clear()
         val entityData = splitJson(prop.get)
 
+
         entityData.foreach { x =>
           val isOpen:Boolean = services.clientSession.isTableChildOpen(ClientSession.TableChildElement(
             field.name,
@@ -201,6 +206,13 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
             metadata.flatMap(m => JSONID.fromData(x,m))
           ))
           add(x, isOpen)
+        }
+
+        for(i <- 0 until (min - entityData.length)) yield {
+          logger.info(i.toString)
+          metadata.map { m =>
+            addItem(child, m)
+          }
         }
       }, immediate)
     }
@@ -235,18 +247,26 @@ case class SimpleChildFactory(child:Child, children:Seq[JSONMetadata], masterDat
                 val widget = childWidgets.find(_.id == e.get)
                 div(ClientConf.style.subform,
                   widget.get.widget.render(write, Property(true)),
-                  if (write) div(
-                    BootstrapStyles.Grid.row,
-                    div(BootstrapCol.md(12), ClientConf.style.block,
-                      div(BootstrapStyles.Float.right(),
-                        a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
-                      )
-                    )
-                  ) else frag()
+                  if (write) {
+                    autoRelease(showIf(entity.transform(_.length > min)) {
+                      div(
+                        BootstrapStyles.Grid.row,
+                        div(BootstrapCol.md(12), ClientConf.style.block,
+                          div(BootstrapStyles.Float.right(),
+                            a(onclick :+= ((_: Event) => removeItem(e.get)), Labels.subform.remove)
+                          )
+                        )
+                      ).render
+                    })
+                  } else frag()
                 ).render
               })
             ).render,
-            if (write) a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add) else frag()
+            if (write) {
+              autoRelease(showIf(entity.transform(e => max.forall(_ > e.length))) {
+                a(onclick :+= ((e: Event) => addItem(child, f)), Labels.subform.add).render
+              })
+            } else frag()
           )
 
         }

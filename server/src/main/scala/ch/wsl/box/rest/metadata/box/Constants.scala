@@ -13,4 +13,8 @@ object Constants {
   final val FUNCTION_FIELD = 12
   final val FUNCTION_FIELD_I18N = 13
 
+  final val NEWS = 21
+  final val NEWS_I18N = 22
+
+
 }

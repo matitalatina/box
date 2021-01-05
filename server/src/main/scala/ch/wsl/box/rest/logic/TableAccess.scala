@@ -19,11 +19,13 @@ object TableAccess {
 
 
 
-  def write(table:String,schema:String,user:String,db:Database)(implicit ec:ExecutionContext) = db.run {
-    sql"""select HAS_TABLE_PRIVILEGE(usename, concat($schema, '.', $table), 'update')
+  def apply(table:String,schema:String,user:String,db:Database)(implicit ec:ExecutionContext) = db.run {
+    sql"""select HAS_TABLE_PRIVILEGE(usename, concat($schema, '.', $table), 'insert') as insert,
+                 HAS_TABLE_PRIVILEGE(usename, concat($schema, '.', $table), 'update') as update,
+                 HAS_TABLE_PRIVILEGE(usename, concat($schema, '.', $table), 'delete') as delete
           from pg_user where usename=$user
-       """.as[Boolean].headOption
-  }.map(_.getOrElse(false))
+       """.as[(Boolean, Boolean, Boolean)].headOption
+  }.map(_.getOrElse((false, false, false))).map(x=> ch.wsl.box.model.shared.TableAccess(x._1,x._2,x._3))
 
 //  def write(table:String,schema:String,user:String)(implicit ec:ExecutionContext) = Auth.adminDB.run {
 //    sql"""SELECT 1

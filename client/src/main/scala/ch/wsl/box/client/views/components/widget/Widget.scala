@@ -177,6 +177,13 @@ trait LookupWidget extends Widget  {
 
 
 
-  def value2Label(org:Json):String = lookup.get.find(_.id == org.string).map(_.value).orElse(field.lookup.get.lookup.find(_.id == org.string).map(_.value)).getOrElse(Labels.lookup.not_found)
+  def value2Label(org:Json):String = {
+
+    val lookupValue = allData.get.get(field.lookup.get.map.localValueProperty)
+
+    lookup.get.find(_.id == lookupValue).map(_.value)
+      .orElse(field.lookup.get.lookup.find(_.id == org.string).map(_.value))
+      .getOrElse(Labels.lookup.not_found)
+  }
   def label2Value(v:String):Json = lookup.get.find(_.value == v).map(_.id.asJson).orElse(field.lookup.get.lookup.find(_.value == v).map(_.id.asJson)).getOrElse(Json.Null)
 }

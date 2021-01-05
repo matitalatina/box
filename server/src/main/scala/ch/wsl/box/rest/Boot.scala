@@ -9,15 +9,18 @@ import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
 import ch.wsl.box.rest.utils.{Auth, BoxConfig}
+import ch.wsl.box.rest.logic.NotificationsHandler
+import ch.wsl.box.services.Services
 import com.typesafe.config.Config
 import scribe._
 import scribe.writer.ConsoleWriter
+import wvlet.airframe.Design
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 
-class Box(name:String,version:String)(implicit val executionContext: ExecutionContext) {
+class Box(name:String,version:String)(implicit val executionContext: ExecutionContext, services: Services) {
   private var server:Http.ServerBinding = null
 
   implicit val system: ActorSystem = ActorSystem()
@@ -65,6 +68,8 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
       case false => ConsoleWriter
       case true => new DbWriter(Auth.boxDB)
     }
+    println(s"Logger level: ${BoxConfig.loggerLevel}")
+
     Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConfig.loggerLevel), writer = loggerWriter).replace()
 
 
@@ -107,14 +112,21 @@ object Boot extends App  {
     case _ => ("Standalone","DEV")
   }
 
-  Migrate.all()
 
-  val executionContext = ExecutionContext.fromExecutor(
-    new java.util.concurrent.ForkJoinPool(Runtime.getRuntime.availableProcessors())
-  )
+  def run(name:String,app_version:String,module:Design) {
+    Migrate.all()
 
-  val server = new Box(name,app_version)(executionContext)
+    val executionContext = ExecutionContext.fromExecutor(
+      new java.util.concurrent.ForkJoinPool(Runtime.getRuntime.availableProcessors())
+    )
 
-  server.start()
+    module.build[Services] { services =>
+      val server = new Box(name, app_version)(executionContext, services)
+
+      server.start()
+    }
+  }
+
+  run(name,app_version,DefaultModule.injector)
 }
 

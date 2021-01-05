@@ -173,6 +173,17 @@ object BoxFieldAccessRegistry extends FieldRegistry {
         "message" -> ColType("String", true),
         "timestamp" -> ColType("Int", true)
       )
+      case "news" => Map(
+        "news_id" -> ColType("Int", false),
+        "datetime" -> ColType("java.time.LocalDateTime", true),
+        "author" -> ColType("String", true)
+      )
+      case "news_i18n" => Map(
+        "news_id" -> ColType("Int", false),
+        "lang" -> ColType("String", true),
+        "text" -> ColType("String", true),
+        "title" -> ColType("String", true)
+      )
       case "ui" => Map(
         "id" -> ColType("Int", false),
         "key" -> ColType("String", false),

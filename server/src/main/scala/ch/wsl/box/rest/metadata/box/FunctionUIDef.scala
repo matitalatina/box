@@ -11,7 +11,7 @@ object FunctionUIDef {
 
   val main = JSONMetadata(
     objId = FUNCTION,
-    name = "Function builder",
+    name = "function",
     label = "Function builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"function_id",false),
@@ -80,7 +80,7 @@ object FunctionUIDef {
 
   val field = JSONMetadata(
     objId = FUNCTION_FIELD,
-    name = "Field builder",
+    name = "field",
     label = "Field builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"field_id",false,widget = Some(WidgetsNames.hidden)),
@@ -131,7 +131,7 @@ object FunctionUIDef {
 
   val fieldI18n = JSONMetadata(
     objId = FUNCTION_FIELD_I18N,
-    name = "FieldI18n builder",
+    name = "fieldI18n",
     label = "FieldI18n builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"field_id",false,widget = Some(WidgetsNames.hidden)),

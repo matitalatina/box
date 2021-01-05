@@ -16,4 +16,6 @@ class HttpClientMock extends HttpClient {
   override def delete[T](url: String)(implicit decoder: Decoder[T]): Future[T] = throw new Exception("delete not implemented")
 
   override def sendFile[T](url: String, file: File)(implicit decoder: Decoder[T]): Future[T] = throw new Exception("sendFile not implemented")
+
+  override def setHandleAuthFailure(f: () => Unit): Unit = {}
 }

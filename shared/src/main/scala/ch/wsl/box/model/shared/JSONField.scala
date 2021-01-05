@@ -19,7 +19,8 @@ case class JSONField(
                       file: Option[FileReference] = None,
                       condition: Option[ConditionalField] = None,
                       tooltip: Option[String] = None,
-                      params: Option[Json] = None
+                      params: Option[Json] = None,
+                      linked: Option[LinkedForm] = None
                     ) {
   def title = label.getOrElse(name)
 }
@@ -28,11 +29,12 @@ object JSONField{
   val empty = JSONField("","",true,true)
 }
 
+case class LinkedForm(name:String,parentValueFields:Seq[String], childValueFields:Seq[String], parentLabelFields:Seq[String])
 
 case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSONLookup] = Seq(), lookupQuery:Option[String] = None)
 
 object JSONFieldLookup {
-  val empty: JSONFieldLookup = JSONFieldLookup("",JSONFieldMap("",""))
+  val empty: JSONFieldLookup = JSONFieldLookup("",JSONFieldMap("","", ""))
 
   def fromData(lookupEntity:String, mapping:JSONFieldMap, lookupData:Seq[Json], lookupQuery:Option[String] = None):JSONFieldLookup = {
     import ch.wsl.box.shared.utils.JSONUtils._
@@ -46,14 +48,14 @@ object JSONFieldLookup {
     JSONFieldLookup(lookupEntity, mapping, options,lookupQuery)
   }
 
-  def prefilled(data:Seq[JSONLookup]) = JSONFieldLookup("",JSONFieldMap("",""),data)
+  def prefilled(data:Seq[JSONLookup]) = JSONFieldLookup("",JSONFieldMap("","", ""),data)
 }
 
 case class JSONLookup(id:String, value:String)
 
 case class FileReference(name_field:String, file_field:String, thumbnail_field:Option[String])
 
-case class JSONFieldMap(valueProperty:String, textProperty:String)
+case class JSONFieldMap(valueProperty:String, textProperty:String, localValueProperty:String)
 
 case class Child(objId:Int, key:String, masterFields:String, childFields:String, childQuery:Option[JSONQuery])
 
@@ -63,6 +65,8 @@ object JSONFieldTypes{
   val NUMBER = "number"
   val STRING = "string"
   val CHILD = "child"
+  val LOOKUP_LABEL = "lookup_label"
+  val LINKED_FORM = "linked_form"
   val FILE = "file"
   val DATE = "date"
   val DATETIME = "datetime"
@@ -74,5 +78,5 @@ object JSONFieldTypes{
   val GEOMETRY = "geometry"
   val JSON = "json"
 
-  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD,GEOMETRY,JSON)
+  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD,GEOMETRY,JSON,LOOKUP_LABEL,LINKED_FORM)
 }

@@ -172,6 +172,24 @@ object BoxTableRegistry extends TableRegistry {
 
 
       }
+      case "news" => new TableRegistryEntry{
+
+        type MT =  boxentities.BoxNews.BoxNews
+
+        override val name = "news"
+        override val tableQuery = boxentities.BoxNews.BoxNewsTable.asInstanceOf[TableQuery[Table[MT]]]
+
+
+      }
+      case "news_i18n" => new TableRegistryEntry{
+
+        type MT =  boxentities.BoxNews.BoxNews_i18n
+
+        override val name = "news_i18n"
+        override val tableQuery = boxentities.BoxNews.BoxNews_i18nTable.asInstanceOf[TableQuery[Table[MT]]]
+
+
+      }
       case "ui" => new TableRegistryEntry{
 
         type MT = boxentities.BoxUITable.BoxUI

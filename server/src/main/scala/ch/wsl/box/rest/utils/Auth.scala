@@ -29,11 +29,16 @@ object Auth extends Logging {
   val dbPath = dbConf.as[String]("url")
   val dbPassword = dbConf.as[String]("password")
   val dbSchema = dbConf.as[String]("schema")
+  val adminPoolSize = dbConf.as[Option[Int]]("adminPoolSize").getOrElse(5)
+  val poolSize = dbConf.as[Option[Int]]("poolSize").getOrElse(3)
+
 
   val boxDbConf: Config = ConfigFactory.load().as[Config]("box.db")
   val boxDbPath = boxDbConf.as[String]("url")
   val boxDbPassword = boxDbConf.as[String]("password")
   val boxDbSchema = boxDbConf.as[String]("schema")
+  val boxAdminPoolSize = dbConf.as[Option[Int]]("adminPoolSize").getOrElse(3)
+  val boxPoolSize = dbConf.as[Option[Int]]("poolSize").getOrElse(3)
 
   println(s"DB: $dbPath")
   println(s"Box DB: $boxDbPath")
@@ -50,8 +55,8 @@ object Auth extends Logging {
     .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
     .withValue("user",ConfigValueFactory.fromAnyRef(dbConf.as[String]("user")))
     .withValue("password",ConfigValueFactory.fromAnyRef(dbConf.as[String]("password")))
-    .withValue("numThreads",ConfigValueFactory.fromAnyRef(3))
-    .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(3))
+    .withValue("numThreads",ConfigValueFactory.fromAnyRef(adminPoolSize))
+    .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(adminPoolSize))
   )
 
   val boxDB = Database.forConfig("",ConfigFactory.empty()
@@ -60,8 +65,8 @@ object Auth extends Logging {
     .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
     .withValue("user",ConfigValueFactory.fromAnyRef(boxDbConf.as[String]("user")))
     .withValue("password",ConfigValueFactory.fromAnyRef(boxDbConf.as[String]("password")))
-    .withValue("numThreads",ConfigValueFactory.fromAnyRef(3))
-    .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(3))
+    .withValue("numThreads",ConfigValueFactory.fromAnyRef(boxAdminPoolSize))
+    .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(boxAdminPoolSize))
   )
 
   def adminUserProfile = UserProfile(
@@ -86,7 +91,7 @@ object Auth extends Logging {
     * check if this is a valid user on your system and return his profile,
     * that include his username and the connection to the DB
     */
-  def getUserProfile(name: String, password: String): UserProfile = {
+  def getUserProfile(name: String, password: String)(implicit executionContext: ExecutionContext): UserProfile = {
 
     val hash = MessageDigest.getInstance("MD5").digest(s"$name $password".getBytes()).map(0xFF & _).map { "%02x".format(_) }.foldLeft("") {_ + _}
 
@@ -94,48 +99,54 @@ object Auth extends Logging {
       case Some(up) => up
       case None => {
 
-        logger.info(s"Creating new pool for $name with hash $hash")
+        logger.info(s"Creating new pool for $name with hash $hash with poolsize $poolSize")
 
-        val db = Database.forConfig("",ConfigFactory.empty()
-          .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-          .withValue("url",ConfigValueFactory.fromAnyRef(s"$dbPath?currentSchema=$dbSchema"))
-          .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-          .withValue("user",ConfigValueFactory.fromAnyRef(name))
-          .withValue("password",ConfigValueFactory.fromAnyRef(password))
-          .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(3))
-          .withValue("numThreads",ConfigValueFactory.fromAnyRef(3))
-          .withValue("minimumIdle",ConfigValueFactory.fromAnyRef(0))
-          .withValue("idleTimeout",ConfigValueFactory.fromAnyRef(10000))
-        )
+        val url = s"$dbPath?currentSchema=$dbSchema"
 
-        val boxDb = Database.forConfig("",ConfigFactory.empty()
-          .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-          .withValue("url",ConfigValueFactory.fromAnyRef(s"$boxDbPath?currentSchema=$boxDbSchema"))
-          .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-          .withValue("user",ConfigValueFactory.fromAnyRef(name))
-          .withValue("password",ConfigValueFactory.fromAnyRef(password))
-          .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(3))
-          .withValue("numThreads",ConfigValueFactory.fromAnyRef(3))
-          .withValue("minimumIdle",ConfigValueFactory.fromAnyRef(0))
-          .withValue("idleTimeout",ConfigValueFactory.fromAnyRef(10000))
-        )
+        val validUser = Await.result(Database.forURL(url,name,password,driver = "org.postgresql.Driver").run{
+          sql"""select 1""".as[Int]
+        }.map{ _ =>
+          true
+        }.recover{case _ => false},2 seconds)
+
+        if(validUser) {
+
+          val db = Database.forConfig("",ConfigFactory.empty()
+            .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
+            .withValue("url",ConfigValueFactory.fromAnyRef(s"$dbPath?currentSchema=$dbSchema"))
+            .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
+            .withValue("user",ConfigValueFactory.fromAnyRef(name))
+            .withValue("password",ConfigValueFactory.fromAnyRef(password))
+            .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(poolSize))
+            .withValue("numThreads",ConfigValueFactory.fromAnyRef(poolSize))
+            .withValue("minimumIdle",ConfigValueFactory.fromAnyRef(0))
+            .withValue("idleTimeout",ConfigValueFactory.fromAnyRef(10000))
+          )
+
+          val boxDb = Database.forConfig("", ConfigFactory.empty()
+            .withValue("driver", ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
+            .withValue("url", ConfigValueFactory.fromAnyRef(s"$boxDbPath?currentSchema=$boxDbSchema"))
+            .withValue("keepAliveConnection", ConfigValueFactory.fromAnyRef(true))
+            .withValue("user", ConfigValueFactory.fromAnyRef(name))
+            .withValue("password", ConfigValueFactory.fromAnyRef(password))
+            .withValue("maximumPoolSize", ConfigValueFactory.fromAnyRef(boxPoolSize))
+            .withValue("numThreads", ConfigValueFactory.fromAnyRef(boxPoolSize))
+            .withValue("minimumIdle", ConfigValueFactory.fromAnyRef(0))
+            .withValue("idleTimeout", ConfigValueFactory.fromAnyRef(10000))
+          )
 
 
+          val up = UserProfile(name, db, boxDb)
 
-        val up = UserProfile(name,db,boxDb)
+          userProfiles += hash -> up
 
-        userProfiles += hash -> up
-
-        up
+          up
+        } else {
+          UserProfile(name, null, null)
+        }
 
       }
     }
-
-
-
-
-
-
 
   }
 
@@ -143,7 +154,7 @@ object Auth extends Logging {
   def onlyAdminstrator(s:BoxSession)(r:Route)(implicit ec: ExecutionContext):Route = {
 
     onSuccess(s.userProfile.accessLevel){
-      case 1000 => r
+      case i:Int if i>=900 => r
       case al => get {
         complete("You don't have the rights (access level = " + al + ")")
       }

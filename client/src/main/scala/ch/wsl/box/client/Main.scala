@@ -1,11 +1,11 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.services.{ClientConf, Labels, REST, UI}
+import ch.wsl.box.client.services.{ClientConf, Labels, Notification, REST, UI}
 import ch.wsl.box.client.styles.OpenLayersStyles
 import ch.wsl.box.client.utils._
 import io.udash.wrappers.jquery._
 import org.scalajs.dom
-import org.scalajs.dom.{Element, document}
+import org.scalajs.dom.{Element, WebSocket, document}
 import scribe.{Level, Logger, Logging}
 
 import scala.concurrent.Future
@@ -39,10 +39,12 @@ object Main extends Logging {
 
     document.addEventListener("DOMContentLoaded", { (e: dom.Event) =>
       setupUI()
+      Notification.setUpWebsocket()
     })
   }
 
   def setupUI(): Future[Unit] = {
+
 
     for {
       appVersion <- services.rest.appVersion()

@@ -19,9 +19,10 @@ import scala.concurrent.ExecutionContext
 import scala.util.Success
 import boxInfo.BoxBuildInfo
 import ch.wsl.box.model.boxentities.BoxUser
+import ch.wsl.box.services.Services
 
 
-case class ApiV1(appVersion:String)(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem) {
+case class ApiV1(appVersion:String)(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem, services: Services) {
 
   import Directives._
   import ch.wsl.box.rest.utils.Auth

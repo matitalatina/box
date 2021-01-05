@@ -24,7 +24,7 @@ object ChildTest extends TestBase {
           _ <- Context.services.clientSession.login("test", "test")
           _ <- waitCycle
           _ <- Future {
-            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", None))
+            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", None, false))
           }
           _ <- waitCycle
           _ <- Future {
@@ -56,7 +56,7 @@ object ChildTest extends TestBase {
             assert(editedChild.innerHTML.length > 0)
 
             //navigate to another record
-            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.doubleChild.asString)))
+            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.doubleChild.asString), false))
           }
           _ <- waitCycle
           _ <- Future {
@@ -64,7 +64,7 @@ object ChildTest extends TestBase {
             assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.childs.thirdChild))).isInstanceOf[HTMLElement])
 
             //navigate back to the first record
-            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.singleChild.asString)))
+            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.singleChild.asString), false))
           }
           _ <- waitCycle
           _ <- Future {

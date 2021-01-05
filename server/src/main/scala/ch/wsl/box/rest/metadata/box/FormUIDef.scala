@@ -12,7 +12,7 @@ object FormUIDef {
 
   def main(tables:Seq[String], users:Seq[BoxUser_row]) = JSONMetadata(
     objId = FORM,
-    name = "Interface builder",
+    name = "form",
     label = "Interface builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"form_id",false),
@@ -78,7 +78,7 @@ object FormUIDef {
         JSONFieldTypes.ALL.sorted.map(x => JSONLookup(x,x))
       ))),
       JSONField(JSONFieldTypes.CHILD,"field_i18n",true,child = Some(Child(FORM_FIELD_I18N,"field_i18n","field_id","field_id",Some(JSONQuery.sortByKeys(Seq("field_id"))))), widget = Some(WidgetsNames.tableChild)),
-      JSONField(JSONFieldTypes.CHILD,"field_file",true,child = Some(Child(FORM_FIELD_FILE,"field_file","field_id","field_id",None)),condition = Some(ConditionalField("type",Seq(JSONFieldTypes.FILE.asJson)))),
+      JSONField(JSONFieldTypes.CHILD,"field_file",true,child = Some(Child(FORM_FIELD_FILE,"field_file","field_id","field_id",None)),condition = Some(ConditionalField("type",Seq(JSONFieldTypes.FILE.asJson))), params = None),//Some(Map("min" -> 1, "max" -> 1).asJson)),
       JSONField(JSONFieldTypes.STRING,"lookupEntity",true,lookup = Some(JSONFieldLookup.prefilled(
         tables.map(x => JSONLookup(x,x))
       ))),
@@ -90,10 +90,12 @@ object FormUIDef {
         lookup = Some(JSONFieldLookup.prefilled(
           forms.map{ form => JSONLookup(form.form_id.get.toString,form.name) }
         )),
-        condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson)))
+        condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson,JSONFieldTypes.LINKED_FORM.asJson)))
       ),
-      JSONField(JSONFieldTypes.STRING,"masterFields",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson)))),
-      JSONField(JSONFieldTypes.STRING,"childFields",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson)))),
+      JSONField(JSONFieldTypes.STRING,"masterFields",true,label=Some("Parent field"),condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson,JSONFieldTypes.LOOKUP_LABEL.asJson,JSONFieldTypes.LINKED_FORM.asJson)))),
+      JSONField(JSONFieldTypes.STRING,"linked_key_fields",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.LINKED_FORM.asJson)))),
+      JSONField(JSONFieldTypes.STRING,"linked_label_fields",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.LINKED_FORM.asJson)))),
+      JSONField(JSONFieldTypes.STRING,"childFields",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson,JSONFieldTypes.LINKED_FORM.asJson)))),
       JSONField(JSONFieldTypes.STRING,"childQuery",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.CHILD.asJson)))),
       JSONField(JSONFieldTypes.STRING,"default",true),
       JSONField(JSONFieldTypes.NUMBER,"min",true,condition = Some(ConditionalField("type",Seq(JSONFieldTypes.NUMBER.asJson)))),
@@ -117,6 +119,8 @@ object FormUIDef {
           "lookupQuery",
           "child_form_id",
           "masterFields",
+          "linked_key_fields",
+          "linked_label_fields",
           "childFields",
           "childQuery",
           "default",

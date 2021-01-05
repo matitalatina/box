@@ -229,121 +229,133 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
 
   }
 
-  private def fieldsToJsonFields(fields:Seq[(((BoxField_row,Option[BoxField_i18n_row]),Option[BoxFieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
-
-    val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
-
-      if(fieldI18n.isEmpty) logger.warn(s"Field ${field.name} (field_id: ${field.field_id}) has no translation to $lang")
-
-      val lookup: Future[Option[JSONFieldLookup]] = {for{
-        refEntity <- field.lookupEntity
-        value <- field.lookupValueField
-
-        text = fieldI18n.flatMap(_.lookupTextField).getOrElse(EntityMetadataFactory.lookupField(refEntity,lang,None))
-      } yield {
-
-        import io.circe.generic.auto._
-        for{
-          keys <- EntityMetadataFactory.keysOf(refEntity)
-          filter = { for{
-            queryString <- field.lookupQuery
-            queryJson <- parse(queryString).right.toOption
-            query <- queryJson.as[JSONQuery].right.toOption
-          } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
-
-
-
-          lookupData <- db.run(Registry().actions(refEntity).find(filter.copy(lang = Some(lang))))
-
-        } yield {
-//          val options = lookupData.map{ lookupRow =>
-//            JSONLookup(lookupRow.get(value),lookupRow.get(text))
-//          }
-//          Some(JSONFieldLookup(refEntity, JSONFieldMap(value,text),options))
-          Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text), lookupData,field.lookupQuery))
+  private def linkedForms(field:BoxField_row):Future[Option[LinkedForm]] = {
+    val linkedFormOpt = for{
+      formId <- field.child_form_id
+      parentFields <- field.linked_key_fields
+      childFields <- field.childFields
+      parentLabel <- field.linked_label_fields
+    } yield {
+      boxDb.run{
+        BoxForm.BoxFormTable.filter(_.form_id === formId).result
+      }.map{ lForm =>
+        lForm.map{ value =>
+          LinkedForm(
+            value.name,
+            parentFields.split(",").map(_.trim),
+            childFields.split(",").map(_.trim),
+            parentLabel.split(",").map(_.trim),
+          )
         }
-
-      }} match {
-        case Some(a) => a
-        case None => Future.successful(None)
       }
+    }
+
+    Future.sequence(linkedFormOpt.toSeq).map(_.flatten.headOption) // fix types
+  }
+
+  private def condition(field:BoxField_row) = for{
+    fieldId <- field.conditionFieldId
+    values <- field.conditionValues
+    json <- Try(parse(values).right.get.as[Seq[Json]].right.get).toOption
+  } yield ConditionalField(fieldId,json)
+
+  private def file(ff:BoxFieldFile_row) = FileReference(ff.name_field, ff.file_field, ff.thumbnail_field)
+
+  private def label(field:BoxField_row,fieldI18n:Option[BoxField_i18n_row], lang:String):Future[String] = {
+
+    field.child_form_id match {
+      case None => Future.successful(fieldI18n.flatMap(_.label).getOrElse(field.name))
+      case Some(subformId) => boxDb.run{
+        {
+          for{
+            (form,formI18n) <- BoxForm.BoxFormTable joinLeft BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId
+          } yield (formI18n,form)
+        }.result.map{x => x.head._1.flatMap(_.label).getOrElse(x.head._2.name)}
+      }
+    }
+  }
+
+  private def subform(field:BoxField_row) = field.`type` match {
+    case JSONFieldTypes.CHILD => {
 
       import io.circe.generic.auto._
 
-      val childQuery:Option[JSONQuery] = {for{
+      val childQuery:Option[JSONQuery] = for{
         filter <- field.childQuery
         json <- parse(filter).right.toOption
         result <- json.as[JSONQuery].right.toOption
-      } yield
-        result }
+      } yield result
 
       (field.childQuery,childQuery) match {
         case (Some(f),None) => logger.warn(s"$f not parsed correctly")
         case _ => {}
       }
 
-
-      val subform = for{
+      for{
         id <- field.child_form_id
         local <- field.masterFields
         remote <- field.childFields
       } yield {
         Child(id,field.name,local,remote,childQuery)
       }
+    }
+    case _ => None
+  }
 
+  private def lookup(field:BoxField_row,fieldI18n:Option[BoxField_i18n_row], lang:String): Future[Option[JSONFieldLookup]] = {for{
+    refEntity <- field.lookupEntity
+    value <- field.lookupValueField
 
-      val label:Future[String] = {
+    text = fieldI18n.flatMap(_.lookupTextField).getOrElse(EntityMetadataFactory.lookupField(refEntity,lang,None))
+  } yield {
 
-        field.child_form_id match {
-          case None => Future.successful(fieldI18n.flatMap(_.label).getOrElse(field.name))
-          case Some(subformId) => boxDb.run{
-            {
-              for{
-                (form,formI18n) <- BoxForm.BoxFormTable joinLeft BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId
-              } yield (formI18n,form)
-            }.result.map{x => x.head._1.flatMap(_.label).getOrElse(x.head._2.name)}
-          }
-        }
-      }
+    import io.circe.generic.auto._
+    for{
+      keys <- EntityMetadataFactory.keysOf(refEntity)
+      filter = { for{
+        queryString <- field.lookupQuery
+        queryJson <- parse(queryString).right.toOption
+        query <- queryJson.as[JSONQuery].right.toOption
+      } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
 
-      val tooltip:Future[Option[String]] = Future.successful(fieldI18n.flatMap(_.tooltip))
+      lookupData <- db.run(Registry().actions(refEntity).find(filter.copy(lang = Some(lang))))
 
-      val placeholder:Future[Option[String]] = Future.successful(fieldI18n.flatMap(_.placeholder))
+    } yield {
+      Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text,field.masterFields.getOrElse(field.name)), lookupData,field.lookupQuery))
+    }
 
-      val nullable = pgColumn.map(_.nullable).getOrElse(true)
+  }} match {
+    case Some(a) => a
+    case None => Future.successful(None)
+  }
 
-      val file = fieldFile.map{ ff =>
-        FileReference(ff.name_field, ff.file_field, ff.thumbnail_field)
-      }
+  private def fieldsToJsonFields(fields:Seq[(((BoxField_row,Option[BoxField_i18n_row]),Option[BoxFieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
 
+    val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
 
-      val condition = for{
-        fieldId <- field.conditionFieldId
-        values <- field.conditionValues
-        json <- Try(parse(values).right.get.as[Seq[Json]].right.get).toOption
-      } yield ConditionalField(fieldId,json)
+      if(fieldI18n.isEmpty) logger.warn(s"Field ${field.name} (field_id: ${field.field_id}) has no translation to $lang")
 
       for{
-        look <- lookup
-        lab <- label
-        placeHolder <- placeholder
-        tip <- tooltip
+        look <- lookup(field, fieldI18n, lang)
+        lab <- label(field, fieldI18n, lang)
+        linked <- linkedForms(field)
       } yield {
         JSONField(
           `type` = field.`type`,
           name = field.name,
-          nullable = nullable,
+          nullable = pgColumn.map(_.nullable).getOrElse(true),
           readOnly = field.read_only,
           label = Some(lab),
           lookup = look,
-          placeholder = placeHolder,
+          placeholder = fieldI18n.flatMap(_.placeholder),
           widget = field.widget,
-          child = subform,
+          child = subform(field),
           default = field.default,
-          file = file,
-          condition = condition,
-          tooltip = tip,
-          params = field.params
+          file = fieldFile.map(file),
+          condition = condition(field),
+          tooltip = fieldI18n.flatMap(_.tooltip),
+          params = field.params,
+          linked = linked
         )
       }
 

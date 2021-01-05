@@ -1,6 +1,8 @@
 package ch.wsl.box.rest.routes.v1
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives.{complete, get, path, pathPrefix}
 import akka.stream.Materializer
@@ -11,13 +13,14 @@ import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, St
 import ch.wsl.box.rest.routes.{BoxFileRoutes, BoxRoutes, Export, Form, Functions, Table, View}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Auth, BoxSession, UserProfile}
-import com.softwaremill.session.SessionDirectives.touchRequiredSession
+import ch.wsl.box.services.Services
+import com.softwaremill.session.SessionDirectives.touchOptionalSession
 import com.softwaremill.session.SessionManager
 import com.softwaremill.session.SessionOptions.{oneOff, usingCookiesOrHeaders}
 
 import scala.concurrent.ExecutionContext
 
-case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem) {
+case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem, services: Services) {
 
   import Directives._
   import ch.wsl.box.rest.utils.Auth
@@ -61,6 +64,24 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
     }
   }
 
+  def auth(session:BoxSession) = pathPrefix("auth") {
+    path("token") {
+      get {
+        respondWithHeader(sessionManager.clientSessionManager.createHeader(session)) {
+          complete("ok")
+        }
+      }
+    } ~
+    path("cookie") {
+      get{
+        setCookie(sessionManager.clientSessionManager.createCookie(session)) {
+          complete("ok")
+        }
+      }
+
+    }
+  }
+
   def forms(implicit up:UserProfile) = path("forms") {
     get {
       complete(FormMetadataFactory(Auth.boxDB,Auth.adminDB).list)
@@ -83,21 +104,26 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
     }
   }
 
-  val route = touchRequiredSession(oneOff, usingCookiesOrHeaders) { session =>
-    implicit val up = session.userProfile
-    implicit val db = up.db
+  val route = touchOptionalSession(oneOff, usingCookiesOrHeaders) {
+    case Some(session) => {
+      implicit val up = session.userProfile
+      implicit val db = up.db
 
-    Access(session).route ~
-      export ~
-      function ~
-      file ~
-      entity ~
-      entities ~
-      tables ~
-      views ~
-      forms ~
-      form ~
-      news ~
-      Admin(session).route
+      Access(session).route ~
+        export ~
+        function ~
+        file ~
+        entity ~
+        entities ~
+        tables ~
+        views ~
+        forms ~
+        form ~
+        news ~
+        auth(session) ~
+        new WebsocketNotifications().route ~
+        Admin(session).route
+    }
+    case None => complete(StatusCodes.Unauthorized,"User not authenticated or session expired")
   }
 }

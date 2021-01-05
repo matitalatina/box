@@ -21,7 +21,7 @@ object ReadOnlyTest extends TestBase {
         _ <- Context.services.clientSession.login("test", "test")
         _ <- waitCycle
         _ <- Future {
-          Context.applicationInstance.goTo(EntityFormState(EntityKind.FORM.kind, Values.testFormName, "true", Some(JSONID(Vector(JSONKeyValue("id", "1"))).asString)))
+          Context.applicationInstance.goTo(EntityFormState(EntityKind.FORM.kind, Values.testFormName, "true", Some(JSONID(Vector(JSONKeyValue("id", "1"))).asString),false))
         }
         _ <- waitCycle
         _ <- waitCycle

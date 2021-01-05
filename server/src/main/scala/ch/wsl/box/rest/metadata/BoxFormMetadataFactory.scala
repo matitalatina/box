@@ -38,6 +38,8 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
     FunctionUIDef.field,
     FunctionUIDef.fieldI18n,
     FunctionUIDef.functionI18n,
+    NewsUIDef.main,
+    NewsUIDef.newsI18n
   )
 
   def getForms():Future[Seq[BoxForm.BoxForm_row]] = {
@@ -52,7 +54,7 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
     }
   }
 
-  val visibleAdmin = Seq(FUNCTION,FORM)
+  val visibleAdmin = Seq(FUNCTION,FORM,NEWS)
 
   override def list: Future[Seq[String]] = registry.map(_.filter(f => visibleAdmin.contains(f.objId)).map(_.name))
 
@@ -66,6 +68,7 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
       case f if f.objId == FORM_FIELD => Seq(FormUIDef.fieldI18n,FormUIDef.fieldFile)
       case f if f.objId == FUNCTION => Seq(FunctionUIDef.field,FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
       case f if f.objId == FUNCTION_FIELD => Seq(FunctionUIDef.fieldI18n)
+      case f if f.objId == NEWS => Seq(NewsUIDef.newsI18n)
       case _ => Seq()
     }
   }

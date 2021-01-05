@@ -28,6 +28,13 @@ object WidgetsNames {
   val simpleFile = "simpleFile"
   val simpleChild = "simpleChild"
   val tableChild = "tableChild"
+  val h1 = "title_h1"
+  val h2 = "title_h2"
+  val h3 = "title_h3"
+  val h4 = "title_h4"
+  val h5 = "title_h5"
+  val staticText = "static_text"
+  val linkedForm = "linked_form"
 
   val all = Seq(
     textinput,
@@ -52,6 +59,13 @@ object WidgetsNames {
     richTextEditorFull,
     simpleFile,
     simpleChild,
-    tableChild
+    tableChild,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    staticText,
+    linkedForm
   ).sorted
 }

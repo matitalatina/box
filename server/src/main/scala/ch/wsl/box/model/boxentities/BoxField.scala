@@ -30,11 +30,13 @@ object BoxField {
                            conditionFieldId:Option[String] = None,
                            conditionValues:Option[String] = None,
                            params:Option[Json] = None,
-                           read_only:Boolean = false
+                           read_only:Boolean = false,
+                           linked_key_fields:Option[String] = None,
+                           linked_label_fields:Option[String] = None
                          )
 
   class BoxField(_tableTag: Tag) extends Table[BoxField_row](_tableTag, "field") {
-    def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues,params,read_only) <> (BoxField_row.tupled, BoxField_row.unapply)
+    def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues,params,read_only,linked_key_fields,linked_label_fields) <> (BoxField_row.tupled, BoxField_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val field_id: Rep[Int] = column[Int]("field_id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
@@ -62,6 +64,8 @@ object BoxField {
     val conditionValues: Rep[Option[String]] = column[Option[String]]("conditionValues", O.Default(None))
     val params: Rep[Option[Json]] = column[Option[Json]]("params", O.Default(None))
     val read_only: Rep[Boolean] = column[Boolean]("read_only")
+    val linked_key_fields: Rep[Option[String]] = column[Option[String]]("linked_key_fields", O.Default(None))
+    val linked_label_fields: Rep[Option[String]] = column[Option[String]]("linked_label_fields", O.Default(None))
 
     /** Foreign key referencing Form (database name fkey_form) */
     lazy val formFk = foreignKey("fkey_form", form_id, BoxForm.BoxFormTable)(r => r.form_id, onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)
@@ -86,8 +90,6 @@ object BoxField {
   /** Table description of table field_i18n. Objects of this class serve as prototypes for rows in queries. */
   class BoxField_i18n(_tableTag: Tag) extends Table[BoxField_i18n_row](_tableTag, "field_i18n") {
     def * = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField) <> (BoxField_i18n_row.tupled, BoxField_i18n_row.unapply)
-    /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField).shaped.<>({ r=>import r._; _1.map(_=> BoxField_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
@@ -105,6 +107,7 @@ object BoxField {
     val hint: Rep[Option[String]] = column[Option[String]]("hint", O.Default(None))
     /** Database column refTextProperty SqlType(text), Default(None) */
     val lookupTextField: Rep[Option[String]] = column[Option[String]]("lookupTextField", O.Default(None))
+
 
     /** Foreign key referencing Field (database name fkey_field) */
     lazy val fieldFk = foreignKey("fkey_field", field_id, BoxFieldTable)(r => Rep.Some(r.field_id), onUpdate=ForeignKeyAction.Cascade, onDelete=ForeignKeyAction.Cascade)

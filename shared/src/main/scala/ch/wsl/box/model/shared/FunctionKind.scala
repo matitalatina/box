@@ -5,7 +5,8 @@ object FunctionKind {
     val TABLE = "table"
     val PDF = "pdf"
     val HTML = "html"
+    val SHP = "shp"
 
-    val all = Seq(TABLE,PDF,HTML)
+    val all = Seq(TABLE,PDF,HTML,SHP)
   }
 }

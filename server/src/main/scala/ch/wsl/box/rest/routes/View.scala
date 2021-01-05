@@ -13,14 +13,14 @@ import akka.util.ByteString
 import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, JSONTableActions, JSONViewActions, Lookup}
-import ch.wsl.box.rest.utils.{Auth, JSONSupport, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, JSONSupport, UserProfile, XLSExport, XLSTable}
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.parse
 import scribe.Logging
 import slick.lifted.TableQuery
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.metadata.EntityMetadataFactory
-import ch.wsl.box.rest.services.{XLSExport, XLSTable}
+
 
 import scala.concurrent.{ExecutionContext, Future}
 

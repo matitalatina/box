@@ -154,6 +154,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       borderColor(rgb(169, 169, 169))
     ),
 
+    unsafeRoot(".modal") (
+      backgroundColor.rgba(0,0,0,0.5),
+    ),
+
     unsafeRoot(".container-fluid")(
       padding.`0`
     ),
@@ -198,6 +202,9 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val jsonMetadataRendered = style(
     unsafeChild("input") (
+      float.right
+    ),
+    unsafeChild("textarea") (
       float.right
     )
   )

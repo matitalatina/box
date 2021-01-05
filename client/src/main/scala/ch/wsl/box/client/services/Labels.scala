@@ -30,6 +30,7 @@ object Labels {
 
   object error{
     def notfound = get("error.notfound")
+    def session_expired = get("error.session_expired")
   }
 
   object login{
@@ -95,6 +96,7 @@ object Labels {
     def csv = get ("exports.csv")
     def pdf = get ("exports.pdf")
     def html = get ("exports.html")
+    def shp = get ("exports.shp")
   }
 
   object entity{

@@ -32,11 +32,11 @@ import scala.language.reflectiveCalls
   */
 
 case class EntityFormModel(name:String, kind:String, id:Option[String], metadata:Option[JSONMetadata], data:Json,
-                           error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean, changed:Boolean, write:Boolean)
+                           error:String, children:Seq[JSONMetadata], navigation: Navigation, loading:Boolean, changed:Boolean, write:Boolean, public:Boolean)
 
 object EntityFormModel extends HasModelPropertyCreator[EntityFormModel] {
   implicit val blank: Blank[EntityFormModel] =
-    Blank.Simple(EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true))
+    Blank.Simple(EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true, false))
 }
 
 object EntityFormViewPresenter extends ViewFactory[EntityFormState] {
@@ -73,8 +73,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
     val jsonId = state.id.flatMap(JSONID.fromString)
 
     {for{
-      metadata <- if(reloadMetadata) services.rest.metadata(state.kind, services.clientSession.lang(), state.entity) else Future.successful(model.get.metadata.get)
-      children <- if(Seq(EntityKind.FORM,EntityKind.BOX).map(_.kind).contains(state.kind) && reloadMetadata) services.rest.children(state.kind,state.entity,services.clientSession.lang()) else Future.successful(Seq())
+      metadata <- if(reloadMetadata) services.rest.metadata(state.kind, services.clientSession.lang(), state.entity,state.public) else Future.successful(model.get.metadata.get)
+      children <- if(Seq(EntityKind.FORM,EntityKind.BOX).map(_.kind).contains(state.kind) && reloadMetadata) services.rest.children(state.kind,state.entity,services.clientSession.lang(),state.public) else Future.successful(Seq())
       data <- state.id match {
         case Some(id) => services.rest.get(state.kind, services.clientSession.lang(), state.entity,jsonId.get)
         case None => Future.successful{
@@ -94,7 +94,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         Navigation.empty1,
         true,
         false,
-        state.writeable
+        state.writeable,
+        state.public
       ))
 
       currentData = Json.Null.deepMerge(data)
@@ -132,9 +133,12 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
         for {
           id <- JSONID.fromString(m.id.getOrElse("")) match {
             case Some (id) => services.rest.update (m.kind, services.clientSession.lang(), m.name, id, data)
-            case None => services.rest.insert (m.kind, services.clientSession.lang (), m.name, data)
+            case None => services.rest.insert (m.kind, services.clientSession.lang (), m.name, data,m.public)
           }
-          result <- services.rest.get(m.kind, services.clientSession.lang(), m.name, id)
+          result <- m.public match {
+            case false => services.rest.get(m.kind, services.clientSession.lang(), m.name, id)
+            case true => Future.successful(data)
+          }
         } yield {
           logger.debug("saveAction::Result")
           result
@@ -349,7 +353,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
     def confirm(cb: () => Any) =  action.confirmText match {
       case Some(ct) => {
-        val confim = window.confirm(ct)
+        val confim = window.confirm(Labels(ct))
         if(confim) {
           cb()
         }
@@ -372,7 +376,9 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
   override def getTemplate: scalatags.generic.Modifier[Element] = {
 
-    val recordNavigation = {
+    val recordNavigation = showIf(model.subProp(_.public).transform(x => !x)){
+
+
 
       def navigation = model.subModel(_.navigation)
 
@@ -405,7 +411,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
           Navigation.button(navigation.subProp(_.hasNext),presenter.last,Labels.navigation.last,_.Float.right()),
           Navigation.button(navigation.subProp(_.hasNext),presenter.next,Labels.navigation.next,_.Float.right())
         )
-      )
+      ).render
     }
 
 
@@ -430,13 +436,15 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       div(BootstrapStyles.Float.right(),ClientConf.style.navigatorArea) (
         recordNavigation
       ),
-      div(BootstrapStyles.Float.right(),ClientConf.style.navigatorArea) (
-        produceWithNested(model.subProp(_.name)) { (m,release) =>
-          div(
-            button(ClientConf.style.boxButton,Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", release(labelTitle))," "
-          ).render
-        }
-      ),
+      showIf(model.subProp(_.public).transform(x => !x)) {
+        div(BootstrapStyles.Float.right(), ClientConf.style.navigatorArea)(
+          produceWithNested(model.subProp(_.name)) { (m, release) =>
+            div(
+              button(ClientConf.style.boxButton, Navigate.click(Routes(model.subProp(_.kind).get, m).entity(m)))(Labels.entities.table + " ", release(labelTitle)), " "
+            ).render
+          }
+        ).render
+      },
       div(BootstrapStyles.Visibility.clearfix),
       produceWithNested(model.subProp(_.write)) { (w,realeser) =>
         if(!w) Seq() else

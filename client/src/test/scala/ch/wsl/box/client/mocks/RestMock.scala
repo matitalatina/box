@@ -1,7 +1,7 @@
 package ch.wsl.box.client.mocks
 
 import ch.wsl.box.client.services.REST
-import ch.wsl.box.model.shared.{Child, ExportDef, FormActionsMetadata, IDs, JSONCount, JSONField, JSONFieldMap, JSONFieldTypes, JSONID, JSONKeyValue, JSONLookup, JSONMetadata, JSONQuery, Layout, LayoutBlock, LoginRequest, NewsEntry, SharedLabels, WidgetsNames}
+import ch.wsl.box.model.shared.{Child, ExportDef, FormActionsMetadata, IDs, JSONCount, JSONField, JSONFieldMap, JSONFieldTypes, JSONID, JSONKeyValue, JSONLookup, JSONMetadata, JSONQuery, Layout, LayoutBlock, LoginRequest, NewsEntry, SharedLabels, TableAccess, WidgetsNames}
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
 import io.circe.syntax._
@@ -74,7 +74,7 @@ class RestMock extends REST with Logging {
     ???
   }
 
-  override def metadata(kind: String, lang: String, entity: String): Future[JSONMetadata] = Future.successful{
+  override def metadata(kind: String, lang: String, entity: String, public:Boolean): Future[JSONMetadata] = Future.successful{
     Values.metadata
   }
 
@@ -83,7 +83,7 @@ class RestMock extends REST with Logging {
     ???
   }
 
-  override def children(kind: String, entity: String, lang: String): Future[Seq[JSONMetadata]] = Future.successful{
+  override def children(kind: String, entity: String, lang: String, public:Boolean): Future[Seq[JSONMetadata]] = Future.successful{
     Seq(Values.childMetadata,Values.subchildMetadata)
   }
 
@@ -116,7 +116,7 @@ class RestMock extends REST with Logging {
     ???
   }
 
-  override def insert(kind: String, lang: String, entity: String, data: Json): Future[JSONID] = Future.successful{
+  override def insert(kind: String, lang: String, entity: String, data: Json, public:Boolean): Future[JSONID] = Future.successful{
     JSONID(id = Vector(JSONKeyValue("id","1")))
   }
 
@@ -183,8 +183,8 @@ class RestMock extends REST with Logging {
     ???
   }
 
-  override def writeAccess(table: String, kind: String): Future[Boolean] = {
-    println("writeAccess not implemented")
+  override def tableAccess(table: String, kind: String): Future[TableAccess] = {
+    println("table Access not implemented")
     ???
   }
 

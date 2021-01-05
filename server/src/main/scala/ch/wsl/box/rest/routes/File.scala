@@ -13,13 +13,15 @@ import akka.util.ByteString
 import ch.wsl.box.jdbc.FullDatabase
 import ch.wsl.box.model.shared.JSONID
 import ch.wsl.box.rest.logic.DbActions
-import ch.wsl.box.rest.routes.File.FileHandler
+import ch.wsl.box.rest.routes.File.{BoxFile, FileHandler}
 import io.circe.Decoder
 import nz.co.rossphillips.thumbnailer.Thumbnailer
 import nz.co.rossphillips.thumbnailer.thumbnailers.{DOCXThumbnailer, ImageThumbnailer, PDFThumbnailer, TextThumbnailer}
 import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.services.Services
+import ch.wsl.box.services.files.FileId
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -27,13 +29,11 @@ import scala.util.Try
 
 
 object File{
-  case class BoxFile(file:Option[Array[Byte]], mime: Option[String], name:Option[String])
+  case class BoxFile(file:Option[Array[Byte]], mime: Option[String], name:String)
 
   trait FileHandler[M <: Product]{
-    def inject(obj:M, file:Array[Byte], metadata:FileInfo):M
-    def extract(obj:M):BoxFile
-    def injectThumbnail(obj:M, file:Array[Byte]):M
-    def extractThumbnail(obj:M):BoxFile
+    def inject(obj:M, file:Array[Byte]):M
+    def extract(obj:M):Option[Array[Byte]]
   }
 
   def completeFile(f:BoxFile) =
@@ -42,7 +42,7 @@ object File{
         ContentType.parse(mime).right.toOption
       }.getOrElse(ContentTypes.`application/octet-stream`)
       val file = f.file.getOrElse(Array())
-      val name = f.name.getOrElse("noname")
+      val name = f.name
 
       val entity = HttpEntity(contentType,file)
       val contentDistribution: HttpHeader = headers.`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> name, "size" -> file.length.toString))
@@ -52,7 +52,7 @@ object File{
 
 }
 
-case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database) extends Logging {
+case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database,services: Services) extends Logging {
   import Directives._
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
@@ -61,29 +61,92 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   val dbActions = new DbActions[T,M](table)
   implicit val boxDb = FullDatabase(db,Auth.adminDB)
 
-
-  def createThumbnail(file:Array[Byte],contentType:String):Option[Array[Byte]] = Try{
-    val thumbnailer = new Thumbnailer(new PDFThumbnailer, new TextThumbnailer, new ImageThumbnailer, new DOCXThumbnailer)
-    thumbnailer.setSize(450,300)
-    thumbnailer.generateThumbnail(new ByteArrayInputStream(file),contentType)
-  }.toOption
-
-  def upload(id:JSONID)(metadata:FileInfo, byteSource:Source[ByteString, Any]) = {
-    for{
-      bytea <- DBIO.from(byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray))
-      row <- dbActions.getById(id)
-      rowWithFile = handler.inject(row.get,bytea,metadata)
-      rowWithFileAndThumb <- DBIO.from{Future{
-        createThumbnail(bytea,metadata.contentType.mediaType.toString) match {
-          case Some(thumbnail) => handler.injectThumbnail(rowWithFile,thumbnail)
-          case None => rowWithFile
-        }}
-
-      }
-      result <- dbActions.update(id,rowWithFileAndThumb)
-    } yield result
+  private def boxFile(fileId: FileId,data:Option[Array[Byte]],tpe:String):BoxFile = {
+    val mime = data.map(services.imageCacher.mime)
+    BoxFile(
+      file = data,
+      mime = mime,
+      name = fileId.name(mime,tpe)
+    )
   }
 
+  def upload(id:JSONID):Route =  post {
+    fileUpload("file") { case (metadata, byteSource) =>
+      val result = db.run{{
+        for{
+          bytea <- DBIO.from(byteSource.runReduce[ByteString]{ (x,y) =>  x ++ y }.map(_.toArray))
+          row <- dbActions.getById(id)
+          rowWithFile = handler.inject(row.get,bytea)
+          result <- dbActions.update(id,rowWithFile)
+          _ <- DBIO.from(services.imageCacher.clear(FileId(id,field)))
+        } yield result
+      }.transactionally}
+      complete(result)
+    }
+  }
+
+  def thumb(fileId: FileId):Route = path("thumb") {
+    get {
+      def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
+      val thumb = services.imageCacher.thumbnail(fileId,file,450,300)
+      onSuccess(thumb) { result =>
+        File.completeFile(boxFile(fileId,Some(result),"thumb"))
+      }
+    }
+  }
+
+  def getFile(fileId: FileId):Route = pathEnd {
+    get {
+      onSuccess(db.run(dbActions.getById(fileId.rowId))) { result =>
+        val f = handler.extract(result.head)
+        File.completeFile(boxFile(fileId,f,"file"))
+      }
+    }
+  }
+
+  def width(fileId: FileId):Route = pathPrefix("width") {
+    path(Segment) { w =>
+      get {
+        def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
+
+        val thumb = services.imageCacher.width(fileId, file, w.toInt)
+        onSuccess(thumb) { result =>
+          File.completeFile(boxFile(fileId, Some(result),"width"))
+        }
+      }
+    }
+  }
+
+  def cover(fileId: FileId):Route = pathPrefix("cover") {
+    pathPrefix(Segment) { w =>
+      path(Segment) { h =>
+        get {
+          def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
+          val thumb = services.imageCacher.cover(fileId, file, w.toInt, h.toInt)
+          onSuccess(thumb) { result =>
+            File.completeFile(boxFile(fileId, Some(result),"cover"))
+          }
+        }
+      }
+    }
+  }
+
+  def fit(fileId: FileId):Route = pathPrefix("fit") {
+    pathPrefix(Segment) { w =>
+      path(Segment) { h =>
+        parameterMap { params =>
+          get {
+            def file = db.run(dbActions.getById(fileId.rowId)).map(result => handler.extract(result.head))
+
+            val thumb = services.imageCacher.fit(fileId, file, w.toInt, h.toInt, params.get("color").map(x => "#"+x).getOrElse(""))
+            onSuccess(thumb) { result =>
+              File.completeFile(boxFile(fileId, Some(result),"fit"))
+            }
+          }
+        }
+      }
+    }
+  }
 
   def route:Route = {
     pathPrefix(field) {
@@ -91,46 +154,15 @@ case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       pathPrefix(Segment) { idstr =>
         logger.info(s"Parsing File'JSONID: $idstr")
         JSONID.fromString(idstr) match {
-          case Some(id) => post {
-            fileUpload("file") { case (metadata, byteSource) =>
-              val result = db.run(upload(id)(metadata, byteSource).transactionally)
-              complete(result)
-            }
-          } ~
-            path("thumb") {
-              get {
-                onSuccess(db.run(dbActions.getById(id))) { result =>
-                  val thumb = handler.extractThumbnail(result.head)
-                  if(thumb.file.isEmpty) {
-                    val originalFile = handler.extract(result.head)
-                    val thumbnailFile = for{
-                      file <- originalFile.file
-                      mime <- originalFile.mime
-                      thumbnail <- createThumbnail(file,mime)
-                    } yield {
-                      val row = handler.injectThumbnail(result.head,thumbnail)
-                      dbActions.update(id,row)
-                      handler.extractThumbnail(row)
-                    }
-                    thumbnailFile match {
-                      case Some(thu) => File.completeFile(thu)
-                      case None => complete(StatusCodes.NotFound)
-                    }
-
-                  } else {
-                    File.completeFile(thumb)
-                  }
-                }
-              }
-            } ~
-            pathEnd {
-              get {
-                onSuccess(db.run(dbActions.getById(id))) { result =>
-                  val f = handler.extract(result.head)
-                  File.completeFile(f)
-                }
-              }
-            }
+          case Some(id) => {
+            val fileId = FileId(id,field)
+            upload(id) ~
+            thumb(fileId) ~
+            width(fileId) ~
+            cover(fileId) ~
+            fit(fileId) ~
+            getFile(fileId)
+          }
           case None => complete(StatusCodes.BadRequest,s"JSONID $idstr not valid")
         }
 

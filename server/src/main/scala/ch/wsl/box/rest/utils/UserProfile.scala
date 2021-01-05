@@ -10,11 +10,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class UserProfile(name: String, db: Database, boxDb:Database) {
 
-  def check(implicit ec:ExecutionContext): Future[Boolean] = db.run{
-    sql"""select 1""".as[Int]
-  }.map{ _ =>
-    true
-  }.recover{case _ => false}
+  def check(implicit ec:ExecutionContext): Future[Boolean] = Future.successful{
+    db != null
+  }
 
   def accessLevel(implicit ec:ExecutionContext):Future[Int] = Auth.boxDB.run{
     BoxUser.BoxUserTable.filter(_.username === name).result

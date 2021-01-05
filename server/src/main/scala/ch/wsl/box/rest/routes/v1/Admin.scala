@@ -9,11 +9,12 @@ import ch.wsl.box.model.shared.EntityKind
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, StubMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxFileRoutes, BoxRoutes, Form, Table}
 import ch.wsl.box.rest.utils.{Auth, BoxSession, UserProfile}
+import ch.wsl.box.services.Services
 import com.softwaremill.session.SessionManager
 
 import scala.concurrent.ExecutionContext
 
-case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: UserProfile, mat:Materializer, system:ActorSystem) {
+case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: UserProfile, mat:Materializer, system:ActorSystem, services: Services) {
 
   import Directives._
   import ch.wsl.box.rest.utils.Auth
@@ -43,7 +44,7 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
   }
 
   def file = pathPrefix("boxfile") {
-    BoxFileRoutes.route(session.userProfile.boxUserProfile, mat, ec)
+    BoxFileRoutes.route(session.userProfile.boxUserProfile, mat, ec, services)
   }
 
   def entity = pathPrefix("boxentity") {

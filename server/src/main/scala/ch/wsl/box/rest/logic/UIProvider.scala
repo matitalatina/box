@@ -23,7 +23,7 @@ object UIProvider {
     val r = q.result
     r
   }.map { _.headOption.map{ uiFile =>
-    BoxFile(uiFile.file,uiFile.mime,uiFile.name)
+    BoxFile(uiFile.file,uiFile.mime,uiFile.name.getOrElse("noname"))
   }}
 }
 
