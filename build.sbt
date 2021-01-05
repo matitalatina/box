@@ -256,12 +256,14 @@ lazy val publishAllTask = {
     (clean in server),
     (clean in codegen),
     (clean in serverCacheRedis),
+    (clean in serverServices),
     (webpack in fullOptJS in Compile in client),
     (compile in Compile in codegen),
     (publish in sharedJVM),
     (publish in codegen),
     (publish in server),
     (publish in serverCacheRedis),
+    (publish in serverServices),
   )
 }
 
@@ -270,6 +272,8 @@ lazy val publishAllLocalTask = {
   Def.sequential(
     (clean in client),
     (clean in server),
+    (clean in serverCacheRedis),
+    (clean in serverServices),
     (clean in codegen),
     (webpack in fullOptJS in Compile in client),
     (compile in Compile in codegen),
@@ -277,6 +281,7 @@ lazy val publishAllLocalTask = {
     (publishLocal in codegen),
     (publishLocal in server),
     (publishLocal in serverCacheRedis),
+    (publishLocal in serverServices),
   )
 }
 
