@@ -22,7 +22,7 @@ object BoxExportField {
 
   /** Table description of table field. Objects of this class serve as prototypes for rows in queries.
     *  NOTE: The following names collided with Scala keywords and were escaped: type */
-  class BoxExportField(_tableTag: Tag) extends profile.api.Table[BoxExportField_row](_tableTag, "export_field") {
+  class BoxExportField(_tableTag: Tag) extends profile.api.Table[BoxExportField_row](_tableTag,BoxSchema.schema, "export_field") {
     def * = (Rep.Some(field_id), export_id, `type`, name, widget, lookupEntity, lookupValueField, lookupQuery, default,conditionFieldId,conditionValues) <> (BoxExportField_row.tupled, BoxExportField_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(field_id), Rep.Some(export_id), Rep.Some(`type`),  name, widget, lookupEntity, lookupValueField, lookupQuery, default,conditionFieldId,conditionValues).shaped.<>({ r=>import r._; _1.map(_=> BoxExportField_row.tupled((_1, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -69,7 +69,7 @@ object BoxExportField {
   /** GetResult implicit for fetching Field_i18n_row objects using plain SQL queries */
 
   /** Table description of table field_i18n. Objects of this class serve as prototypes for rows in queries. */
-  class BoxExportField_i18n(_tableTag: Tag) extends profile.api.Table[BoxExportField_i18n_row](_tableTag, "export_field_i18n") {
+  class BoxExportField_i18n(_tableTag: Tag) extends profile.api.Table[BoxExportField_i18n_row](_tableTag,BoxSchema.schema, "export_field_i18n") {
     def * = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField) <> (BoxExportField_i18n_row.tupled, BoxExportField_i18n_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField).shaped.<>({ r=>import r._; _1.map(_=> BoxExportField_i18n_row.tupled((_1, _2, _3, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
@@ -100,7 +100,7 @@ object BoxExportField {
 
   case class BoxExportHeader_i18n_row(id: Option[Int] = None, key:String, lang:String, label:String)
 
-  class BoxExportHeader_i18n(_tableTag: Tag) extends profile.api.Table[BoxExportHeader_i18n_row](_tableTag, "export_header_i18n") {
+  class BoxExportHeader_i18n(_tableTag: Tag) extends profile.api.Table[BoxExportHeader_i18n_row](_tableTag,BoxSchema.schema, "export_header_i18n") {
     def * = (Rep.Some(id), key, lang, label) <> (BoxExportHeader_i18n_row.tupled, BoxExportHeader_i18n_row.unapply)
 
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)

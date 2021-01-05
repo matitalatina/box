@@ -11,7 +11,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
  * Created by andreaminetti on 10/03/16.
  *
  */
-class JSONSchemas(boxDb:Database,adminDb:Database)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) {
+class JSONSchemas(adminDb:Database)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) {
 
 
 
@@ -22,7 +22,7 @@ class JSONSchemas(boxDb:Database,adminDb:Database)(implicit up:UserProfile, mat:
         title = Some(field.name)
       ))
       case Some(child) => for{
-        m <- FormMetadataFactory(boxDb,adminDb).of(child.objId,lang)
+        m <- FormMetadataFactory(adminDb).of(child.objId,lang)
         schema <- of(m)
       } yield field.name -> schema
 

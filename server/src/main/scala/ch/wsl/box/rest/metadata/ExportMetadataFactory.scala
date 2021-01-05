@@ -22,7 +22,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
   implicit val db = up.db
   implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
 
-  def list: Future[Seq[String]] = Auth.boxDB.run{
+  def list: Future[Seq[String]] = Auth.adminDB.run{
     BoxExport.BoxExportTable.result
   }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
@@ -46,7 +46,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     for{
       roles <- up.memberOf
       al <- up.accessLevel
-      qr <-  Auth.boxDB.run(query.result)
+      qr <-  Auth.adminDB.run(query.result)
     } yield {
        qr.filter(_._7.map(ar => checkRole(roles, ar, al)).getOrElse(true))
          .sortBy(_._4.getOrElse(Double.MaxValue)).map(
@@ -65,7 +65,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
     } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
 
-    Auth.boxDB.run{
+    Auth.adminDB.run{
       query.result
     }.map(_.map{ case (label, function, name, _, hint, tooltip) =>
       ExportDef(function, label.getOrElse(name), hint, tooltip,FunctionKind.Modes.TABLE)
@@ -85,11 +85,11 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     } yield (f, fi18n)
 
     for {
-      (export,exportI18n) <- Auth.boxDB.run {
+      (export,exportI18n) <- Auth.adminDB.run {
         queryExport.result
       }.map(_.head)
 
-      fields <- Auth.boxDB.run {
+      fields <- Auth.adminDB.run {
         queryField(export.export_id.get).sortBy(_._1.field_id).result
       }
 

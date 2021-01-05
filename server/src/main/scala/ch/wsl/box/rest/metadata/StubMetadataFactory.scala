@@ -39,7 +39,7 @@ object StubMetadataFactory {
           exportFields = Some(metadata.exportFields.mkString(","))
         )
 
-        up.boxDb.run{
+        up.db.run{
           (BoxForm.BoxFormTable.returning(BoxForm.BoxFormTable) += newForm).transactionally
         }
       }
@@ -49,11 +49,11 @@ object StubMetadataFactory {
           lang = Some(lang._1),
           label = Some(entity)
         )
-        up.boxDb.run{
+        up.db.run{
           (BoxForm.BoxForm_i18nTable.returning(BoxForm.BoxForm_i18nTable) += newFormI18n).transactionally
         }
       })
-      a <- up.boxDb.run {
+      a <- up.db.run {
         DBIO.seq(metadata.fields.map { field =>
           val newField = BoxField_row(
             form_id = form.form_id.get,
@@ -70,7 +70,7 @@ object StubMetadataFactory {
 
         }: _*).transactionally
       }
-      fields <- up.boxDb.run {
+      fields <- up.db.run {
         BoxField.BoxFieldTable.filter(_.form_id === form.form_id.get ).result
       }
       fieldsI18n <- {
@@ -88,7 +88,7 @@ object StubMetadataFactory {
               lookupTextField = jsonField.lookup.map(_.map.textProperty)
             )
 
-            up.boxDb.run{
+            up.db.run{
               (BoxField.BoxField_i18nTable.returning(BoxField.BoxField_i18nTable) += newFieldI18n).transactionally
             }
 

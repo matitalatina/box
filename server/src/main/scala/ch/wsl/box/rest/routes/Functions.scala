@@ -26,7 +26,7 @@ object Functions extends Data {
     implicit def db:Database = up.db
 
     for{
-      functionDef <- Auth.boxDB.run{
+      functionDef <- Auth.adminDB.run{
         functions.BoxFunctionTable.filter(_.name === function).result
       }.map(_.headOption)
       result <- functionDef match {

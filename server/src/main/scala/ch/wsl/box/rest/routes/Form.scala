@@ -180,7 +180,7 @@ case class Form(
     path("schema") {
       get {
         complete {
-          metadata.map(new JSONSchemas(Auth.boxDB,Auth.adminDB).of)
+          metadata.map(new JSONSchemas(Auth.adminDB).of)
         }
       }
     } ~

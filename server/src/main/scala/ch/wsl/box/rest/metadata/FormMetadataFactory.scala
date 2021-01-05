@@ -45,7 +45,7 @@ object FormMetadataFactory{
     cacheFormName = cacheFormName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
   }
 
-  def hasGuestAccess(formName:String,boxDb:Database)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = boxDb.run{
+  def hasGuestAccess(formName:String,adminDb:Database)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = adminDb.run{
     BoxFormTable.filter(f => f.name === formName && f.guest_user.nonEmpty).result.headOption
   }.map{_.map{ form =>
     Auth.userProfileForUser(form.guest_user.get)
@@ -56,12 +56,12 @@ object FormMetadataFactory{
 
 
 
-case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
+case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
   implicit val db = up.db
   implicit val database = FullDatabase(up.db,adminDb)
 
-  def list: Future[Seq[String]] = boxDb.run{
+  def list: Future[Seq[String]] = adminDb.run{
     BoxForm.BoxFormTable.result
   }.map{_.map(_.name)}
 
@@ -141,14 +141,14 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
 
 
     for{
-      (form,formI18n) <- boxDb.run( fQuery.result ).map(_.head)
-      fields <- boxDb.run{fieldQuery(form.form_id.get).result}
+      (form,formI18n) <- adminDb.run( fQuery.result ).map(_.head)
+      fields <- adminDb.run{fieldQuery(form.form_id.get).result}
       fieldsFile <- Future.sequence(fields.map { case (f, _) =>
-        boxDb.run {
+        adminDb.run {
           BoxField.BoxFieldFileTable.filter(_.field_id === f.field_id).result
         }.map(_.headOption)
       })
-      actions <- boxDb.run{
+      actions <- adminDb.run{
         BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
       }
       cols <- new PgInformationSchema(form.entity).columns
@@ -236,7 +236,7 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
       childFields <- field.childFields
       parentLabel <- field.linked_label_fields
     } yield {
-      boxDb.run{
+      adminDb.run{
         BoxForm.BoxFormTable.filter(_.form_id === formId).result
       }.map{ lForm =>
         lForm.map{ value =>
@@ -265,7 +265,7 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
 
     field.child_form_id match {
       case None => Future.successful(fieldI18n.flatMap(_.label).getOrElse(field.name))
-      case Some(subformId) => boxDb.run{
+      case Some(subformId) => adminDb.run{
         {
           for{
             (form,formI18n) <- BoxForm.BoxFormTable joinLeft BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId

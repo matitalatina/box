@@ -2,9 +2,12 @@ package ch.wsl.box.rest.routes.v1
 
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives.{complete, path, pathPrefix}
+import ch.wsl.box.model.boxentities.BoxSchema
 import ch.wsl.box.rest.logic.TableAccess
 import ch.wsl.box.rest.utils.{Auth, BoxSession}
-import io.circe._, io.circe.generic.auto._, io.circe.syntax._
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
 
 import scala.concurrent.ExecutionContext
 
@@ -17,7 +20,7 @@ case class Access(session:BoxSession)(implicit ec:ExecutionContext) {
     pathPrefix("box-admin") {
       pathPrefix(Segment) { table =>
         path("table-access") {
-          complete(TableAccess(table,Auth.boxDbSchema,session.username,Auth.boxDB).map(_.asJson))
+          complete(TableAccess(table,BoxSchema.schema.get,session.username,Auth.adminDB).map(_.asJson))
         }
       }
     } ~

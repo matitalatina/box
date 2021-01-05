@@ -43,13 +43,13 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
   )
 
   def getForms():Future[Seq[BoxForm.BoxForm_row]] = {
-    up.boxDb.run{
+    up.db.run{
       BoxForm.BoxFormTable.result
     }
   }
 
   def getUsers():Future[Seq[BoxUser.BoxUser_row]] = {
-    up.boxDb.run{
+    up.db.run{
       BoxUser.BoxUserTable.result
     }
   }

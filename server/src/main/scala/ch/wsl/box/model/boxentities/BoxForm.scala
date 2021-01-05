@@ -34,7 +34,7 @@ object BoxForm {
                         )
 
   /** Table description of table form. Objects of this class serve as prototypes for rows in queries. */
-  class BoxForm(_tableTag: Tag) extends profile.api.Table[BoxForm_row](_tableTag, "form") {
+  class BoxForm(_tableTag: Tag) extends profile.api.Table[BoxForm_row](_tableTag,BoxSchema.schema, "form") {
     def * = (Rep.Some(form_id), name, entity, description, layout, tabularFields, query,exportFields,guest_user,edit_key_field) <> (BoxForm_row.tupled, BoxForm_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
@@ -71,7 +71,7 @@ object BoxForm {
   /** GetResult implicit for fetching Form_i18n_row objects using plain SQL queries */
 
   /** Table description of table form_i18n. Objects of this class serve as prototypes for rows in queries. */
-  class BoxForm_i18n(_tableTag: Tag) extends profile.api.Table[BoxForm_i18n_row](_tableTag, "form_i18n") {
+  class BoxForm_i18n(_tableTag: Tag) extends profile.api.Table[BoxForm_i18n_row](_tableTag,BoxSchema.schema, "form_i18n") {
     def * = (Rep.Some(id), form_id, lang, label, tooltip, hint,viewTable) <> (BoxForm_i18n_row.tupled, BoxForm_i18n_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
@@ -106,7 +106,7 @@ object BoxForm {
                               reload:Boolean,
                               confirm_text:Option[String])
 
-  class BoxForm_actions(_tableTag: Tag) extends profile.api.Table[BoxForm_actions_row](_tableTag, "form_actions") {
+  class BoxForm_actions(_tableTag: Tag) extends profile.api.Table[BoxForm_actions_row](_tableTag,BoxSchema.schema, "form_actions") {
     def * = (Rep.Some(id), form_id, action, importance, after_action_goto, label, update_only, insert_only, reload,confirm_text) <> (BoxForm_actions_row.tupled, BoxForm_actions_row.unapply)
 
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))

@@ -48,7 +48,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
   def start() =  {
 
 
-    BoxConfig.load(Auth.boxDB)
+    BoxConfig.load(Auth.adminDB)
 
 
     val akkaConf: Config = BoxConfig.akkaHttpSession
@@ -66,7 +66,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
 
     val loggerWriter = BoxConfig.logDB match  {
       case false => ConsoleWriter
-      case true => new DbWriter(Auth.boxDB)
+      case true => new DbWriter(Auth.adminDB)
     }
     println(s"Logger level: ${BoxConfig.loggerLevel}")
 
@@ -75,7 +75,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
 
     //TODO need to be reworked now it's based on an hack, it call generated root to populate models
     Registry().routes("en")(Auth.adminUserProfile, materializer, executionContext)
-    BoxRoutes()(Auth.boxUserProfile, materializer, executionContext)
+    BoxRoutes()(Auth.adminUserProfile, materializer, executionContext)
 
 
     for{

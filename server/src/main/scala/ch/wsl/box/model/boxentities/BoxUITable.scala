@@ -12,7 +12,7 @@ object BoxUITable {
 
   case class BoxUI_row(id: Option[Int] = None, key:String, value: String, accessLevel:Int)
 
-  class BoxUI(_tableTag: Tag) extends profile.api.Table[BoxUI_row](_tableTag, "ui") {
+  class BoxUI(_tableTag: Tag) extends profile.api.Table[BoxUI_row](_tableTag,BoxSchema.schema, "ui") {
     def * = (Rep.Some(id), key, value, accessLevel) <> (BoxUI_row.tupled, BoxUI_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(id),  key, value, accessLevel).shaped.<>({r=>import r._; _1.map(_=> BoxUI_row.tupled((_1, _2, _3, _4)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

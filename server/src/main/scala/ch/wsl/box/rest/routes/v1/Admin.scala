@@ -24,7 +24,7 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
   def forms = pathPrefix("box-admin") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),userProfile.boxDb,EntityKind.BOX.kind).route
+        Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),userProfile.db,EntityKind.BOX.kind).route
       }
     } ~ pathEnd{
       complete(BoxFormMetadataFactory().list)
@@ -44,11 +44,11 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
   }
 
   def file = pathPrefix("boxfile") {
-    BoxFileRoutes.route(session.userProfile.boxUserProfile, mat, ec, services)
+    BoxFileRoutes.route(session.userProfile, mat, ec, services)
   }
 
   def entity = pathPrefix("boxentity") {
-    BoxRoutes()(session.userProfile.boxUserProfile, mat, ec)
+    BoxRoutes()(session.userProfile, mat, ec)
   }
 
   def entities = path("boxentities") {

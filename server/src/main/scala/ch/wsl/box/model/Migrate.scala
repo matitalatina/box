@@ -1,5 +1,6 @@
 package ch.wsl.box.model
 
+import ch.wsl.box.model.boxentities.BoxSchema
 import ch.wsl.box.rest.utils.Auth
 import org.flywaydb.core.Flyway
 
@@ -13,10 +14,10 @@ object Migrate {
       .sqlMigrationPrefix("BOX_V")
       //.undoSqlMigrationPrefix("BOX_U") oly for pro or enterprise version
       .repeatableSqlMigrationPrefix("BOX_R")
-      .schemas(Auth.boxDbSchema)
+      .schemas(BoxSchema.schema.get)
       .table("flyway_schema_history_box")
       .locations("migrations")
-      .dataSource(Auth.boxDbPath, Auth.boxUserProfile.name, Auth.boxDbPassword)
+      .dataSource(Auth.dbPath, Auth.adminUserProfile.name, Auth.dbPassword)
       .load()
 
     flyway.migrate()
@@ -25,7 +26,7 @@ object Migrate {
   def app() = {
     val flyway = Flyway.configure()
       .baselineOnMigrate(true)
-      .schemas(Auth.boxDbSchema,Auth.dbSchema)
+      .schemas(BoxSchema.schema.get,Auth.dbSchema)
       .defaultSchema(Auth.dbSchema)
       .table("flyway_schema_history")
       .locations("migrations")

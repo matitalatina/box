@@ -16,7 +16,7 @@ object NewsLoader {
       news_i18n <- BoxNews.BoxNews_i18nTable if news_i18n.lang === lang && news.news_id === news_i18n.news_id
     } yield (news.datetime,news_i18n.title,news_i18n.text,news.author)
 
-    Auth.adminUserProfile.boxDb.run{
+    Auth.adminUserProfile.db.run{
       q.sortBy( _._1.desc).result
     }.map{ _.map{ x =>
       NewsEntry(DateTimeFormatters.timestamp.format(x._1),x._2,x._3,x._4)

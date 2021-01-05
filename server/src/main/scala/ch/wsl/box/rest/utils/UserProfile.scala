@@ -8,17 +8,15 @@ import slick.jdbc.GetResult
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UserProfile(name: String, db: Database, boxDb:Database) {
+case class UserProfile(name: String, db: Database) {
 
   def check(implicit ec:ExecutionContext): Future[Boolean] = Future.successful{
     db != null
   }
 
-  def accessLevel(implicit ec:ExecutionContext):Future[Int] = Auth.boxDB.run{
+  def accessLevel(implicit ec:ExecutionContext):Future[Int] = Auth.adminDB.run{
     BoxUser.BoxUserTable.filter(_.username === name).result
   }.map(_.headOption.map(_.access_level_id).getOrElse(-1))
-
-  def boxUserProfile = UserProfile(name, boxDb, boxDb)   //todo : do it less ugly
 
 
   def memberOf(implicit ec:ExecutionContext) = Auth.adminDB.run{              //todo: depends on v_roles, hasrole and hasrolein >> make cleaner
