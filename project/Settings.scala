@@ -111,7 +111,8 @@ object Settings {
   ))
 
   val serverCacheRedisDependecies = Def.setting(Seq(
-    "com.github.scredis" %% "scredis" % "2.4.3"
+    "com.github.scredis" %% "scredis" % "2.4.3",
+    "com.iheart"         %% "ficus"   % versions.ficus,
   ))
 
   /** Dependencies only used by the JVM project */

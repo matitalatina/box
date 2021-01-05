@@ -20,12 +20,17 @@ case class FileAccessGenerator(model:Model,conf:Config) extends slick.codegen.So
     val tableTableQuery = tbl.TableClass.name
     val tableTableRow = tbl.EntityType.name
 
+    val (inj,ext) = if(col.nullable) {
+      ("Some(file)",s"row.$bytea")
+    } else {
+      ("file",s"Some(row.$bytea)")
+    }
 
 
     s"""
        |    File("$table.$bytea",$tableTableQuery,new FileHandler[$tableTableRow] {
-       |        override def inject(row: $tableTableRow, file: Array[Byte]) = row.copy($bytea = Some(file))
-       |        override def extract(row: $tableTableRow) = row.$bytea
+       |        override def inject(row: $tableTableRow, file: Array[Byte]) = row.copy($bytea = $inj)
+       |        override def extract(row: $tableTableRow) = $ext
        |    }).route""".stripMargin
 
   }

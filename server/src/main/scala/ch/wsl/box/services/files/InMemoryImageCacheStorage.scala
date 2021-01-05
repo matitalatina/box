@@ -1,16 +1,12 @@
 package ch.wsl.box.services.files
 
 import ch.wsl.box.model.shared.JSONID
+import ch.wsl.box.services.file.{FileCacheKey, FileId, ImageCacheStorage}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
-trait ImageCacheStorage {
-  def clearField(id:FileId)(implicit ex:ExecutionContext):Future[Boolean]
-  def save(fileId: FileCacheKey,data:Array[Byte])(implicit ex:ExecutionContext):Future[Boolean]
-  def delete(fileId: FileCacheKey)(implicit ex:ExecutionContext):Future[Boolean]
-  def get(fileId: FileCacheKey)(implicit ex:ExecutionContext):Future[Option[Array[Byte]]]
-}
+
 
 class InMemoryImageCacheStorage extends ImageCacheStorage {
 
