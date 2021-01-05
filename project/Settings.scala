@@ -110,6 +110,10 @@ object Settings {
     "com.outr" %% "scribe" % versions.scribe,
   ))
 
+  val serverCacheRedisDependecies = Def.setting(Seq(
+    "com.github.scredis" %% "scredis" % "2.4.3"
+  ))
+
   /** Dependencies only used by the JVM project */
   val jvmDependencies = Def.setting(sharedJVMCodegenDependencies.value ++ Seq(
     "org.scala-lang"           % "scala-reflect"     % versions.scala212,

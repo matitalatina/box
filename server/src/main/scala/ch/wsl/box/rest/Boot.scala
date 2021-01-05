@@ -14,6 +14,7 @@ import ch.wsl.box.services.Services
 import com.typesafe.config.Config
 import scribe._
 import scribe.writer.ConsoleWriter
+import wvlet.airframe.Design
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -111,16 +112,21 @@ object Boot extends App  {
     case _ => ("Standalone","DEV")
   }
 
-  Migrate.all()
 
-  val executionContext = ExecutionContext.fromExecutor(
-    new java.util.concurrent.ForkJoinPool(Runtime.getRuntime.availableProcessors())
-  )
+  def run(name:String,app_version:String,module:Design) {
+    Migrate.all()
 
-  DefaultModule.injector.build[Services] { services =>
-    val server = new Box(name, app_version)(executionContext,services)
+    val executionContext = ExecutionContext.fromExecutor(
+      new java.util.concurrent.ForkJoinPool(Runtime.getRuntime.availableProcessors())
+    )
 
-    server.start()
+    module.build[Services] { services =>
+      val server = new Box(name, app_version)(executionContext, services)
+
+      server.start()
+    }
   }
+
+  run(name,app_version,DefaultModule.injector)
 }
 

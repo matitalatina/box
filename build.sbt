@@ -69,6 +69,19 @@ lazy val server: Project  = project
   .dependsOn(sharedJVM)
   .dependsOn(codegen)
 
+lazy val serverCacheRedis  = (project in file("server-cache-redis")).settings(
+  organization := "boxframework",
+  name := "box-server-cache-redis",
+  bintrayRepository := "maven",
+  bintrayOrganization := Some("waveinch"),
+  publishMavenStyle := true,
+  licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
+  scalaVersion := Settings.versions.scala212,
+  libraryDependencies ++= Settings.serverCacheRedisDependecies.value,
+  resolvers += Resolver.jcenterRepo,
+  resolvers += Resolver.bintrayRepo("waveinch","maven"),
+  git.useGitDescribe := true
+).dependsOn(server)
 
 lazy val client: Project = (project in file("client"))
   .settings(
@@ -225,11 +238,13 @@ lazy val publishAllTask = {
     (clean in client),
     (clean in server),
     (clean in codegen),
+    (clean in serverCacheRedis),
     (webpack in fullOptJS in Compile in client),
     (compile in Compile in codegen),
     (publish in sharedJVM),
     (publish in codegen),
-    (publish in server)
+    (publish in server),
+    (publish in serverCacheRedis),
   )
 }
 
@@ -243,7 +258,8 @@ lazy val publishAllLocalTask = {
     (compile in Compile in codegen),
     (publishLocal in sharedJVM),
     (publishLocal in codegen),
-    (publishLocal in server)
+    (publishLocal in server),
+    (publishLocal in serverCacheRedis),
   )
 }
 
