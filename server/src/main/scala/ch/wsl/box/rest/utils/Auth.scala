@@ -31,7 +31,13 @@ object Auth extends Logging {
   val dbSchema = dbConf.as[String]("schema")
   val adminPoolSize = dbConf.as[Option[Int]]("adminPoolSize").getOrElse(5)
   val poolSize = dbConf.as[Option[Int]]("poolSize").getOrElse(3)
+  val enableConnectionPool = dbConf.as[Option[Boolean]]("enableConnectionPool").getOrElse(true)
 
+  val connectionPool = if(enableConnectionPool) {
+    ConfigValueFactory.fromAnyRef("HikariCP")
+  } else {
+    ConfigValueFactory.fromAnyRef("disabled")
+  }
 
 
 
@@ -51,12 +57,12 @@ object Auth extends Logging {
     .withValue("password",ConfigValueFactory.fromAnyRef(dbConf.as[String]("password")))
     .withValue("numThreads",ConfigValueFactory.fromAnyRef(adminPoolSize))
     .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(adminPoolSize))
+    .withValue("connectionPool",connectionPool)
   )
 
 
   def adminUserProfile = UserProfile(
-    name=dbConf.as[String]("user"),
-    db=adminDB
+    name=dbConf.as[String]("user")
   )
 
 
@@ -71,13 +77,11 @@ object Auth extends Logging {
     * check if this is a valid user on your system and return his profile,
     * that include his username and the connection to the DB
     */
-  def getUserProfile(name: String, password: String)(implicit executionContext: ExecutionContext): UserProfile = {
+  def getUserProfile(name: String, password: String)(implicit executionContext: ExecutionContext): Option[UserProfile] = {
 
     val hash = MessageDigest.getInstance("MD5").digest(s"$name $password".getBytes()).map(0xFF & _).map { "%02x".format(_) }.foldLeft("") {_ + _}
 
-    userProfiles.get(hash) match {
-      case Some(up) => up
-      case None => {
+    userProfiles.get(hash).orElse{
 
         logger.info(s"Creating new pool for $name with hash $hash with poolsize $poolSize")
 
@@ -90,29 +94,16 @@ object Auth extends Logging {
 
         if(validUser) {
 
-          val db = Database.forConfig("",ConfigFactory.empty()
-            .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-            .withValue("url",ConfigValueFactory.fromAnyRef(dbPath))
-            .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-            .withValue("user",ConfigValueFactory.fromAnyRef(name))
-            .withValue("password",ConfigValueFactory.fromAnyRef(password))
-            .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(poolSize))
-            .withValue("numThreads",ConfigValueFactory.fromAnyRef(poolSize))
-            .withValue("minimumIdle",ConfigValueFactory.fromAnyRef(0))
-            .withValue("idleTimeout",ConfigValueFactory.fromAnyRef(10000))
-          )
-
-
-          val up = UserProfile(name, db)
+          val up = UserProfile(name)
 
           userProfiles += hash -> up
 
-          up
+          Some(up)
         } else {
-          UserProfile(name, null)
+          None
         }
 
-      }
+
     }
 
   }
@@ -120,7 +111,7 @@ object Auth extends Logging {
   //todo: verificare differenza di Auth.boxDB con userProfile.box
   def onlyAdminstrator(s:BoxSession)(r:Route)(implicit ec: ExecutionContext):Route = {
 
-    onSuccess(s.userProfile.accessLevel){
+    onSuccess(s.userProfile.get.accessLevel){
       case i:Int if i>=900 => r
       case al => get {
         complete("You don't have the rights (access level = " + al + ")")
@@ -130,26 +121,9 @@ object Auth extends Logging {
   }
 
   def userProfileForUser(u:String):UserProfile = {
-    val prop = new Properties()
-    prop.setProperty("connectionInitSql",s"SET ROLE $u")
-
-    val confDb = ConfigFactory.empty()
-      .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-      .withValue("connectionInitSql",ConfigValueFactory.fromAnyRef(s"SET ROLE $u"))
-      .withValue("url",ConfigValueFactory.fromAnyRef(dbPath))
-      .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-      .withValue("user",ConfigValueFactory.fromAnyRef(dbConf.as[String]("user")))
-      .withValue("password",ConfigValueFactory.fromAnyRef(dbConf.as[String]("password")))
-      .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(3))
-      .withValue("numThreads",ConfigValueFactory.fromAnyRef(3))
-
-
-
-    val db = Database.forConfig("",confDb)
 
     UserProfile(
-      name=u,
-      db=db
+      name=u
     )
 
   }

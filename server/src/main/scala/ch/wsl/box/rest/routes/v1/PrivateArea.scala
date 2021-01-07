@@ -106,7 +106,7 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
 
   val route = touchOptionalSession(oneOff, usingCookiesOrHeaders) {
     case Some(session) => {
-      implicit val up = session.userProfile
+      implicit val up = session.userProfile.get
       implicit val db = up.db
 
       Access(session).route ~

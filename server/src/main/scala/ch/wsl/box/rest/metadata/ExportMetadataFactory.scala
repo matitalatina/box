@@ -72,7 +72,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     }.head)
   }
 
-  def of(name:String, lang:String):Future[JSONMetadata]  = {
+  def of(schema:String, name:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
       (export, exportI18n) <- BoxExport.BoxExportTable joinLeft BoxExport.BoxExport_i18nTable.filter(_.lang === lang) on (_.export_id === _.export_id)
       if export.function === name
@@ -93,7 +93,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
         queryField(export.export_id.get).sortBy(_._1.field_id).result
       }
 
-      jsonFields <- Future.sequence(fields.map(fieldsMetadata(lang)))
+      jsonFields <- Future.sequence(fields.map(fieldsMetadata(schema,lang)))
 
     } yield {
 
@@ -115,7 +115,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     }
   }
 
-  private def fieldsMetadata(lang:String)(el:(BoxExportField_row, Option[BoxExportField_i18n_row])):Future[JSONField] = {
+  private def fieldsMetadata(schema:String, lang:String)(el:(BoxExportField_row, Option[BoxExportField_i18n_row])):Future[JSONField] = {
     import ch.wsl.box.shared.utils.JSONUtils._
 
     val (field,fieldI18n) = el
@@ -132,7 +132,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
       import io.circe.generic.auto._
       for {
 
-        keys <- EntityMetadataFactory.keysOf(entity)
+        keys <- EntityMetadataFactory.keysOf(schema,entity)
         filter = { for{
           queryString <- field.lookupQuery
           queryJson <- parse(queryString).right.toOption

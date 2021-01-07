@@ -1,17 +1,41 @@
 package ch.wsl.box.rest.utils
 
+import ch.wsl.box.jdbc.UserDatabase
 import ch.wsl.box.model.boxentities.BoxUser
-//import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.jdbc.PostgresProfile.plainAPI._
+import slick.basic.DatabasePublisher
+import slick.dbio
+import slick.dbio.{DBIOAction, NoStream}
+import slick.sql.SqlAction
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import com.github.tminglei.slickpg.utils.PlainSQLUtils._
 import slick.jdbc.GetResult
 
+
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UserProfile(name: String, db: Database) {
+case class UserProfile(name: String) {
 
-  def check(implicit ec:ExecutionContext): Future[Boolean] = Future.successful{
-    db != null
+
+  def db(implicit executionContext: ExecutionContext) = new UserDatabase {
+
+    //cannot interpolate directly
+    val setRole: SqlAction[Int, NoStream, Effect] = sqlu"SET ROLE placeholder".overrideStatements(Seq(s"SET ROLE $name"))
+    val resetRole = sqlu"RESET ROLE"
+
+    override def stream[T](a: DBIOAction[Seq[T], Streaming[T], Nothing]) = {
+
+      Auth.adminDB.stream[T](
+        setRole.andThen[Seq[T],Streaming[T],Nothing](a).andFinally(resetRole)
+      )
+
+
+    }
+
+    override def run[R](a: DBIOAction[R, NoStream, Nothing]) = {
+      Auth.adminDB.run {
+        setRole.andThen[R,NoStream,Nothing](a).andFinally(resetRole)
+      }
+    }
   }
 
   def accessLevel(implicit ec:ExecutionContext):Future[Int] = Auth.adminDB.run{

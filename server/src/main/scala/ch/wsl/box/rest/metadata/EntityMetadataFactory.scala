@@ -78,7 +78,7 @@ object EntityMetadataFactory extends Logging {
 //    }
 //  }
 
-  def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext,boxDatabase: FullDatabase):Future[JSONMetadata] = {
+  def of(_schema:String,table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext,boxDatabase: FullDatabase):Future[JSONMetadata] = {
 
     implicit val db = up.db
 
@@ -89,7 +89,7 @@ object EntityMetadataFactory extends Logging {
       case None => {
         logger.info(s"Metadata table cache miss! cache key: ($table, $lang, $lookupMaxRows), cache: ${cacheTable}")
 
-        val schema = new PgInformationSchema(table, excludeFields)
+        val schema = new PgInformationSchema(_schema,table, excludeFields)(ec,Auth.adminDB)
 
         //    println(schema.fk)
 
@@ -99,7 +99,7 @@ object EntityMetadataFactory extends Logging {
           for {
             fk <- schema.findFk(field.column_name)
             firstNoPK <- fk match {
-              case Some(f) => firstNoPKField(f.referencingTable)
+              case Some(f) => firstNoPKField(_schema,f.referencingTable)
               case None => Future.successful(None)
             }
             count <- fk match {
@@ -168,7 +168,7 @@ object EntityMetadataFactory extends Logging {
         val result = for {
           c <- schema.columns
           fields <- Future.sequence(c.map(field2form))
-          keys <- EntityMetadataFactory.keysOf(table)
+          keys <- EntityMetadataFactory.keysOf(_schema,table)
         } yield {
           val fieldList = fields.map(_.name)
           JSONMetadata(
@@ -202,14 +202,14 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def keysOf(table:String)(implicit ec:ExecutionContext, boxDb:FullDatabase):Future[Seq[String]] = {
+  def keysOf(schema:String,table:String)(implicit ec:ExecutionContext, boxDb:FullDatabase):Future[Seq[String]] = {
     logger.info("Getting " + table + " keys")
     cacheKeys.lift((table)) match {
       case Some(r) => r
       case None => {
         logger.info(s"Metadata keys cache miss! cache key: ($table), cache: ${cacheKeys}")
 
-        val result = new PgInformationSchema(table).pk.map { pk => //map to enter the future
+        val result = new PgInformationSchema(schema,table)(ec,Auth.adminDB).pk.map { pk => //map to enter the future
           logger.info(pk.toString)
           pk.boxKeys
         }
@@ -225,9 +225,9 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def firstNoPKField(table:String)(implicit db:FullDatabase, ec:ExecutionContext):Future[Option[String]] = {
+  def firstNoPKField(_schema:String,table:String)(implicit db:FullDatabase, ec:ExecutionContext):Future[Option[String]] = {
     logger.info("Getting first field of " + table + " that is not PK")
-    val schema = new PgInformationSchema(table,excludeFields)
+    val schema = new PgInformationSchema(_schema,table,excludeFields)(ec,Auth.adminDB)
     for {
       pks <- schema.pk.map(_.boxKeys) //todo: or boxKeys?
       c <- schema.columns
@@ -252,8 +252,8 @@ object EntityMetadataFactory extends Logging {
 
 
 
-  def isView(table:String)(implicit ec:ExecutionContext,boxDatabase: FullDatabase):Future[Boolean] =
-    new PgInformationSchema(table).pgTable.map(_.isView)  //map to enter the future
+  def isView(schema:String,table:String)(implicit ec:ExecutionContext,boxDatabase: FullDatabase):Future[Boolean] =
+    new PgInformationSchema(schema,table)(ec,Auth.adminDB).pgTable.map(_.isView)  //map to enter the future
 
 
 

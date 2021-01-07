@@ -74,7 +74,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     }.head)
   }
 
-  def of(name:String, lang:String):Future[JSONMetadata]  = {
+  def of(schema:String,name:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
       (func, functionI18n) <- functions.BoxFunctionTable joinLeft functions.BoxFunction_i18nTable.filter(_.lang === lang) on (_.function_id === _.function_id)
       if func.name === name
@@ -95,7 +95,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
         queryField(func.function_id.get).sortBy(_._1.field_id).result
       }
 
-      jsonFields <- Future.sequence(fields.map(fieldsMetadata(lang)))
+      jsonFields <- Future.sequence(fields.map(fieldsMetadata(schema,lang)))
 
     } yield {
 
@@ -109,7 +109,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     }
   }
 
-  private def fieldsMetadata(lang:String)(el:(BoxFunctionField_row, Option[BoxFunctionField_i18n_row])):Future[JSONField] = {
+  private def fieldsMetadata(schema:String, lang:String)(el:(BoxFunctionField_row, Option[BoxFunctionField_i18n_row])):Future[JSONField] = {
     import ch.wsl.box.shared.utils.JSONUtils._
 
     val (field,fieldI18n) = el
@@ -126,7 +126,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       import io.circe.generic.auto._
       for {
 
-        keys <- EntityMetadataFactory.keysOf(entity)
+        keys <- EntityMetadataFactory.keysOf(schema,entity)
         filter = {
             for{
               queryString <- field.lookupQuery

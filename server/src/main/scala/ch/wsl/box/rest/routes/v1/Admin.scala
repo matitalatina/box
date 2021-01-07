@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives.{complete, get, path, pathPrefix}
 import akka.stream.Materializer
 import ch.wsl.box.model.BoxActionsRegistry
+import ch.wsl.box.model.boxentities.BoxSchema
 import ch.wsl.box.model.shared.EntityKind
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, StubMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxFileRoutes, BoxRoutes, Form, Table}
@@ -24,7 +25,7 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
   def forms = pathPrefix("box-admin") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),userProfile.db,EntityKind.BOX.kind).route
+        Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),userProfile.db,EntityKind.BOX.kind,schema = BoxSchema.schema).route
       }
     } ~ pathEnd{
       complete(BoxFormMetadataFactory().list)
@@ -44,11 +45,11 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
   }
 
   def file = pathPrefix("boxfile") {
-    BoxFileRoutes.route(session.userProfile, mat, ec, services)
+    BoxFileRoutes.route(session.userProfile.get, mat, ec, services)
   }
 
   def entity = pathPrefix("boxentity") {
-    BoxRoutes()(session.userProfile, mat, ec)
+    BoxRoutes()(session.userProfile.get, mat, ec)
   }
 
   def entities = path("boxentities") {

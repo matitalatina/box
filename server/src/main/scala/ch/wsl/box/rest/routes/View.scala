@@ -33,7 +33,7 @@ object View {
 
 }
 
-case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en")
+case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", schema:Option[String] = None)
                                                     (implicit
                                                      enc: Encoder[M],
                                                      dec:Decoder[M],
@@ -70,7 +70,7 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
           val query = parse(q).right.get.as[JSONQuery].right.get
           complete {
             for {
-              metadata <- EntityMetadataFactory.of(name, lang)
+              metadata <- EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang)
               fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
               data <- db.run(jsonActions.find(query))
             } yield {
@@ -113,13 +113,13 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def metadata:Route = path("metadata") {
     get {
-      complete{ EntityMetadataFactory.of(name, lang) }
+      complete{ EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang) }
     }
   }
 
   def tabularMetadata:Route = path("tabularMetadata") {
     get {
-      complete{ EntityMetadataFactory.of(name, lang) }
+      complete{ EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang) }
     }
   }
 
@@ -175,7 +175,7 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
             val query = parse(q).right.get.as[JSONQuery].right.get
             complete {
               for {
-                metadata <- EntityMetadataFactory.of(name, lang.getOrElse("en"))
+                metadata <- EntityMetadataFactory.of(Auth.dbSchema, name, lang.getOrElse("en"))
                 fkValues <- lang match {
                   case None => Future.successful(None)
                   case Some(_) => Lookup.valuesForEntity(metadata).map(Some(_))

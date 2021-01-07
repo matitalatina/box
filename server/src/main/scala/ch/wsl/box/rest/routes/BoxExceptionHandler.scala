@@ -7,8 +7,9 @@ import ch.wsl.box.model.shared.errors.{JsonDecoderExceptionReport, SQLExceptionR
 import ch.wsl.box.rest.logic.JSONDecoderException
 import ch.wsl.box.rest.utils.JSONSupport
 import org.postgresql.util.PSQLException
+import scribe.Logging
 
-case class BoxExceptionHandler(origins:Seq[String]) {
+case class BoxExceptionHandler(origins:Seq[String]) extends Logging {
 
   val authHeaderName = "x-box-auth"
 
@@ -36,6 +37,7 @@ case class BoxExceptionHandler(origins:Seq[String]) {
 
   def handler()  = ExceptionHandler {
     case sql: PSQLException => {
+      logger.info(s"${sql.getMessage}")
       cors.handle {
         complete(StatusCodes.InternalServerError, psql2sqlReport(sql))
       }

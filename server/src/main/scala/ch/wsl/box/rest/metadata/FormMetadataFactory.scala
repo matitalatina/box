@@ -127,7 +127,7 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
 
   private def keys(form:BoxForm_row):Future[Seq[String]] = form.edit_key_field.map{x =>
     Future.successful(x.split(",").toSeq.map(_.trim))
-  }.getOrElse(EntityMetadataFactory.keysOf(form.entity))
+  }.getOrElse(EntityMetadataFactory.keysOf(Auth.dbSchema,form.entity))
 
   private def getForm(formQuery: Query[BoxForm.BoxForm,BoxForm_row,Seq], lang:String) = {
 
@@ -151,7 +151,7 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
       actions <- adminDb.run{
         BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
       }
-      cols <- new PgInformationSchema(form.entity).columns
+      cols <- new PgInformationSchema(Auth.dbSchema,form.entity)(ec,adminDb).columns
       columns = fields.map(f => cols.find(_.column_name == f._1.name))
       keys <- keys(form)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
@@ -311,7 +311,7 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
 
     import io.circe.generic.auto._
     for{
-      keys <- EntityMetadataFactory.keysOf(refEntity)
+      keys <- EntityMetadataFactory.keysOf(Auth.dbSchema,refEntity)
       filter = { for{
         queryString <- field.lookupQuery
         queryJson <- parse(queryString).right.toOption

@@ -36,6 +36,17 @@ trait PostgresProfile extends ExPostgresProfile
     with SearchAssistants
     with PostGISImplicits
     with PostGISAssistants
+    with ByteaPlainImplicits
+    with SimpleArrayPlainImplicits
+    with Date2DateTimePlainImplicits
+    with PostGISPlainImplicits
+    with CirceJsonPlainImplicits
+    //    with SimpleJsonPlainImplicits
+    //    with SimpleNetPlainImplicits
+    //    with SimpleLTreePlainImplicits
+    //    with SimpleRangePlainImplicits
+    //    with SimpleHStorePlainImplicits
+    with SimpleSearchPlainImplicits
   {
     implicit val strListTypeMapper = new SimpleArrayJdbcType[String]("text").to(_.toList)
     implicit val shortListTypeMapper = new SimpleArrayJdbcType[Short]("int2").to(_.toList)
@@ -51,17 +62,18 @@ trait PostgresProfile extends ExPostgresProfile
 
 
 
-  val plainAPI = new API with ByteaPlainImplicits
-    with SimpleArrayPlainImplicits
-    with Date2DateTimePlainImplicits
-    with PostGISPlainImplicits
-    with CirceJsonPlainImplicits
-    //    with SimpleJsonPlainImplicits
-    //    with SimpleNetPlainImplicits
-    //    with SimpleLTreePlainImplicits
-    //    with SimpleRangePlainImplicits
-    //    with SimpleHStorePlainImplicits
-    with SimpleSearchPlainImplicits {}
+//  val plainAPI = new API
+//    with ByteaPlainImplicits
+//    with SimpleArrayPlainImplicits
+//    with Date2DateTimePlainImplicits
+//    with PostGISPlainImplicits
+//    with CirceJsonPlainImplicits
+//    //    with SimpleJsonPlainImplicits
+//    //    with SimpleNetPlainImplicits
+//    //    with SimpleLTreePlainImplicits
+//    //    with SimpleRangePlainImplicits
+//    //    with SimpleHStorePlainImplicits
+//    with SimpleSearchPlainImplicits {}
 
 
 

@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import ch.wsl.box.model.Migrate
 import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
@@ -16,7 +15,9 @@ import scribe._
 import scribe.writer.ConsoleWriter
 import wvlet.airframe.Design
 
-import scala.concurrent.{ExecutionContext, Future}
+import ch.wsl.box.model.Migrate
+
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
 
@@ -114,6 +115,7 @@ object Boot extends App  {
 
 
   def run(name:String,app_version:String,module:Design) {
+
     Migrate.all()
 
     val executionContext = ExecutionContext.fromExecutor(
@@ -122,7 +124,6 @@ object Boot extends App  {
 
     module.build[Services] { services =>
       val server = new Box(name, app_version)(executionContext, services)
-
       server.start()
     }
   }

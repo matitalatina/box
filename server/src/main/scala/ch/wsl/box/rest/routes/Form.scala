@@ -7,10 +7,10 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
-import ch.wsl.box.jdbc.FullDatabase
+import ch.wsl.box.jdbc.{FullDatabase, UserDatabase}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.utils.{Auth, JSONSupport, Timer, UserProfile, XLSExport, XLSTable}
+import ch.wsl.box.rest.utils.{Auth, JSONSupport, UserProfile, XLSExport, XLSTable}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
@@ -29,9 +29,10 @@ case class Form(
                  lang:String,
                  jsonActions: String => TableActions[Json], //EntityActionsRegistry().tableActions
                  metadataFactory: MetadataFactory, //JSONFormMetadataFactory(),
-                 db:Database,
+                 db:UserDatabase,
                  kind:String,
-                 public: Boolean = false
+                 public: Boolean = false,
+                 schema:Option[String] = None
                )(implicit up:UserProfile, ec: ExecutionContext, mat:Materializer) extends enablers.CSVDownload with Logging {
 
     import JSONSupport._
@@ -99,7 +100,7 @@ case class Form(
     def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.flatMap{ m =>
       val filteredFields = m.view match {
         case None => Future.successful(_tabMetadata(fields,m))
-        case Some(view) => EntityMetadataFactory.of(view,lang).map{ em =>
+        case Some(view) => EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),view,lang).map{ em =>
           _tabMetadata(Some(fields.getOrElse(m.tabularFields)),em)
         }
       }
@@ -194,7 +195,7 @@ case class Form(
     path("keys") {
       get {
         complete {
-          metadata.map(f => EntityMetadataFactory.keysOf(f.entity) )
+          metadata.map(f => EntityMetadataFactory.keysOf(schema.getOrElse(Auth.dbSchema),f.entity) )
         }
       }
     } ~

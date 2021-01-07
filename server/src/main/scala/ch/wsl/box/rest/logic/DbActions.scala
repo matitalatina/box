@@ -81,12 +81,12 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       .sort(query.sort, query.lang.getOrElse("en"))
       .page(query.paging)
 
-
-    db.db.stream(q
+    val stream: DBIOAction[Seq[M], Streaming[M], Effect.Read with Effect.Transactional] = q
       .result
       .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
       .transactionally
-    )
+
+    db.db.stream(stream)
 
   }
 
@@ -95,7 +95,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     q.page(query.paging).result
   }
 
-  def keys()(implicit db:FullDatabase): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(EntityMetadataFactory.keysOf(entity.baseTableRow.tableName))
+  def keys()(implicit db:FullDatabase): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(EntityMetadataFactory.keysOf(entity.baseTableRow.schemaName.getOrElse("public"),entity.baseTableRow.tableName))
 
   override def ids(query: JSONQuery)(implicit db: FullDatabase, mat: Materializer): DBIO[IDs] = {
     for{

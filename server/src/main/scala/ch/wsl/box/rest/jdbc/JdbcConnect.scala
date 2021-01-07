@@ -4,13 +4,14 @@ import java.sql._
 
 import ch.wsl.box.model.boxentities.BoxExportField
 import ch.wsl.box.model.boxentities.BoxExportField.BoxExportHeader_i18n_row
-import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import io.circe.Json
 import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.UserDatabase
 import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
 
 
@@ -25,17 +26,17 @@ object JdbcConnect extends Logging {
 
 
 
-  def function(name:String, args: Seq[Json], lang:String)(implicit ec:ExecutionContext,db:Database):Future[Option[DataResultTable]] = {
+  def function(name:String, args: Seq[Json], lang:String)(implicit ec:ExecutionContext,up:UserProfile):Future[Option[DataResultTable]] = {
 
     val result = Future{
       // make the connection
-      val connection = db.source.createConnection()
+      val connection = Auth.adminDB.source.createConnection()
       val result = Try {
         // create the statement, and run the select query
         val statement = connection.createStatement()
         val argsStr = if (args == null) ""
                       else args.map(_.toString()).mkString(",")
-        val query = s"SELECT * FROM $name($argsStr)".replaceAll("'","\\'").replaceAll("\"","'")
+        val query = s"SET ROLE ${up.name}; SELECT * FROM $name($argsStr)".replaceAll("'","\\'").replaceAll("\"","'")
         logger.info(query)
         val resultSet = statement.executeQuery(query)
         val metadata = getColumnMeta(resultSet.getMetaData)

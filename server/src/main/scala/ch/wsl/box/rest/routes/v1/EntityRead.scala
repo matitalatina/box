@@ -74,7 +74,7 @@ object EntityRead extends Logging  {
         path("metadata") {
           get {
             complete {
-              EntityMetadataFactory.of(name, lang)
+              EntityMetadataFactory.of(Auth.dbSchema,name, lang)
             }
           }
         } ~

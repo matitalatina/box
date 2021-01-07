@@ -24,7 +24,7 @@ object StubMetadataFactory {
 
     for{
       langs <- Future.sequence(BoxConfig.langs.map{ lang =>
-        EntityMetadataFactory.of(entity,lang).map(x => (lang,x))
+        EntityMetadataFactory.of(Auth.dbSchema,entity,lang).map(x => (lang,x))
       })
       metadata = langs.head._2
       form <- {
