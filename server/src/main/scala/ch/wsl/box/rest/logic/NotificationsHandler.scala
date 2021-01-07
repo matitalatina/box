@@ -4,6 +4,7 @@ import java.sql.Connection
 import java.util.Date
 
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.rest.utils.Auth
 import org.postgresql.PGConnection
 import scribe.Logging
 
@@ -29,7 +30,7 @@ class Listener(conn: Connection,channel:String,callback: (String) => Unit) exten
     running = false
   }
   private val stmt = conn.createStatement
-  val listenQuery = s"LISTEN $channel"
+  val listenQuery = s"SET ROLE ${Auth.adminUser}; LISTEN $channel"
   logger.info(listenQuery)
   stmt.execute(listenQuery)
   stmt.close

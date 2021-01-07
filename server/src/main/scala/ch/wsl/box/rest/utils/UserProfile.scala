@@ -16,27 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class UserProfile(name: String) {
 
 
-  def db(implicit executionContext: ExecutionContext) = new UserDatabase {
-
-    //cannot interpolate directly
-    val setRole: SqlAction[Int, NoStream, Effect] = sqlu"SET ROLE placeholder".overrideStatements(Seq(s"SET ROLE $name"))
-    val resetRole = sqlu"RESET ROLE"
-
-    override def stream[T](a: DBIOAction[Seq[T], Streaming[T], Nothing]) = {
-
-      Auth.adminDB.stream[T](
-        setRole.andThen[Seq[T],Streaming[T],Nothing](a).andFinally(resetRole)
-      )
-
-
-    }
-
-    override def run[R](a: DBIOAction[R, NoStream, Nothing]) = {
-      Auth.adminDB.run {
-        setRole.andThen[R,NoStream,Nothing](a).andFinally(resetRole)
-      }
-    }
-  }
+  def db = Auth.dbForUser(name)
 
   def accessLevel(implicit ec:ExecutionContext):Future[Int] = Auth.adminDB.run{
     BoxUser.BoxUserTable.filter(_.username === name).result

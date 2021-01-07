@@ -1,6 +1,6 @@
 package ch.wsl.box.information_schema
 
-import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile}
+import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile, UserDatabase}
 import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -8,7 +8,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext,db:Database) {
+class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext,db:UserDatabase) {
 
 
   private val FOREIGNKEY = "FOREIGN KEY"

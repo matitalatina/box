@@ -202,7 +202,7 @@ object EntityMetadataFactory extends Logging {
     }
   }
 
-  def keysOf(schema:String,table:String)(implicit ec:ExecutionContext, boxDb:FullDatabase):Future[Seq[String]] = {
+  def keysOf(schema:String,table:String)(implicit ec:ExecutionContext):Future[Seq[String]] = {
     logger.info("Getting " + table + " keys")
     cacheKeys.lift((table)) match {
       case Some(r) => r

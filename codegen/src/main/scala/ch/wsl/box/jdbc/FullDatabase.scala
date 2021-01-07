@@ -5,7 +5,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 
 case class FullDatabase(
                         db:UserDatabase,
-                        adminDb:Database
+                        adminDb:UserDatabase
                       ) {
   implicit val runDb = db
 }

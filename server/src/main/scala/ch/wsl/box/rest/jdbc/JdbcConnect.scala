@@ -30,7 +30,7 @@ object JdbcConnect extends Logging {
 
     val result = Future{
       // make the connection
-      val connection = Auth.adminDB.source.createConnection()
+      val connection = Auth.dbConnection.source.createConnection()
       val result = Try {
         // create the statement, and run the select query
         val statement = connection.createStatement()

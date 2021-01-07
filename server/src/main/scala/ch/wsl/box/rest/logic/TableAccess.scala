@@ -2,6 +2,7 @@ package ch.wsl.box.rest.logic
 
 import ch.wsl.box.rest.utils.Auth
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.UserDatabase
 
 import scala.concurrent.ExecutionContext
 
@@ -19,7 +20,7 @@ object TableAccess {
 
 
 
-  def apply(table:String,schema:String,user:String,db:Database)(implicit ec:ExecutionContext) = db.run {
+  def apply(table:String,schema:String,user:String,db:UserDatabase)(implicit ec:ExecutionContext) = db.run {
     sql"""select HAS_TABLE_PRIVILEGE(usename, concat($schema, '.', $table), 'insert') as insert,
                  HAS_TABLE_PRIVILEGE(usename, concat($schema, '.', $table), 'update') as update,
                  HAS_TABLE_PRIVILEGE(usename, concat($schema, '.', $table), 'delete') as delete

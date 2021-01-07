@@ -2,7 +2,7 @@ package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
 import ch.wsl.box.information_schema.{PgColumn, PgColumns, PgInformationSchema}
-import ch.wsl.box.jdbc.FullDatabase
+import ch.wsl.box.jdbc.{FullDatabase, UserDatabase}
 import ch.wsl.box.model.boxentities.BoxField.{BoxFieldFile_row, BoxField_i18n_row, BoxField_row}
 import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_row}
 import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
@@ -45,7 +45,7 @@ object FormMetadataFactory{
     cacheFormName = cacheFormName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
   }
 
-  def hasGuestAccess(formName:String,adminDb:Database)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = adminDb.run{
+  def hasGuestAccess(formName:String,adminDb:UserDatabase)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = adminDb.run{
     BoxFormTable.filter(f => f.name === formName && f.guest_user.nonEmpty).result.headOption
   }.map{_.map{ form =>
     Auth.userProfileForUser(form.guest_user.get)
@@ -56,10 +56,9 @@ object FormMetadataFactory{
 
 
 
-case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
+case class FormMetadataFactory(adminDb:UserDatabase)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
-  implicit val db = up.db
-  implicit val database = FullDatabase(up.db,adminDb)
+
 
   def list: Future[Seq[String]] = adminDb.run{
     BoxForm.BoxFormTable.result
@@ -74,7 +73,7 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
         val formQuery: Query[BoxForm.BoxForm, BoxForm_row, Seq] = for {
           form <- BoxForm.BoxFormTable if form.form_id === id
         } yield form
-        val result = getForm(formQuery,lang)
+        val result = adminDb.run(getForm(formQuery,lang))
         if(BoxConfig.enableCache) FormMetadataFactory.cacheFormId = FormMetadataFactory.cacheFormId ++ Map(cacheKey -> result)
         result.onComplete{ x =>
           if(x.isFailure) {
@@ -95,7 +94,7 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
         val formQuery: Query[BoxForm.BoxForm, BoxForm_row, Seq] = for {
           form <- BoxForm.BoxFormTable if form.name === name
         } yield form
-        val result = getForm(formQuery,lang)
+        val result = adminDb.run(getForm(formQuery,lang))
         if(BoxConfig.enableCache) FormMetadataFactory.cacheFormName = FormMetadataFactory.cacheFormName ++ Map(cacheKey -> result)
         result.onComplete{x =>
           if(x.isFailure) {
@@ -140,21 +139,18 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
     val fQuery = formQuery joinLeft BoxForm.BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id)
 
 
-    for{
-      (form,formI18n) <- adminDb.run( fQuery.result ).map(_.head)
-      fields <- adminDb.run{fieldQuery(form.form_id.get).result}
-      fieldsFile <- Future.sequence(fields.map { case (f, _) =>
-        adminDb.run {
-          BoxField.BoxFieldFileTable.filter(_.field_id === f.field_id).result
-        }.map(_.headOption)
+    val result = for{
+      (form,formI18n) <- fQuery.result.map(_.head)
+      fields <- fieldQuery(form.form_id.get).result
+      fieldsFile <- DBIO.sequence(fields.map { case (f, _) =>
+          BoxField.BoxFieldFileTable.filter(_.field_id === f.field_id).result.headOption
       })
-      actions <- adminDb.run{
-        BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
-      }
-      cols <- new PgInformationSchema(Auth.dbSchema,form.entity)(ec,adminDb).columns
+      actions <- BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
+
+      cols <- DBIO.from(new PgInformationSchema(Auth.dbSchema,form.entity)(ec,adminDb).columns)
       columns = fields.map(f => cols.find(_.column_name == f._1.name))
-      keys <- keys(form)
-      jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
+      keys <- DBIO.from(keys(form))
+      jsonFieldsPartial <- DBIO.from(fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang))
     } yield {
 
 
@@ -226,6 +222,8 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
       //println(s"resulting form: $result")
       result
     }
+
+    result.transactionally
 
   }
 
@@ -310,6 +308,9 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
   } yield {
 
     import io.circe.generic.auto._
+
+    implicit def fDb = FullDatabase(up.db,adminDb)
+
     for{
       keys <- EntityMetadataFactory.keysOf(Auth.dbSchema,refEntity)
       filter = { for{
@@ -318,7 +319,7 @@ case class FormMetadataFactory(adminDb:Database)(implicit up:UserProfile, mat:Ma
         query <- queryJson.as[JSONQuery].right.toOption
       } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
 
-      lookupData <- db.run(Registry().actions(refEntity).find(filter.copy(lang = Some(lang))))
+      lookupData <- up.db.run(Registry().actions(refEntity).find(filter.copy(lang = Some(lang))))
 
     } yield {
       Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text,field.masterFields.getOrElse(field.name)), lookupData,field.lookupQuery))

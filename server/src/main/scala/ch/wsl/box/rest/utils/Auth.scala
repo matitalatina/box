@@ -11,7 +11,10 @@ import akka.http.scaladsl.server.directives.Credentials.Missing
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigValue, ConfigValueFactory}
 import net.ceedubs.ficus.Ficus._
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.UserDatabase
 import scribe.Logging
+import slick.dbio.{DBIOAction, NoStream}
+import slick.sql.SqlAction
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -32,6 +35,7 @@ object Auth extends Logging {
   val adminPoolSize = dbConf.as[Option[Int]]("adminPoolSize").getOrElse(5)
   val poolSize = dbConf.as[Option[Int]]("poolSize").getOrElse(3)
   val enableConnectionPool = dbConf.as[Option[Boolean]]("enableConnectionPool").getOrElse(true)
+  val adminUser = dbConf.as[String]("user")
 
   val connectionPool = if(enableConnectionPool) {
     ConfigValueFactory.fromAnyRef("HikariCP")
@@ -49,16 +53,18 @@ object Auth extends Logging {
     * @return
     */
 
-  val adminDB = Database.forConfig("",ConfigFactory.empty()
+  val dbConnection = Database.forConfig("",ConfigFactory.empty()
     .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
     .withValue("url",ConfigValueFactory.fromAnyRef(dbPath))
     .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-    .withValue("user",ConfigValueFactory.fromAnyRef(dbConf.as[String]("user")))
+    .withValue("user",ConfigValueFactory.fromAnyRef(adminUser))
     .withValue("password",ConfigValueFactory.fromAnyRef(dbConf.as[String]("password")))
     .withValue("numThreads",ConfigValueFactory.fromAnyRef(adminPoolSize))
     .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(adminPoolSize))
     .withValue("connectionPool",connectionPool)
   )
+
+  val adminDB = dbForUser(adminUser)
 
 
   def adminUserProfile = UserProfile(
@@ -125,8 +131,29 @@ object Auth extends Logging {
     UserProfile(
       name=u
     )
-
   }
+
+  def dbForUser(name:String):UserDatabase = new UserDatabase {
+
+      //cannot interpolate directly
+      val setRole: SqlAction[Int, NoStream, Effect] = sqlu"SET ROLE placeholder".overrideStatements(Seq(s"SET ROLE $name"))
+      val resetRole = sqlu"RESET ROLE"
+
+      override def stream[T](a: DBIOAction[Seq[T], Streaming[T], Nothing]) = {
+
+        Auth.dbConnection.stream[T](
+          setRole.andThen[Seq[T],Streaming[T],Nothing](a).andFinally(resetRole)
+        )
+
+
+      }
+
+      override def run[R](a: DBIOAction[R, NoStream, Nothing]) = {
+        Auth.dbConnection.run {
+          setRole.andThen[R,NoStream,Nothing](a).andFinally(resetRole)
+        }
+      }
+    }
 
 
 

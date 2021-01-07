@@ -12,6 +12,7 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.UserDatabase
 
 
 
@@ -19,7 +20,7 @@ object BoxConfig extends Logging {
 
   private var conf: Map[String, String] = Map()
 
-  def load(boxDb:Database)(implicit ec: ExecutionContext) = {
+  def load(boxDb:UserDatabase)(implicit ec: ExecutionContext) = {
 
     val query = for {
       row <- ch.wsl.box.model.boxentities.BoxConf.BoxConfTable

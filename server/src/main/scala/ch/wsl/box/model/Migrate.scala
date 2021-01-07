@@ -38,7 +38,7 @@ object Migrate {
       .schemas(BoxSchema.schema.get)
       .table("flyway_schema_history_box")
       .locations("migrations")
-      .dataSource(new DatabaseDatasource(Auth.adminDB))
+      .dataSource(new DatabaseDatasource(Auth.dbConnection))
       .load()
 
     flyway.migrate()
@@ -51,7 +51,7 @@ object Migrate {
       .defaultSchema(Auth.dbSchema)
       .table("flyway_schema_history")
       .locations("migrations")
-      .dataSource(new DatabaseDatasource(Auth.adminDB))
+      .dataSource(new DatabaseDatasource(Auth.dbConnection))
       .load()
 
     flyway.migrate()

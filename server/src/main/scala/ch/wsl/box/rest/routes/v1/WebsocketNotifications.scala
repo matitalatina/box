@@ -78,6 +78,6 @@ object NotificationChannels extends Logging {
     }
   }
 
-  NotificationsHandler.create(Auth.adminDB,"ui_feedback_channel",handleNotification)
+  NotificationsHandler.create(Auth.dbConnection,"ui_feedback_channel",handleNotification)
 
 }
