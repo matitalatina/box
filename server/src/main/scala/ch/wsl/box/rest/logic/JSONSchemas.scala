@@ -12,18 +12,18 @@ import ch.wsl.box.jdbc.UserDatabase
  * Created by andreaminetti on 10/03/16.
  *
  */
-class JSONSchemas(adminDb:UserDatabase)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) {
+class JSONSchemas()(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) {
 
 
 
-  def field(lang:String)(field:JSONField):Future[(String,JSONSchema)] = {
+  def field(lang:String)(field:JSONField):DBIO[(String,JSONSchema)] = {
     field.child match {
-      case None => Future.successful(field.name -> JSONSchema(
+      case None => DBIO.successful(field.name -> JSONSchema(
         `type` = field.`type`,
         title = Some(field.name)
       ))
       case Some(child) => for{
-        m <- FormMetadataFactory(adminDb).of(child.objId,lang)
+        m <- FormMetadataFactory().of(child.objId,lang)
         schema <- of(m)
       } yield field.name -> schema
 
@@ -31,8 +31,8 @@ class JSONSchemas(adminDb:UserDatabase)(implicit up:UserProfile, mat:Materialize
 
   }
 
-  def of(metadata:JSONMetadata):Future[JSONSchema] = {
-    Future.sequence(metadata.fields.map(field(metadata.lang))).map{ props =>
+  def of(metadata:JSONMetadata):DBIO[JSONSchema] = {
+    DBIO.sequence(metadata.fields.map(field(metadata.lang))).map{ props =>
       JSONSchema(
         `type` = "object",
         title = Some(metadata.name),

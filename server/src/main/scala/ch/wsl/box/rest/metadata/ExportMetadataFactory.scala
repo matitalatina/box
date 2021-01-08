@@ -132,7 +132,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
       import io.circe.generic.auto._
       for {
 
-        keys <- EntityMetadataFactory.keysOf(schema,entity)
+        keys <-boxDb.adminDb.run(EntityMetadataFactory.keysOf(schema,entity))
         filter = { for{
           queryString <- field.lookupQuery
           queryJson <- parse(queryString).right.toOption

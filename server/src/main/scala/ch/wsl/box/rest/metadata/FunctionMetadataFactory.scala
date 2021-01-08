@@ -126,7 +126,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
       import io.circe.generic.auto._
       for {
 
-        keys <- EntityMetadataFactory.keysOf(schema,entity)
+        keys <- boxDb.adminDb.run(EntityMetadataFactory.keysOf(schema,entity))
         filter = {
             for{
               queryString <- field.lookupQuery

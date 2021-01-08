@@ -28,13 +28,13 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
         Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),userProfile.db,EntityKind.BOX.kind,schema = BoxSchema.schema).route
       }
     } ~ pathEnd{
-      complete(BoxFormMetadataFactory().list)
+      complete(Auth.adminDB.run(BoxFormMetadataFactory().list))
     }
   }
 
   def boxAdmins = path("box-admins") {
     get {
-      complete(BoxFormMetadataFactory().list)
+      complete(Auth.adminDB.run(BoxFormMetadataFactory().list))
     }
   }
 

@@ -8,7 +8,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Created by andreaminetti on 15/03/16.
   */
-class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext,db:UserDatabase) {
+class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]=Seq())(implicit ec:ExecutionContext) {
 
 
   private val FOREIGNKEY = "FOREIGN KEY"
@@ -31,12 +31,12 @@ class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]
     def boxReferencingKeys = referencingKeys
   }
 
-  lazy val pgTable:Future[PgTable] = db.run{
+  def pgTable:DBIO[PgTable] ={
     pgTables.filter(e => e.table_name === table && e.table_schema === schema).result.head
   }
 
 
-  lazy val columns:Future[Seq[PgColumn]] = db.run{
+  def columns:DBIO[Seq[PgColumn]] = {
     if (excludeFields.size==0)
       pgColumns
         .filter(e => e.table_name === table && e.table_schema === schema)
@@ -55,7 +55,7 @@ class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]
     usage <- pgContraintsUsage if usage.constraint_name === constraint.constraint_name && usage.table_name === table
   } yield (usage.column_name, usage.constraint_name)
 
-  val pk:Future[PrimaryKey] = db.run{ //needs admin right to access information_schema.constraint_column_usage
+  val pk:DBIO[PrimaryKey] = { //needs admin right to access information_schema.constraint_column_usage
       pkQ.result
         .map(x => x.unzip)    //change seq of tuple into tuple of seqs
         .map(x => PrimaryKey(x._1, x._2.headOption.getOrElse("")))   //as constraint_name take only first element (should be the same)
@@ -74,11 +74,11 @@ class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]
 
 
 
-  lazy val fks:Future[Seq[ForeignKey]] =  {
+  lazy val fks:DBIO[Seq[ForeignKey]] =  {
 
-    db.run(fkQ1.result).flatMap { references =>
-      Future.sequence(references.map { case (c, ref) =>
-        db.run(fkQ2(c,ref).result).map{ keys =>
+    fkQ1.result.flatMap { references =>
+      DBIO.sequence(references.map { case (c, ref) =>
+        fkQ2(c,ref).result.map{ keys =>
           ForeignKey(keys.map(_._1),keys.map(_._2),ref.table_name, c.constraint_name)
         }
       })
@@ -86,6 +86,6 @@ class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]
 
   }
 
-  def findFk(field:String):Future[Option[ForeignKey]] = fks.map(_.find(_.keys.exists(_ == field)))
+  def findFk(field:String):DBIO[Option[ForeignKey]] = fks.map(_.find(_.keys.exists(_ == field)))
 
 }

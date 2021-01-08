@@ -57,7 +57,7 @@ object EntityRead extends Logging  {
             post {
               entity(as[JSONQuery]) { query =>
                 complete {
-                  Lookup.values(name, valueProperty, textProperty, query)
+                  db.run(Lookup.values(name, valueProperty, textProperty, query))
                 }
               }
             }

@@ -14,6 +14,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.jdbc.UserDatabase
 import scribe.Logging
 import slick.dbio.{DBIOAction, NoStream}
+import slick.jdbc.{ResultSetConcurrency, ResultSetType}
 import slick.sql.SqlAction
 
 import scala.concurrent.duration._
@@ -139,10 +140,16 @@ object Auth extends Logging {
       val setRole: SqlAction[Int, NoStream, Effect] = sqlu"SET ROLE placeholder".overrideStatements(Seq(s"SET ROLE $name"))
       val resetRole = sqlu"RESET ROLE"
 
-      override def stream[T](a: DBIOAction[Seq[T], Streaming[T], Nothing]) = {
+      override def stream[T](a: StreamingDBIO[Seq[T],T]) = {
 
         Auth.dbConnection.stream[T](
           setRole.andThen[Seq[T],Streaming[T],Nothing](a).andFinally(resetRole)
+            .withStatementParameters(
+              rsType = ResultSetType.ForwardOnly,
+              rsConcurrency = ResultSetConcurrency.ReadOnly,
+              fetchSize = 5000)
+            .withPinnedSession
+            .transactionally
         )
 
 
@@ -150,7 +157,7 @@ object Auth extends Logging {
 
       override def run[R](a: DBIOAction[R, NoStream, Nothing]) = {
         Auth.dbConnection.run {
-          setRole.andThen[R,NoStream,Nothing](a).andFinally(resetRole)
+          setRole.andThen[R,NoStream,Nothing](a).andFinally(resetRole).withPinnedSession.transactionally
         }
       }
     }

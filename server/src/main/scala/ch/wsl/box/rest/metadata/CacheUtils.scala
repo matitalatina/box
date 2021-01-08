@@ -8,10 +8,8 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 object CacheUtils {
-  def checkIfHasForeignKeys(entity:String,metadata: Future[JSONMetadata]) = {
-    //futures when stored in the cache should already be resolved so thats non blocking
-    val m = Await.result(metadata,20 seconds)
-    m.fields.exists(_.lookup.exists(_.lookupEntity == entity))
+  def checkIfHasForeignKeys(entity:String,metadata: JSONMetadata) = {
+    metadata.fields.exists(_.lookup.exists(_.lookupEntity == entity))
   }
 
   case class ResetCacheForEntity(e:String)

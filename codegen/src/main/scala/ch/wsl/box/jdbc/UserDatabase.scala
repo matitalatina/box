@@ -9,6 +9,6 @@ trait UserDatabase{
 
   def run[R](a: DBIOAction[R, NoStream, Nothing]): Future[R]
 
-  def stream[T](a: DBIOAction[Seq[T], Streaming[T], Nothing]): DatabasePublisher[T]
+  def stream[T](a: StreamingDBIO[Seq[T],T]): DatabasePublisher[T]
 
 }

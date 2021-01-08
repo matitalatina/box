@@ -84,14 +84,14 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
 
   def forms(implicit up:UserProfile) = path("forms") {
     get {
-      complete(FormMetadataFactory(Auth.adminDB).list)
+      complete(Auth.adminDB.run(FormMetadataFactory().list))
     }
   }
 
   def form(implicit up:UserProfile) = pathPrefix("form") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        Form(name, lang,x => Registry().actions(x),FormMetadataFactory(Auth.adminDB),up.db,EntityKind.FORM.kind).route
+        Form(name, lang,x => Registry().actions(x),FormMetadataFactory(),up.db,EntityKind.FORM.kind).route
       }
     }
   }
@@ -99,7 +99,7 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
   def news(implicit up:UserProfile) = pathPrefix("news") {
     pathPrefix(Segment) { lang =>
       get{
-        complete(NewsLoader.get(lang))
+        complete(Auth.adminDB.run(NewsLoader.get(lang)))
       }
     }
   }

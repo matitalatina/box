@@ -9,7 +9,7 @@ import scribe.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
+case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
 
 
@@ -42,27 +42,23 @@ case class BoxFormMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:
     NewsUIDef.newsI18n
   )
 
-  def getForms():Future[Seq[BoxForm.BoxForm_row]] = {
-    up.db.run{
+  def getForms():DBIO[Seq[BoxForm.BoxForm_row]] = {
       BoxForm.BoxFormTable.result
-    }
   }
 
-  def getUsers():Future[Seq[BoxUser.BoxUser_row]] = {
-    up.db.run{
+  def getUsers():DBIO[Seq[BoxUser.BoxUser_row]] = {
       BoxUser.BoxUserTable.result
-    }
   }
 
   val visibleAdmin = Seq(FUNCTION,FORM,NEWS)
 
-  override def list: Future[Seq[String]] = registry.map(_.filter(f => visibleAdmin.contains(f.objId)).map(_.name))
+  override def list: DBIO[Seq[String]] = registry.map(_.filter(f => visibleAdmin.contains(f.objId)).map(_.name))
 
-  override def of(name: String, lang: String): Future[JSONMetadata] = registry.map(_.find(_.name == name).get)
+  override def of(name: String, lang: String): DBIO[JSONMetadata] = registry.map(_.find(_.name == name).get)
 
-  override def of(id: Int, lang: String): Future[JSONMetadata] = registry.map(_.find(_.objId == id).get)
+  override def of(id: Int, lang: String): DBIO[JSONMetadata] = registry.map(_.find(_.objId == id).get)
 
-  override def children(form: JSONMetadata): Future[Seq[JSONMetadata]] = getForms().map{ forms =>
+  override def children(form: JSONMetadata): DBIO[Seq[JSONMetadata]] = getForms().map{ forms =>
     form match {
       case f if f.objId == FORM => Seq(FormUIDef.field(forms,tablesAndViews),FormUIDef.fieldI18n,FormUIDef.formI18n(viewsOnly),FormUIDef.fieldFile)
       case f if f.objId == FORM_FIELD => Seq(FormUIDef.fieldI18n,FormUIDef.fieldFile)
