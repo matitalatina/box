@@ -41,7 +41,11 @@ case class FormActions(metadata:JSONMetadata,
 
   def getById(id:JSONID) = {
     logger.info("Getting Form data")
-    get(id.query)
+
+
+    jsonAction.getById(id).flatMap{ row =>
+      DBIO.sequenceOption(row.map(expandJson))
+    }
   }
 
   private def streamSeq(query:JSONQuery):DBIO[Seq[Json]] = {
@@ -91,16 +95,14 @@ case class FormActions(metadata:JSONMetadata,
       rows.map { json =>
         fields(metadata).map { field =>
           lookup(field, json.get(field)).getOrElse(json.get(field))
-        }.asCsv(rfc)
+        }
       }.asCsv(rfc)
     }
 
 
   }
 
-  def get(query:JSONQuery):DBIO[Option[Json]] = {
-    streamSeq(query).map(_.headOption)
-  }
+
 
 
 

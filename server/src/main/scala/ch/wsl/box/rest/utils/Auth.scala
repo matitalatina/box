@@ -143,7 +143,7 @@ object Auth extends Logging {
       override def stream[T](a: StreamingDBIO[Seq[T],T]) = {
 
         Auth.dbConnection.stream[T](
-          setRole.andThen[Seq[T],Streaming[T],Nothing](a).andFinally(resetRole)
+          setRole.andThen[Seq[T],Streaming[T],Nothing](a)
             .withStatementParameters(
               rsType = ResultSetType.ForwardOnly,
               rsConcurrency = ResultSetConcurrency.ReadOnly,
@@ -157,7 +157,7 @@ object Auth extends Logging {
 
       override def run[R](a: DBIOAction[R, NoStream, Nothing]) = {
         Auth.dbConnection.run {
-          setRole.andThen[R,NoStream,Nothing](a).andFinally(resetRole).withPinnedSession.transactionally
+          setRole.andThen[R,NoStream,Nothing](a).withPinnedSession.transactionally
         }
       }
     }
