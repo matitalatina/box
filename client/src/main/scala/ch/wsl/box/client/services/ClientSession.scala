@@ -1,6 +1,6 @@
 package ch.wsl.box.client.services
 
-import ch.wsl.box.client.{Context, IndexState, LoginState}
+import ch.wsl.box.client.{Context, IndexState, LoginState, LogoutState}
 import ch.wsl.box.model.shared.{IDs, JSONID, JSONQuery, LoginRequest}
 import io.udash.properties.single.Property
 import io.udash.routing.RoutingRegistry
@@ -49,6 +49,7 @@ class ClientSession(rest:REST,httpClient: HttpClient) extends Logging {
   logger.info("Loading session")
 
 
+
   isValidSession().map{ x =>
     logger.info(s"is valid session $x")
     x match {
@@ -67,8 +68,10 @@ class ClientSession(rest:REST,httpClient: HttpClient) extends Logging {
   }
 
   httpClient.setHandleAuthFailure(() => {
-    logger.info("Authentication failure, trying to get a new valid session")
-    LoginPopup.show()
+    if(logged.get) {
+      logger.info("Authentication failure, trying to get a new valid session")
+      LoginPopup.show()
+    }
   })
 
   def set[T](key:String,obj:T)(implicit encoder: Encoder[T]) = {
@@ -96,9 +99,12 @@ class ClientSession(rest:REST,httpClient: HttpClient) extends Logging {
   }
 
   def login(username:String,password:String):Future[Boolean] = {
-    createSession(username,password).map{ _ =>
-      Context.applicationInstance.reload()
-      true
+    createSession(username,password).map{ valid =>
+      logger.info(s"New session, valid: $valid")
+      if(valid) {
+        Context.applicationInstance.reload()
+      }
+      valid
     }
   }
 
@@ -132,7 +138,18 @@ class ClientSession(rest:REST,httpClient: HttpClient) extends Logging {
       } yield {
         UI.load(ui)
         logged.set(false)
+
+        val oldState = Context.applicationInstance.currentState
         Navigate.to(LoginState(""))
+
+        logger.info(oldState.toString)
+
+        if (oldState == IndexState) { // Fix #113
+          logger.info("Reloading...")
+          Context.applicationInstance.reload()
+        }
+
+
       }
     }
   }
