@@ -64,7 +64,7 @@ class IndexView(viewModel:ModelProperty[IndexViewModel]) extends View {
           div(
             div(news.get.datetime),
             news.get.title.map(h4(_)),
-            div(pre(news.get.text)),
+            div(raw(news.get.text)),
             br
           ).render
         }
