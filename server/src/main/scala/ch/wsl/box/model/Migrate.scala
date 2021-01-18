@@ -36,6 +36,7 @@ object Migrate {
       //.undoSqlMigrationPrefix("BOX_U") oly for pro or enterprise version
       .repeatableSqlMigrationPrefix("BOX_R")
       .schemas(BoxSchema.schema.get)
+      .defaultSchema(BoxSchema.schema.get)
       .table("flyway_schema_history_box")
       .locations("migrations")
       .dataSource(new DatabaseDatasource(Auth.dbConnection))
@@ -47,7 +48,7 @@ object Migrate {
   def app() = {
     val flyway = Flyway.configure()
       .baselineOnMigrate(true)
-      .schemas(BoxSchema.schema.get,Auth.dbSchema)
+      .schemas(Auth.dbSchema)
       .defaultSchema(Auth.dbSchema)
       .table("flyway_schema_history")
       .locations("migrations")
