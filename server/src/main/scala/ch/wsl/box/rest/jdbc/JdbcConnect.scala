@@ -33,10 +33,14 @@ object JdbcConnect extends Logging {
       val connection = Auth.dbConnection.source.createConnection()
       val result = Try {
         // create the statement, and run the select query
+        val roleStatement = connection.createStatement()
+        roleStatement.execute(s"SET ROLE ${up.name}")
+
         val statement = connection.createStatement()
         val argsStr = if (args == null) ""
-                      else args.map(_.toString()).mkString(",")
-        val query = s"SET ROLE ${up.name}; SELECT * FROM $name($argsStr)".replaceAll("'","\\'").replaceAll("\"","'")
+        else args.map(_.toString()).mkString(",")
+
+        val query = s"SELECT * FROM ${Auth.dbSchema}.$name($argsStr)".replaceAll("'","\\'").replaceAll("\"","'")
         logger.info(query)
         val resultSet = statement.executeQuery(query)
         val metadata = getColumnMeta(resultSet.getMetaData)
@@ -133,5 +137,5 @@ object JdbcConnect extends Logging {
       logger.warn(s"datatype: $datatype not found")
       obj.toString.asJson
     }
-    }
+  }
 }
