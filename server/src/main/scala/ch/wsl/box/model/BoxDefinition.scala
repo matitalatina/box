@@ -154,129 +154,148 @@ object BoxDefinition {
     
   }
 
+  
+  case class CommitAction(
+                         insert:DBIO[_],
+                         delete:DBIO[_],
+                         update:DBIO[_],
+                         fixSerial:DBIO[_]
+                         )
+  
   def update(db:UserDatabase,merge:BoxDefinitionMerge)(implicit ec:ExecutionContext) = {
     def commit[M,T <: Table[M]](f:BoxDefinitionMerge => MergeElement[M],table:TableQuery[T],filteredTable:M => Query[T,M,Seq],fixAutoIncrement:DBIO[_] = DBIO.successful()) = {
-      for{
-        ins <- table.forceInsertAll(f(merge).insert)
-        del <- DBIO.sequence(f(merge).delete.map( row => filteredTable(row).delete))
-        upd <- table.insertOrUpdateAll(f(merge).update)
-        _ <- fixAutoIncrement
-      } yield true
+
+      val deleteAction = DBIO.sequence(f(merge).delete.map( row => filteredTable(row).delete))
+      
+      CommitAction(
+        table.forceInsertAll(f(merge).insert),
+        deleteAction,
+        table.insertOrUpdateAll(f(merge).update),
+        fixAutoIncrement
+      )
+      
     }
 
-    val boxDef = for {
+    val actions = Seq(
 
-      _ <- commit[BoxConf.BoxConf_row,BoxConf.BoxConf](
+      commit[BoxConf.BoxConf_row,BoxConf.BoxConf](
         _.conf,BoxConf.BoxConfTable,
         x => BoxConf.BoxConfTable.filter(_.id === x.id),
         sql"SELECT setval('box.conf_id_seq',(SELECT max(id) from box.conf))".as[Int]
-      )
-      _ <- commit[BoxExport.BoxExport_i18n_row,BoxExport.BoxExport_i18n](
+      ),
+      commit[BoxExport.BoxExport_i18n_row,BoxExport.BoxExport_i18n](
         _.export_i18n,BoxExport.BoxExport_i18nTable,
         x => BoxExport.BoxExport_i18nTable.filter(_.id === x.id),
         sql"SELECT setval('box.export_i18n_id_seq',(SELECT max(id) from box.export_i18n))".as[Int]
-      )
-      _ <- commit[BoxExportField.BoxExportField_i18n_row,BoxExportField.BoxExportField_i18n](
+      ),
+      commit[BoxExportField.BoxExportField_i18n_row,BoxExportField.BoxExportField_i18n](
         _.export_field_i18n,BoxExportField.BoxExportField_i18nTable,
         x => BoxExportField.BoxExportField_i18nTable.filter(_.id === x.id),
         sql"SELECT setval('box.export_field_i18n_id_seq',(SELECT max(id) from box.export_field_i18n))".as[Int]
-      )
-      _ <- commit[BoxExportField.BoxExportField_row,BoxExportField.BoxExportField](
+      ),
+      commit[BoxExportField.BoxExportField_row,BoxExportField.BoxExportField](
         _.export_field,BoxExportField.BoxExportFieldTable,
         x => BoxExportField.BoxExportFieldTable.filter(_.field_id === x.field_id),
         sql"SELECT setval('box.export_field_field_id_seq',(SELECT max(field_id) from box.export_field))".as[Int]
-      )
-      _ <- commit[BoxExportField.BoxExportHeader_i18n_row,BoxExportField.BoxExportHeader_i18n](
+      ),
+      commit[BoxExportField.BoxExportHeader_i18n_row,BoxExportField.BoxExportHeader_i18n](
         _.export_header_i18n,BoxExportField.BoxExportHeader_i18nTable,
         x => BoxExportField.BoxExportHeader_i18nTable.filter(_.id === x.id),
         sql"SELECT setval('box.export_header_i18n_id_seq',(SELECT max(id) from box.export_header_i18n))".as[Int]
-      )
-      _ <- commit[BoxExport.BoxExport_row,BoxExport.BoxExport](
+      ),
+      commit[BoxExport.BoxExport_row,BoxExport.BoxExport](
         _.`export`,BoxExport.BoxExportTable,
         x => BoxExport.BoxExportTable.filter(_.export_id === x.export_id),
         sql"SELECT setval('box.export_export_id_seq',(SELECT max(export_id) from box.export))".as[Int]
-      )
-      _ <- commit[BoxField.BoxField_i18n_row,BoxField.BoxField_i18n](
+      ),
+      commit[BoxField.BoxField_i18n_row,BoxField.BoxField_i18n](
         _.field_i18n,BoxField.BoxField_i18nTable,
         x => BoxField.BoxField_i18nTable.filter(_.id === x.id),
         sql"SELECT setval('box.field_i18n_id_seq',(SELECT max(id) from box.field_i18n))".as[Int]
-      )
-      _ <- commit[BoxField.BoxFieldFile_row,BoxField.BoxFieldFile](
+      ),
+      commit[BoxField.BoxFieldFile_row,BoxField.BoxFieldFile](
         _.field_file,BoxField.BoxFieldFileTable,
         x => BoxField.BoxFieldFileTable.filter(_.field_id === x.field_id)
-      )
-      _ <- commit[BoxField.BoxField_row,BoxField.BoxField](
+      ),
+      commit[BoxField.BoxField_row,BoxField.BoxField](
         _.field,BoxField.BoxFieldTable,
         x => BoxField.BoxFieldTable.filter(_.field_id === x.field_id),
         sql"SELECT setval('box.field_field_id_seq',(SELECT max(field_id) from box.field))".as[Int]
-      )
-      _ <- commit[BoxForm.BoxForm_i18n_row,BoxForm.BoxForm_i18n](
+      ),
+      commit[BoxForm.BoxForm_i18n_row,BoxForm.BoxForm_i18n](
         _.form_i18n,BoxForm.BoxForm_i18nTable,
         x => BoxForm.BoxForm_i18nTable.filter(_.id === x.id),
         sql"SELECT setval('box.form_i18n_id_seq',(SELECT max(id) from box.form_i18n))".as[Int]
-      )
-      _ <- commit[BoxForm.BoxForm_actions_row,BoxForm.BoxForm_actions](
+      ),
+      commit[BoxForm.BoxForm_actions_row,BoxForm.BoxForm_actions](
         _.form_actions,BoxForm.BoxForm_actions,
         x => BoxForm.BoxForm_actions.filter(_.id === x.id),
         sql"SELECT setval('box.form_actions_id_seq',(SELECT max(id) from box.form_actions))".as[Int]
-      )
-      _ <- commit[BoxForm.BoxForm_row,BoxForm.BoxForm](
+      ),
+      commit[BoxForm.BoxForm_row,BoxForm.BoxForm](
         _.form,BoxForm.BoxFormTable,
         x => BoxForm.BoxFormTable.filter(_.form_id === x.form_id),
         sql"SELECT setval('box.form_form_id_seq',(SELECT max(form_id) from box.form))".as[Int]
-      )
-      _ <- commit[BoxFunction.BoxFunctionField_i18n_row,BoxFunction.BoxFunctionField_i18n](
+      ),
+      commit[BoxFunction.BoxFunctionField_i18n_row,BoxFunction.BoxFunctionField_i18n](
         _.function_field_i18n,BoxFunction.BoxFunctionField_i18nTable,
         x => BoxFunction.BoxFunctionField_i18nTable.filter(_.id === x.id),
         sql"SELECT setval('box.function_field_i18n_id_seq',(SELECT max(id) from box.function_field_i18n))".as[Int]
-      )
-      _ <- commit[BoxFunction.BoxFunctionField_row,BoxFunction.BoxFunctionField](
+      ),
+      commit[BoxFunction.BoxFunctionField_row,BoxFunction.BoxFunctionField](
         _.function_field,BoxFunction.BoxFunctionFieldTable,
         x => BoxFunction.BoxFunctionFieldTable.filter(_.field_id === x.field_id),
         sql"SELECT setval('box.function_field_field_id_seq',(SELECT max(field_id) from box.function_field))".as[Int]
-      )
-      _ <- commit[BoxFunction.BoxFunction_i18n_row,BoxFunction.BoxFunction_i18n](
+      ),
+      commit[BoxFunction.BoxFunction_i18n_row,BoxFunction.BoxFunction_i18n](
         _.function_i18n,BoxFunction.BoxFunction_i18nTable,
         x => BoxFunction.BoxFunction_i18nTable.filter(_.id === x.id),
         sql"SELECT setval('box.function_i18n_id_seq',(SELECT max(id) from box.function_i18n))".as[Int]
-      )
-      _ <- commit[BoxFunction.BoxFunction_row,BoxFunction.BoxFunction](
+      ),
+      commit[BoxFunction.BoxFunction_row,BoxFunction.BoxFunction](
         _.function,BoxFunction.BoxFunctionTable,
         x => BoxFunction.BoxFunctionTable.filter(_.function_id === x.function_id),
         sql"SELECT setval('box.function_function_id_seq',(SELECT max(function_id) from box.function))".as[Int]
-      )
-      _ <- commit[BoxLabels.BoxLabels_row,BoxLabels.BoxLabels](
+      ),
+      commit[BoxLabels.BoxLabels_row,BoxLabels.BoxLabels](
         _.labels,BoxLabels.BoxLabelsTable,
         x => BoxLabels.BoxLabelsTable.filter(_.id === x.id),
         sql"SELECT setval('box.labels_id_seq',(SELECT max(id) from box.labels))".as[Int]
-      )
-      _ <- commit[BoxNews.BoxNews_i18n_row,BoxNews.BoxNews_i18n](
+      ),
+      commit[BoxNews.BoxNews_i18n_row,BoxNews.BoxNews_i18n](
         _.news_i18n,BoxNews.BoxNews_i18nTable,
         x => BoxNews.BoxNews_i18nTable.filter(t => t.news_id === x.news_id && t.lang === x.lang)
-      )
-      _ <- commit[BoxNews.BoxNews_row,BoxNews.BoxNews](
+      ),
+      commit[BoxNews.BoxNews_row,BoxNews.BoxNews](
         _.news,BoxNews.BoxNewsTable,
         x => BoxNews.BoxNewsTable.filter(_.news_id === x.news_id),
         sql"SELECT setval('box.news_news_id_seq',(SELECT max(news_id) from box.news))".as[Int]
-      )
-      _ <- commit[BoxUITable.BoxUI_row,BoxUITable.BoxUI](
+      ),
+      commit[BoxUITable.BoxUI_row,BoxUITable.BoxUI](
         _.ui,BoxUITable.BoxUITable,
         x => BoxUITable.BoxUITable.filter(_.id === x.id),
         sql"SELECT setval('box.ui_id_seq',(SELECT max(id) from box.ui))".as[Int]
-      )
-      _ <- commit[BoxUIsrcTable.BoxUIsrc_row,BoxUIsrcTable.BoxUIsrc](
+      ),
+      commit[BoxUIsrcTable.BoxUIsrc_row,BoxUIsrcTable.BoxUIsrc](
         _.ui_src,BoxUIsrcTable.BoxUIsrcTable,
         x => BoxUIsrcTable.BoxUIsrcTable.filter(_.id === x.id),
         sql"SELECT setval('box.ui_src_id_seq',(SELECT max(id) from box.ui_src))".as[Int]
-      )
-      _ <- commit[BoxAccessLevel.BoxAccessLevel_row,BoxAccessLevel.BoxAccessLevel](
+      ),
+      commit[BoxAccessLevel.BoxAccessLevel_row,BoxAccessLevel.BoxAccessLevel](
         _.access_levels,BoxAccessLevel.BoxAccessLevelTable,
         x => BoxAccessLevel.BoxAccessLevelTable.filter(_.access_level_id === x.access_level_id)
-      )
-      _ <- commit[BoxUser.BoxUser_row,BoxUser.BoxUser](
+      ),
+      commit[BoxUser.BoxUser_row,BoxUser.BoxUser](
         _.users,BoxUser.BoxUserTable,
         x => BoxUser.BoxUserTable.filter(_.username === x.username)
       )
+    )
+
+    val boxDef = for{
+      _ <- DBIO.sequence(actions.map(_.delete))
+      _ <- DBIO.sequence(actions.reverse.map(_.insert))
+      _ <- DBIO.sequence(actions.reverse.map(_.update))
+      _ <- DBIO.sequence(actions.reverse.map(_.fixSerial))
     } yield true
 
     db.run(boxDef.transactionally)
