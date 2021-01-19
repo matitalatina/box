@@ -32,6 +32,7 @@ object JdbcConnect extends Logging {
       // make the connection
       val connection = Auth.dbConnection.source.createConnection()
       val result = Try {
+        connection.setAutoCommit(false)
         // create the statement, and run the select query
         val roleStatement = connection.createStatement()
         roleStatement.execute(s"SET ROLE ${up.name}")
@@ -43,6 +44,7 @@ object JdbcConnect extends Logging {
         val query = s"SELECT * FROM ${Auth.dbSchema}.$name($argsStr)".replaceAll("'","\\'").replaceAll("\"","'")
         logger.info(query)
         val resultSet = statement.executeQuery(query)
+        connection.commit()
         val metadata = getColumnMeta(resultSet.getMetaData)
         val data = getResults(resultSet,metadata)
         DataResultTable(metadata.map(_.label),data.map(_.map(_.string)))
