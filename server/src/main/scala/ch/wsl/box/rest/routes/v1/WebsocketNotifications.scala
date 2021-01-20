@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives
 import akka.stream.{CompletionStrategy, Materializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import ch.wsl.box.rest.logic.NotificationsHandler
+import ch.wsl.box.rest.logic.notification.NotificationsHandler
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import io.circe._
 import io.circe.syntax._
@@ -78,6 +78,6 @@ object NotificationChannels extends Logging {
     }
   }
 
-  NotificationsHandler.create(Auth.dbConnection,"ui_feedback_channel",handleNotification)
+  NotificationsHandler.create("ui_feedback_channel",handleNotification)
 
 }

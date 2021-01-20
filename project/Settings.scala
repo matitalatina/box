@@ -160,6 +160,7 @@ object Settings {
     "org.scalatest" %% "scalatest" % versions.scalatest % "test",
     "org.scalatest" %% "scalatest-flatspec" % versions.scalatest % "test",
     "com.vladsch.flexmark" % "flexmark-all" % "0.35.10" % Test,
+    "com.github.daddykotex" %% "courier" % "3.0.0-M3a"
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))

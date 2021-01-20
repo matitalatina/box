@@ -1,9 +1,8 @@
-package ch.wsl.box.rest.logic
+package ch.wsl.box.rest.logic.notification
 
 import java.sql.Connection
 import java.util.Date
 
-import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.utils.Auth
 import org.postgresql.PGConnection
 import scribe.Logging
@@ -14,8 +13,8 @@ trait PgNotifier{
 
 object NotificationsHandler {
 
-  def create(db:Database,channel:String,callback: (String) => Unit):PgNotifier = new PgNotifier {
-    val listener = new Listener(db.source.createConnection(),channel,callback)
+  def create(channel:String,callback: (String) => Unit):PgNotifier = new PgNotifier {
+    val listener = new Listener(Auth.dbConnection.source.createConnection(),channel,callback)
     listener.start()
     override def stop(): Unit = listener.stopRunning()
   }

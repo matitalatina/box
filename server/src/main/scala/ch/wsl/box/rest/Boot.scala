@@ -8,14 +8,13 @@ import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
 import ch.wsl.box.rest.utils.{Auth, BoxConfig}
-import ch.wsl.box.rest.logic.NotificationsHandler
 import ch.wsl.box.services.Services
 import com.typesafe.config.Config
 import scribe._
 import scribe.writer.ConsoleWriter
 import wvlet.airframe.Design
-
 import ch.wsl.box.model.Migrate
+import ch.wsl.box.rest.logic.notification.{MailHandler, NotificationsHandler}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -78,6 +77,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
     Registry().routes("en")(Auth.adminUserProfile, materializer, executionContext)
     BoxRoutes()(Auth.adminUserProfile, materializer, executionContext)
 
+    new MailHandler(services.mail).listen()
 
     for{
       //pl <- preloading
@@ -96,7 +96,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
           |
           |===================================
           |
-          |Box server started at http://localhost:$port
+          |Box server started at http://$host:$port
           |
           |""".stripMargin)
       server = b

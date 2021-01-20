@@ -115,13 +115,4 @@ object BoxConfig extends Logging {
 
   def filterPrecisionDouble: Option[Int] = Try(conf("filter.precision.double").toInt).toOption
 
-  def prepareDouble = filterPrecisionDouble match {
-    case None => ((x: Double) => x)
-    case Some(p) => ((x: Double) => roundAtDigit(p)(x))
-    //    case Some(p) if p<0 => ((x:Double) => roundAtDigit(-p)(x))
-  }
-
-
-  def roundAtDigit(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.round(n) * s) / s }
-  def truncateAtDigit(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.floor(n) * s) / s }
 }
