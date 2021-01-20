@@ -14,8 +14,7 @@ case class GeneratedFiles(
                        entityActionsRegistry: EntityActionsRegistryGenerator,
                        fileAccessGenerator: FileAccessGenerator,
                        registry: RegistryGenerator,
-                       fieldRegistry: FieldAccessGenerator,
-                       tableRegistry:TableRegistryGenerator
+                       fieldRegistry: FieldAccessGenerator
                          )
 
 object CustomizedCodeGenerator extends BaseCodeGenerator {
@@ -32,8 +31,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       entityActionsRegistry = EntityActionsRegistryGenerator(calculatedViews ++ calculatedTables,dbModel),
       fileAccessGenerator = FileAccessGenerator(dbModel,dbConf),
       registry = RegistryGenerator(dbModel),
-      fieldRegistry = FieldAccessGenerator(calculatedTables ++ calculatedViews,dbModel),
-      tableRegistry = TableRegistryGenerator(calculatedTables ++ calculatedViews,dbModel)
+      fieldRegistry = FieldAccessGenerator(calculatedTables ++ calculatedViews,dbModel)
     )
 
   }
@@ -75,8 +73,6 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     )
 
     files.fieldRegistry.writeToFile(args(0),"ch.wsl.box.generated","GenFieldRegistry.scala","")
-
-    files.tableRegistry.writeToFile(args(0),"ch.wsl.box.generated","GenTableRegistry.scala","")
 
 
     files.registry.writeToFile(args(0),"ch.wsl.box.generated","","GenRegistry.scala")
