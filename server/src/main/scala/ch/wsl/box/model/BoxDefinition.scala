@@ -10,6 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class BoxDefinition(
                         access_levels:Seq[BoxAccessLevel.BoxAccessLevel_row],
                         conf: Seq[BoxConf.BoxConf_row],
+                        cron: Seq[BoxCron.BoxCron_row],
                         export: Seq[BoxExport.BoxExport_row],
                         export_i18n: Seq[BoxExport.BoxExport_i18n_row],
                         export_field: Seq[BoxExportField.BoxExportField_row],
@@ -38,6 +39,7 @@ case class MergeElement[T](insert:Seq[T],delete:Seq[T],update:Seq[T])
 case class BoxDefinitionMerge(
                                access_levels:MergeElement[BoxAccessLevel.BoxAccessLevel_row],
                                conf: MergeElement[BoxConf.BoxConf_row],
+                               cron: MergeElement[BoxCron.BoxCron_row],
                                export: MergeElement[BoxExport.BoxExport_row],
                                export_i18n: MergeElement[BoxExport.BoxExport_i18n_row],
                                export_field: MergeElement[BoxExportField.BoxExportField_row],
@@ -66,6 +68,7 @@ object BoxDefinition {
     val boxDef = for {
       access_levels <- BoxAccessLevel.BoxAccessLevelTable.result
       conf <- BoxConf.BoxConfTable.result
+      cron <- BoxCron.BoxCronTable.result
       export <- BoxExport.BoxExportTable.result
       export_i18n <- BoxExport.BoxExport_i18nTable.result
       export_field <- BoxExportField.BoxExportFieldTable.result
@@ -90,6 +93,7 @@ object BoxDefinition {
     } yield BoxDefinition(
       access_levels,
       conf,
+      cron,
       export,
       export_i18n,
       export_field,
@@ -129,6 +133,7 @@ object BoxDefinition {
     BoxDefinitionMerge(
       merge(_.access_levels, _.access_level_id == _.access_level_id, _ == _),
       merge(_.conf, _.id == _.id, _ == _),
+      merge(_.cron, _.name == _.name, _ == _),
       merge(_.export, _.export_id == _.export_id, _ == _),
       merge(_.export_i18n, _.id == _.id, _ == _),
       merge(_.export_field, _.field_id == _.field_id, _ == _),
@@ -182,6 +187,10 @@ object BoxDefinition {
         _.conf,BoxConf.BoxConfTable,
         x => BoxConf.BoxConfTable.filter(_.id === x.id),
         sql"SELECT setval('box.conf_id_seq',(SELECT max(id) from box.conf))".as[Int]
+      ),
+      commit[BoxCron.BoxCron_row,BoxCron.BoxCron](
+        _.cron,BoxCron.BoxCronTable,
+        x => BoxCron.BoxCronTable.filter(_.name === x.name)
       ),
       commit[BoxExport.BoxExport_i18n_row,BoxExport.BoxExport_i18n](
         _.export_i18n,BoxExport.BoxExport_i18nTable,

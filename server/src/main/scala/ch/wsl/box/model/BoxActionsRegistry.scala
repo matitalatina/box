@@ -16,6 +16,7 @@ class BoxActionsRegistry(implicit ec:ExecutionContext)  {
   def tableActions:String => TableActions[Json] = {
     case "access_level" => JSONTableActions[BoxAccessLevel.BoxAccessLevel,BoxAccessLevel.BoxAccessLevel_row](BoxAccessLevel.BoxAccessLevelTable)
     case "conf" => JSONTableActions[BoxConf.BoxConf,BoxConf.BoxConf_row](BoxConf.BoxConfTable)
+    case "cron" => JSONTableActions[BoxCron.BoxCron,BoxCron.BoxCron_row](BoxCron.BoxCronTable)
     case "export" => JSONTableActions[BoxExport.BoxExport,BoxExport.BoxExport_row](BoxExport.BoxExportTable)
     case "export_field" => JSONTableActions[BoxExportField.BoxExportField,BoxExportField.BoxExportField_row](BoxExportField.BoxExportFieldTable)
     case "export_field_i18n" => JSONTableActions[BoxExportField.BoxExportField_i18n,BoxExportField.BoxExportField_i18n_row](BoxExportField.BoxExportField_i18nTable)

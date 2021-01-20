@@ -17,6 +17,11 @@ object BoxFieldAccessRegistry extends FieldRegistry {
         "key" -> ColType("String", false),
         "value" -> ColType("String", true)
       )
+      case "cron" => Map(
+        "name" -> ColType("String", false),
+        "cron" -> ColType("String", false),
+        "sql" -> ColType("String", false)
+      )
       case "export" => Map(
         "export_id" -> ColType("Int", false),
         "name" -> ColType("String", false),

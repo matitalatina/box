@@ -14,6 +14,7 @@ import scribe._
 import scribe.writer.ConsoleWriter
 import wvlet.airframe.Design
 import ch.wsl.box.model.Migrate
+import ch.wsl.box.rest.logic.cron.{BoxCronLoader, CronScheduler}
 import ch.wsl.box.rest.logic.notification.{MailHandler, NotificationsHandler}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -73,11 +74,11 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
     Logger.root.clearHandlers().withHandler(minimumLevel = Some(BoxConfig.loggerLevel), writer = loggerWriter).replace()
 
 
-    //TODO need to be reworked now it's based on an hack, it call generated root to populate models
-    Registry().routes("en")(Auth.adminUserProfile, materializer, executionContext)
-    BoxRoutes()(Auth.adminUserProfile, materializer, executionContext)
-
+    //Registring handlers
     new MailHandler(services.mail).listen()
+
+    val scheduler = new CronScheduler(system)
+    new BoxCronLoader(scheduler).load()
 
     for{
       //pl <- preloading
