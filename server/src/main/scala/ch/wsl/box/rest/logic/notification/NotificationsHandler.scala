@@ -36,31 +36,38 @@ class Listener(conn: Connection,channel:String,callback: (String) => Unit) exten
   private val pgconn:PGConnection = conn.unwrap(classOf[PGConnection])
 
   override def run(): Unit = {
-    try while ( running ) {
-      // notifications = pgconn.getNotifications
-      // If this thread is the only one that uses the connection, a timeout can be used to
-      // receive notifications immediately:
-      val notifications = pgconn.getNotifications(10000)
-      if(notifications != null) {
-        notifications.foreach{ n =>
-          logger.info(s"""
-             |Recived notification:
-             |timestamp: ${new Date().toString}
-             |name: ${n.getName}
-             |parameter: ${n.getParameter}
-             |""".stripMargin)
-          callback(n.getParameter)
+     while ( running ) {
+       try {
+
+          // issue a dummy query to contact the backend
+          // and receive any pending notifications.
+          val stmt = conn.createStatement
+          val rs = stmt.executeQuery(s"SELECT 1")
+          rs.close()
+          stmt.close();
+
+          val notifications = pgconn.getNotifications(1000)
+          if(notifications != null) {
+            notifications.foreach{ n =>
+              logger.info(s"""
+                 |Recived notification:
+                 |timestamp: ${new Date().toString}
+                 |name: ${n.getName}
+                 |parameter: ${n.getParameter}
+                 |""".stripMargin)
+              callback(n.getParameter)
+            }
+          }
+          // wait a while before checking again for new
+          // notifications
+          //Thread.sleep(1000)
         }
-      }
-      // wait a while before checking again for new
-      // notifications
-      //Thread.sleep(500)
-    }
-    catch {
-      case sqle: SQLException =>
-        sqle.printStackTrace()
-      case ie: InterruptedException =>
-        ie.printStackTrace()
-    }
+        catch {
+          case sqle: SQLException =>
+            sqle.printStackTrace()
+          case ie: InterruptedException =>
+            ie.printStackTrace()
+        }
+     }
   }
 }
