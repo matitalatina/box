@@ -25,16 +25,18 @@ object EntityMetadataFactory extends Logging {
   val excludeFields:Seq[String] = Try{
     com.typesafe.config.ConfigFactory.load().as[Seq[String]]("db.generator.excludeFields")
   }.getOrElse(Seq())
-  private var cacheTable = Map[(String, String, String, Int), Future[JSONMetadata]]()   //  (up.name, table, lang,lookupMaxRows)
-  private var cacheKeys = Map[String, Future[Seq[String]]]()                            //  (table)
+  private val cacheTable = scala.collection.mutable.Map[(String, String, String, Int), JSONMetadata]()   //  (up.name, table, lang,lookupMaxRows)
+  private val cacheKeys = scala.collection.mutable.Map[String, Seq[String]]()                            //  (table)
 
   def resetCache() = {
-    cacheTable = Map()
-    cacheKeys = Map()
+    cacheTable.clear()
+    cacheKeys.clear()
   }
 
   def resetCacheForEntity(e:String) = {
-    cacheTable = cacheTable.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
+    cacheTable.filter(c => CacheUtils.checkIfHasForeignKeys(e, c._2)).foreach{ case (k,_) =>
+      cacheTable.remove(k)
+    }
   }
 
   def lookupField(referencingTable:String,lang:String, firstNoPK:Option[String]):String = {
@@ -53,58 +55,33 @@ object EntityMetadataFactory extends Logging {
   }
 
 
-//  def lookup(table:String, column:String, lang:String)(implicit db:FullDatabase, ec:ExecutionContext):Future[Option[JSONFieldLookup]] = {
-//
-//
-//    val schema = new PgInformationSchema(table, excludeFields)
-//
-//    for {
-//      fkOpt <- schema.findFk(column)
-//      firstNoPK <- fkOpt match {
-//        case Some(f) => firstNoPKField(f.referencingTable)
-//        case None => Future.successful(None)
-//      }
-//    } yield {
-//      for{
-//        fk <- fkOpt
-//      } yield {
-//        val text = lookupField(fk.referencingTable, lang, firstNoPK)
-//        val model = fk.referencingTable
-//        val value = fk.referencingKeys.head //todo verify for multiple key
-//
-//        JSONFieldLookup(model, JSONFieldMap(value, text, f), Seq())
-//
-//      }
-//    }
-//  }
-
-  def of(table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext,boxDatabase: FullDatabase):Future[JSONMetadata] = {
-
-    implicit val db = up.db
+  def of(_schema:String,table:String,lang:String, lookupMaxRows:Int = 100)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext,boxDatabase: FullDatabase):Future[JSONMetadata] = boxDatabase.adminDb.run{
 
     logger.warn("searching cache table for " + Seq(up.name, table, lang, lookupMaxRows).mkString)
 
-    cacheTable.lift((up.name, table, lang,lookupMaxRows)) match {
-      case Some(r) => r
+    val cacheKey = (up.name, table, lang,lookupMaxRows)
+
+    cacheTable.get(cacheKey) match {
+      case Some(r) => DBIO.successful(r)
       case None => {
         logger.info(s"Metadata table cache miss! cache key: ($table, $lang, $lookupMaxRows), cache: ${cacheTable}")
 
-        val schema = new PgInformationSchema(table, excludeFields)
+        val schema = new PgInformationSchema(_schema,table, excludeFields)(ec)
 
         //    println(schema.fk)
 
         var constraints = List[String]()
 
-        def field2form(field: PgColumn): Future[JSONField] = {
+        def field2form(field: PgColumn): DBIO[JSONField] = {
           for {
             fk <- schema.findFk(field.column_name)
             firstNoPK <- fk match {
-              case Some(f) => firstNoPKField(f.referencingTable)
-              case None => Future.successful(None)
+              case Some(f) => firstNoPKField(_schema,f.referencingTable)
+              case None => DBIO.successful(None)
             }
             count <- fk match {
-              case Some(fk) => db.run(Registry().actions(fk.referencingTable).count().map(_.count))
-              case None => Future.successful(0)
+              case Some(fk) => Registry().actions(fk.referencingTable).count().map(_.count)
+              case None => DBIO.successful(0)
             }
           } yield {
             fk match {
@@ -113,7 +90,7 @@ object EntityMetadataFactory extends Logging {
                   if (constraints.contains(fk.constraintName)) {
                     logger.info("error: " + fk.constraintName)
                     logger.info(field.column_name)
-                    Future.successful(JSONField(field.jsonType, name = field.boxName, nullable = field.nullable))
+                    DBIO.successful(JSONField(field.jsonType, name = field.boxName, nullable = field.nullable))
                   } else {
                     constraints = fk.constraintName :: constraints //add fk constraint to contraint list
 
@@ -126,7 +103,7 @@ object EntityMetadataFactory extends Logging {
 
                     import ch.wsl.box.shared.utils.JSONUtils._
                     for {
-                      lookupData <- db.run(Registry().actions(model).find())
+                      lookupData <- Registry().actions(model).find()
                     } yield {
                       val options = lookupData.map { lookupRow =>
                         JSONLookup(lookupRow.get(value), lookupRow.get(text))
@@ -144,7 +121,7 @@ object EntityMetadataFactory extends Logging {
 
                   }
                 } else { //no lookup from fk
-                  Future.successful(JSONField(
+                  DBIO.successful(JSONField(
                     field.jsonType,
                     name = field.boxName,
                     nullable = field.nullable,
@@ -152,7 +129,7 @@ object EntityMetadataFactory extends Logging {
                   ))
                 }
               }
-              case _ => Future.successful(JSONField(
+              case _ => DBIO.successful(JSONField(
                 field.jsonType,
                 name = field.boxName,
                 nullable = field.nullable,
@@ -163,12 +140,10 @@ object EntityMetadataFactory extends Logging {
 
         }.flatten
 
-        val cacheKey = (up.name, table, lang, lookupMaxRows)
-
         val result = for {
           c <- schema.columns
-          fields <- Future.sequence(c.map(field2form))
-          keys <- EntityMetadataFactory.keysOf(table)
+          fields <- DBIO.from(up.db.run(DBIO.sequence(c.map(field2form))))
+          keys <- EntityMetadataFactory.keysOf(_schema,table)
         } yield {
           val fieldList = fields.map(_.name)
           JSONMetadata(
@@ -188,46 +163,52 @@ object EntityMetadataFactory extends Logging {
             FormActionsMetadata.default
           )
         }
-        if(BoxConfig.enableCache) {
-          logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)
-          cacheTable = cacheTable ++ Map(cacheKey -> result)
-        }
-        result.onComplete{ x =>
-          if(x.isFailure) {
-            cacheTable = cacheTable.filterKeys(_ != cacheKey)
+
+
+        for{
+          metadata <- result
+        } yield {
+          if(BoxConfig.enableCache) {
+            logger.warn("adding to cache table " + Seq(up.name, table, lang, lookupMaxRows).mkString)
+            DBIO.successful(cacheTable.put(cacheKey,metadata))
           }
+          metadata
         }
-        result
+
+
       }
     }
   }
 
-  def keysOf(table:String)(implicit ec:ExecutionContext, boxDb:FullDatabase):Future[Seq[String]] = {
+  def keysOf(schema:String,table:String)(implicit ec:ExecutionContext):DBIO[Seq[String]] = {
     logger.info("Getting " + table + " keys")
-    cacheKeys.lift((table)) match {
-      case Some(r) => r
+    cacheKeys.get(table) match {
+      case Some(r) => DBIO.successful(r)
       case None => {
         logger.info(s"Metadata keys cache miss! cache key: ($table), cache: ${cacheKeys}")
 
-        val result = new PgInformationSchema(table).pk.map { pk => //map to enter the future
+        val result = new PgInformationSchema(schema,table)(ec).pk.map { pk => //map to enter the future
           logger.info(pk.toString)
           pk.boxKeys
         }
 
-        if(BoxConfig.enableCache) cacheKeys = cacheKeys ++ Map((table) -> result)
-        result.onComplete{x =>
-          if(x.isFailure) {
-            cacheKeys = cacheKeys.filterKeys(_ != table)
+
+        for{
+          keys <- result
+        } yield {
+          if(BoxConfig.enableCache) {
+            DBIO.successful(cacheKeys.put(table,keys))
           }
+          keys
         }
-        result
+
       }
     }
   }
 
-  def firstNoPKField(table:String)(implicit db:FullDatabase, ec:ExecutionContext):Future[Option[String]] = {
+  def firstNoPKField(_schema:String,table:String)(implicit db:FullDatabase, ec:ExecutionContext):DBIO[Option[String]] = {
     logger.info("Getting first field of " + table + " that is not PK")
-    val schema = new PgInformationSchema(table,excludeFields)
+    val schema = new PgInformationSchema(_schema,table,excludeFields)(ec)
     for {
       pks <- schema.pk.map(_.boxKeys) //todo: or boxKeys?
       c <- schema.columns
@@ -252,8 +233,8 @@ object EntityMetadataFactory extends Logging {
 
 
 
-  def isView(table:String)(implicit ec:ExecutionContext,boxDatabase: FullDatabase):Future[Boolean] =
-    new PgInformationSchema(table).pgTable.map(_.isView)  //map to enter the future
+  def isView(schema:String,table:String)(implicit ec:ExecutionContext):DBIO[Boolean] =
+    new PgInformationSchema(schema,table)(ec).pgTable.map(_.isView)  //map to enter the future
 
 
 

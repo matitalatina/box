@@ -4,13 +4,17 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives.{complete, get, path, pathPrefix}
 import akka.stream.Materializer
-import ch.wsl.box.model.BoxActionsRegistry
+import ch.wsl.box.model.{BoxActionsRegistry, BoxDefinition, BoxDefinitionMerge}
+import ch.wsl.box.model.boxentities.BoxSchema
 import ch.wsl.box.model.shared.EntityKind
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, StubMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxFileRoutes, BoxRoutes, Form, Table}
 import ch.wsl.box.rest.utils.{Auth, BoxSession, UserProfile}
 import ch.wsl.box.services.Services
 import com.softwaremill.session.SessionManager
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
 
 import scala.concurrent.ExecutionContext
 
@@ -19,21 +23,21 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
   import Directives._
   import ch.wsl.box.rest.utils.Auth
   import ch.wsl.box.rest.utils.JSONSupport._
-  import io.circe.generic.auto._
+
 
   def forms = pathPrefix("box-admin") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),userProfile.boxDb,EntityKind.BOX.kind).route
+        Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),userProfile.db,EntityKind.BOX.kind,schema = BoxSchema.schema).route
       }
     } ~ pathEnd{
-      complete(BoxFormMetadataFactory().list)
+      complete(Auth.adminDB.run(BoxFormMetadataFactory().list))
     }
   }
 
   def boxAdmins = path("box-admins") {
     get {
-      complete(BoxFormMetadataFactory().list)
+      complete(Auth.adminDB.run(BoxFormMetadataFactory().list))
     }
   }
 
@@ -44,16 +48,42 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
   }
 
   def file = pathPrefix("boxfile") {
-    BoxFileRoutes.route(session.userProfile.boxUserProfile, mat, ec, services)
+    BoxFileRoutes.route(session.userProfile.get, mat, ec, services)
   }
 
-  def entity = pathPrefix("boxentity") {
-    BoxRoutes()(session.userProfile.boxUserProfile, mat, ec)
+  def boxentity = pathPrefix("boxentity") {
+    BoxRoutes()(session.userProfile.get, mat, ec)
   }
 
   def entities = path("boxentities") {
     get {
       complete(Table.boxTables.toSeq.sorted)
+    }
+  }
+
+  def boxDefinition = pathPrefix("box-definition") {
+    get{
+      complete(BoxDefinition.`export`(Auth.adminDB).map(_.asJson))
+    } ~
+    path("diff") {
+      post{
+        entity(as[BoxDefinition]) {  newDef =>
+          complete {
+            BoxDefinition.`export`(Auth.adminDB).map { oldDef =>
+              BoxDefinition.diff(oldDef, newDef).asJson
+            }
+          }
+        }
+      }
+    } ~
+    path("commit") {
+      post{
+        entity(as[BoxDefinitionMerge]) { merge =>
+          complete {
+            BoxDefinition.update(Auth.adminDB,merge)
+          }
+        }
+      }
     }
   }
 
@@ -67,7 +97,8 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
     boxAdmins ~
     createStub  ~
     file  ~
-    entity   ~
-    entities
+    boxentity   ~
+    entities ~
+    boxDefinition
   }
 }

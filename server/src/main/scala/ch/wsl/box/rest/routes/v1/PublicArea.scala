@@ -17,7 +17,7 @@ import scala.util.{Failure, Success}
 
 case class PublicArea(implicit ec:ExecutionContext, mat:Materializer, system:ActorSystem) {
 
-  lazy val publicEntities:Future[Seq[BoxPublicEntities.Row]] = Auth.boxDB.run(BoxPublicEntities.table.result)
+  lazy val publicEntities:Future[Seq[BoxPublicEntities.Row]] = Auth.adminDB.run(BoxPublicEntities.table.result)
 
   import akka.http.scaladsl.server.Directives._
 
@@ -26,11 +26,11 @@ case class PublicArea(implicit ec:ExecutionContext, mat:Materializer, system:Act
   def form = pathPrefix("form") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        val route: Future[Route] = FormMetadataFactory.hasGuestAccess(name,Auth.boxDB).map {
+        val route: Future[Route] = Auth.adminDB.run(FormMetadataFactory.hasGuestAccess(name)).map {
           _ match {
             case Some(userProfile) => {
               implicit val up = userProfile
-              Form(name, lang, x => Registry().actions(x), FormMetadataFactory(Auth.boxDB,Auth.adminDB), up.db, EntityKind.FORM.kind).route
+              Form(name, lang, x => Registry().actions(x), FormMetadataFactory(), up.db, EntityKind.FORM.kind).route
             }
             case None => complete(StatusCodes.BadRequest, "The form is not public")
           }

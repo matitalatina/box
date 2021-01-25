@@ -18,6 +18,20 @@ lazy val codegen  = (project in file("codegen")).settings(
   git.useGitDescribe := true
 ).dependsOn(sharedJVM)
 
+lazy val serverServices  = (project in file("server-services")).settings(
+  organization := "boxframework",
+  name := "box-server-services",
+  bintrayRepository := "maven",
+  bintrayOrganization := Some("waveinch"),
+  publishMavenStyle := true,
+  licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
+  scalaVersion := Settings.versions.scala212,
+  libraryDependencies ++= Settings.serverCacheRedisDependecies.value,
+  resolvers += Resolver.jcenterRepo,
+  resolvers += Resolver.bintrayRepo("waveinch","maven"),
+  git.useGitDescribe := true
+).dependsOn(sharedJVM)
+
 lazy val server: Project  = project
   .settings(
     organization := "boxframework",
@@ -68,6 +82,9 @@ lazy val server: Project  = project
   )
   .dependsOn(sharedJVM)
   .dependsOn(codegen)
+  .dependsOn(serverServices)
+
+
 
 lazy val serverCacheRedis  = (project in file("server-cache-redis")).settings(
   organization := "boxframework",
@@ -81,7 +98,7 @@ lazy val serverCacheRedis  = (project in file("server-cache-redis")).settings(
   resolvers += Resolver.jcenterRepo,
   resolvers += Resolver.bintrayRepo("waveinch","maven"),
   git.useGitDescribe := true
-).dependsOn(server)
+).dependsOn(serverServices)
 
 lazy val client: Project = (project in file("client"))
   .settings(
@@ -239,12 +256,14 @@ lazy val publishAllTask = {
     (clean in server),
     (clean in codegen),
     (clean in serverCacheRedis),
+    (clean in serverServices),
     (webpack in fullOptJS in Compile in client),
     (compile in Compile in codegen),
     (publish in sharedJVM),
     (publish in codegen),
     (publish in server),
     (publish in serverCacheRedis),
+    (publish in serverServices),
   )
 }
 
@@ -253,6 +272,8 @@ lazy val publishAllLocalTask = {
   Def.sequential(
     (clean in client),
     (clean in server),
+    (clean in serverCacheRedis),
+    (clean in serverServices),
     (clean in codegen),
     (webpack in fullOptJS in Compile in client),
     (compile in Compile in codegen),
@@ -260,6 +281,7 @@ lazy val publishAllLocalTask = {
     (publishLocal in codegen),
     (publishLocal in server),
     (publishLocal in serverCacheRedis),
+    (publishLocal in serverServices),
   )
 }
 

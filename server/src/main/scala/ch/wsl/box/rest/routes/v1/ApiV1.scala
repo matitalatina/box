@@ -59,8 +59,8 @@ case class ApiV1(appVersion:String)(implicit ec:ExecutionContext, sessionManager
     post {
       entity(as[LoginRequest]) { request =>
         val usernamePassword = BoxSession.fromLogin(request)
-        onComplete(usernamePassword.userProfile.check) {
-          case Success(true) => boxSetSessionCookie(usernamePassword) {
+        usernamePassword.userProfile match {
+          case Some(up) => boxSetSessionCookie(usernamePassword) {
             complete("ok")
           }
           case _ => complete(StatusCodes.Unauthorized, "nok")
@@ -73,8 +73,8 @@ case class ApiV1(appVersion:String)(implicit ec:ExecutionContext, sessionManager
     post {
       entity(as[LoginRequest]) { request =>
         val usernamePassword = BoxSession.fromLogin(request)
-        onComplete(usernamePassword.userProfile.check) {
-          case Success(true) => boxSetSessionHeader(usernamePassword) {
+        usernamePassword.userProfile match {
+          case Some(up) => boxSetSessionHeader(usernamePassword) {
             complete("ok")
           }
           case _ => complete(StatusCodes.Unauthorized, "nok")
@@ -89,7 +89,7 @@ case class ApiV1(appVersion:String)(implicit ec:ExecutionContext, sessionManager
       optionalSession(oneOff, usingCookiesOrHeaders) {
         case None => complete(UIProvider.forAccessLevel(UIProvider.NOT_LOGGED_IN))
         case Some(session) => complete(for {
-          accessLevel <- session.userProfile.accessLevel
+          accessLevel <- session.userProfile.get.accessLevel
           ui <- UIProvider.forAccessLevel(accessLevel)
         } yield ui)
       }
@@ -103,7 +103,7 @@ case class ApiV1(appVersion:String)(implicit ec:ExecutionContext, sessionManager
           val boxFile = session match {
             case None => UIProvider.fileForAccessLevel(fileName,UIProvider.NOT_LOGGED_IN)
             case Some(session) => for {
-              accessLevel <- session.userProfile.accessLevel
+              accessLevel <- session.userProfile.get.accessLevel
               ui <- UIProvider.fileForAccessLevel(fileName,accessLevel)
             } yield ui
           }

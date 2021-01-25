@@ -108,6 +108,8 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
     override def mappingEnabled = true;
 
     override def TableClass = new TableClassDef {
+
+
       override def optionEnabled = columns.size <= 22 && mappingEnabled && columns.exists(c => !c.model.nullable)
     }
 

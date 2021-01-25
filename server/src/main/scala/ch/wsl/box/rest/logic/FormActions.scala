@@ -3,6 +3,7 @@ package ch.wsl.box.rest.logic
 import akka.NotUsed
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import ch.wsl
 import ch.wsl.box
 import ch.wsl.box.jdbc
 import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile}
@@ -10,7 +11,7 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.routes.enablers.CSVDownload
-import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, FutureUtils, Timer, UserProfile}
 import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher
@@ -38,12 +39,16 @@ case class FormActions(metadata:JSONMetadata,
 
 
 
-  def getById(id:JSONID)(implicit db: FullDatabase) = {
+  def getById(id:JSONID) = {
     logger.info("Getting Form data")
-    DBIO.from(get(id.query))
+
+
+    jsonAction.getById(id).flatMap{ row =>
+      DBIO.sequenceOption(row.map(expandJson))
+    }
   }
 
-  private def streamSeq(query:JSONQuery):Source[Json,NotUsed] = {
+  private def streamSeq(query:JSONQuery):DBIO[Seq[Json]] = {
 
     val q:JSONQuery = metadata.query.map{ defaultQuery =>
         JSONQuery(
@@ -54,53 +59,50 @@ case class FormActions(metadata:JSONMetadata,
         )
     }.getOrElse(query)
 
+    jsonAction.find(q).flatMap{ rows =>
+      DBIO.sequence(rows.map(expandJson))
+    }
 
-    Source
-      .fromPublisher(jsonAction.findStreamed(q))
-      .flatMapConcat( json => Source.fromFuture(db.db.run{ expandJson(json) }))
   }
 
 
-  private def _list(query:JSONQuery): Source[Json, NotUsed] = {
+  private def _list(query:JSONQuery):DBIO[Seq[Json]] = {
     metadata.view.map(v => Registry().actions(v)) match {
       case None => streamSeq(query)
-      case Some(v) => Source.fromPublisher(v.findStreamed(query))
+      case Some(v) => v.find(query)
     }
   }
 
-  def list(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):Future[Seq[Json]] = _list(query).runFold(Seq[Json]()){(acc, row) =>
+  def list(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]]):DBIO[Seq[Json]] = _list(query).map{ _.map{ row =>
+
 
     val lookup = Lookup.valueExtractor(lookupElements, metadata) _
 
     val columns = metadata.tabularFields.map{f =>
       (f, lookup(f,row.js(f).string).map(_.asJson).getOrElse(row.js(f)))
     }
-    val js = Json.obj(columns:_*)
-    acc ++ Seq(js)
-  }
+    Json.obj(columns:_*)
+  }}
 
-  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):Source[String,NotUsed] = {
+  def csv(query:JSONQuery,lookupElements:Option[Map[String,Seq[Json]]],fields:JSONMetadata => Seq[String] = _.tabularFields):DBIO[String] = {
 
     import kantan.csv._
     import kantan.csv.ops._
 
     val lookup = Lookup.valueExtractor(lookupElements, metadata) _
 
-    _list(query).map { json =>
-      val row = fields(metadata).map { field =>
-        lookup(field,json.get(field)).getOrElse(json.get(field))
-      }
-      Seq(row).asCsv(rfc)
+    _list(query).map { rows =>
+      rows.map { json =>
+        fields(metadata).map { field =>
+          lookup(field, json.get(field)).getOrElse(json.get(field))
+        }
+      }.asCsv(rfc)
     }
+
 
   }
 
-  def get(query:JSONQuery):Future[Option[Json]] = streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_)).map(x =>
-      if(x.length >1){
-        throw new Exception("Multiple rows retrieved with single id")
-      } else {
-        x.headOption.map(_.asJson)
-      })
+
 
 
 
@@ -133,8 +135,8 @@ case class FormActions(metadata:JSONMetadata,
 
   def subAction[T](e:Json, action: FormActions => ((Option[JSONID],Json) => DBIO[_])): Seq[DBIO[Seq[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
-      form <- DBIO.from(metadataFactory.of(field.child.get.objId, metadata.lang))
-      dbSubforms <- getChild(e,field,form,field.child.get)
+      form <- DBIO.from(Auth.adminDB.run(metadataFactory.of(field.child.get.objId, metadata.lang)))
+      dbSubforms <- getChild(e,form,field.child.get)
       subs = e.seq(field.name)
       subJsonWithIndexs = attachArrayIndex(subs,form)
       subJson = attachParentId(subJsonWithIndexs,e,field.child.get)
@@ -168,7 +170,7 @@ case class FormActions(metadata:JSONMetadata,
   }
 
 
-  def delete(id:JSONID)(implicit db: FullDatabase) = {
+  def delete(id:JSONID) = {
     for{
       json <- getById(id)
       subs <- DBIO.sequence(subAction(json.get,x => (id,json) => x.deleteSingle(id.get,json)))
@@ -176,12 +178,12 @@ case class FormActions(metadata:JSONMetadata,
     } yield current + subs.size
   }
 
-  def insert(e:Json)(implicit db: FullDatabase) = for{
+  def insert(e:Json) = for{
     insertedId <- jsonAction.insert(e)
     inserted <- jsonAction.getById(insertedId).map(_.get)
     _ <- DBIO.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
       for {
-        metadata <- DBIO.from(metadataFactory.of(field.child.get.objId, metadata.lang))
+        metadata <- DBIO.from(Auth.adminDB.run(metadataFactory.of(field.child.get.objId, metadata.lang)))
         rows = attachArrayIndex(e.seq(field.name),metadata)
         //attach parent id
         rowsWithId = rows.map{ row =>
@@ -195,14 +197,14 @@ case class FormActions(metadata:JSONMetadata,
 
 
 
-  def update(id:JSONID, e:Json)(implicit db: FullDatabase) = {
+  def update(id:JSONID, e:Json) = {
     for{
       _ <- DBIO.sequence(subAction(e,_.upsertIfNeeded))  //need upsert to add new child records
       result <- jsonAction.update(id,e)
     } yield result
   }
 
-  def updateIfNeeded(id:JSONID, e:Json)(implicit db: FullDatabase) = {
+  def updateIfNeeded(id:JSONID, e:Json) = {
 
     for{
       _ <- DBIO.sequence(subAction(e,_.upsertIfNeeded))  //need upsert to add new child records
@@ -210,7 +212,7 @@ case class FormActions(metadata:JSONMetadata,
     } yield result
   }
 
-  def upsertIfNeeded(id:Option[JSONID],e:Json)(implicit db:FullDatabase) = {
+  def upsertIfNeeded(id:Option[JSONID],e:Json) = {
 
     for{
       newId <- jsonAction.upsertIfNeeded(id,e)
@@ -234,9 +236,9 @@ case class FormActions(metadata:JSONMetadata,
     child.childQuery.getOrElse(JSONQuery.empty).copy(filter=filters.toList.distinct)
   }
 
-  private def getChild(dataJson:Json, field:JSONField, metadata:JSONMetadata, child:Child):DBIO[Seq[Json]] = DBIO.from{
+  private def getChild(dataJson:Json, metadata:JSONMetadata, child:Child):DBIO[Seq[Json]] = {
     val query = createQuery(dataJson,child)
-    FormActions(metadata,jsonActions,metadataFactory).streamSeq(query).runFold(Seq[Json]())(_ ++ Seq(_))
+    FormActions(metadata,jsonActions,metadataFactory).streamSeq(query)
   }
 
   private def expandJson(dataJson:Json):DBIO[Json] = {
@@ -246,8 +248,8 @@ case class FormActions(metadata:JSONMetadata,
         case ("static",_) => DBIO.successful(field.name -> field.default.asJson)  //set default value
         case (_,None) => DBIO.successful(field.name -> dataJson.js(field.name))        //use given value
         case (_,Some(child)) => for{
-          form <- DBIO.from(metadataFactory.of(child.objId,metadata.lang))
-          data <- getChild(dataJson,field,form,child)
+          form <- DBIO.from(Auth.adminDB.run(metadataFactory.of(child.objId,metadata.lang)))
+          data <- getChild(dataJson,form,child)
         } yield {
           logger.info(s"expanding child ${field.name} : ${data.asJson}")
           field.name -> data.asJson
@@ -258,19 +260,12 @@ case class FormActions(metadata:JSONMetadata,
   }
 
 
+  override def find(query: JSONQuery) = jsonAction.find(query)
 
+  override def count() = jsonAction.count()
+  override def count(query: JSONQuery) = jsonAction.count(query)
 
-
-
-  override def findStreamed(query: JSONQuery)(implicit db: FullDatabase): DatabasePublisher[Json] = jsonAction.findStreamed(query)
-
-
-  override def find(query: JSONQuery)(implicit db: FullDatabase, mat: Materializer): DBIO[Seq[Json]] = jsonAction.find(query)
-
-  override def count()(implicit db: FullDatabase) = jsonAction.count()
-  override def count(query: JSONQuery)(implicit db: FullDatabase) = jsonAction.count(query)
-
-  override def ids(query: JSONQuery)(implicit db: FullDatabase, mat: Materializer) = {
+  override def ids(query: JSONQuery) = {
     metadata.view.map(v => Registry().actions(v)) match {
       case None => jsonAction.ids(query)
       case Some(v) => for {

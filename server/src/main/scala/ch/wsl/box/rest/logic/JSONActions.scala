@@ -10,7 +10,7 @@ import io.circe.syntax._
 import scribe.Logging
 import slick.basic.DatabasePublisher
 import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile}
-import slick.lifted.TableQuery
+import slick.lifted.{MappedProjection, TableQuery}
 import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,17 +23,16 @@ class JSONViewActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Pro
 
   protected val dbActions = new DbActions[T,M](entity)
 
-  override def findStreamed(query: JSONQuery=JSONQuery.empty)(implicit db:FullDatabase): DatabasePublisher[Json] = dbActions.findStreamed(query).mapResult(_.asJson)
 
+  def findQuery(query: JSONQuery): Query[MappedProjection[Json, M], Json, Seq] = dbActions.findQuery(query).map(_ <> (_.asJson, (_:Json) => None))
+  override def find(query: JSONQuery) = findQuery(query).result
 
-  override def find(query: JSONQuery)(implicit db: FullDatabase, mat: Materializer): DBIO[Seq[Json]] = dbActions.find(query).map(_.map(_.asJson))
+  override def getById(id: JSONID=JSONID.empty):DBIO[Option[Json]] = dbActions.getById(id).map(_.map(_.asJson))
 
-  override def getById(id: JSONID=JSONID.empty)(implicit db:FullDatabase):DBIO[Option[Json]] = dbActions.getById(id).map(_.map(_.asJson))
+  override def count() = dbActions.count()
+  override def count(query: JSONQuery) = dbActions.count(query)
 
-  override def count()(implicit db:FullDatabase) = dbActions.count()
-  override def count(query: JSONQuery)(implicit db: FullDatabase) = dbActions.count(query)
-
-  override def ids(query:JSONQuery)(implicit db:FullDatabase, mat:Materializer):DBIO[IDs] = {
+  override def ids(query:JSONQuery):DBIO[IDs] = {
     for{
       data <- dbActions.find(query)
       keys <- dbActions.keys()   // JSONMetadataFactory.keysOf(table.baseTableRow.tableName)
@@ -60,7 +59,7 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
 
 
 
-  override def update(id:JSONID, json: Json)(implicit db: FullDatabase):DBIO[Int] = {
+  override def update(id:JSONID, json: Json):DBIO[Int] = {
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
@@ -68,7 +67,7 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
     } yield updatedCount
   }
 
-  override def updateIfNeeded(id:JSONID, json: Json)(implicit db: FullDatabase):DBIO[Int] = {
+  override def updateIfNeeded(id:JSONID, json: Json):DBIO[Int] = {
     for{
       current <- getById(id) //retrieve values in db
       merged  = current.get.deepMerge(json) //merge old and new json
@@ -80,11 +79,11 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
     }
   }
 
-  override def insert(json: Json)(implicit db:FullDatabase):DBIO[JSONID] = dbActions.insert(toM(json))
+  override def insert(json: Json):DBIO[JSONID] = dbActions.insert(toM(json))
 
 
 
-  override def upsertIfNeeded(id:Option[JSONID], json: Json)(implicit db: FullDatabase):DBIO[JSONID] = {
+  override def upsertIfNeeded(id:Option[JSONID], json: Json):DBIO[JSONID] = {
     for{
       current <- id match {
         case Some(id) => getById(id)
@@ -103,7 +102,7 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
     }
   }
 
-  override def delete(id: JSONID)(implicit db: FullDatabase):DBIO[Int] = dbActions.delete(id)
+  override def delete(id: JSONID):DBIO[Int] = dbActions.delete(id)
 
   protected def toM(json: Json):M =json.as[M].fold(
       { fail =>

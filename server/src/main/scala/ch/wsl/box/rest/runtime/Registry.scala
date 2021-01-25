@@ -10,15 +10,13 @@ trait RegistryInstance{
   def routes: GeneratedRoutes
   def actions: ActionRegistry
   def fields: FieldRegistry
-  def tables: TableRegistry
 }
 
 case class GeneratedRegistry(
                    fileRoutes:GeneratedFileRoutes,
                    routes: GeneratedRoutes,
                    actions: ActionRegistry,
-                   fields: FieldRegistry,
-                   tables: TableRegistry
+                   fields: FieldRegistry
                    ) extends RegistryInstance
 
 object Registry extends Logging {
@@ -54,12 +52,6 @@ object Registry extends Logging {
         parentType = None
       )
 
-      val fileEntitiesCode =  files.fileTables.packageCode(
-        profile = "ch.wsl.box.jdbc.PostgresProfile",
-        pkg = "",
-        container = "FileTables",
-        parentType = None
-      )
 
       val routeFileCode =  files.fileAccessGenerator.generate(
         pkg = "",
@@ -85,9 +77,7 @@ object Registry extends Logging {
 
       val source = s"""
                       |${dropPackage(entitiesCode)}
-                      |
-                      |${dropPackage(fileEntitiesCode)}
-                      |
+                      |                      |
                       |${dropPackage(routeFileCode)}
                       |
                       |${dropPackage(routesCode)}

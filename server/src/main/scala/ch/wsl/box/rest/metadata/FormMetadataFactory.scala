@@ -2,7 +2,7 @@ package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
 import ch.wsl.box.information_schema.{PgColumn, PgColumns, PgInformationSchema}
-import ch.wsl.box.jdbc.FullDatabase
+import ch.wsl.box.jdbc.{FullDatabase, UserDatabase}
 import ch.wsl.box.model.boxentities.BoxField.{BoxFieldFile_row, BoxField_i18n_row, BoxField_row}
 import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_row}
 import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
@@ -32,20 +32,24 @@ object FormMetadataFactory{
    *
    * cache should be resetted when an external field changes
    */
-  private var cacheFormName = Map[(String, String, String),Future[JSONMetadata]]()   //(up.name, form id, lang)
-  private var cacheFormId = Map[(String, Int, String),Future[JSONMetadata]]()        //(up.name, from name, lang)
+  private val cacheFormName = scala.collection.mutable.Map[(String, String, String),JSONMetadata]()   //(up.name, form id, lang)
+  private val cacheFormId = scala.collection.mutable.Map[(String, Int, String),JSONMetadata]()        //(up.name, from name, lang)
 
   def resetCache() = {
-    cacheFormName = Map()
-    cacheFormId = Map()
+    cacheFormName.clear()
+    cacheFormId.clear()
   }
 
   def resetCacheForEntity(e:String) = {
-    cacheFormId = cacheFormId.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
-    cacheFormName = cacheFormName.filterNot(c => CacheUtils.checkIfHasForeignKeys(e, c._2))
+    cacheFormId.filter(c => CacheUtils.checkIfHasForeignKeys(e, c._2)).foreach{case (k,_) =>
+      cacheFormId.remove(k)
+    }
+    cacheFormName.filter(c => CacheUtils.checkIfHasForeignKeys(e, c._2)).foreach{case (k,_) =>
+      cacheFormName.remove(k)
+    }
   }
 
-  def hasGuestAccess(formName:String,boxDb:Database)(implicit ec:ExecutionContext):Future[Option[UserProfile]] = boxDb.run{
+  def hasGuestAccess(formName:String)(implicit ec:ExecutionContext):DBIO[Option[UserProfile]] = {
     BoxFormTable.filter(f => f.name === formName && f.guest_user.nonEmpty).result.headOption
   }.map{_.map{ form =>
     Auth.userProfileForUser(form.guest_user.get)
@@ -56,65 +60,71 @@ object FormMetadataFactory{
 
 
 
-case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
+case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
-  implicit val db = up.db
-  implicit val database = FullDatabase(up.db,adminDb)
 
-  def list: Future[Seq[String]] = boxDb.run{
+
+  def list: DBIO[Seq[String]] = {
     BoxForm.BoxFormTable.result
   }.map{_.map(_.name)}
 
-  def of(id:Int, lang:String):Future[JSONMetadata] = {
+  def of(id:Int, lang:String):DBIO[JSONMetadata] = {
     val cacheKey = (up.name, id,lang)
-    FormMetadataFactory.cacheFormId.lift(cacheKey) match {
-      case Some(r) => r
+    FormMetadataFactory.cacheFormId.get(cacheKey) match {
+      case Some(r) => DBIO.successful(r)
       case None => {
         logger.info(s"Metadata cache miss! cache key: ($id,$lang), cache: ${FormMetadataFactory.cacheFormName}")
         val formQuery: Query[BoxForm.BoxForm, BoxForm_row, Seq] = for {
           form <- BoxForm.BoxFormTable if form.form_id === id
         } yield form
-        val result = getForm(formQuery,lang)
-        if(BoxConfig.enableCache) FormMetadataFactory.cacheFormId = FormMetadataFactory.cacheFormId ++ Map(cacheKey -> result)
-        result.onComplete{ x =>
-          if(x.isFailure) {
-            FormMetadataFactory.cacheFormId = FormMetadataFactory.cacheFormId.filterKeys(_ != cacheKey)
+
+        for {
+          metadata <- getForm(formQuery, lang)
+        } yield {
+          if(BoxConfig.enableCache) {
+            FormMetadataFactory.cacheFormId.put(cacheKey,metadata)
+            FormMetadataFactory.cacheFormName.put((up.name, metadata.name,lang),metadata)
           }
+          metadata
         }
-        result
+
       }
     }
   }
 
-  def of(name:String, lang:String):Future[JSONMetadata] = {
+  def of(name:String, lang:String):DBIO[JSONMetadata] = {
     val cacheKey = (up.name, name,lang)
     FormMetadataFactory.cacheFormName.lift(cacheKey) match {
-      case Some(r) => r
+      case Some(r) => DBIO.successful(r)
       case None => {
         logger.info(s"Metadata cache miss! cache key: ($name,$lang), cache: ${FormMetadataFactory.cacheFormName}")
         val formQuery: Query[BoxForm.BoxForm, BoxForm_row, Seq] = for {
           form <- BoxForm.BoxFormTable if form.name === name
         } yield form
-        val result = getForm(formQuery,lang)
-        if(BoxConfig.enableCache) FormMetadataFactory.cacheFormName = FormMetadataFactory.cacheFormName ++ Map(cacheKey -> result)
-        result.onComplete{x =>
-          if(x.isFailure) {
-            FormMetadataFactory.cacheFormName = FormMetadataFactory.cacheFormName.filterKeys(_ != cacheKey)
+
+        for {
+          metadata <- getForm(formQuery, lang)
+        } yield {
+          if(BoxConfig.enableCache) {
+            FormMetadataFactory.cacheFormName.put(cacheKey,metadata)
+            FormMetadataFactory.cacheFormId.put((up.name, metadata.objId,lang),metadata)
           }
+          metadata
         }
-        result
+
+
       }
     }
 
   }
 
-  def children(form:JSONMetadata):Future[Seq[JSONMetadata]] = {
-    val result = Future.sequence{
+  def children(form:JSONMetadata):DBIO[Seq[JSONMetadata]] = {
+    val result = DBIO.sequence{
       form.fields.flatMap(_.child).map{ child =>
         of(child.objId,form.lang)
       }
     }
-    val subresults = result.map(x => Future.sequence(x.map(children)))
+    val subresults = result.map(x => DBIO.sequence(x.map(children)))
     for{
       firstLevel <- result
       secondLevel <- subresults
@@ -125,9 +135,9 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
 
   }
 
-  private def keys(form:BoxForm_row):Future[Seq[String]] = form.edit_key_field.map{x =>
-    Future.successful(x.split(",").toSeq.map(_.trim))
-  }.getOrElse(EntityMetadataFactory.keysOf(form.entity))
+  private def keys(form:BoxForm_row):DBIO[Seq[String]] = form.edit_key_field.map{x =>
+    DBIO.successful(x.split(",").toSeq.map(_.trim))
+  }.getOrElse(EntityMetadataFactory.keysOf(Auth.dbSchema,form.entity))
 
   private def getForm(formQuery: Query[BoxForm.BoxForm,BoxForm_row,Seq], lang:String) = {
 
@@ -140,18 +150,15 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
     val fQuery = formQuery joinLeft BoxForm.BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id)
 
 
-    for{
-      (form,formI18n) <- boxDb.run( fQuery.result ).map(_.head)
-      fields <- boxDb.run{fieldQuery(form.form_id.get).result}
-      fieldsFile <- Future.sequence(fields.map { case (f, _) =>
-        boxDb.run {
-          BoxField.BoxFieldFileTable.filter(_.field_id === f.field_id).result
-        }.map(_.headOption)
+    val result = for{
+      (form,formI18n) <- fQuery.result.map(_.head)
+      fields <- fieldQuery(form.form_id.get).result
+      fieldsFile <- DBIO.sequence(fields.map { case (f, _) =>
+          BoxField.BoxFieldFileTable.filter(_.field_id === f.field_id).result.headOption
       })
-      actions <- boxDb.run{
-        BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
-      }
-      cols <- new PgInformationSchema(form.entity).columns
+      actions <- BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
+
+      cols <- new PgInformationSchema(Auth.dbSchema,form.entity)(ec).columns
       columns = fields.map(f => cols.find(_.column_name == f._1.name))
       keys <- keys(form)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
@@ -227,16 +234,18 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
       result
     }
 
+    result.transactionally
+
   }
 
-  private def linkedForms(field:BoxField_row):Future[Option[LinkedForm]] = {
+  private def linkedForms(field:BoxField_row):DBIO[Option[LinkedForm]] = {
     val linkedFormOpt = for{
       formId <- field.child_form_id
       parentFields <- field.linked_key_fields
       childFields <- field.childFields
       parentLabel <- field.linked_label_fields
     } yield {
-      boxDb.run{
+      {
         BoxForm.BoxFormTable.filter(_.form_id === formId).result
       }.map{ lForm =>
         lForm.map{ value =>
@@ -250,7 +259,7 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
       }
     }
 
-    Future.sequence(linkedFormOpt.toSeq).map(_.flatten.headOption) // fix types
+    DBIO.sequence(linkedFormOpt.toSeq).map(_.flatten.headOption) // fix types
   }
 
   private def condition(field:BoxField_row) = for{
@@ -261,11 +270,11 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
 
   private def file(ff:BoxFieldFile_row) = FileReference(ff.name_field, ff.file_field, ff.thumbnail_field)
 
-  private def label(field:BoxField_row,fieldI18n:Option[BoxField_i18n_row], lang:String):Future[String] = {
+  private def label(field:BoxField_row,fieldI18n:Option[BoxField_i18n_row], lang:String):DBIO[String] = {
 
     field.child_form_id match {
-      case None => Future.successful(fieldI18n.flatMap(_.label).getOrElse(field.name))
-      case Some(subformId) => boxDb.run{
+      case None => DBIO.successful(fieldI18n.flatMap(_.label).getOrElse(field.name))
+      case Some(subformId) => {
         {
           for{
             (form,formI18n) <- BoxForm.BoxFormTable joinLeft BoxForm_i18nTable.filter(_.lang === lang) on (_.form_id === _.form_id) if form.form_id === subformId
@@ -302,7 +311,7 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
     case _ => None
   }
 
-  private def lookup(field:BoxField_row,fieldI18n:Option[BoxField_i18n_row], lang:String): Future[Option[JSONFieldLookup]] = {for{
+  private def lookup(field:BoxField_row,fieldI18n:Option[BoxField_i18n_row], lang:String): DBIO[Option[JSONFieldLookup]] = {for{
     refEntity <- field.lookupEntity
     value <- field.lookupValueField
 
@@ -310,15 +319,18 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
   } yield {
 
     import io.circe.generic.auto._
+
+    //implicit def fDb = FullDatabase(up.db,adminDb)
+
     for{
-      keys <- EntityMetadataFactory.keysOf(refEntity)
+      keys <- EntityMetadataFactory.keysOf(Auth.dbSchema,refEntity)
       filter = { for{
         queryString <- field.lookupQuery
         queryJson <- parse(queryString).right.toOption
         query <- queryJson.as[JSONQuery].right.toOption
       } yield query }.getOrElse(JSONQuery.sortByKeys(keys))
 
-      lookupData <- db.run(Registry().actions(refEntity).find(filter.copy(lang = Some(lang))))
+      lookupData <- DBIO.from(up.db.run(Registry().actions(refEntity).find(filter.copy(lang = Some(lang)))))
 
     } yield {
       Some(JSONFieldLookup.fromData(refEntity, JSONFieldMap(value,text,field.masterFields.getOrElse(field.name)), lookupData,field.lookupQuery))
@@ -326,10 +338,10 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
 
   }} match {
     case Some(a) => a
-    case None => Future.successful(None)
+    case None => DBIO.successful(None)
   }
 
-  private def fieldsToJsonFields(fields:Seq[(((BoxField_row,Option[BoxField_i18n_row]),Option[BoxFieldFile_row]),Option[PgColumn])], lang:String): Future[Seq[JSONField]] = {
+  private def fieldsToJsonFields(fields:Seq[(((BoxField_row,Option[BoxField_i18n_row]),Option[BoxFieldFile_row]),Option[PgColumn])], lang:String): DBIO[Seq[JSONField]] = {
 
     val jsonFields = fields.map{ case (((field,fieldI18n),fieldFile),pgColumn) =>
 
@@ -361,7 +373,7 @@ case class FormMetadataFactory(boxDb:Database,adminDb:Database)(implicit up:User
 
     }
 
-    Future.sequence(jsonFields)
+    DBIO.sequence(jsonFields)
 
   }
 

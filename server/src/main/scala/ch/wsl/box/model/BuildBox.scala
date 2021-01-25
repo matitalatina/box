@@ -115,7 +115,7 @@ object BuildBox extends App {
     } yield "ok"
 
 
-  val installShowError = install(Auth.boxDB,Auth.dbConf.as[String]("user")).recover{ case t:Throwable => t.printStackTrace()}
+  val installShowError = install(Auth.dbConnection,Auth.dbConf.as[String]("user")).recover{ case t:Throwable => t.printStackTrace()}
 
   Await.result(installShowError, 30 seconds)
 

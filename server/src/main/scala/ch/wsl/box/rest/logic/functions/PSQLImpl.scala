@@ -17,7 +17,7 @@ object PSQLImpl extends RuntimePSQL {
   import ch.wsl.box.shared.utils.JSONUtils._
 
 
-  override def function(name: String, parameters: Seq[Json])(implicit lang: Lang,ec: ExecutionContext, db: Database): Future[Option[DataResultTable]] = JdbcConnect.function(name,parameters,lang.lang)
+  override def function(name: String, parameters: Seq[Json])(implicit lang: Lang,ec: ExecutionContext, up: UserProfile): Future[Option[DataResultTable]] = JdbcConnect.function(name,parameters,lang.lang)
 
   override def table(name: String, query:JSONQuery)(implicit lang:Lang, ec: ExecutionContext, up: UserProfile, mat:Materializer): Future[Option[DataResultTable]] = {
 

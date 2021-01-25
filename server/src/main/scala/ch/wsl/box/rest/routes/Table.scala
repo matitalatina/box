@@ -41,7 +41,7 @@ object Table {
 
 }
 
-case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", isBoxTable:Boolean = false)
+case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", isBoxTable:Boolean = false, schema:Option[String] = None)
                                                             (implicit
                                                              enc: Encoder[M],
                                                              dec:Decoder[M],
@@ -87,10 +87,10 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
         parameters('q) { q =>
           val query = parse(q).right.get.as[JSONQuery].right.get
           complete {
-            for {
-              metadata <- EntityMetadataFactory.of(name, lang)
-              fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
-              data <- db.run(jsonActions.find(query))
+            val io = for {
+              metadata <- DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang))
+              //fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
+              data <- jsonActions.find(query)
             } yield {
               val table = XLSTable(
                 title = name,
@@ -103,6 +103,9 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
               os.close()
               HttpResponse(entity = HttpEntity(MediaTypes.`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, os.toByteArray))
             }
+
+            db.run(io)
+
           }
         }
       }
@@ -115,7 +118,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
         post{
           entity(as[JSONQuery]){ query =>
             complete {
-              Lookup.values(name, valueProperty, textProperty, query)
+              db.run(Lookup.values(name, valueProperty, textProperty, query))
             }
           }
         }
@@ -131,13 +134,13 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
 
   def metadata:Route = path("metadata") {
     get {
-      complete{ EntityMetadataFactory.of(name, lang, limitLookupFromFk) }
+      complete{ EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang, limitLookupFromFk) }
     }
   }
 
   def tabularMetadata:Route = path("tabularMetadata") {
     get {
-      complete{ EntityMetadataFactory.of(name, lang, limitLookupFromFk) }
+      complete{ EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang, limitLookupFromFk) }
     }
   }
 
@@ -183,7 +186,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
         logger.info("csv")
         import kantan.csv._
         import kantan.csv.ops._
-        complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => Seq(x.values()).asCsv(rfc))).log("csv"))
+        complete(Source.fromPublisher(db.stream(dbActions.find(query)).mapResult(x => Seq(x.values()).asCsv(rfc))).log("csv"))
       }
     } ~
       respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -192,9 +195,9 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
             import kantan.csv._
             import kantan.csv.ops._
             val query = parse(q).right.get.as[JSONQuery].right.get
-            val csv = Source.fromFuture(EntityMetadataFactory.of(name,lang, limitLookupFromFk).map{ metadata =>
+            val csv = Source.fromFuture(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name,lang, limitLookupFromFk).map{ metadata =>
               Seq(metadata.fields.map(_.name)).asCsv(rfc)
-            }).concat(Source.fromPublisher(dbActions.findStreamed(query)).map(x => Seq(x.values()).asCsv(rfc))).log("csv")
+            }).concat(Source.fromPublisher(db.stream(dbActions.find(query))).map(x => Seq(x.values()).asCsv(rfc))).log("csv")
             complete(csv)
           }
         }

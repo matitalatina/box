@@ -8,21 +8,22 @@ import slick.basic.DatabasePublisher
 import scala.concurrent.Future
 import akka.stream.scaladsl.Source
 import ch.wsl.box.jdbc.FullDatabase
+import io.circe.Json
+import slick.dbio.{DBIOAction, Effect, Streaming}
+import slick.lifted.MappedProjection
 
 
 
 trait ViewActions[T] {
 
-  def find(query: JSONQuery=JSONQuery.empty)(implicit db: FullDatabase, mat:Materializer): DBIO[Seq[T]]
+  def find(query: JSONQuery=JSONQuery.empty): StreamingDBIO[Seq[T],T] //enable streaming
 
-  def findStreamed(query: JSONQuery=JSONQuery.empty)(implicit db: FullDatabase): DatabasePublisher[T]
+  def getById(id: JSONID=JSONID.empty):DBIO[Option[T]]
 
-  def getById(id: JSONID=JSONID.empty)(implicit db: FullDatabase):DBIO[Option[T]]
+  def count(): DBIO[JSONCount]
+  def count(query: JSONQuery): DBIO[Int]
 
-  def count()(implicit db: FullDatabase): DBIO[JSONCount]
-  def count(query: JSONQuery)(implicit db: FullDatabase): DBIO[Int]
-
-  def ids(query: JSONQuery)(implicit db: FullDatabase, mat:Materializer): DBIO[IDs]
+  def ids(query: JSONQuery): DBIO[IDs]
 }
 
 /**
@@ -35,13 +36,17 @@ trait ViewActions[T] {
  * @tparam T model class type
  */
 trait TableActions[T] extends ViewActions[T] {
-  def insert(obj: T)(implicit db:FullDatabase): DBIO[JSONID]
+  def insert(obj: T): DBIO[JSONID]
 
-  def delete(id:JSONID)(implicit db:FullDatabase): DBIO[Int]
+  def delete(id:JSONID): DBIO[Int]
 
-  def update(id:JSONID, obj: T)(implicit db:FullDatabase): DBIO[Int]
+  def update(id:JSONID, obj: T): DBIO[Int]
 
-  def updateIfNeeded(id:JSONID, obj: T)(implicit db:FullDatabase): DBIO[Int]
+  def updateIfNeeded(id:JSONID, obj: T): DBIO[Int]
 
-  def upsertIfNeeded(id:Option[JSONID], obj: T)(implicit db:FullDatabase): DBIO[JSONID]
+  def upsertIfNeeded(id:Option[JSONID], obj: T): DBIO[JSONID]
+}
+
+trait JsonQuery{
+  def findQuery(query: JSONQuery): Query[MappedProjection[Json, _], Json, Seq]
 }

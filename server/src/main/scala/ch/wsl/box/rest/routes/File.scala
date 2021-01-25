@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import ch.wsl.box.jdbc.FullDatabase
+import ch.wsl.box.jdbc.{FullDatabase, UserDatabase}
 import ch.wsl.box.model.shared.JSONID
 import ch.wsl.box.rest.logic.DbActions
 import ch.wsl.box.rest.routes.File.{BoxFile, FileHandler}
@@ -21,7 +21,7 @@ import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.utils.Auth
 import ch.wsl.box.services.Services
-import ch.wsl.box.services.files.FileId
+import ch.wsl.box.services.file.FileId
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -52,7 +52,7 @@ object File{
 
 }
 
-case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:Database,services: Services) extends Logging {
+case class File[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](field:String, table: TableQuery[T], handler: FileHandler[M])(implicit ec:ExecutionContext, materializer:Materializer, db:UserDatabase, services: Services) extends Logging {
   import Directives._
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._

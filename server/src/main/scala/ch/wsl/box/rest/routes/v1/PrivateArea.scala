@@ -84,14 +84,14 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
 
   def forms(implicit up:UserProfile) = path("forms") {
     get {
-      complete(FormMetadataFactory(Auth.boxDB,Auth.adminDB).list)
+      complete(Auth.adminDB.run(FormMetadataFactory().list))
     }
   }
 
   def form(implicit up:UserProfile) = pathPrefix("form") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        Form(name, lang,x => Registry().actions(x),FormMetadataFactory(Auth.boxDB,Auth.adminDB),up.db,EntityKind.FORM.kind).route
+        Form(name, lang,x => Registry().actions(x),FormMetadataFactory(),up.db,EntityKind.FORM.kind).route
       }
     }
   }
@@ -99,14 +99,14 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
   def news(implicit up:UserProfile) = pathPrefix("news") {
     pathPrefix(Segment) { lang =>
       get{
-        complete(NewsLoader.get(lang))
+        complete(Auth.adminDB.run(NewsLoader.get(lang)))
       }
     }
   }
 
   val route = touchOptionalSession(oneOff, usingCookiesOrHeaders) {
     case Some(session) => {
-      implicit val up = session.userProfile
+      implicit val up = session.userProfile.get
       implicit val db = up.db
 
       Access(session).route ~

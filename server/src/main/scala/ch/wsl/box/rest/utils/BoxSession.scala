@@ -7,7 +7,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 case class BoxSession(username:String,password:String) {
-  def userProfile(implicit ec:ExecutionContext) = Auth.getUserProfile(username,password)
+  def userProfile(implicit ec:ExecutionContext): Option[UserProfile] = Auth.getUserProfile(username,password)
 }
 
 object BoxSession {

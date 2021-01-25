@@ -111,7 +111,8 @@ object Settings {
   ))
 
   val serverCacheRedisDependecies = Def.setting(Seq(
-    "com.github.scredis" %% "scredis" % "2.4.3"
+    "com.github.scredis" %% "scredis" % "2.4.3",
+    "com.iheart"         %% "ficus"   % versions.ficus,
   ))
 
   /** Dependencies only used by the JVM project */
@@ -123,6 +124,7 @@ object Settings {
     "de.heikoseeberger"        %% "akka-http-circe"  % versions.akkaHttpJson,
     "com.typesafe.akka"        %% "akka-actor"       % versions.akka,
     "com.typesafe.akka"        %% "akka-stream"      % versions.akka,
+    "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.5-akka-2.6.x",
     "com.softwaremill.akka-http-session" %% "core"   % "0.5.11",
     "io.circe"                 %% "circe-core"       % versions.circe,
     "io.circe"                 %% "circe-generic"    % versions.circe,
@@ -159,6 +161,7 @@ object Settings {
     "org.scalatest" %% "scalatest" % versions.scalatest % "test",
     "org.scalatest" %% "scalatest-flatspec" % versions.scalatest % "test",
     "com.vladsch.flexmark" % "flexmark-all" % "0.35.10" % Test,
+    "com.github.daddykotex" %% "courier" % "3.0.0-M3a"
 //    "com.github.andyglow" %% "scala-jsonschema" % versions.scalaJsonSchema,
 //    "com.github.andyglow" %% "scala-jsonschema-circe-json" % versions.scalaJsonSchema
   ))

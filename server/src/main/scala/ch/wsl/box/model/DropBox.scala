@@ -17,6 +17,6 @@ object DropBox extends App {
     _ <- db.run(Schema.box.dropIfExists)
   } yield true
 
-  Await.result(fut(Auth.boxDB),10 seconds)
+  Await.result(fut(Auth.dbConnection),10 seconds)
 
 }

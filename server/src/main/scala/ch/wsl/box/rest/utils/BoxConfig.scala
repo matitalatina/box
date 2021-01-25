@@ -12,6 +12,7 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.UserDatabase
 
 
 
@@ -19,7 +20,7 @@ object BoxConfig extends Logging {
 
   private var conf: Map[String, String] = Map()
 
-  def load(boxDb:Database)(implicit ec: ExecutionContext) = {
+  def load(boxDb:UserDatabase)(implicit ec: ExecutionContext) = {
 
     val query = for {
       row <- ch.wsl.box.model.boxentities.BoxConf.BoxConfTable
@@ -114,13 +115,4 @@ object BoxConfig extends Logging {
 
   def filterPrecisionDouble: Option[Int] = Try(conf("filter.precision.double").toInt).toOption
 
-  def prepareDouble = filterPrecisionDouble match {
-    case None => ((x: Double) => x)
-    case Some(p) => ((x: Double) => roundAtDigit(p)(x))
-    //    case Some(p) if p<0 => ((x:Double) => roundAtDigit(-p)(x))
-  }
-
-
-  def roundAtDigit(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.round(n) * s) / s }
-  def truncateAtDigit(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.floor(n) * s) / s }
 }

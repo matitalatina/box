@@ -10,13 +10,11 @@ import slick.codegen.SourceCodeGenerator
 
 case class GeneratedFiles(
                        entities: SourceCodeGenerator,
-                       fileTables: SourceCodeGenerator,
                        generatedRoutes: RoutesGenerator,
                        entityActionsRegistry: EntityActionsRegistryGenerator,
                        fileAccessGenerator: FileAccessGenerator,
                        registry: RegistryGenerator,
-                       fieldRegistry: FieldAccessGenerator,
-                       tableRegistry:TableRegistryGenerator
+                       fieldRegistry: FieldAccessGenerator
                          )
 
 object CustomizedCodeGenerator extends BaseCodeGenerator {
@@ -24,23 +22,16 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
   def generatedFiles():GeneratedFiles = {
 
 
-
-    val modelWithOnlyFilesTables = dbModel.copy(tables = dbModel.tables.filter(_.columns.exists(_.tpe == "Array[Byte]")).map{ t =>
-      t.copy(foreignKeys = Seq())
-    })
-
     val calculatedViews = enabledViews.map(_.name.name).distinct
     val calculatedTables = enabledTables.map(_.name.name).distinct
 
     GeneratedFiles(
       entities = EntitiesGenerator(dbModel,dbConf),
-      fileTables = EntitiesGenerator(modelWithOnlyFilesTables,dbConf),
       generatedRoutes = RoutesGenerator(calculatedViews,calculatedTables,dbModel),
       entityActionsRegistry = EntityActionsRegistryGenerator(calculatedViews ++ calculatedTables,dbModel),
       fileAccessGenerator = FileAccessGenerator(dbModel,dbConf),
       registry = RegistryGenerator(dbModel),
-      fieldRegistry = FieldAccessGenerator(calculatedTables ++ calculatedViews,dbModel),
-      tableRegistry = TableRegistryGenerator(calculatedTables ++ calculatedViews,dbModel)
+      fieldRegistry = FieldAccessGenerator(calculatedTables ++ calculatedViews,dbModel)
     )
 
   }
@@ -55,14 +46,6 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "ch.wsl.box.generated",
       "Entities",
       "Entities.scala"
-    )
-
-    files.fileTables.writeToFile(
-      "ch.wsl.box.jdbc.PostgresProfile",
-      args(0),
-      "ch.wsl.box.generated",
-      "FileTables",
-      "FileTables.scala"
     )
 
 
@@ -86,12 +69,10 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       "ch.wsl.box.generated",
       "FileRoutes",
       "FileRoutes.scala",
-      "FileTables"
+      "Entities"
     )
 
     files.fieldRegistry.writeToFile(args(0),"ch.wsl.box.generated","GenFieldRegistry.scala","")
-
-    files.tableRegistry.writeToFile(args(0),"ch.wsl.box.generated","GenTableRegistry.scala","")
 
 
     files.registry.writeToFile(args(0),"ch.wsl.box.generated","","GenRegistry.scala")

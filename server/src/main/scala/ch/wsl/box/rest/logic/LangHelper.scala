@@ -15,7 +15,7 @@ case class LangHelper(lang:String)(implicit ec:ExecutionContext) {
     val query = for{
       label <- BoxLabels.BoxLabelsTable if label.lang === lang
     } yield label
-    Auth.boxDB.run(query.result).map{_.map{ row =>
+    Auth.adminDB.run(query.result).map{_.map{ row =>
       row.key -> row.label.getOrElse("")
     }.toMap}
   }

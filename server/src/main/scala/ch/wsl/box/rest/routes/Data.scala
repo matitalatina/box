@@ -12,7 +12,7 @@ import akka.util.ByteString
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.html.Html
 import ch.wsl.box.rest.jdbc.JdbcConnect
-import ch.wsl.box.rest.utils.{JSONSupport, UserProfile}
+import ch.wsl.box.rest.utils.{Auth, JSONSupport, UserProfile}
 import io.circe.Json
 import io.circe.parser.parse
 import io.circe._
@@ -101,7 +101,7 @@ trait Data extends Logging {
         pathPrefix("metadata") {
           path(Segment) { lang =>
             get {
-              complete(metadataFactory.of(function, lang))
+              complete(metadataFactory.of(Auth.dbSchema,function, lang))
             }
           }
         } ~

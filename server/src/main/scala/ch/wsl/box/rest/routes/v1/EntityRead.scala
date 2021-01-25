@@ -57,7 +57,7 @@ object EntityRead extends Logging  {
             post {
               entity(as[JSONQuery]) { query =>
                 complete {
-                  Lookup.values(name, valueProperty, textProperty, query)
+                  db.run(Lookup.values(name, valueProperty, textProperty, query))
                 }
               }
             }
@@ -74,7 +74,7 @@ object EntityRead extends Logging  {
         path("metadata") {
           get {
             complete {
-              EntityMetadataFactory.of(name, lang)
+              EntityMetadataFactory.of(Auth.dbSchema,name, lang)
             }
           }
         } ~

@@ -2,6 +2,7 @@ package ch.wsl.box.rest.routes
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+import ch.wsl.box.jdbc.UserDatabase
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.logic.functions.RuntimeFunction
 import ch.wsl.box.rest.metadata.{DataMetadataFactory, FunctionMetadataFactory}
@@ -23,10 +24,10 @@ object Functions extends Data {
   def functions = ch.wsl.box.model.boxentities.BoxFunction
 
   override def data(function: String, params: Json, lang: String)(implicit up: UserProfile,  mat: Materializer, ec: ExecutionContext,system:ActorSystem): Future[Option[DataContainer]] = {
-    implicit def db:Database = up.db
+    implicit def db:UserDatabase = up.db
 
     for{
-      functionDef <- Auth.boxDB.run{
+      functionDef <- Auth.adminDB.run{
         functions.BoxFunctionTable.filter(_.name === function).result
       }.map(_.headOption)
       result <- functionDef match {

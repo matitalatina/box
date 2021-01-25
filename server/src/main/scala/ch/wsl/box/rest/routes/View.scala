@@ -33,7 +33,7 @@ object View {
 
 }
 
-case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en")
+case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", schema:Option[String] = None)
                                                     (implicit
                                                      enc: Encoder[M],
                                                      dec:Decoder[M],
@@ -69,10 +69,10 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
         parameters('q) { q =>
           val query = parse(q).right.get.as[JSONQuery].right.get
           complete {
-            for {
-              metadata <- EntityMetadataFactory.of(name, lang)
-              fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
-              data <- db.run(jsonActions.find(query))
+            val io = for {
+              metadata <- DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang))
+              //fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
+              data <- jsonActions.find(query)
             } yield {
               val table = XLSTable(
                 title = name,
@@ -85,6 +85,9 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
               os.close()
               HttpResponse(entity = HttpEntity(MediaTypes.`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, os.toByteArray))
             }
+
+            db.run(io)
+
           }
         }
       }
@@ -97,7 +100,7 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
         post{
           entity(as[JSONQuery]){ query =>
             complete {
-              Lookup.values(name, valueProperty, textProperty, query)
+              db.run(Lookup.values(name, valueProperty, textProperty, query))
             }
           }
         }
@@ -113,13 +116,13 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def metadata:Route = path("metadata") {
     get {
-      complete{ EntityMetadataFactory.of(name, lang) }
+      complete{ EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang) }
     }
   }
 
   def tabularMetadata:Route = path("tabularMetadata") {
     get {
-      complete{ EntityMetadataFactory.of(name, lang) }
+      complete{ EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang) }
     }
   }
 
@@ -166,7 +169,7 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
         //Source
         import kantan.csv._
         import kantan.csv.ops._
-        complete(Source.fromPublisher(dbActions.findStreamed(query).mapResult(x => Seq(x.values()).asCsv(rfc))).log("csv"))
+        complete(Source.fromPublisher(db.stream(dbActions.find(query)).mapResult(x => Seq(x.values()).asCsv(rfc))).log("csv"))
       }
     } ~
       respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment,Map("filename" -> s"$name.csv"))) {
@@ -175,21 +178,21 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
             val query = parse(q).right.get.as[JSONQuery].right.get
             complete {
               for {
-                metadata <- EntityMetadataFactory.of(name, lang.getOrElse("en"))
+                metadata <- EntityMetadataFactory.of(Auth.dbSchema, name, lang.getOrElse("en"))
                 fkValues <- lang match {
                   case None => Future.successful(None)
-                  case Some(_) => Lookup.valuesForEntity(metadata).map(Some(_))
+                  case Some(_) => db.run(Lookup.valuesForEntity(metadata).map(Some(_)))
                 }
               } yield {
 
-                val lookup = Lookup.valueExtractor(fkValues,metadata) _
+                //val lookup = Lookup.valueExtractor(fkValues,metadata) _
 
                 import kantan.csv._
                 import kantan.csv.ops._
 
                 Source.fromFuture(Future.successful(
                   Seq(metadata.fields.map(_.name)).asCsv(rfc)
-                )).concat(Source.fromPublisher(dbActions.findStreamed(query).mapResult{x =>
+                )).concat(Source.fromPublisher(db.stream(dbActions.find(query)).mapResult{x =>
                   Seq(x.values()).asCsv(rfc)
                 }))
               }

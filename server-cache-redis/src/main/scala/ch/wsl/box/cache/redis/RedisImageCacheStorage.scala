@@ -1,12 +1,11 @@
 package ch.wsl.box.cache.redis
 
 import akka.actor.ActorSystem
-import ch.wsl.box.services.files.{FileCacheKey, FileId, ImageCacheStorage}
+import ch.wsl.box.services.file.{FileCacheKey, FileId, ImageCacheStorage}
 import com.typesafe.config.{Config, ConfigFactory}
+import net.ceedubs.ficus.Ficus._
 import scredis._
 import scredis.protocol.AuthConfig
-
-import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.{ExecutionContext, Future}
 

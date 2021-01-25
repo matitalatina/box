@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
-import ch.wsl.box.rest.utils.UserProfile
+import ch.wsl.box.rest.utils.{Auth, UserProfile}
 
 /**
   * Created by andreaminetti on 15/03/16.
@@ -37,7 +37,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
       }
     }
 
-    def sort(sorting: Seq[JSONSort], lang:String)(implicit db:FullDatabase): Query[T, M, Seq] = {
+    def sort(sorting: Seq[JSONSort], lang:String): Query[T, M, Seq] = {
       sorting.foldRight[Query[T, M, Seq]](base) { case (sort, query) =>
         query.sortBy { x =>
           sort.order match {
@@ -62,42 +62,33 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def count()(implicit db:FullDatabase):DBIO[JSONCount] = {
+  def count():DBIO[JSONCount] = {
     entity.length.result
   }.transactionally.map(JSONCount)
 
-  def count(query:JSONQuery)(implicit db:FullDatabase):DBIO[Int] = {
+  def count(query:JSONQuery):DBIO[Int] = {
     val q = entity.where(query.filter)
 
     (q.length.result).transactionally
 
   }
 
+  def findQuery(query:JSONQuery) = {
 
-  def findStreamed(query:JSONQuery)(implicit db:FullDatabase): DatabasePublisher[M] = {
-
-    val q = entity
+    entity
       .where(query.filter)
       .sort(query.sort, query.lang.getOrElse("en"))
       .page(query.paging)
-
-
-    db.db.stream(q
-      .result
-      .withStatementParameters(rsType = ResultSetType.ForwardOnly, rsConcurrency = ResultSetConcurrency.ReadOnly, fetchSize = 0) //needed for PostgreSQL streaming result as stated in http://slick.lightbend.com/doc/3.2.1/dbio.html
-      .transactionally
-    )
+      .map(x => x)
 
   }
 
-  override def find(query:JSONQuery)(implicit db:FullDatabase, mat: Materializer): DBIO[Seq[M]] = {
-    val q = entity.where(query.filter).sort(query.sort, query.lang.getOrElse("en"))
-    q.page(query.paging).result
-  }
+  def find(query:JSONQuery) = findQuery(query).result
 
-  def keys()(implicit db:FullDatabase): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(EntityMetadataFactory.keysOf(entity.baseTableRow.tableName))
 
-  override def ids(query: JSONQuery)(implicit db: FullDatabase, mat: Materializer): DBIO[IDs] = {
+  def keys(): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(Auth.adminDB.run(EntityMetadataFactory.keysOf(entity.baseTableRow.schemaName.getOrElse("public"),entity.baseTableRow.tableName)))
+
+  override def ids(query: JSONQuery): DBIO[IDs] = {
     for{
       data <- find(query)
       keys <- keys()
@@ -128,7 +119,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def getById(id:JSONID)(implicit db:FullDatabase) = {
+  def getById(id:JSONID) = {
     logger.info(s"GET BY ID $id")
     Try(filter(id)).toOption match {
       case Some(f) => for {
@@ -142,7 +133,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     }
   }
 
-  def insert(e: M)(implicit db:FullDatabase) = {
+  def insert(e: M) = {
     logger.info(s"INSERT $e")
     resetMetadataCache()
     for{
@@ -153,19 +144,19 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
     } yield new EnhancedModel(result).ID(keys)
   }
 
-  def delete(id:JSONID)(implicit db:FullDatabase) = {
+  def delete(id:JSONID) = {
     logger.info(s"DELETE BY ID $id")
     resetMetadataCache()
     filter(id).delete.transactionally
   }
 
-  def update(id:JSONID, e:M)(implicit db:FullDatabase) = {
+  def update(id:JSONID, e:M) = {
     logger.info(s"UPDATE BY ID $id")
     resetMetadataCache()
     filter(id).update(e).transactionally
   }
 
-  def updateIfNeeded(id:JSONID, e:M)(implicit boxDatabase: FullDatabase) = {
+  def updateIfNeeded(id:JSONID, e:M) = {
     logger.info(s"UPDATE IF NEEDED BY ID $id")
     resetMetadataCache()
     for {
@@ -179,7 +170,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   }
 
 
-  def upsertIfNeeded(id:Option[JSONID], e:M)(implicit boxDatabase: FullDatabase) = {
+  def upsertIfNeeded(id:Option[JSONID], e:M) = {
     logger.info(s"UPSERT IF NEEDED BY ID $id")
     resetMetadataCache()
     for {

@@ -35,7 +35,7 @@ object BoxField {
                            linked_label_fields:Option[String] = None
                          )
 
-  class BoxField(_tableTag: Tag) extends Table[BoxField_row](_tableTag, "field") {
+  class BoxField(_tableTag: Tag) extends Table[BoxField_row](_tableTag,BoxSchema.schema, "field") {
     def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues,params,read_only,linked_key_fields,linked_label_fields) <> (BoxField_row.tupled, BoxField_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
@@ -88,7 +88,7 @@ object BoxField {
   /** GetResult implicit for fetching Field_i18n_row objects using plain SQL queries */
 
   /** Table description of table field_i18n. Objects of this class serve as prototypes for rows in queries. */
-  class BoxField_i18n(_tableTag: Tag) extends Table[BoxField_i18n_row](_tableTag, "field_i18n") {
+  class BoxField_i18n(_tableTag: Tag) extends Table[BoxField_i18n_row](_tableTag,BoxSchema.schema, "field_i18n") {
     def * = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField) <> (BoxField_i18n_row.tupled, BoxField_i18n_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
@@ -120,7 +120,7 @@ object BoxField {
   case class BoxFieldFile_row(field_id: Int, file_field: String, thumbnail_field: Option[String] = None, name_field: String)
 
 
-  class BoxFieldFile(_tableTag: Tag) extends Table[BoxFieldFile_row](_tableTag, "field_file") {
+  class BoxFieldFile(_tableTag: Tag) extends Table[BoxFieldFile_row](_tableTag,BoxSchema.schema, "field_file") {
     def * = (field_id,file_field,thumbnail_field,name_field) <> (BoxFieldFile_row.tupled, BoxFieldFile_row.unapply)
 
     val field_id: Rep[Int] = column[Int]("field_id", O.PrimaryKey)

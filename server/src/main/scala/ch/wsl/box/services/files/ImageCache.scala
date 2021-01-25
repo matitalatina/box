@@ -2,8 +2,7 @@ package ch.wsl.box.services.files
 
 import java.io.{ByteArrayInputStream, InputStream}
 
-import akka.stream.scaladsl.StreamConverters
-import ch.wsl.box.model.shared.JSONID
+import ch.wsl.box.services.file.{Cover, FileCacheKey, FileId, Fit, ImageCacheStorage, Thumbnail, Width}
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.color.{Color, RGBColor, X11Colorlist}
 import com.sksamuel.scrimage.nio.JpegWriter
@@ -16,33 +15,6 @@ import wvlet.airframe.bind
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-case class FileId(rowId:JSONID,column:String) {
-  def name(mime:Option[String],tpe:String):String = {
-    val extension = mime match {
-      case Some(s) if s.endsWith("jpeg") => ".jpg"
-      case Some(s) if s.endsWith("png") => ".png"
-      case _ => ""
-    }
-
-    asString(tpe) + extension
-
-  }
-
-  def asString(tpe:String):String = s"$column-${rowId.asString}-$tpe"
-}
-
-sealed trait FileCacheKey{
-  def id:FileId
-
-  def asString() = id.asString(this.getClass.getSimpleName.toLowerCase)
-
-}
-case class Thumbnail(id:FileId,width:Int,height:Int) extends FileCacheKey
-case class Width(id:FileId,width:Int) extends FileCacheKey
-case class Cover(id:FileId,width:Int,height:Int) extends FileCacheKey
-case class Fit(id:FileId,width:Int,height:Int,color:String) extends FileCacheKey {
-  override def asString(): String = super.asString() + "-" + color
-}
 
 
 trait ImageCache extends Logging {

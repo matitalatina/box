@@ -22,7 +22,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
   implicit val db = up.db
   implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
 
-  def list: Future[Seq[String]] = Auth.boxDB.run{
+  def list: Future[Seq[String]] = Auth.adminDB.run{
     BoxExport.BoxExportTable.result
   }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
@@ -46,7 +46,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     for{
       roles <- up.memberOf
       al <- up.accessLevel
-      qr <-  Auth.boxDB.run(query.result)
+      qr <-  Auth.adminDB.run(query.result)
     } yield {
        qr.filter(_._7.map(ar => checkRole(roles, ar, al)).getOrElse(true))
          .sortBy(_._4.getOrElse(Double.MaxValue)).map(
@@ -65,14 +65,14 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
     } yield (ei18.flatMap(_.label), e.function, e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip))
 
-    Auth.boxDB.run{
+    Auth.adminDB.run{
       query.result
     }.map(_.map{ case (label, function, name, _, hint, tooltip) =>
       ExportDef(function, label.getOrElse(name), hint, tooltip,FunctionKind.Modes.TABLE)
     }.head)
   }
 
-  def of(name:String, lang:String):Future[JSONMetadata]  = {
+  def of(schema:String, name:String, lang:String):Future[JSONMetadata]  = {
     val queryExport = for{
       (export, exportI18n) <- BoxExport.BoxExportTable joinLeft BoxExport.BoxExport_i18nTable.filter(_.lang === lang) on (_.export_id === _.export_id)
       if export.function === name
@@ -85,15 +85,15 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     } yield (f, fi18n)
 
     for {
-      (export,exportI18n) <- Auth.boxDB.run {
+      (export,exportI18n) <- Auth.adminDB.run {
         queryExport.result
       }.map(_.head)
 
-      fields <- Auth.boxDB.run {
+      fields <- Auth.adminDB.run {
         queryField(export.export_id.get).sortBy(_._1.field_id).result
       }
 
-      jsonFields <- Future.sequence(fields.map(fieldsMetadata(lang)))
+      jsonFields <- Future.sequence(fields.map(fieldsMetadata(schema,lang)))
 
     } yield {
 
@@ -115,7 +115,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
     }
   }
 
-  private def fieldsMetadata(lang:String)(el:(BoxExportField_row, Option[BoxExportField_i18n_row])):Future[JSONField] = {
+  private def fieldsMetadata(schema:String, lang:String)(el:(BoxExportField_row, Option[BoxExportField_i18n_row])):Future[JSONField] = {
     import ch.wsl.box.shared.utils.JSONUtils._
 
     val (field,fieldI18n) = el
@@ -132,7 +132,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
       import io.circe.generic.auto._
       for {
 
-        keys <- EntityMetadataFactory.keysOf(entity)
+        keys <-boxDb.adminDb.run(EntityMetadataFactory.keysOf(schema,entity))
         filter = { for{
           queryString <- field.lookupQuery
           queryJson <- parse(queryString).right.toOption

@@ -11,7 +11,11 @@ import akka.http.scaladsl.server.directives.Credentials.Missing
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigValue, ConfigValueFactory}
 import net.ceedubs.ficus.Ficus._
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.jdbc.UserDatabase
 import scribe.Logging
+import slick.dbio.{DBIOAction, NoStream}
+import slick.jdbc.{ResultSetConcurrency, ResultSetType}
+import slick.sql.SqlAction
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -31,17 +35,18 @@ object Auth extends Logging {
   val dbSchema = dbConf.as[String]("schema")
   val adminPoolSize = dbConf.as[Option[Int]]("adminPoolSize").getOrElse(5)
   val poolSize = dbConf.as[Option[Int]]("poolSize").getOrElse(3)
+  val enableConnectionPool = dbConf.as[Option[Boolean]]("enableConnectionPool").getOrElse(true)
+  val adminUser = dbConf.as[String]("user")
+
+  val connectionPool = if(enableConnectionPool) {
+    ConfigValueFactory.fromAnyRef("HikariCP")
+  } else {
+    ConfigValueFactory.fromAnyRef("disabled")
+  }
 
 
-  val boxDbConf: Config = ConfigFactory.load().as[Config]("box.db")
-  val boxDbPath = boxDbConf.as[String]("url")
-  val boxDbPassword = boxDbConf.as[String]("password")
-  val boxDbSchema = boxDbConf.as[String]("schema")
-  val boxAdminPoolSize = dbConf.as[Option[Int]]("adminPoolSize").getOrElse(3)
-  val boxPoolSize = dbConf.as[Option[Int]]("poolSize").getOrElse(3)
 
   println(s"DB: $dbPath")
-  println(s"Box DB: $boxDbPath")
 
   /**
     * Admin DB connection, useful for quering the information Schema
@@ -49,37 +54,25 @@ object Auth extends Logging {
     * @return
     */
 
-  val adminDB = Database.forConfig("",ConfigFactory.empty()
+  val dbConnection = Database.forConfig("",ConfigFactory.empty()
     .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-    .withValue("url",ConfigValueFactory.fromAnyRef(s"$dbPath?currentSchema=$dbSchema"))
+    .withValue("url",ConfigValueFactory.fromAnyRef(dbPath))
     .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-    .withValue("user",ConfigValueFactory.fromAnyRef(dbConf.as[String]("user")))
+    .withValue("user",ConfigValueFactory.fromAnyRef(adminUser))
     .withValue("password",ConfigValueFactory.fromAnyRef(dbConf.as[String]("password")))
     .withValue("numThreads",ConfigValueFactory.fromAnyRef(adminPoolSize))
     .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(adminPoolSize))
+    .withValue("connectionPool",connectionPool)
   )
 
-  val boxDB = Database.forConfig("",ConfigFactory.empty()
-    .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-    .withValue("url",ConfigValueFactory.fromAnyRef(s"$boxDbPath?currentSchema=$boxDbSchema"))
-    .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-    .withValue("user",ConfigValueFactory.fromAnyRef(boxDbConf.as[String]("user")))
-    .withValue("password",ConfigValueFactory.fromAnyRef(boxDbConf.as[String]("password")))
-    .withValue("numThreads",ConfigValueFactory.fromAnyRef(boxAdminPoolSize))
-    .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(boxAdminPoolSize))
-  )
+  val adminDB = dbForUser(adminUser)
+
 
   def adminUserProfile = UserProfile(
-    name=dbConf.as[String]("user"),
-    db=adminDB,
-    boxDb=boxDB
+    name=dbConf.as[String]("user")
   )
 
-  def boxUserProfile = UserProfile(
-    name=boxDbConf.as[String]("user"),
-    db=boxDB,
-    boxDb=boxDB
-  )
+
 
 
 
@@ -91,19 +84,16 @@ object Auth extends Logging {
     * check if this is a valid user on your system and return his profile,
     * that include his username and the connection to the DB
     */
-  def getUserProfile(name: String, password: String)(implicit executionContext: ExecutionContext): UserProfile = {
+  def getUserProfile(name: String, password: String)(implicit executionContext: ExecutionContext): Option[UserProfile] = {
 
     val hash = MessageDigest.getInstance("MD5").digest(s"$name $password".getBytes()).map(0xFF & _).map { "%02x".format(_) }.foldLeft("") {_ + _}
 
-    userProfiles.get(hash) match {
-      case Some(up) => up
-      case None => {
+    userProfiles.get(hash).orElse{
 
         logger.info(s"Creating new pool for $name with hash $hash with poolsize $poolSize")
 
-        val url = s"$dbPath?currentSchema=$dbSchema"
 
-        val validUser = Await.result(Database.forURL(url,name,password,driver = "org.postgresql.Driver").run{
+        val validUser = Await.result(Database.forURL(dbPath,name,password,driver = "org.postgresql.Driver").run{
           sql"""select 1""".as[Int]
         }.map{ _ =>
           true
@@ -111,41 +101,16 @@ object Auth extends Logging {
 
         if(validUser) {
 
-          val db = Database.forConfig("",ConfigFactory.empty()
-            .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-            .withValue("url",ConfigValueFactory.fromAnyRef(s"$dbPath?currentSchema=$dbSchema"))
-            .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-            .withValue("user",ConfigValueFactory.fromAnyRef(name))
-            .withValue("password",ConfigValueFactory.fromAnyRef(password))
-            .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(poolSize))
-            .withValue("numThreads",ConfigValueFactory.fromAnyRef(poolSize))
-            .withValue("minimumIdle",ConfigValueFactory.fromAnyRef(0))
-            .withValue("idleTimeout",ConfigValueFactory.fromAnyRef(10000))
-          )
-
-          val boxDb = Database.forConfig("", ConfigFactory.empty()
-            .withValue("driver", ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-            .withValue("url", ConfigValueFactory.fromAnyRef(s"$boxDbPath?currentSchema=$boxDbSchema"))
-            .withValue("keepAliveConnection", ConfigValueFactory.fromAnyRef(true))
-            .withValue("user", ConfigValueFactory.fromAnyRef(name))
-            .withValue("password", ConfigValueFactory.fromAnyRef(password))
-            .withValue("maximumPoolSize", ConfigValueFactory.fromAnyRef(boxPoolSize))
-            .withValue("numThreads", ConfigValueFactory.fromAnyRef(boxPoolSize))
-            .withValue("minimumIdle", ConfigValueFactory.fromAnyRef(0))
-            .withValue("idleTimeout", ConfigValueFactory.fromAnyRef(10000))
-          )
-
-
-          val up = UserProfile(name, db, boxDb)
+          val up = UserProfile(name)
 
           userProfiles += hash -> up
 
-          up
+          Some(up)
         } else {
-          UserProfile(name, null, null)
+          None
         }
 
-      }
+
     }
 
   }
@@ -153,7 +118,7 @@ object Auth extends Logging {
   //todo: verificare differenza di Auth.boxDB con userProfile.box
   def onlyAdminstrator(s:BoxSession)(r:Route)(implicit ec: ExecutionContext):Route = {
 
-    onSuccess(s.userProfile.accessLevel){
+    onSuccess(s.userProfile.get.accessLevel){
       case i:Int if i>=900 => r
       case al => get {
         complete("You don't have the rights (access level = " + al + ")")
@@ -163,40 +128,39 @@ object Auth extends Logging {
   }
 
   def userProfileForUser(u:String):UserProfile = {
-    val prop = new Properties()
-    prop.setProperty("connectionInitSql",s"SET ROLE $u")
-
-    val confDb = ConfigFactory.empty()
-      .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-      .withValue("connectionInitSql",ConfigValueFactory.fromAnyRef(s"SET ROLE $u"))
-      .withValue("url",ConfigValueFactory.fromAnyRef(s"$dbPath?currentSchema=$dbSchema"))
-      .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-      .withValue("user",ConfigValueFactory.fromAnyRef(dbConf.as[String]("user")))
-      .withValue("password",ConfigValueFactory.fromAnyRef(dbConf.as[String]("password")))
-      .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(3))
-      .withValue("numThreads",ConfigValueFactory.fromAnyRef(3))
-
-    val confBoxDb = ConfigFactory.empty()
-      .withValue("driver",ConfigValueFactory.fromAnyRef("org.postgresql.Driver"))
-      .withValue("connectionInitSql",ConfigValueFactory.fromAnyRef(s"SET ROLE $u"))
-      .withValue("url",ConfigValueFactory.fromAnyRef(s"$boxDbPath?currentSchema=$boxDbSchema"))
-      .withValue("keepAliveConnection",ConfigValueFactory.fromAnyRef(true))
-      .withValue("user",ConfigValueFactory.fromAnyRef(boxDbConf.as[String]("user")))
-      .withValue("password",ConfigValueFactory.fromAnyRef(boxDbConf.as[String]("password")))
-      .withValue("maximumPoolSize",ConfigValueFactory.fromAnyRef(1))
-      .withValue("numThreads",ConfigValueFactory.fromAnyRef(1))
-
-
-    val db = Database.forConfig("",confDb)
-    val boxDB = Database.forConfig("",confBoxDb)
 
     UserProfile(
-      name=u,
-      db=db,
-      boxDb=boxDB
+      name=u
     )
-
   }
+
+  def dbForUser(name:String):UserDatabase = new UserDatabase {
+
+      //cannot interpolate directly
+      val setRole: SqlAction[Int, NoStream, Effect] = sqlu"SET ROLE placeholder".overrideStatements(Seq(s"SET ROLE $name"))
+      val resetRole = sqlu"RESET ROLE"
+
+      override def stream[T](a: StreamingDBIO[Seq[T],T]) = {
+
+        Auth.dbConnection.stream[T](
+          setRole.andThen[Seq[T],Streaming[T],Nothing](a)
+            .withStatementParameters(
+              rsType = ResultSetType.ForwardOnly,
+              rsConcurrency = ResultSetConcurrency.ReadOnly,
+              fetchSize = 5000)
+            .withPinnedSession
+            .transactionally
+        )
+
+
+      }
+
+      override def run[R](a: DBIOAction[R, NoStream, Nothing]) = {
+        Auth.dbConnection.run {
+          setRole.andThen[R,NoStream,Nothing](a).withPinnedSession.transactionally
+        }
+      }
+    }
 
 
 

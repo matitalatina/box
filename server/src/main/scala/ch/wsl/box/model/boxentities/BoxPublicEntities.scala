@@ -12,7 +12,7 @@ object BoxPublicEntities {
 
   case class Row(id: Option[Int] = None, entity:String, update: Boolean, insert: Boolean)
 
-  class Table(_tableTag: Tag) extends profile.api.Table[Row](_tableTag, "public_entities") {
+  class Table(_tableTag: Tag) extends profile.api.Table[Row](_tableTag,BoxSchema.schema, "public_entities") {
     def * = (Rep.Some(id), entity, update, insert) <> (Row.tupled, Row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = (Rep.Some(id),  entity, update, insert).shaped.<>({r=>import r._; _1.map(_=> Row.tupled((_1, _2, _3, _4)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

@@ -1,24 +1,26 @@
 package ch.wsl.box.rest.utils
 
+import ch.wsl.box.jdbc.UserDatabase
 import ch.wsl.box.model.boxentities.BoxUser
-//import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.jdbc.PostgresProfile.plainAPI._
+import slick.basic.DatabasePublisher
+import slick.dbio
+import slick.dbio.{DBIOAction, NoStream}
+import slick.sql.SqlAction
+import ch.wsl.box.jdbc.PostgresProfile.api._
 import com.github.tminglei.slickpg.utils.PlainSQLUtils._
 import slick.jdbc.GetResult
 
+
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UserProfile(name: String, db: Database, boxDb:Database) {
+case class UserProfile(name: String) {
 
-  def check(implicit ec:ExecutionContext): Future[Boolean] = Future.successful{
-    db != null
-  }
 
-  def accessLevel(implicit ec:ExecutionContext):Future[Int] = Auth.boxDB.run{
+  def db = Auth.dbForUser(name)
+
+  def accessLevel(implicit ec:ExecutionContext):Future[Int] = Auth.adminDB.run{
     BoxUser.BoxUserTable.filter(_.username === name).result
   }.map(_.headOption.map(_.access_level_id).getOrElse(-1))
-
-  def boxUserProfile = UserProfile(name, boxDb, boxDb)   //todo : do it less ugly
 
 
   def memberOf(implicit ec:ExecutionContext) = Auth.adminDB.run{              //todo: depends on v_roles, hasrole and hasrolein >> make cleaner
