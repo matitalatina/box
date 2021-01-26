@@ -3,7 +3,7 @@ package ch.wsl.box.client.mocks
 import ch.wsl.box.model.shared.{Child, ConditionalField, FormActionsMetadata, JSONField, JSONFieldTypes, JSONID, JSONKeyValue, JSONMetadata, Layout, LayoutBlock, WidgetsNames}
 import io.circe._, io.circe.syntax._
 
-object Values {
+class Values {
   val headerLangEn = "test header en"
   val headerLangIt = "test header it"
 
@@ -178,6 +178,30 @@ object Values {
       val thirdChild: JSONID = JSONID(Vector(JSONKeyValue("id", "3")))
     }
 
+  }
+
+  def get(id:JSONID):Json = {
+    id match {
+      case ids.main.singleChild => Map(
+        "id" -> 1.asJson,
+        readOnlyField -> readOnlyValue.asJson,
+        "child" -> Seq(
+          Map("parent_id" -> 1.asJson, "id" -> 1.asJson, "text" -> "test".asJson)
+        ).asJson
+      ).asJson
+      case ids.main.doubleChild => Map(
+        "id" -> 2.asJson,
+        "child" -> Seq(
+          Map("parent_id" -> 2.asJson, "id" -> 2.asJson, "text" -> "test".asJson),
+          Map("parent_id" -> 2.asJson, "id" -> 3.asJson, "text" -> "test".asJson)
+        ).asJson
+      ).asJson
+    }
+  }
+
+  def update(id:JSONID,obj:Json):JSONID = {
+    println("not implemented")
+    ???
   }
 
 }

@@ -12,7 +12,7 @@ object LoaderTest extends TestBase {
   val tests = Tests{
     test("loader test") - {
       Main.setupUI().map { _ =>
-          assert(document.querySelectorAll("#headerTitle").count(_.textContent == Values.uiConf("title")) == 1)
+          assert(document.querySelectorAll("#headerTitle").count(_.textContent == values.uiConf("title")) == 1)
       }
     }
   }

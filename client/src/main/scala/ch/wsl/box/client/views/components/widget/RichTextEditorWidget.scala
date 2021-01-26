@@ -13,7 +13,7 @@ import io.udash.properties.single.Property
 import org.scalablytyped.runtime.StringDictionary
 import scalatags.JsDom
 import scribe.Logging
-import typings.quill.mod.{DeltaStatic, QuillOptionsStatic, Sources}
+import typings.quill.mod.{Delta, DeltaOperation, DeltaStatic, QuillOptionsStatic, Sources}
 
 import scala.scalajs.js
 import scala.util.Try
@@ -51,10 +51,11 @@ case class RichTextEditorWidget(_id: Property[Option[String]], field: JSONField,
 
   override protected def edit(): JsDom.all.Modifier = {
     logger.debug(s"field: ${field.name} widget mode $mode")
+    logger.debug(s"data: ${prop.get.toString()}")
     produce(_id) { _ =>
       val container = div( height := 300.px).render
       val parent = div(container).render
-      BrowserConsole.log(typings.quill.mod.default)
+
 
 
       val editor = new typings.quill.mod.default(container
@@ -67,8 +68,7 @@ case class RichTextEditorWidget(_id: Property[Option[String]], field: JSONField,
         ))
       )
 
-      val delta = editor.clipboard.convert(prop.get.string)
-      editor.setContents(delta, Sources.silent)
+      editor.root.innerHTML = prop.get.string
 
       editor.on_textchange(typings.quill.quillStrings.`text-change`,
         (delta:DeltaStatic,oldContent:DeltaStatic,source:Sources) => prop.set(editor.root.innerHTML.asJson)

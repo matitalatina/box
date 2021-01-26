@@ -17,20 +17,20 @@ object ConditionalFieldTest extends TestBase {
   val tests = Tests{
     test("conditional field test") - {
 
-      def condidionalVisible() = document.getElementsByClassName(TestHooks.formField(Values.conditionalField)).length > 0
+      def condidionalVisible() = document.getElementsByClassName(TestHooks.formField(values.conditionalField)).length > 0
 
       for {
         _ <- Main.setupUI()
         _ <- Context.services.clientSession.login("test", "test")
         _ <- waitCycle
         _ <- Future {
-          Context.applicationInstance.goTo(EntityFormState(EntityKind.FORM.kind, Values.testFormName, "true", Some(JSONID(Vector(JSONKeyValue("id", "1"))).asString), false))
+          Context.applicationInstance.goTo(EntityFormState(EntityKind.FORM.kind, values.testFormName, "true", Some(JSONID(Vector(JSONKeyValue("id", "1"))).asString), false))
         }
         _ <- waitCycle
-        conditioner = document.querySelector(s".${TestHooks.formField(Values.conditionerField)}").asInstanceOf[HTMLInputElement]
+        conditioner = document.querySelector(s".${TestHooks.formField(values.conditionerField)}").asInstanceOf[HTMLInputElement]
         _ <- Future {
           assert(!condidionalVisible())
-          conditioner.value = Values.conditionalValue
+          conditioner.value = values.conditionalValue
           conditioner.onchange(new Event("change"))
         }
         _ <- waitCycle

@@ -14,4 +14,14 @@ object TestHooks {
   val dataChanged = "dataChanged"
   def formField(name:String) = s"formField$name"
   def readOnlyField(name:String) = s"readOnlyField$name"
+
+  private val loadingListeners = new scala.collection.mutable.ListBuffer[() => Unit]
+
+  def loaded() = {
+    loadingListeners.foreach(f => f())
+  }
+
+  def addOnLoad(f:() => Unit) = {
+    loadingListeners.addOne(f)
+  }
 }

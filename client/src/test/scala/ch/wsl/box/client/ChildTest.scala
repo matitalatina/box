@@ -24,11 +24,11 @@ object ChildTest extends TestBase {
           _ <- Context.services.clientSession.login("test", "test")
           _ <- waitCycle
           _ <- Future {
-            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", None, false))
+            Context.applicationInstance.goTo(EntityFormState("form", values.testFormName, "true", None, false))
           }
           _ <- waitCycle
           _ <- Future {
-            assert(document.querySelectorAll("h3 span").count(_.textContent.contains(Values.testFormTitle)) == 1)
+            assert(document.querySelectorAll("h3 span").count(_.textContent.contains(values.testFormTitle)) == 1)
             assert(document.getElementById(TestHooks.tableChildId(2)).isInstanceOf[HTMLElement])
             assert(countChilds(2) == 0)
             document.getElementById(TestHooks.addChildId(2)).asInstanceOf[HTMLElement].click()
@@ -48,32 +48,32 @@ object ChildTest extends TestBase {
           }
           _ <- waitCycle
           _ <- Future { //test if element is still present after save
-            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.main.singleChild))).isInstanceOf[HTMLElement])
+            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(values.ids.main.singleChild))).isInstanceOf[HTMLElement])
             assert(countChilds(2) == 1)
 
             //check that the child is keept open after save
-            val editedChild = document.getElementById(TestHooks.tableChildRowId(2,Some(Values.ids.main.singleChild))).asInstanceOf[HTMLElement]
+            val editedChild = document.getElementById(TestHooks.tableChildRowId(2,Some(values.ids.main.singleChild))).asInstanceOf[HTMLElement]
             assert(editedChild.innerHTML.length > 0)
 
             //navigate to another record
-            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.doubleChild.asString), false))
+            Context.applicationInstance.goTo(EntityFormState("form", values.testFormName, "true", Some(values.ids.main.doubleChild.asString), false))
           }
           _ <- waitCycle
           _ <- Future {
             assert(countChilds(2) == 2)
-            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.childs.thirdChild))).isInstanceOf[HTMLElement])
+            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(values.ids.childs.thirdChild))).isInstanceOf[HTMLElement])
 
             //navigate back to the first record
-            Context.applicationInstance.goTo(EntityFormState("form", Values.testFormName, "true", Some(Values.ids.main.singleChild.asString), false))
+            Context.applicationInstance.goTo(EntityFormState("form", values.testFormName, "true", Some(values.ids.main.singleChild.asString), false))
           }
           _ <- waitCycle
           _ <- Future {
             //check that the childs is still one
-            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(Values.ids.main.singleChild))).isInstanceOf[HTMLElement])
+            assert(document.getElementById(TestHooks.tableChildButtonId(2,Some(values.ids.main.singleChild))).isInstanceOf[HTMLElement])
             assert(countChilds(2) == 1)
 
             //check that the child is kept open when navigating back
-            val editedChild = document.getElementById(TestHooks.tableChildRowId(2,Some(Values.ids.main.singleChild))).asInstanceOf[HTMLElement]
+            val editedChild = document.getElementById(TestHooks.tableChildRowId(2,Some(values.ids.main.singleChild))).asInstanceOf[HTMLElement]
             assert(editedChild.innerHTML.length > 0)
 
           }
