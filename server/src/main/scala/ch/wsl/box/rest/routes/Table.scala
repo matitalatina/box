@@ -34,12 +34,6 @@ import scala.util.{Failure, Success}
  * Created by andreaminetti on 16/02/16.
  */
 
-object Table {
-
-  var tables = Set[String]()
-  var boxTables = Set[String]()
-
-}
 
 case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", isBoxTable:Boolean = false, schema:Option[String] = None)
                                                             (implicit
@@ -61,10 +55,6 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
     implicit val db = up.db
     implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
 
-    isBoxTable match{
-      case false => Table.tables = Set(name) ++ Table.tables
-      case true => Table.boxTables = Set(name) ++ Table.boxTables
-    }
 
     val dbActions = new DbActions[T,M](table)
     val jsonActions = JSONTableActions[T,M](table)

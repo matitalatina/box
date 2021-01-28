@@ -30,7 +30,7 @@ class RedisImageCacheStorage extends ImageCacheStorage {
   override def clearField(id: FileId)(implicit ex: ExecutionContext): Future[Boolean] = {
     for{
       keys <- client.keys(id.asString("")+"*")
-      _ <- client.del({keys.toSeq}:_*)
+      _ <- if(keys.nonEmpty) client.del({keys.toSeq}:_*) else Future.successful(0L) //del on empty list fails
     } yield true
 
   }

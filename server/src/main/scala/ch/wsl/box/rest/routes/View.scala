@@ -27,11 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * Created by andreaminetti on 16/02/16.
  */
-object View {
 
-  var views = Set[String]()
-
-}
 
 case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](name:String, table:TableQuery[T], lang:String="en", schema:Option[String] = None)
                                                     (implicit
@@ -43,8 +39,6 @@ case class View[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
 
 
-
-    View.views = Set(name) ++ View.views
 
   import JSONSupport._
   import akka.http.scaladsl.model._

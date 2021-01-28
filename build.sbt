@@ -1,3 +1,4 @@
+import org.openqa.selenium.remote.{DesiredCapabilities, RemoteWebDriver}
 import org.scalajs.jsenv.Input.Script
 import org.scalajs.jsenv.selenium.SeleniumJSEnv
 
@@ -157,17 +158,42 @@ lazy val client: Project = (project in file("client"))
     javaOptions in fullOptJS += "-Xmx4G -XX:MaxMetaspaceSize=1G -XX:MaxPermSize=1G -XX:+CMSClassUnloadingEnabled -Xss3m",
 
     //To use jsdom headless browser uncomment the following lines
-    jsEnv in Test := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
-    jsEnvInput in Test := Def.task{
-      val targetDir = (npmUpdate in Test).value
-      println(targetDir)
-      val r = Seq(Script((targetDir / s"fixTest.js").toPath)) ++ (jsEnvInput in Test).value
-      println(r)
-      r
-    }.value,
+//    jsEnv in Test := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+//    jsEnvInput in Test := Def.task{
+//      val targetDir = (npmUpdate in Test).value
+//      println(targetDir)
+//      val r = Seq(Script((targetDir / s"fixTest.js").toPath)) ++ (jsEnvInput in Test).value
+//      println(r)
+//      r
+//    }.value,
 
     //To use Selenium uncomment the following line
-    //jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(true)),
+    jsEnv in Test := {
+
+
+      val AUTOMATE_USERNAME = "andreaminetti2"
+      val AUTOMATE_ACCESS_KEY = "nXRrVsimjiuuhm6UxpBe"
+      val URL = "https://" + AUTOMATE_USERNAME + ":" + AUTOMATE_ACCESS_KEY + "@hub-cloud.browserstack.com/wd/hub"
+
+
+      val caps = new DesiredCapabilities
+      caps.setCapability("os_version", "10")
+      caps.setCapability("resolution", "1920x1080")
+      caps.setCapability("browser", "Chrome")
+      caps.setCapability("browser_version", "latest-beta")
+      caps.setCapability("os", "Windows")
+      caps.setCapability("name", "BStack-[Java] Sample Test") // test name
+
+      caps.setCapability("build", "BStack Build Number 1") // CI/CD job or build name
+
+      val driver = new RemoteWebDriver(new URL(URL), caps)
+
+
+
+      val jsenv = new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(true))
+      println(jsenv)
+      jsenv
+    },
 
 
     testFrameworks += new TestFramework("utest.runner.Framework"),

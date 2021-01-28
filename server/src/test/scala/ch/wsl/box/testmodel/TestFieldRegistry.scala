@@ -4,6 +4,12 @@ import ch.wsl.box.rest.runtime.{ColType, FieldRegistry}
 import scribe.Logging
 
 object TestFieldRegistry extends FieldRegistry with Logging {
+
+
+  override def tables: Seq[String] = Seq("simple")
+
+  override def views: Seq[String] = Seq()
+
   override def field(table: String, column: String): ColType = {
     val tableFields:Map[String,ColType] = table match {
       case "simple" => Map(

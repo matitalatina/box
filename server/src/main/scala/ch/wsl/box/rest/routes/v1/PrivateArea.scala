@@ -47,20 +47,20 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
 
   def entities = path("entities") {
     get {
-      val alltables = Table.tables ++ View.views
+      val alltables = Registry().fields.tables ++ Registry().fields.views
       complete(alltables.toSeq.sorted)
     }
   }
 
   def tables = path("tables") {
     get {
-      complete(Table.tables.toSeq.sorted)
+      complete(Registry().fields.tables.toSeq.sorted)
     }
   }
 
   def views = path("views") {
     get {
-      complete(View.views.toSeq.sorted)
+      complete(Registry().fields.views.toSeq.sorted)
     }
   }
 

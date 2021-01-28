@@ -15,6 +15,12 @@ After inserting the informations required go to the project folder:
 ```
 cd <project-name>
 ```
+
+Install the box schema
+```
+sbt installBox
+```
+
 And generate your model
 ```
 sbt generateModel

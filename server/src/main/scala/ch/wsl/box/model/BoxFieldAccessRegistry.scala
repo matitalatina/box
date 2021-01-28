@@ -5,6 +5,35 @@ import ch.wsl.box.rest.runtime.{ColType, FieldRegistry}
 object BoxFieldAccessRegistry extends FieldRegistry {
 
 
+  override def tables: Seq[String] = Seq(
+    "access_level",
+    "conf",
+    "cron",
+    "export",
+    "export_field",
+    "export_field_i18n",
+    "export_header_i18n",
+    "export_i18n",
+    "field",
+    "field_file",
+    "field_i18n",
+    "form",
+    "form_i18n",
+    "function",
+    "function_field",
+    "function_field_i18n",
+    "function_i18n",
+    "labels",
+    "log",
+    "news",
+    "news_i18n",
+    "ui",
+    "ui_src",
+    "users"
+  )
+
+  override def views: Seq[String] = Seq("v_roles")
+
   def field(table: String, column: String): ColType = {
 
     val tableFields: Map[String, ColType] = table match {
