@@ -45,7 +45,7 @@ trait BaseCodeGenerator {
       } else {
         tables.contains(t.name.name)
       }
-    }.distinct
+    }.filter(_.name.schema.forall(_ == dbSchema)).distinct
 
   val enabledViews = Await.result(db.run{
     MTable.getTables(None, None, None, Some(Seq("VIEW")))
@@ -58,7 +58,8 @@ trait BaseCodeGenerator {
       } else {
         views.contains(t.name.name)
       }
-    }.distinct
+    }.filter(_.name.schema.forall(_ == dbSchema))
+    .distinct
 
 
   private val enabledEntities = enabledTables ++ enabledViews
