@@ -1,6 +1,5 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.mocks.Values
 import ch.wsl.box.client.utils.TestHooks
 import utest._
 import org.scalajs.dom.document
@@ -22,7 +21,7 @@ object LoginTest extends TestBase {
           } yield {
             assert(beforeLogin != document.body.innerHTML)
             assert(document.querySelectorAll(s"#${TestHooks.logoutButton}").length == 1)
-            assert(document.getElementById(Values.titleId).textContent == Values.titleText)
+            assert(document.getElementById(values.titleId).textContent == values.titleText)
           }
       }
     }

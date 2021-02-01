@@ -110,6 +110,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
       model.subProp(_.loading).set(false)
 
+      TestHooks.loaded()
+
     }}.recover{ case e => e.printStackTrace() }
 
   }

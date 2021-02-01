@@ -10,7 +10,7 @@ import scribe.Logging
 
 import scala.concurrent.Future
 
-class RestMock extends REST with Logging {
+class RestMock(values:Values) extends REST with Logging {
   override def version(): Future[String] = Future.successful("version")
 
   override def appVersion(): Future[String] = Future.successful("appVersion")
@@ -31,7 +31,7 @@ class RestMock extends REST with Logging {
 
   override def entities(kind: String): Future[Seq[String]] = {
     kind match {
-      case "form" => Future.successful(Values.formEntities)
+      case "form" => Future.successful(values.formEntities)
       case _ => {
         println(s"entities for $kind not implemented")
         ???
@@ -75,7 +75,7 @@ class RestMock extends REST with Logging {
   }
 
   override def metadata(kind: String, lang: String, entity: String, public:Boolean): Future[JSONMetadata] = Future.successful{
-    Values.metadata
+    values.metadata
   }
 
   override def tabularMetadata(kind: String, lang: String, entity: String): Future[JSONMetadata] = {
@@ -84,7 +84,7 @@ class RestMock extends REST with Logging {
   }
 
   override def children(kind: String, entity: String, lang: String, public:Boolean): Future[Seq[JSONMetadata]] = Future.successful{
-    Seq(Values.childMetadata,Values.subchildMetadata)
+    Seq(values.childMetadata,values.subchildMetadata)
   }
 
   override def lookup(lang: String, lookupEntity: String, map: JSONFieldMap, queryWithSubstitutions: Json): Future[Seq[JSONLookup]] = {
@@ -93,27 +93,11 @@ class RestMock extends REST with Logging {
   }
 
   override def get(kind: String, lang: String, entity: String, id: JSONID): Future[Json] = Future.successful{
-    id match {
-      case Values.ids.main.singleChild => Map(
-        "id" -> 1.asJson,
-        Values.readOnlyField -> Values.readOnlyValue.asJson,
-        "child" -> Seq(
-          Map("parent_id" -> 1.asJson, "id" -> 1.asJson, "text" -> "test".asJson)
-        ).asJson
-      ).asJson
-      case Values.ids.main.doubleChild => Map(
-        "id" -> 2.asJson,
-        "child" -> Seq(
-          Map("parent_id" -> 2.asJson, "id" -> 2.asJson, "text" -> "test".asJson),
-          Map("parent_id" -> 2.asJson, "id" -> 3.asJson, "text" -> "test".asJson)
-        ).asJson
-      ).asJson
-    }
+    values.get(id)
   }
 
   override def update(kind: String, lang: String, entity: String, id: JSONID, data: Json): Future[JSONID] = {
-    println("update not implemented")
-    ???
+    Future.successful(values.update(id,data))
   }
 
   override def insert(kind: String, lang: String, entity: String, data: Json, public:Boolean): Future[JSONID] = Future.successful{
@@ -142,20 +126,20 @@ class RestMock extends REST with Logging {
   override def labels(lang: String): Future[Map[String, String]] = {
     Future.successful(lang match {
       case "en" => Map(
-        SharedLabels.header.lang -> Values.headerLangEn
+        SharedLabels.header.lang -> values.headerLangEn
       )
       case "it" => Map(
-        SharedLabels.header.lang -> Values.headerLangIt
+        SharedLabels.header.lang -> values.headerLangIt
       )
     })
   }
 
   override def conf(): Future[Map[String, String]] = Future.successful{
-    Values.conf
+    values.conf
   }
 
   override def ui(): Future[Map[String, String]] = Future.successful{
-    Values.uiConf
+    values.uiConf
   }
 
   override def news(lang: String): Future[Seq[NewsEntry]] = {

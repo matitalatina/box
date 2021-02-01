@@ -31,7 +31,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
       entityActionsRegistry = EntityActionsRegistryGenerator(calculatedViews ++ calculatedTables,dbModel),
       fileAccessGenerator = FileAccessGenerator(dbModel,dbConf),
       registry = RegistryGenerator(dbModel),
-      fieldRegistry = FieldAccessGenerator(calculatedTables ++ calculatedViews,dbModel)
+      fieldRegistry = FieldAccessGenerator(calculatedTables,calculatedViews,dbModel)
     )
 
   }

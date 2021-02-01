@@ -4,6 +4,7 @@ import akka.stream.Materializer
 import ch.wsl.box.model.boxentities.{BoxForm, BoxUser}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.routes.{Table, View}
+import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.UserProfile
 import scribe.Logging
 
@@ -20,8 +21,8 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
   import ch.wsl.box.rest.metadata.box._
 
 
-  val viewsOnly = View.views.toSeq.sorted
-  val tablesAndViews = (Table.tables.toSeq ++ View.views).sorted
+  val viewsOnly = Registry().fields.tables.toSeq.sorted
+  val tablesAndViews = (viewsOnly ++ Registry().fields.tables).sorted
 
 
 

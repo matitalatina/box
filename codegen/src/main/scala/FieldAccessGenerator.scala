@@ -5,7 +5,7 @@ import slick.model.Model
 
 
 
-case class FieldAccessGenerator(entityList:Seq[String], model:Model) extends slick.codegen.SourceCodeGenerator(model)
+case class FieldAccessGenerator(tabs:Seq[String], views:Seq[String], model:Model) extends slick.codegen.SourceCodeGenerator(model)
   with BoxSourceCodeGenerator
   with slick.codegen.OutputHelpers {
 
@@ -24,6 +24,7 @@ case class FieldAccessGenerator(entityList:Seq[String], model:Model) extends sli
 
 
 
+
   def generate(pkg:String, modelPackages:String):String =
     s"""package ${pkg}
        |
@@ -31,11 +32,19 @@ case class FieldAccessGenerator(entityList:Seq[String], model:Model) extends sli
        |
        |object FieldAccessRegistry extends FieldRegistry {
        |
+       |  override def tables: Seq[String] = Seq(
+       |      ${tabs.mkString("\"","\",\n      \"","\"")}
+       |  )
+       |
+       |  override def views: Seq[String] = Seq(
+       |      ${views.mkString("\"","\",\n      \"","\"")}
+       |  )
+       |
        |
        |  def field(table:String,column:String):ColType = {
        |
        |    val tableFields:Map[String,ColType] = table match {
-       |      ${entityList.flatMap(mapEntity).mkString("\n      ")}
+       |      ${(tabs++views).flatMap(mapEntity).mkString("\n      ")}
        |      case _ => Map()
        |    }
        |

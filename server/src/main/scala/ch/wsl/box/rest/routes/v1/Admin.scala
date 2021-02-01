@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives.{complete, get, path, pathPrefix}
 import akka.stream.Materializer
-import ch.wsl.box.model.{BoxActionsRegistry, BoxDefinition, BoxDefinitionMerge}
+import ch.wsl.box.model.{BoxActionsRegistry, BoxDefinition, BoxDefinitionMerge, BoxFieldAccessRegistry}
 import ch.wsl.box.model.boxentities.BoxSchema
 import ch.wsl.box.model.shared.EntityKind
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, StubMetadataFactory}
@@ -57,7 +57,7 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
 
   def entities = path("boxentities") {
     get {
-      complete(Table.boxTables.toSeq.sorted)
+      complete((BoxFieldAccessRegistry.tables ++ BoxFieldAccessRegistry.views).sorted)
     }
   }
 

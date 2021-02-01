@@ -1,7 +1,8 @@
 package ch.wsl.box.client
 
-import ch.wsl.box.client.mocks.RestMock
+import ch.wsl.box.client.mocks.{RestMock, Values}
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.utils.TestHooks
 import org.scalajs.dom.{document, window}
 import scribe.{Level, Logger, Logging}
 import utest.{ArrowAssert, TestSuite}
@@ -13,11 +14,21 @@ trait TestBase extends TestSuite with Logging {
 
   Logger.root.clearHandlers().clearModifiers().withHandler(minimumLevel = Some(Level.Debug)).replace()
 
-  def rest:REST = new RestMock
+  def values = new Values()
+
+  def rest:REST = new RestMock(values)
 
   def injector:Design = TestModule(rest).test
 
   Context.init(injector)
+
+  def formLoaded():Future[Boolean] = {
+    val promise = Promise[Boolean]
+    TestHooks.addOnLoad(() => {
+      promise.success(true)
+    })
+    promise.future
+  }
 
   def waitCycle:Future[Boolean] = {
     val promise = Promise[Boolean]
