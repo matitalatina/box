@@ -194,7 +194,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
 
     unsafeRoot(".ql-editor p")(
-      marginBottom(10 px)
+      marginBottom.`0`
     )
 
 
