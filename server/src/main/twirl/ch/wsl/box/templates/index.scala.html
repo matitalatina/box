@@ -1,6 +1,6 @@
 @import org.webjars.WebJarAssetLocator
 @import scala.util.Try
-@(version:String)
+@(version:String,enableRedactor:Boolean)
 
 <!DOCTYPE html>
 <html>
@@ -17,6 +17,12 @@
         <link rel="stylesheet" href="assets/quill/dist/quill.snow.css">
 
         <link rel="stylesheet" href="assets/ol/ol.css" >
+
+        @if(enableRedactor) {
+            <link rel="stylesheet" href="/redactor.css" />
+            <script src="/redactor.js"></script>
+        }
+
 
 
 

@@ -3,7 +3,7 @@ package ch.wsl.box.client.views.components.widget
 import java.util.UUID
 
 import ch.wsl.box.client.services.ClientConf
-import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes}
+import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, JSONMetadata}
 import io.circe.Json
 import io.udash.properties.single.Property
 import scalatags.JsDom
@@ -15,6 +15,7 @@ import io.circe.parser._
 import org.scalajs.dom.html.Div
 import typings.monacoEditor.mod.editor.{IStandaloneCodeEditor, IStandaloneEditorConstructionOptions}
 
+import scala.concurrent.Future
 import scala.util.Try
 
 case class MonacoWidget(_id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging {
@@ -40,30 +41,36 @@ case class MonacoWidget(_id: Property[Option[String]], field: JSONField, prop: P
 
       logger.info(language)
 
-      val value = field.`type` match {
-        case JSONFieldTypes.JSON => prop.get.toString()
-        case _ => prop.get.string
-      }
 
       val editor = typings.monacoEditor.mod.editor.create(container,IStandaloneEditorConstructionOptions()
         .setLanguage(language)
-        .setValue(value)
+        .setValue(prop.get.string)
 
       )
       editor.onDidChangeModelContent{e =>
 
-        if(field.`type` == JSONFieldTypes.JSON) {
-          parse(editor.getValue()) match {
-            case Left(_) => prop.set(editor.getValue().asJson)
-            case Right(value) => prop.set(value)
-          }
-        } else {
-          prop.set(editor.getValue().asJson)
-        }
-
+        prop.set(editor.getValue().asJson)
 
       }
     }
+  }
+
+
+  override def beforeSave(data: Json, metadata: JSONMetadata): Future[Json] = Future.successful{
+    val jsField = data.js(field.name)
+    val result = field.`type` match {
+      case JSONFieldTypes.JSON => parse(jsField.string) match {
+        case Left(value) => {
+          logger.warn(value.message)
+          jsField
+        }
+        case Right(value) => value
+      }
+      case _ => jsField
+    }
+    Map(field.name -> result).asJson
+
+
   }
 
   override protected def edit(): JsDom.all.Modifier = {

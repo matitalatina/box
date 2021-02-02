@@ -28,7 +28,7 @@ object JSONUtils extends Logging {
         num => num.toString,
         str => str,
         arr => arr.map(_.string).mkString("[", ",", "]"),
-        obj => obj.toString
+        obj => el.printWith(Printer.spaces2) //obj.toMap.map{ case (k:String,v:Json) => s"""  "$k": ${v.string}  """}.mkString("{\n", ",\n", "\n}")
       )
       result
     }

@@ -52,7 +52,7 @@ case class RichTextEditorWidget(_id: Property[Option[String]], field: JSONField,
 
   override protected def edit(): JsDom.all.Modifier = {
     logger.debug(s"field: ${field.name} widget mode $mode")
-    logger.debug(s"data: ${prop.get.toString()}")
+    logger.debug(s"data: ${prop.get.toString().take(50)}")
     produce(_id) { _ =>
       val container = div( height := 300.px).render
       val parent = div(container).render

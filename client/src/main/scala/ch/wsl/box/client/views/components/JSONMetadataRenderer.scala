@@ -136,6 +136,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
           case (_,Some(WidgetsNames.code),_,_,_) => MonacoWidget
           case (_,Some(WidgetsNames.richTextEditor),_,_,_)            => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)
           case (_,Some(WidgetsNames.richTextEditorFull),_,_,_)        => RichTextEditorWidgetFactory(RichTextEditorWidget.Full)
+          case (_,Some(WidgetsNames.redactor),_,_,_)                  => RedactorFactory
           case (_, _, _, _, _)                                        => InputWidgetFactory.Text
     }
 
