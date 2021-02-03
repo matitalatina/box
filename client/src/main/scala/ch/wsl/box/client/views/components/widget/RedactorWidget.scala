@@ -51,6 +51,10 @@ case class Redactor(editorId:String){
     JSRedactor.exec(selector,"start")
   }
 
+  def isStarted():Boolean = {
+    JSRedactor.exec(selector,"isStarted").asInstanceOf[js.UndefOr[Boolean]].toOption.exists(x => x)
+  }
+
   def getHTML():Option[String] = {
     JSRedactor.exec(selector,"source.getCode").asInstanceOf[js.UndefOr[String]].toOption
   }
@@ -88,7 +92,8 @@ case class RedactorWidget(_id: Property[Option[String]], field: JSONField, prop:
 
   override def afterRender(): Unit = {
     val opts:Json = field.params.map(_.js("editorOptions")).getOrElse(Map[String,Json]().asJson)
-    if(!started) {
+    logger.debug(s"started: $started, redactor isStarted: ${redactor.isStarted()}")
+    if(!started || !redactor.isStarted()) {
       started = true;
       redactor.init(opts, html => prop.set(html.asJson))
       redactor.setHTML(prop.get.string)

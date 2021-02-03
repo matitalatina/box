@@ -312,6 +312,7 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
                       open.set(!open.get)
                       if (open.get) {
                         services.clientSession.setTableChildOpen(tableChildElement)
+                        logger.debug("Opening child")
                         widget.get.widget.afterRender()
                       } else {
                         services.clientSession.setTableChildClose(tableChildElement)
