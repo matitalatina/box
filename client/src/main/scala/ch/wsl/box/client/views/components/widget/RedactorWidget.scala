@@ -44,9 +44,11 @@ case class Redactor(editorId:String){
     editorOpts.asInstanceOf[js.Dynamic].callbacks = js.Dynamic.literal(
       changed = onChange
     )
-    BrowserConsole.log(editorOpts)
     val editor = JSRedactor.init(selector,editorOpts)
-    BrowserConsole.log(editor)
+  }
+
+  def redraw() = {
+    JSRedactor.exec(selector,"start")
   }
 
   def getHTML():Option[String] = {
@@ -82,11 +84,17 @@ case class RedactorWidget(_id: Property[Option[String]], field: JSONField, prop:
 
   val redactor = Redactor(editorId)
 
+  var started = false;
 
   override def afterRender(): Unit = {
     val opts:Json = field.params.map(_.js("editorOptions")).getOrElse(Map[String,Json]().asJson)
-    redactor.init(opts,html => prop.set(html.asJson))
-    redactor.setHTML(prop.get.string)
+    if(!started) {
+      started = true;
+      redactor.init(opts, html => prop.set(html.asJson))
+      redactor.setHTML(prop.get.string)
+    } else {
+      redactor.redraw() // need to call it when toggling the table
+    }
   }
 
   override protected def edit(): JsDom.all.Modifier = {
