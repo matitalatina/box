@@ -21,7 +21,7 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
   import ch.wsl.box.rest.metadata.box._
 
 
-  val viewsOnly = Registry().fields.tables.toSeq.sorted
+  val viewsOnly = Registry().fields.views.sorted
   val tablesAndViews = (viewsOnly ++ Registry().fields.tables).sorted
 
 

@@ -91,7 +91,8 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
       } //retrieve values in db
       result <- if (current.isDefined){   //if exists, check if we have to skip the update (if row is the same)
         val merged  = current.get.deepMerge(json) //merge old and new json
-        if (toM(current.get) != toM(merged)) {
+        val model = toM(merged)
+        if (toM(current.get) != model) {
           dbActions.update(id.get, toM(merged)).map(_ => id.get)        //could also use updateIfNeeded and no check
         } else DBIO.successful(id.get)
       } else{

@@ -67,7 +67,7 @@ object BoxForm {
   case class BoxForm_i18n_row(id: Option[Int] = None, form_id: Option[Int] = None,
                               lang: Option[String] = None, label: Option[String] = None,
                               tooltip: Option[String] = None, hint: Option[String] = None,
-                              viewTable: Option[String] = None)
+                              view_table: Option[String] = None)
   /** GetResult implicit for fetching Form_i18n_row objects using plain SQL queries */
 
   /** Table description of table form_i18n. Objects of this class serve as prototypes for rows in queries. */

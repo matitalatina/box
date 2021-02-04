@@ -227,7 +227,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         keys,
         defaultQuery,
         form.exportFields.map(_.split(",").toSeq).getOrElse(tableFields),
-        formI18n.flatMap(_.viewTable),
+        formI18n.flatMap(_.view_table),
         formActions
       )//, form.entity)
       //println(s"resulting form: $result")
