@@ -98,14 +98,22 @@ case class Form(
           case Some(fields) => m.fields.filter(field => fields.contains(field.name))
           case None => m.fields.filter(field => m.tabularFields.contains(field.name))
         }
-
     }
+
+  private def viewTableMetadata(fields:Seq[String],tableMetadata:JSONMetadata,viewMetadata:JSONMetadata): Seq[JSONField] = {
+    val tableFields = _tabMetadata(Some(fields),tableMetadata)
+    val viewFields = _tabMetadata(Some(fields),viewMetadata)
+    fields.flatMap{ field =>
+      tableFields.find(_.name == field).orElse(viewFields.find(_.name == field))
+    }
+
+  }
 
     def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.flatMap{ m =>
       val filteredFields = m.view match {
         case None => DBIO.successful(_tabMetadata(fields,m))
-        case Some(view) => DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),view,lang).map{ em =>
-          _tabMetadata(Some(fields.getOrElse(m.tabularFields)),em)
+        case Some(view) => DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),view,lang).map{ vm =>
+          viewTableMetadata(fields.getOrElse(m.tabularFields),m,vm)
         })
       }
 
