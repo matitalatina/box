@@ -38,7 +38,8 @@ case class PgColumn(
   numeric_scale:Option[Int],
   table_name:String,
   table_schema:String,
-  ordinal_position:Int
+  ordinal_position:Int,
+  column_default:Option[String]
 ) {
   def nullable = is_nullable == "YES"
   def updatable = is_updatable == "YES"// || is_trigger_updatable == "YES"
@@ -62,8 +63,9 @@ class PgColumns(tag: Tag) extends Table[PgColumn](tag,  Some("information_schema
   def table_name = column[String]("table_name")
   def table_schema = column[String]("table_schema")
   def ordinal_position = column[Int]("ordinal_position")
-    
-  def * = (column_name, is_nullable, is_updatable, data_type, udt_name, character_maximum_length, numeric_precision, numeric_scale, table_name, table_schema, ordinal_position) <> (PgColumn.tupled, PgColumn.unapply)
+  def column_default = column[Option[String]]("column_default")
+
+  def * = (column_name, is_nullable, is_updatable, data_type, udt_name, character_maximum_length, numeric_precision, numeric_scale, table_name, table_schema, ordinal_position,column_default) <> (PgColumn.tupled, PgColumn.unapply)
 }
 
 case class PgConstraint(
@@ -126,6 +128,15 @@ class PgKeyUsages(tag: Tag) extends Table[PgKeyUsage](tag,  Some("information_sc
 
     
   def * = (constraint_name, table_name, column_name) <> (PgKeyUsage.tupled, PgKeyUsage.unapply)
+}
+
+object PgInformationSchemaSlick{
+  val pgTables = TableQuery[PgTables]
+  val pgColumns = TableQuery[PgColumns]
+  val pgConstraints = TableQuery[PgConstraints]
+  val pgConstraintsReference = TableQuery[PgConstraintReferences]
+  val pgContraintsUsage = TableQuery[PgConstraintUsages]
+  val pgKeyUsage = TableQuery[PgKeyUsages]
 }
 
 

@@ -13,10 +13,10 @@ import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, FromRequestUnma
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
-import ch.wsl.box.jdbc.FullDatabase
+import ch.wsl.box.jdbc.{Connection, FullDatabase}
 import ch.wsl.box.model.shared.{JSONCount, JSONData, JSONID, JSONQuery}
 import ch.wsl.box.rest.logic.{DbActions, FormActions, JSONTableActions, Lookup}
-import ch.wsl.box.rest.utils.{Auth, BoxConfig, JSONSupport, UserProfile, XLSExport, XLSTable}
+import ch.wsl.box.rest.utils.{BoxConfig, JSONSupport, UserProfile, XLSExport, XLSTable}
 import com.typesafe.config.{Config, ConfigFactory}
 import scribe.Logging
 import slick.lifted.TableQuery
@@ -53,7 +53,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
   import ch.wsl.box.model.shared.EntityKind
 
     implicit val db = up.db
-    implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
+    implicit val boxDb = FullDatabase(up.db,Connection.adminDB)
 
 
     val dbActions = new DbActions[T,M](table)
@@ -78,7 +78,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
           val query = parse(q).right.get.as[JSONQuery].right.get
           complete {
             val io = for {
-              metadata <- DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang))
+              metadata <- DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Connection.dbSchema),name, lang))
               //fkValues <- Lookup.valuesForEntity(metadata).map(Some(_))
               data <- jsonActions.find(query)
             } yield {
@@ -124,13 +124,13 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
 
   def metadata:Route = path("metadata") {
     get {
-      complete{ EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang, limitLookupFromFk) }
+      complete{ EntityMetadataFactory.of(schema.getOrElse(Connection.dbSchema),name, lang, limitLookupFromFk) }
     }
   }
 
   def tabularMetadata:Route = path("tabularMetadata") {
     get {
-      complete{ EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name, lang, limitLookupFromFk) }
+      complete{ EntityMetadataFactory.of(schema.getOrElse(Connection.dbSchema),name, lang, limitLookupFromFk) }
     }
   }
 
@@ -185,7 +185,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
             import kantan.csv._
             import kantan.csv.ops._
             val query = parse(q).right.get.as[JSONQuery].right.get
-            val csv = Source.fromFuture(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),name,lang, limitLookupFromFk).map{ metadata =>
+            val csv = Source.fromFuture(EntityMetadataFactory.of(schema.getOrElse(Connection.dbSchema),name,lang, limitLookupFromFk).map{ metadata =>
               Seq(metadata.fields.map(_.name)).asCsv(rfc)
             }).concat(Source.fromPublisher(db.stream(dbActions.find(query))).map(x => Seq(x.values()).asCsv(rfc))).log("csv")
             complete(csv)

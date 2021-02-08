@@ -1,7 +1,12 @@
 package ch.wsl.box.codegen
 
-import ch.wsl.box.jdbc.TypeMapping
+import ch.wsl.box.information_schema.PgInformationSchema
+import ch.wsl.box.jdbc.{Connection, TypeMapping}
 import slick.model.Model
+
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.DurationInt
 
 
 
@@ -18,7 +23,22 @@ case class FieldAccessGenerator(tabs:Seq[String], views:Seq[String], model:Model
 
   def mapField(table:Table):Seq[String] = table.columns.map{ c =>
     val scalaType = TypeMapping(c.model).getOrElse(c.model.tpe)
-    s"""      "${c.model.name}" -> ColType("${scalaType}",${c.model.nullable})"""
+
+    val hasDefault:Boolean = {
+      Await.result(
+        Connection.dbConnection.run(
+          PgInformationSchema.hasDefault(
+            table.model.name.schema.getOrElse("public"),
+            table.model.name.table,
+            c.model.name
+          )
+        ),
+        10.seconds
+      )
+    }
+
+    val nullable = c.model.nullable || hasDefault
+    s"""      "${c.model.name}" -> ColType("${scalaType}",$nullable)"""
   }
 
 

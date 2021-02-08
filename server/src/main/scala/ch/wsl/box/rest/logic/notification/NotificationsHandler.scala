@@ -1,9 +1,8 @@
 package ch.wsl.box.rest.logic.notification
 
-import java.sql.Connection
 import java.util.Date
 
-import ch.wsl.box.rest.utils.Auth
+import ch.wsl.box.jdbc.Connection
 import org.postgresql.PGConnection
 import scribe.Logging
 
@@ -14,7 +13,7 @@ trait PgNotifier{
 object NotificationsHandler {
 
   def create(channel:String,callback: (String) => Unit):PgNotifier = new PgNotifier {
-    val listener = new Listener(Auth.dbConnection.source.createConnection(),channel,callback)
+    val listener = new Listener(Connection.dbConnection.source.createConnection(),channel,callback)
     listener.start()
     override def stop(): Unit = listener.stopRunning()
   }
@@ -23,13 +22,13 @@ object NotificationsHandler {
 
 import java.sql.SQLException
 
-class Listener(conn: Connection,channel:String,callback: (String) => Unit) extends Thread with Logging {
+class Listener(conn: java.sql.Connection,channel:String,callback: (String) => Unit) extends Thread with Logging {
   private var running = true
   def stopRunning() = {
     running = false
   }
   private val stmt = conn.createStatement
-  val listenQuery = s"SET ROLE ${Auth.adminUser}; LISTEN $channel"
+  val listenQuery = s"SET ROLE ${Connection.adminUser}; LISTEN $channel"
   logger.info(listenQuery)
   stmt.execute(listenQuery)
   stmt.close

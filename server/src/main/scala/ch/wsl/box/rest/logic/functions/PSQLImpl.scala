@@ -1,12 +1,12 @@
 package ch.wsl.box.rest.logic.functions
 
 import akka.stream.Materializer
-import ch.wsl.box.jdbc.FullDatabase
+import ch.wsl.box.jdbc.{Connection, FullDatabase}
 import ch.wsl.box.model.shared.JSONQuery
 import ch.wsl.box.rest.jdbc.JdbcConnect
 import ch.wsl.box.rest.logic.{DataResult, DataResultTable}
 import ch.wsl.box.rest.runtime.Registry
-import ch.wsl.box.rest.utils.{Auth, Lang, UserProfile}
+import ch.wsl.box.rest.utils.{Lang, UserProfile}
 import io.circe.Json
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -22,7 +22,7 @@ object PSQLImpl extends RuntimePSQL {
   override def table(name: String, query:JSONQuery)(implicit lang:Lang, ec: ExecutionContext, up: UserProfile, mat:Materializer): Future[Option[DataResultTable]] = {
 
     implicit val db = up.db
-    implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
+    implicit val boxDb = FullDatabase(up.db,Connection.adminDB)
 
     val actions = Registry().actions(name)
 

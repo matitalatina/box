@@ -12,7 +12,7 @@ import ch.wsl.box.rest.logic.NewsLoader
 import ch.wsl.box.rest.metadata.{BoxFormMetadataFactory, FormMetadataFactory, StubMetadataFactory}
 import ch.wsl.box.rest.routes.{BoxFileRoutes, BoxRoutes, Export, Form, Functions, Table, View}
 import ch.wsl.box.rest.runtime.Registry
-import ch.wsl.box.rest.utils.{Auth, BoxSession, UserProfile}
+import ch.wsl.box.rest.utils.{BoxSession, UserProfile}
 import ch.wsl.box.services.Services
 import com.softwaremill.session.SessionDirectives.touchOptionalSession
 import com.softwaremill.session.SessionManager
@@ -23,7 +23,7 @@ import scala.concurrent.ExecutionContext
 case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem, services: Services) {
 
   import Directives._
-  import ch.wsl.box.rest.utils.Auth
+  import ch.wsl.box.jdbc.Connection
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
 
@@ -84,7 +84,7 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
 
   def forms(implicit up:UserProfile) = path("forms") {
     get {
-      complete(Auth.adminDB.run(FormMetadataFactory().list))
+      complete(Connection.adminDB.run(FormMetadataFactory().list))
     }
   }
 
@@ -99,7 +99,7 @@ case class PrivateArea(implicit ec:ExecutionContext, sessionManager: SessionMana
   def news(implicit up:UserProfile) = pathPrefix("news") {
     pathPrefix(Segment) { lang =>
       get{
-        complete(Auth.adminDB.run(NewsLoader.get(lang)))
+        complete(Connection.adminDB.run(NewsLoader.get(lang)))
       }
     }
   }

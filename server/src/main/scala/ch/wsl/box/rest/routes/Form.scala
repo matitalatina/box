@@ -7,10 +7,10 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
-import ch.wsl.box.jdbc.{FullDatabase, UserDatabase}
+import ch.wsl.box.jdbc.{Connection, FullDatabase, UserDatabase}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.utils.{Auth, JSONSupport, UserProfile, XLSExport, XLSTable}
+import ch.wsl.box.rest.utils.{JSONSupport, UserProfile, XLSExport, XLSTable}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
@@ -47,7 +47,7 @@ case class Form(
 
 
     implicit val implicitDB = db
-    implicit val boxDb = FullDatabase(db,Auth.adminDB)
+    implicit val boxDb = FullDatabase(db,Connection.adminDB)
 
     val metadata: DBIO[JSONMetadata] = metadataFactory.of(name,lang)
 
@@ -112,7 +112,7 @@ case class Form(
     def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.flatMap{ m =>
       val filteredFields = m.view match {
         case None => DBIO.successful(_tabMetadata(fields,m))
-        case Some(view) => DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),view,lang).map{ vm =>
+        case Some(view) => DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Connection.dbSchema),view,lang).map{ vm =>
           viewTableMetadata(fields.getOrElse(m.tabularFields),m,vm)
         })
       }
@@ -207,7 +207,7 @@ case class Form(
     path("keys") {
       get {
         complete {
-          boxDb.adminDb.run(metadata.flatMap(f => EntityMetadataFactory.keysOf(schema.getOrElse(Auth.dbSchema),f.entity)))
+          boxDb.adminDb.run(metadata.flatMap(f => EntityMetadataFactory.keysOf(schema.getOrElse(Connection.dbSchema),f.entity)))
         }
       }
     } ~

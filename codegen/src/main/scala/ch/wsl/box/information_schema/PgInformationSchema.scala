@@ -2,9 +2,17 @@ package ch.wsl.box.information_schema
 
 import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile, UserDatabase}
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import PgInformationSchemaSlick._
 
 import scala.concurrent.{ExecutionContext, Future}
 
+object PgInformationSchema{
+  def hasDefault(schema:String,table:String,column:String)(implicit ex:ExecutionContext):DBIO[Boolean] = {
+    pgColumns
+      .filter(e => e.table_name === table && e.table_schema === schema && e.column_name === column)
+      .map(x => x.column_default.nonEmpty).result.map(_.headOption.contains(true))
+  }
+}
 /**
   * Created by andreaminetti on 15/03/16.
   */
@@ -14,12 +22,7 @@ class PgInformationSchema(schema:String, table:String, excludeFields:Seq[String]
   private val FOREIGNKEY = "FOREIGN KEY"
   private val PRIMARYKEY = "PRIMARY KEY"
 
-  private val pgTables = TableQuery[PgTables]
-  private val pgColumns = TableQuery[PgColumns]
-  private val pgConstraints = TableQuery[PgConstraints]
-  private val pgConstraintsReference = TableQuery[PgConstraintReferences]
-  private val pgContraintsUsage = TableQuery[PgConstraintUsages]
-  private val pgKeyUsage = TableQuery[PgKeyUsages]
+
 
   case class PrimaryKey(keys: Seq[String], constraintName: String) {
     def boxKeys = keys

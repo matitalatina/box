@@ -1,12 +1,12 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.jdbc.FullDatabase
+import ch.wsl.box.jdbc.{Connection, FullDatabase}
 import ch.wsl.box.model.boxentities.BoxExportField.{BoxExportField_i18n_row, BoxExportField_row}
 import ch.wsl.box.model.boxentities.BoxFunction.{BoxFunctionField_i18n_row, BoxFunctionField_row}
 import ch.wsl.box.model.boxentities.{BoxExport, BoxExportField}
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import ch.wsl.box.rest.utils.UserProfile
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
@@ -21,11 +21,11 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
   import io.circe.generic.auto._
 
   implicit val db = up.db
-  implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
+  implicit val boxDb = FullDatabase(up.db,Connection.adminDB)
 
   def functions = ch.wsl.box.model.boxentities.BoxFunction
 
-  def list: Future[Seq[String]] = Auth.adminDB.run{
+  def list: Future[Seq[String]] = Connection.adminDB.run{
     functions.BoxFunctionTable.result
   }.map{_.sortBy(_.order.getOrElse(Double.MaxValue)).map(_.name)}
 
@@ -48,7 +48,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
 
     for{
       al <- up.accessLevel
-      qr <-  Auth.adminDB.run(query.result)
+      qr <-  Connection.adminDB.run(query.result)
     } yield {
       qr.filter(_._6.map(ar => checkRole(List(),ar, al)).getOrElse(true)) // TODO how to manage roles?
         .sortBy(_._3.getOrElse(Double.MaxValue)).map(
@@ -67,7 +67,7 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
 
     } yield (ei18.flatMap(_.label), e.name, e.order, ei18.flatMap(_.hint), ei18.flatMap(_.tooltip),e.mode)
 
-    Auth.adminDB.run{
+    Connection.adminDB.run{
       query.result
     }.map(_.map{ case (label, name, _, hint, tooltip, mode) =>
       ExportDef(name, label.getOrElse(name), hint, tooltip, mode)
@@ -87,11 +87,11 @@ case class FunctionMetadataFactory(implicit up:UserProfile, mat:Materializer, ec
     } yield (f, fi18n)
 
     for {
-      (func, functionI18n)  <- Auth.adminDB.run {
+      (func, functionI18n)  <- Connection.adminDB.run {
         queryExport.result
       }.map(_.head)
 
-      fields <- Auth.adminDB.run {
+      fields <- Connection.adminDB.run {
         queryField(func.function_id.get).sortBy(_._1.field_id).result
       }
 

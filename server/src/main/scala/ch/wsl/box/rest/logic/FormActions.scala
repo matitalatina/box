@@ -6,12 +6,12 @@ import akka.stream.scaladsl.Source
 import ch.wsl
 import ch.wsl.box
 import ch.wsl.box.jdbc
-import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile}
+import ch.wsl.box.jdbc.{Connection, FullDatabase, PostgresProfile}
 import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.routes.enablers.CSVDownload
-import ch.wsl.box.rest.utils.{Auth, FutureUtils, Timer, UserProfile}
+import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
 import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher
@@ -135,7 +135,7 @@ case class FormActions(metadata:JSONMetadata,
 
   def subAction[T](e:Json, action: FormActions => ((Option[JSONID],Json) => DBIO[_])): Seq[DBIO[Seq[_]]] = metadata.fields.filter(_.child.isDefined).map { field =>
     for {
-      form <- DBIO.from(Auth.adminDB.run(metadataFactory.of(field.child.get.objId, metadata.lang)))
+      form <- DBIO.from(Connection.adminDB.run(metadataFactory.of(field.child.get.objId, metadata.lang)))
       dbSubforms <- getChild(e,form,field.child.get)
       subs = e.seq(field.name)
       subJsonWithIndexs = attachArrayIndex(subs,form)
@@ -183,7 +183,7 @@ case class FormActions(metadata:JSONMetadata,
     inserted <- jsonAction.getById(insertedId).map(_.get)
     _ <- DBIO.sequence(metadata.fields.filter(_.child.isDefined).map { field =>
       for {
-        metadata <- DBIO.from(Auth.adminDB.run(metadataFactory.of(field.child.get.objId, metadata.lang)))
+        metadata <- DBIO.from(Connection.adminDB.run(metadataFactory.of(field.child.get.objId, metadata.lang)))
         rows = attachArrayIndex(e.seq(field.name),metadata)
         //attach parent id
         rowsWithId = rows.map{ row =>
@@ -248,7 +248,7 @@ case class FormActions(metadata:JSONMetadata,
         case ("static",_) => DBIO.successful(field.name -> field.default.asJson)  //set default value
         case (_,None) => DBIO.successful(field.name -> dataJson.js(field.name))        //use given value
         case (_,Some(child)) => for{
-          form <- DBIO.from(Auth.adminDB.run(metadataFactory.of(child.objId,metadata.lang)))
+          form <- DBIO.from(Connection.adminDB.run(metadataFactory.of(child.objId,metadata.lang)))
           data <- getChild(dataJson,form,child)
         } yield {
           logger.info(s"expanding child ${field.name} : ${data.asJson}")

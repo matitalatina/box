@@ -1,8 +1,8 @@
 package ch.wsl.box.model
 
+import ch.wsl.box.jdbc.Connection
 import ch.wsl.box.model.boxentities.Schema
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.utils.Auth
 import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.Await
@@ -17,6 +17,6 @@ object DropBox extends App {
     _ <- db.run(Schema.box.dropIfExists)
   } yield true
 
-  Await.result(fut(Auth.dbConnection),10 seconds)
+  Await.result(fut(Connection.dbConnection),10 seconds)
 
 }

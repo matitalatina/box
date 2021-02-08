@@ -1,11 +1,15 @@
 package ch.wsl.box.codegen
 
-import ch.wsl.box.jdbc.TypeMapping
+import ch.wsl.box.information_schema.PgInformationSchema
+import ch.wsl.box.jdbc.{Connection, TypeMapping}
 import com.typesafe.config.Config
 import slick.model.Model
 import slick.ast.ColumnOption
 import scribe.Logging
 
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits._
+import scala.concurrent.duration.DurationInt
 
 
 trait MyOutputHelper extends slick.codegen.OutputHelpers {
@@ -139,6 +143,19 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
       val appKeysExceptions = conf.getStringList("generator.keys.app")
       val keyStrategy = conf.getString("generator.keys.default.strategy")
 
+      private val hasDefault:Boolean = {
+        Await.result(
+          Connection.dbConnection.run(
+            PgInformationSchema.hasDefault(
+              model.table.schema.getOrElse("public"),
+              model.table.table,
+              model.name
+            )
+          ),
+          10.seconds
+        )
+      }
+
       private val managed:Boolean = {
         val result = keyStrategy match {
           case "db" if primaryKey => !dbKeysExceptions.contains(completeName)
@@ -148,14 +165,19 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
         result
       }
 
-      override def asOption: Boolean =  managed match {
+
+
+      override def asOption: Boolean =  managed || hasDefault match {
         case true => true
         case false => super.asOption
       }
 
-      override def options: Iterable[String] = managed match {
-        case false => super.options
-        case true => {super.options.toSeq ++ Seq("O.AutoInc")}.distinct
+      override def options: Iterable[String] = {
+        val opts = { managed || hasDefault match {
+          case false => super.options
+          case true => {super.options.toSeq ++ Seq("O.AutoInc")}.distinct
+        }}.filterNot{ opt => hasDefault && opt.startsWith("O.Default") }
+        opts
       }
 
 

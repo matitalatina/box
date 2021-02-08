@@ -3,8 +3,8 @@ package ch.wsl.box.model
 import java.util.Base64
 
 import boxentities._
+import ch.wsl.box.jdbc.Connection
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.rest.utils.Auth
 import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.Await
@@ -502,7 +502,7 @@ ALTER TABLE ONLY box.function_field
   }
 
 
-  val installShowError = install(Auth.dbConnection,Auth.dbConf.as[String]("user")).recover{ case t:Throwable => t.printStackTrace()}
+  val installShowError = install(Connection.dbConnection,Connection.dbConf.as[String]("user")).recover{ case t:Throwable => t.printStackTrace()}
 
   Await.result(installShowError, 30 seconds)
 

@@ -4,10 +4,11 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
+import ch.wsl.box.jdbc.Connection
 import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
-import ch.wsl.box.rest.utils.{Auth, BoxConfig}
+import ch.wsl.box.rest.utils.BoxConfig
 import ch.wsl.box.services.Services
 import com.typesafe.config.Config
 import scribe._
@@ -49,7 +50,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
   def start() =  {
 
 
-    BoxConfig.load(Auth.adminDB)
+    BoxConfig.load(Connection.adminDB)
 
 
     val akkaConf: Config = BoxConfig.akkaHttpSession
@@ -67,7 +68,7 @@ class Box(name:String,version:String)(implicit val executionContext: ExecutionCo
 
     val loggerWriter = BoxConfig.logDB match  {
       case false => ConsoleWriter
-      case true => new DbWriter(Auth.adminDB)
+      case true => new DbWriter(Connection.adminDB)
     }
     println(s"Logger level: ${BoxConfig.loggerLevel}")
 

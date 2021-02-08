@@ -21,7 +21,7 @@ import scala.concurrent.ExecutionContext
 case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: UserProfile, mat:Materializer, system:ActorSystem, services: Services) {
 
   import Directives._
-  import ch.wsl.box.rest.utils.Auth
+  import ch.wsl.box.jdbc.Connection
   import ch.wsl.box.rest.utils.JSONSupport._
 
 
@@ -31,13 +31,13 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
         Form(name, lang,BoxActionsRegistry().tableActions,BoxFormMetadataFactory(),userProfile.db,EntityKind.BOX.kind,schema = BoxSchema.schema).route
       }
     } ~ pathEnd{
-      complete(Auth.adminDB.run(BoxFormMetadataFactory().list))
+      complete(Connection.adminDB.run(BoxFormMetadataFactory().list))
     }
   }
 
   def boxAdmins = path("box-admins") {
     get {
-      complete(Auth.adminDB.run(BoxFormMetadataFactory().list))
+      complete(Connection.adminDB.run(BoxFormMetadataFactory().list))
     }
   }
 
@@ -63,13 +63,13 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
 
   def boxDefinition = pathPrefix("box-definition") {
     get{
-      complete(BoxDefinition.`export`(Auth.adminDB).map(_.asJson))
+      complete(BoxDefinition.`export`(Connection.adminDB).map(_.asJson))
     } ~
     path("diff") {
       post{
         entity(as[BoxDefinition]) {  newDef =>
           complete {
-            BoxDefinition.`export`(Auth.adminDB).map { oldDef =>
+            BoxDefinition.`export`(Connection.adminDB).map { oldDef =>
               BoxDefinition.diff(oldDef, newDef).asJson
             }
           }
@@ -80,7 +80,7 @@ case class Admin(session:BoxSession)(implicit ec:ExecutionContext, userProfile: 
       post{
         entity(as[BoxDefinitionMerge]) { merge =>
           complete {
-            BoxDefinition.update(Auth.adminDB,merge)
+            BoxDefinition.update(Connection.adminDB,merge)
           }
         }
       }

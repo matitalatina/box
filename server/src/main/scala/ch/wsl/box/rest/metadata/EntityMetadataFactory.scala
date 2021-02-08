@@ -3,7 +3,7 @@ package ch.wsl.box.rest.metadata
 import akka.stream.Materializer
 import ch.wsl.box.information_schema.{PgColumn, PgInformationSchema}
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.utils.{Auth, BoxConfig, UserProfile}
+import ch.wsl.box.rest.utils.{BoxConfig, UserProfile}
 import ch.wsl.box.shared.utils.JSONUtils
 import com.typesafe.config.Config
 import scribe.Logging

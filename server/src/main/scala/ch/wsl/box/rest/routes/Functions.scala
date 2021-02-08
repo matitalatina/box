@@ -2,11 +2,11 @@ package ch.wsl.box.rest.routes
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import ch.wsl.box.jdbc.UserDatabase
+import ch.wsl.box.jdbc.{Connection, UserDatabase}
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.logic.functions.RuntimeFunction
 import ch.wsl.box.rest.metadata.{DataMetadataFactory, FunctionMetadataFactory}
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import ch.wsl.box.rest.utils.UserProfile
 import io.circe.Json
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,7 +27,7 @@ object Functions extends Data {
     implicit def db:UserDatabase = up.db
 
     for{
-      functionDef <- Auth.adminDB.run{
+      functionDef <- Connection.adminDB.run{
         functions.BoxFunctionTable.filter(_.name === function).result
       }.map(_.headOption)
       result <- functionDef match {

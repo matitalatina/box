@@ -1,5 +1,6 @@
 package ch.wsl.box.rest.utils
 
+import ch.wsl.box.jdbc.Connection
 import ch.wsl.box.model.shared.LoginRequest
 import com.softwaremill.session.{SessionSerializer, SingleValueSessionSerializer}
 

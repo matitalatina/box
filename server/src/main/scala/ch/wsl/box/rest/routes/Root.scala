@@ -36,6 +36,8 @@ import scala.util.{Failure, Success}
   */
 case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:Seq[String])(implicit materializer:Materializer,executionContext:ExecutionContext,system: ActorSystem,services: Services) extends Logging {
 
+  import ch.wsl.box.jdbc.Connection
+
 
   lazy val sessionConfig = SessionConfig.fromConfig(akkaConf)
 
@@ -47,7 +49,6 @@ case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:
 
   import Directives._
   import ch.wsl.box.rest.utils.JSONSupport._
-  import ch.wsl.box.rest.utils.Auth
   import io.circe.generic.auto._
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
@@ -88,7 +89,7 @@ case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:
       FormMetadataFactory.resetCache()
       EntityMetadataFactory.resetCache()
       RuntimeFunction.resetCache()
-      BoxConfig.load(Auth.adminDB)
+      BoxConfig.load(Connection.adminDB)
       complete(
         HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"reset cache"))
       )
