@@ -128,7 +128,9 @@ lazy val client: Project = (project in file("client"))
       "monaco-editor" -> "0.21.1",
       "quill" -> "1.3.7",
       "@types/quill" -> "1.3.10",
-      "typeface-clear-sans" -> "0.0.44"
+      "typeface-clear-sans" -> "0.0.44",
+      "file-saver" -> "2.0.5",
+      "@types/file-saver" -> "2.0.1",
     ),
     stIgnore += "typeface-clear-sans",
     stIgnore += "ol-ext",

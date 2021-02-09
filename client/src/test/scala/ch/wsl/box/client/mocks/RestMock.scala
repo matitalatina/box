@@ -1,6 +1,8 @@
 package ch.wsl.box.client.mocks
 
 import ch.wsl.box.client.services.REST
+import ch.wsl.box.client.viewmodel.BoxDef.BoxDefinitionMerge
+import ch.wsl.box.client.viewmodel.{BoxDefinition}
 import ch.wsl.box.model.shared.{Child, ExportDef, FormActionsMetadata, IDs, JSONCount, JSONField, JSONFieldMap, JSONFieldTypes, JSONID, JSONKeyValue, JSONLookup, JSONMetadata, JSONQuery, Layout, LayoutBlock, LoginRequest, NewsEntry, SharedLabels, TableAccess, WidgetsNames}
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
@@ -176,4 +178,10 @@ class RestMock(values:Values) extends REST with Logging {
     println("generateStub not implemented")
     ???
   }
+
+  override def definition(): Future[BoxDefinition] = ???
+
+  override def definitionDiff(definition: BoxDefinition): Future[BoxDefinitionMerge] = ???
+
+  override def definitionCommit(merge: BoxDefinitionMerge): Future[Boolean] = ???
 }
