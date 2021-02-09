@@ -124,8 +124,24 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
     }
 
     override def Column = new Column(_){
+
+      private val hasDefault:Boolean = {
+        Await.result(
+          Connection.dbConnection.run(
+            PgInformationSchema.hasDefault(
+              model.table.schema.getOrElse("public"),
+              model.table.table,
+              model.name
+            )
+          ),
+          10.seconds
+        )
+      }
+
       // customize Scala column names
       override def rawName = model.name
+
+
 
       override def rawType: String =  TypeMapping(model).getOrElse(super.rawType)
 
@@ -143,18 +159,7 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
       val appKeysExceptions = conf.getStringList("generator.keys.app")
       val keyStrategy = conf.getString("generator.keys.default.strategy")
 
-      private val hasDefault:Boolean = {
-        Await.result(
-          Connection.dbConnection.run(
-            PgInformationSchema.hasDefault(
-              model.table.schema.getOrElse("public"),
-              model.table.table,
-              model.name
-            )
-          ),
-          10.seconds
-        )
-      }
+
 
       private val managed:Boolean = {
         val result = keyStrategy match {
@@ -167,7 +172,7 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
 
 
 
-      override def asOption: Boolean =  managed || hasDefault match {
+      override def asOption: Boolean =  (managed || hasDefault) && !model.nullable match { //add no model nullable condition to avoid double optionals
         case true => true
         case false => super.asOption
       }
