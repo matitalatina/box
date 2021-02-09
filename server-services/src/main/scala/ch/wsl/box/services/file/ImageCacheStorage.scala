@@ -21,14 +21,21 @@ case class FileId(rowId:JSONID,column:String) {
 sealed trait FileCacheKey{
   def id:FileId
 
-  def asString() = id.asString(this.getClass.getSimpleName.toLowerCase)
+  protected def prefix = id.asString(this.getClass.getSimpleName.toLowerCase)
+  def asString(): String
 
 }
-case class Thumbnail(id:FileId,width:Int,height:Int) extends FileCacheKey
-case class Width(id:FileId,width:Int) extends FileCacheKey
-case class Cover(id:FileId,width:Int,height:Int) extends FileCacheKey
+case class Thumbnail(id:FileId,width:Int,height:Int) extends FileCacheKey {
+  def asString(): String = s"$prefix-w$width-h$height"
+}
+case class Width(id:FileId,width:Int) extends FileCacheKey {
+  def asString(): String = s"$prefix-w$width"
+}
+case class Cover(id:FileId,width:Int,height:Int) extends FileCacheKey {
+  def asString(): String = s"$prefix-w$width-h$height"
+}
 case class Fit(id:FileId,width:Int,height:Int,color:String) extends FileCacheKey {
-  override def asString(): String = super.asString() + "-" + color
+  def asString(): String = s"$prefix-w$width-h$height-c$color"
 }
 
 trait ImageCacheStorage {
