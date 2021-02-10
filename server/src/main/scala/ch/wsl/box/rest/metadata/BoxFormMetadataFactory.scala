@@ -31,7 +31,9 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
     users <- getUsers()
   } yield Seq(
     FormUIDef.main(tablesAndViews,users.sortBy(_.username)),
-    FormUIDef.field(forms,tablesAndViews),
+    FormUIDef.field(tablesAndViews),
+    FormUIDef.field_childs(forms),
+    FormUIDef.field_static(tablesAndViews),
     FormUIDef.fieldI18n,
     FormUIDef.formI18n(viewsOnly),
     FormUIDef.fieldFile,
@@ -61,8 +63,10 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
 
   override def children(form: JSONMetadata): DBIO[Seq[JSONMetadata]] = getForms().map{ forms =>
     form match {
-      case f if f.objId == FORM => Seq(FormUIDef.field(forms,tablesAndViews),FormUIDef.fieldI18n,FormUIDef.formI18n(viewsOnly),FormUIDef.fieldFile)
+      case f if f.objId == FORM => Seq(FormUIDef.field(tablesAndViews),FormUIDef.field_static(tablesAndViews),FormUIDef.field_childs(forms),FormUIDef.fieldI18n,FormUIDef.formI18n(viewsOnly),FormUIDef.fieldFile)
       case f if f.objId == FORM_FIELD => Seq(FormUIDef.fieldI18n,FormUIDef.fieldFile)
+      case f if f.objId == FORM_FIELD_STATIC => Seq(FormUIDef.fieldI18n)
+      case f if f.objId == FORM_FIELD_CHILDS => Seq(FormUIDef.fieldI18n)
       case f if f.objId == FUNCTION => Seq(FunctionUIDef.field(tablesAndViews),FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
       case f if f.objId == FUNCTION_FIELD => Seq(FunctionUIDef.fieldI18n)
       case f if f.objId == NEWS => Seq(NewsUIDef.newsI18n)

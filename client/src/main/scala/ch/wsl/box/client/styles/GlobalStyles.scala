@@ -41,6 +41,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       Font.clearSans
     ),
 
+    unsafeRoot("h3") (
+      marginTop(18 px)
+    ),
+
     unsafeRoot("select")(
       inputDefaultWidth,
       borderStyle.solid,

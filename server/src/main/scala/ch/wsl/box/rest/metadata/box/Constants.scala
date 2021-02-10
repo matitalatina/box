@@ -6,6 +6,8 @@ object Constants {
   final val FORM_FIELD_I18N = 3
   final val FORM_I18N = 4
   final val FORM_FIELD_FILE = 5
+  final val FORM_FIELD_CHILDS = 6
+  final val FORM_FIELD_STATIC = 7
 
 
   final val FUNCTION = 10
