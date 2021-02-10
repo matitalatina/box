@@ -24,8 +24,12 @@ import scala.scalajs.js
 
 
 
-case class PopupWidgetFactory(allData:Property[Json]) extends ComponentWidgetFactory  {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = PopupWidget(field,prop,allData)
+object PopupWidgetFactory extends ComponentWidgetFactory  {
+
+  override def name: String = WidgetsNames.popup
+
+  override def create(params: WidgetParams): Widget = PopupWidget(params.field,params.prop,params.allData)
+
 }
 
 case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Json]) extends LookupWidget with Logging {
@@ -39,12 +43,11 @@ case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Js
 
 
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
-    val selectedItem: Property[String] = data.bitransform(value2Label)(label2Value)
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin)(
       label(field.title),
       div(BootstrapStyles.Float.right(), ClientConf.style.popupButton,
-        bind(selectedItem)
+        bind(selectModel)
       ),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
@@ -61,7 +64,6 @@ case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Js
 
     val modalStatus = Property(Status.Closed)
 
-    val selectedItem: Property[String] = data.bitransform(value2Label)(label2Value)
 
     def optionList(nested:NestedInterceptor):Modifier = div(
       lab(Labels.popup.search),br,
@@ -71,10 +73,10 @@ case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Js
           div(
             nested(produce(lookup) { lu =>
               div(
-                lu.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { case JSONLookup(key, value) =>
-                  div(a(value, onclick :+= ((e: Event) => {
+                lu.filter(opt => searchTerm == "" || opt.value.toLowerCase.contains(searchTerm.toLowerCase)).map { x =>
+                  div(a(x.value, onclick :+= ((e: Event) => {
                     modalStatus.set(Status.Closed)
-                    selectedItem.set(value)
+                    model.set(x)
                   })))
                 }
               ).render
@@ -135,7 +137,7 @@ case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Js
       tooltip(button(ClientConf.style.popupButton, onclick :+= ((e:Event) => {
         modalStatus.set(Status.Open)
         true
-      }),bind(selectedItem)).render),
+      }),bind(selectModel)).render),
       modal.render
 
     )

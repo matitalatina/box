@@ -3,7 +3,7 @@ package ch.wsl.box.client.views.components.widget
 import java.util.UUID
 
 import ch.wsl.box.client.services.BrowserConsole
-import ch.wsl.box.model.shared.JSONField
+import ch.wsl.box.model.shared.{JSONField, WidgetsNames}
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.{Json, JsonObject}
 import io.circe.syntax._
@@ -114,5 +114,8 @@ case class RedactorWidget(_id: Property[Option[String]], field: JSONField, prop:
 }
 
 case object RedactorFactory extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField) = RedactorWidget(id,field,prop)
+  override def name: String = WidgetsNames.redactor
+
+  override def create(params: WidgetParams): Widget = RedactorWidget(params.id,params.field,params.prop)
+
 }

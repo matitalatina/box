@@ -36,7 +36,7 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
     FormUIDef.formI18n(viewsOnly),
     FormUIDef.fieldFile,
     FunctionUIDef.main,
-    FunctionUIDef.field,
+    FunctionUIDef.field(tablesAndViews),
     FunctionUIDef.fieldI18n,
     FunctionUIDef.functionI18n,
     NewsUIDef.main,
@@ -63,7 +63,7 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
     form match {
       case f if f.objId == FORM => Seq(FormUIDef.field(forms,tablesAndViews),FormUIDef.fieldI18n,FormUIDef.formI18n(viewsOnly),FormUIDef.fieldFile)
       case f if f.objId == FORM_FIELD => Seq(FormUIDef.fieldI18n,FormUIDef.fieldFile)
-      case f if f.objId == FUNCTION => Seq(FunctionUIDef.field,FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
+      case f if f.objId == FUNCTION => Seq(FunctionUIDef.field(tablesAndViews),FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
       case f if f.objId == FUNCTION_FIELD => Seq(FunctionUIDef.fieldI18n)
       case f if f.objId == NEWS => Seq(NewsUIDef.newsI18n)
       case _ => Seq()

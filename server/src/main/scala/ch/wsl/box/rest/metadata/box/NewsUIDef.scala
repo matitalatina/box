@@ -19,13 +19,13 @@ object NewsUIDef {
     label = "News editor",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"news_id",false),
-      JSONField(JSONFieldTypes.DATETIME,"datetime",false),
-      JSONField(JSONFieldTypes.STRING,"author",true),
+      JSONField(JSONFieldTypes.DATETIME,"datetime",false, widget = Some(WidgetsNames.datetimePicker)),
+      JSONField(JSONFieldTypes.STRING,"author",true, widget = Some(WidgetsNames.textinput)),
       JSONField(JSONFieldTypes.CHILD,"news_i18n",true,child = Some(Child(NEWS_I18N,"news_i18n","news_id","news_id",None)), widget = Some(WidgetsNames.tableChild))
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,4, Seq("news_id","datetime","author").map(Left(_))),
+        LayoutBlock(None,4, Seq("datetime","author").map(Left(_))),
         LayoutBlock(Some("Translations"),8,Seq("news_i18n").map(Left(_)))
       )
     ),
@@ -48,13 +48,13 @@ object NewsUIDef {
     label = "NewsI18n builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"news_id",false),
-      JSONField(JSONFieldTypes.STRING,"lang",false),
+      CommonField.lang,
       JSONField(JSONFieldTypes.STRING,"text",true, widget = Some(WidgetsNames.richTextEditor)),
-      JSONField(JSONFieldTypes.STRING,"title",true)
+      JSONField(JSONFieldTypes.STRING,"title",true, widget = Some(WidgetsNames.textinput))
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,3,Seq("news_id","lang").map(Left(_))),
+        LayoutBlock(None,3,Seq("lang").map(Left(_))),
         LayoutBlock(None,9,Seq("title","text").map(Left(_))),
       )
     ),

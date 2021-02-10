@@ -78,27 +78,23 @@ object FunctionUIDef {
     action = FormActionsMetadata.default
   )
 
-  val field = JSONMetadata(
+  def field(tables:Seq[String]) = JSONMetadata(
     objId = FUNCTION_FIELD,
     name = "field",
     label = "Field builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"field_id",false,widget = Some(WidgetsNames.hidden)),
       JSONField(JSONFieldTypes.NUMBER,"function_id",false,widget = Some(WidgetsNames.hidden)),
-      JSONField(JSONFieldTypes.STRING,"name",false),
-      JSONField(JSONFieldTypes.STRING,"widget",true,lookup = Some(JSONFieldLookup.prefilled(
-        WidgetsNames.all.map(x => JSONLookup(x,x))
-      ))),
-      JSONField(JSONFieldTypes.STRING,"type",false,lookup = Some(JSONFieldLookup.prefilled(
-        JSONFieldTypes.ALL.sorted.map(x => JSONLookup(x,x))
-      ))),
+      CommonField.name,
+      CommonField.widget,
+      CommonField.typ,
       JSONField(JSONFieldTypes.CHILD,"function_field_i18n",true,child = Some(Child(FUNCTION_FIELD_I18N,"function_field_i18n","field_id","field_id",None))),
-      JSONField(JSONFieldTypes.STRING,"lookupEntity",true),
-      JSONField(JSONFieldTypes.STRING,"lookupValueField",true),
-      JSONField(JSONFieldTypes.STRING,"lookupQuery",true),
-      JSONField(JSONFieldTypes.STRING,"default",true),
-      JSONField(JSONFieldTypes.STRING,"conditionFieldId",true),
-      JSONField(JSONFieldTypes.STRING,"conditionValues",true)
+      CommonField.lookupEntity(tables),
+      CommonField.lookupValueField(tables),
+      CommonField.lookupQuery(tables),
+      CommonField.default,
+      CommonField.conditionFieldId,
+      CommonField.conditionValues,
     ),
     layout = Layout(
       blocks = Seq(
@@ -136,12 +132,12 @@ object FunctionUIDef {
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"field_id",false,widget = Some(WidgetsNames.hidden)),
       JSONField(JSONFieldTypes.NUMBER,"id",false,widget = Some(WidgetsNames.hidden)),
-      JSONField(JSONFieldTypes.STRING,"lang",false),
-      JSONField(JSONFieldTypes.STRING,"label",true),
-      JSONField(JSONFieldTypes.STRING,"tooltip",true),
-      JSONField(JSONFieldTypes.STRING,"hint",true),
-      JSONField(JSONFieldTypes.STRING,"placeholder",true),
-      JSONField(JSONFieldTypes.STRING,"lookupTextField",true),
+      CommonField.lang,
+      CommonField.label,
+      CommonField.tooltip,
+      CommonField.hint,
+      CommonField.placeholder,
+      CommonField.lookupTextField,
     ),
     layout = Layout(
       blocks = Seq(
@@ -167,15 +163,14 @@ object FunctionUIDef {
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"function_id",false,widget = Some(WidgetsNames.hidden)),
       JSONField(JSONFieldTypes.NUMBER,"id",false,widget = Some(WidgetsNames.hidden)),
-      JSONField(JSONFieldTypes.STRING,"lang",false,widget = Some(WidgetsNames.fullWidth)),
-      JSONField(JSONFieldTypes.STRING,"label",true),
-      JSONField(JSONFieldTypes.STRING,"tooltip",true),
-      JSONField(JSONFieldTypes.STRING,"hint",true),
+      CommonField.lang,
+      CommonField.label,
+      CommonField.tooltip,
+      CommonField.hint,
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,4,Seq("field_id","id","lang").map(Left(_))),
-        LayoutBlock(None,8,Seq("label","tooltip","hint").map(Left(_))),
+        LayoutBlock(None,12,Seq("lang","label","tooltip","hint").map(Left(_)))
       )
     ),
     entity = "function_i18n",

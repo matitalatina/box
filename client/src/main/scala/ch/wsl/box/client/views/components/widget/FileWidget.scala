@@ -123,6 +123,9 @@ case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JS
 
 }
 
-case class FileWidgetFactory( entity:String) extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = FileWidget(id,prop,field,entity)
+object FileWidgetFactory extends ComponentWidgetFactory {
+
+  override def name: String = WidgetsNames.fileWithPreview
+
+  override def create(params: WidgetParams): Widget = FileWidget(params.id,params.prop,params.field,params.metadata.entity)
 }

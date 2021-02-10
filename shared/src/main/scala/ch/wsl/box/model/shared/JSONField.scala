@@ -31,7 +31,20 @@ object JSONField{
 
 case class LinkedForm(name:String,parentValueFields:Seq[String], childValueFields:Seq[String], parentLabelFields:Seq[String])
 
-case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSONLookup] = Seq(), lookupQuery:Option[String] = None)
+/**
+  *
+  * @param lookupEntity
+  * @param map
+  * @param lookup
+  * @param lookupQuery
+  * @param lookupExtractor map with on the first place the key of the Json, on second place the possible values with they respective values
+  */
+case class JSONFieldLookup(lookupEntity:String, map:JSONFieldMap, lookup:Seq[JSONLookup] = Seq(), lookupQuery:Option[String] = None, lookupExtractor: Option[JSONLookupExtractor] = None)
+
+case class JSONLookupExtractor(key:String, values:Seq[Json], results:Seq[Seq[JSONLookup]]) {
+  def map = values.zip(results).toMap
+}
+
 
 object JSONFieldLookup {
   val empty: JSONFieldLookup = JSONFieldLookup("",JSONFieldMap("","", ""))
@@ -49,6 +62,14 @@ object JSONFieldLookup {
   }
 
   def prefilled(data:Seq[JSONLookup]) = JSONFieldLookup("",JSONFieldMap("","", ""),data)
+  def withExtractor(key:String,extractor:Map[Json,Seq[JSONLookup]]) = {
+    val extractorSeq = extractor.toSeq
+    JSONFieldLookup("",JSONFieldMap("","", ""),Seq(),None,Some(JSONLookupExtractor(
+      key,
+      extractorSeq.map(_._1),
+      extractorSeq.map(_._2)
+    )))
+  }
 }
 
 case class JSONLookup(id:String, value:String)
@@ -65,18 +86,17 @@ object JSONFieldTypes{
   val NUMBER = "number"
   val STRING = "string"
   val CHILD = "child"
-  val LOOKUP_LABEL = "lookup_label"
-  val LINKED_FORM = "linked_form"
   val FILE = "file"
   val DATE = "date"
   val DATETIME = "datetime"
   val TIME = "time"
-  val INTERVAL = "interval"
+  val INTERVAL = "interval" //Not used
   val BOOLEAN = "boolean"
   val ARRAY_NUMBER = "array_number"
   val ARRAY_STRING = "array_string"
   val GEOMETRY = "geometry"
   val JSON = "json"
+  val STATIC = "static"
 
-  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD,GEOMETRY,JSON,LOOKUP_LABEL,LINKED_FORM)
+  val ALL = Seq(NUMBER,STRING,FILE,DATE,DATETIME,TIME, BOOLEAN, ARRAY_NUMBER, ARRAY_STRING,CHILD,GEOMETRY,JSON,STATIC)
 }

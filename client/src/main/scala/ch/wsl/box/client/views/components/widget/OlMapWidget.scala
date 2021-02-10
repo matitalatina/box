@@ -5,7 +5,7 @@ import ch.wsl.box.client.styles.Icons
 import ch.wsl.box.client.styles.Icons.Icon
 import ch.wsl.box.client.utils.GeoJson.{FeatureCollection, GeometryCollection}
 import ch.wsl.box.client.vendors.{DrawHole, DrawHoleOptions}
-import ch.wsl.box.model.shared.{JSONField, JSONMetadata}
+import ch.wsl.box.model.shared.{JSONField, JSONMetadata, WidgetsNames}
 import io.circe.Json
 import io.udash._
 import org.scalablytyped.runtime.StringDictionary
@@ -706,5 +706,8 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
 }
 
 object OlMapWidget extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField) = OlMapWidget(id,field,prop)
+  override def name: String = WidgetsNames.map
+
+  override def create(params: WidgetParams): Widget = OlMapWidget(params.id,params.field,params.prop)
+
 }

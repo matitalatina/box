@@ -1,9 +1,13 @@
 package ch.wsl.box.model.shared
 
+import JSONFieldTypes._
 /**
   * Created by andreaminetti on 06/06/16.
   */
 object WidgetsNames {
+  val inputDisabled = "inputDisabled"
+  val inputNumber = "inputNumber"
+  val inputArrayNumber = "inputArrayNumber"
   val textinput = "textinput"
   val textarea = "textarea"
   val datepicker = "datepicker"
@@ -36,38 +40,89 @@ object WidgetsNames {
   val h5 = "title_h5"
   val staticText = "static_text"
   val linkedForm = "linked_form"
+  val fileWithPreview = "fileWithPreview"
+  val lookupLabel = "lookupLabel"
 
-  val all = Seq(
-    textinput,
-    textarea,
-    datepicker,
-    datetimePicker,
-    datepickerFullWidth,
-    timepickerFullWidth,
-    datetimePickerFullWidth,
-    select,
-    checkbox,
-    checkboxNumber,
-    hidden,
-    nolabel,
-    twoLines,
-    popup,
-    fullWidth,
-    mapPoint,
-    map,
-    code,
-    richTextEditor,
-    richTextEditorFull,
-    redactor,
-    simpleFile,
-    simpleChild,
-    tableChild,
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    staticText,
-    linkedForm
-  ).sorted
+  val mapping= Map(
+    NUMBER -> Seq(
+      inputNumber,
+      select,
+      popup,
+      checkboxNumber,
+      inputDisabled,
+      hidden,
+    ),
+    STRING -> Seq(
+      textinput,
+      twoLines,
+      textarea,
+      richTextEditor,
+      richTextEditorFull,
+      redactor,
+      code,
+      select,
+      popup,
+      hidden,
+    ),
+    CHILD -> Seq(
+      simpleChild,
+      tableChild,
+      linkedForm
+    ),
+    FILE -> Seq(
+      fileWithPreview,
+      simpleFile
+    ),
+    DATE -> Seq(
+      datepicker,
+      textinput,
+      hidden
+    ),
+    DATETIME -> Seq(
+      datetimePicker,
+      textinput,
+      hidden
+    ),
+    TIME -> Seq(
+      timepicker,
+      textinput,
+      hidden
+    ),
+    INTERVAL -> Seq(
+      textinput,
+      hidden
+    ),
+    BOOLEAN -> Seq(
+      checkbox,
+      hidden
+    ),
+    ARRAY_NUMBER -> Seq(
+      inputArrayNumber,
+      hidden
+    ),
+    ARRAY_STRING -> Seq(
+      textinput,
+      hidden
+    ),
+    GEOMETRY -> Seq(
+      map,
+      hidden
+    ),
+    JSON -> Seq(
+      code,
+      hidden
+    ),
+    STATIC -> Seq(
+      staticText,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      lookupLabel
+    )
+  )
+
+  val defaults = mapping.map{case (k,v) => k -> v.head}  //using defaults is deprecated with starting form interface builder in box 1.3.0
+
 }

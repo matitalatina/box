@@ -4,7 +4,7 @@ import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.{EntityFormState, EntityTableState}
 import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Notification, SessionQuery}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget, SelectWidgetFullWidth}
+import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget}
 import ch.wsl.box.client.views.components.{Debug, TableFieldsRenderer}
 import ch.wsl.box.model.shared.EntityKind.VIEW
 import ch.wsl.box.model.shared.{JSONQuery, _}

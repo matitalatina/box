@@ -4,7 +4,7 @@ import java.util.UUID
 
 import ch.wsl.box.client.services.BrowserConsole
 import ch.wsl.box.client.views.components.widget.RichTextEditorWidget.Mode
-import ch.wsl.box.model.shared.JSONField
+import ch.wsl.box.model.shared.{JSONField, WidgetsNames}
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json
 import io.circe.syntax._
@@ -95,5 +95,12 @@ object RichTextEditorWidget {
 }
 
 case class RichTextEditorWidgetFactory(mode:Mode) extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField) = RichTextEditorWidget(id,field,prop,mode)
+  override def name: String = mode match {
+    case RichTextEditorWidget.Minimal => WidgetsNames.richTextEditor
+    case RichTextEditorWidget.Full => WidgetsNames.richTextEditorFull
+  }
+
+
+  override def create(params: WidgetParams): Widget = RichTextEditorWidget(params.id,params.field,params.prop,mode)
+
 }
