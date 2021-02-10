@@ -1,7 +1,7 @@
 package ch.wsl.box.codegen
 
 import ch.wsl.box.information_schema.PgInformationSchema
-import ch.wsl.box.jdbc.{Connection, TypeMapping}
+import ch.wsl.box.jdbc.{Connection, Managed, TypeMapping}
 import com.typesafe.config.Config
 import slick.model.Model
 import slick.ast.ColumnOption
@@ -40,7 +40,7 @@ trait MyOutputHelper extends slick.codegen.OutputHelpers {
 }
 
 //exteded code generator (add route and registry generation)
-case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.SourceCodeGenerator(model) with BoxSourceCodeGenerator with MyOutputHelper with Logging {
+case class EntitiesGenerator(model:Model) extends slick.codegen.SourceCodeGenerator(model) with BoxSourceCodeGenerator with MyOutputHelper with Logging {
 
 
 
@@ -153,24 +153,7 @@ case class EntitiesGenerator(model:Model, conf:Config) extends slick.codegen.Sou
       }
 
 
-      def completeName = s"${model.table.table}.${model.name}"
-
-      val dbKeysExceptions = conf.getStringList("generator.keys.db")
-      val appKeysExceptions = conf.getStringList("generator.keys.app")
-      val keyStrategy = conf.getString("generator.keys.default.strategy")
-
-
-
-      private val managed:Boolean = {
-        val result = keyStrategy match {
-          case "db" if primaryKey => !dbKeysExceptions.contains(completeName)
-          case "app" if primaryKey => dbKeysExceptions.contains(completeName)
-          case _ => false
-        }
-        result
-      }
-
-
+      private val managed:Boolean = Managed(model.table.table) && primaryKey
 
       override def asOption: Boolean =  (managed || hasDefault) && !model.nullable match { //add no model nullable condition to avoid double optionals
         case true => true

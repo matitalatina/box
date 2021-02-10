@@ -2,7 +2,7 @@ package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
 import ch.wsl.box.information_schema.{PgColumn, PgColumns, PgInformationSchema}
-import ch.wsl.box.jdbc.{Connection, FullDatabase, UserDatabase}
+import ch.wsl.box.jdbc.{Connection, FullDatabase, Managed, UserDatabase}
 import ch.wsl.box.model.boxentities.BoxField.{BoxFieldFile_row, BoxField_i18n_row, BoxField_row}
 import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_row}
 import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
@@ -214,6 +214,8 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         )
       }
 
+      val keyStrategy = if(Managed(form.entity)) SurrugateKey else NaturalKey
+
       val result = JSONMetadata(
         form.form_id.get,
         form.name,
@@ -225,6 +227,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         tableFields,
         form.tabularFields.toSeq.flatMap(_.split(",")),
         keys,
+        keyStrategy,
         defaultQuery,
         form.exportFields.map(_.split(",").toSeq).getOrElse(tableFields),
         formI18n.flatMap(_.view_table),
