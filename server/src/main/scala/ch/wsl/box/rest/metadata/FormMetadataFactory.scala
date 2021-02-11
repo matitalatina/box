@@ -359,7 +359,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
           `type` = field.`type`,
           name = field.name,
           nullable = pgColumn.map(_.nullable).getOrElse(true),
-          readOnly = field.read_only,
+          readOnly = field.read_only.getOrElse(false),
           label = Some(lab),
           lookup = look,
           placeholder = fieldI18n.flatMap(_.placeholder),
