@@ -1,8 +1,7 @@
 package ch.wsl.box.rest.logic
 
-import ch.wsl.box.rest.utils.Auth
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.jdbc.UserDatabase
+import ch.wsl.box.jdbc.{Connection, UserDatabase}
 
 import scala.concurrent.ExecutionContext
 

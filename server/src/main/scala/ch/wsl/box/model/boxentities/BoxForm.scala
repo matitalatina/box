@@ -62,17 +62,16 @@ object BoxForm {
     *  @param form_id Database column field_id SqlType(int4), Default(None)
     *  @param lang Database column lang SqlType(bpchar), Length(2,false), Default(None)
     *  @param label Database column title SqlType(text), Default(None)
-    *  @param tooltip Database column tooltip SqlType(text), Default(None)
-    *  @param hint Database column hint SqlType(text), Default(None)*/
+    *
+    **/
   case class BoxForm_i18n_row(id: Option[Int] = None, form_id: Option[Int] = None,
                               lang: Option[String] = None, label: Option[String] = None,
-                              tooltip: Option[String] = None, hint: Option[String] = None,
-                              viewTable: Option[String] = None)
+                              view_table: Option[String] = None)
   /** GetResult implicit for fetching Form_i18n_row objects using plain SQL queries */
 
   /** Table description of table form_i18n. Objects of this class serve as prototypes for rows in queries. */
   class BoxForm_i18n(_tableTag: Tag) extends profile.api.Table[BoxForm_i18n_row](_tableTag,BoxSchema.schema, "form_i18n") {
-    def * = (Rep.Some(id), form_id, lang, label, tooltip, hint,viewTable) <> (BoxForm_i18n_row.tupled, BoxForm_i18n_row.unapply)
+    def * = (Rep.Some(id), form_id, lang, label,viewTable) <> (BoxForm_i18n_row.tupled, BoxForm_i18n_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
@@ -82,10 +81,6 @@ object BoxForm {
     val lang: Rep[Option[String]] = column[Option[String]]("lang", O.Length(2,varying=false), O.Default(None))
     /** Database column title SqlType(text), Default(None) */
     val label: Rep[Option[String]] = column[Option[String]]("label", O.Default(None))
-     /** Database column tooltip SqlType(text), Default(None) */
-    val tooltip: Rep[Option[String]] = column[Option[String]]("tooltip", O.Default(None))
-    /** Database column hint SqlType(text), Default(None) */
-    val hint: Rep[Option[String]] = column[Option[String]]("hint", O.Default(None))
 
     val viewTable: Rep[Option[String]] = column[Option[String]]("view_table", O.Default(None))
 

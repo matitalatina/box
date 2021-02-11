@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
-import ch.wsl.box.jdbc.{FullDatabase, PostgresProfile}
+import ch.wsl.box.jdbc.{Connection, FullDatabase, PostgresProfile}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, FormMetadataFactory}
 import scribe.Logging
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import ch.wsl.box.rest.utils.UserProfile
 
 /**
   * Created by andreaminetti on 15/03/16.
@@ -86,7 +86,7 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
   def find(query:JSONQuery) = findQuery(query).result
 
 
-  def keys(): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(Auth.adminDB.run(EntityMetadataFactory.keysOf(entity.baseTableRow.schemaName.getOrElse("public"),entity.baseTableRow.tableName)))
+  def keys(): DBIOAction[Seq[String], NoStream, Effect] = DBIO.from(Connection.adminDB.run(EntityMetadataFactory.keysOf(entity.baseTableRow.schemaName.getOrElse("public"),entity.baseTableRow.tableName)))
 
   override def ids(query: JSONQuery): DBIO[IDs] = {
     for{

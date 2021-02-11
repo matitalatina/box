@@ -76,7 +76,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
         val visibility = Property(false)
         observedData.listen(d => {
           val r = evaluate(d)
-          if(r == !visibility.get) { //change only when the status changes
+          if(r == !visibility.get) { //change only when the status changesW
             visibility.set(r)
           }
         },true)
@@ -87,61 +87,21 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
 
   private def widgetSelector(field: JSONField, id:Property[Option[String]], fieldData:Property[Json]): Widget = {
-    import JSONFieldTypes._
+
+    val isKeyNotEditable:Boolean = metadata.keys.contains(field.name) && metadata.keyStrategy == SurrugateKey && !( ClientConf.manualEditKeyFields || ClientConf.manualEditSingleKeyFields.contains(metadata.entity + "." + field.name))
 
 
-
-    val widg:ComponentWidgetFactory =
-
-        ( field.`type`,
-          field.widget,
-          field.lookup,
-          metadata.keys.contains(field.name) & !( ClientConf.manualEditKeyFields || ClientConf.manualEditSingleKeyFields.contains(metadata.entity + "." + field.name)),
-          field.child) match {
-          //  TYPE, WIDGET NAME, LOOKUP, IS KEY NOT MANUAL EDITABLE, CHILDS
-          case (_,Some(WidgetsNames.h1),_,_,_)                        => TitleWidget(1)
-          case (_,Some(WidgetsNames.h2),_,_,_)                        => TitleWidget(2)
-          case (_,Some(WidgetsNames.h3),_,_,_)                        => TitleWidget(3)
-          case (_,Some(WidgetsNames.h4),_,_,_)                        => TitleWidget(4)
-          case (_,Some(WidgetsNames.h5),_,_,_)                        => TitleWidget(5)
-          case (_,Some(WidgetsNames.staticText),_,_,_)                => StaticTextWidget
-          case (_,Some(WidgetsNames.linkedForm),_,_,_)                => LinkedFormWidget(field.linked.get,data)
-          case (_, Some(WidgetsNames.hidden), _, _, _)                => HiddenWidget
-          case (_, Some(WidgetsNames.fullWidth), Some(options), _, _) => SelectWidgetFullWidthFactory(data)
-          case (_, Some(WidgetsNames.popup), Some(options), _, _)     => PopupWidgetFactory(data)
-          case (_, _, Some(lookup), _, _)                             => SelectWidgetFactory(data)
-          case (_, _, _, true, _)                                     => InputWidgetFactory.TextDisabled
-          case (BOOLEAN, _, _, _, _)                                  => CheckboxWidget
-          case (NUMBER, Some(WidgetsNames.checkboxNumber), _, _, _)   => CheckboxNumberWidget
-          case (NUMBER, Some(WidgetsNames.nolabel), _, _, _)          => InputWidgetFactory.NumberNoLabel
-          case (NUMBER, _, _, _, _)                                   => InputWidgetFactory.Number
-          case (ARRAY_NUMBER, _, _, _, _)                             => InputWidgetFactory.NumberArray
-          case (TIME, Some(WidgetsNames.timepicker), _, _, _)         => DateTimeWidget.Time
-          case (DATE, Some(WidgetsNames.datepicker), _, _, _)         => DateTimeWidget.Date
-          case (DATETIME, Some(WidgetsNames.datetimePicker), _, _, _) => DateTimeWidget.DateTime
-          case (TIME, Some(WidgetsNames.timepickerFullWidth), _, _, _) => DateTimeWidget.TimeFullWidth
-          case (DATE, Some(WidgetsNames.datepickerFullWidth), _, _, _) => DateTimeWidget.DateFullWidth
-          case (DATETIME, Some(WidgetsNames.datetimePickerFullWidth), _, _, _) => DateTimeWidget.DateTimeFullWidth
-          case (DATE, _, _, _, _) => DateTimeWidget.Date
-          case (DATETIME, _, _, _, _) => DateTimeWidget.DateTime
-          case (CHILD, Some(WidgetsNames.tableChild), _, _, Some(child))  => TableChildFactory(child,children,data)
-          case (CHILD, _, _, _, Some(child))                          => SimpleChildFactory(child,children,data)
-          case (_, Some(WidgetsNames.nolabel), _, _, _)               => InputWidgetFactory.TextNoLabel
-          case (_, Some(WidgetsNames.twoLines), _, _, _)              => InputWidgetFactory.TwoLines
-          case (_, Some(WidgetsNames.textarea), _, _, _)              => InputWidgetFactory.TextArea
-          case (FILE, Some(WidgetsNames.simpleFile), _, _, _)         => FileSimpleWidgetFactory(metadata.entity)
-          case (FILE, _, _, _, _)                                     => FileWidgetFactory(metadata.entity)
-          case (_,Some(WidgetsNames.mapPoint),_,_,_)                  => OlMapWidget
-          case (_,Some(WidgetsNames.map),_,_,_)                       => OlMapWidget
-          case (_,Some(WidgetsNames.code),_,_,_) => MonacoWidget
-          case (_,Some(WidgetsNames.richTextEditor),_,_,_)            => RichTextEditorWidgetFactory(RichTextEditorWidget.Minimal)
-          case (_,Some(WidgetsNames.richTextEditorFull),_,_,_)        => RichTextEditorWidgetFactory(RichTextEditorWidget.Full)
-          case (_, _, _, _, _)                                        => InputWidgetFactory.Text
+    val widg:ComponentWidgetFactory = isKeyNotEditable match {
+      case true => InputWidgetFactory.TextDisabled
+      case false => field.widget match {
+        case Some(value) => WidgetRegistry.forName(value)
+        case None => WidgetRegistry.forType(field.`type`)
+      }
     }
 
     logger.debug(s"Selected widget for ${field.name}: ${widg}")
 
-    widg.create(id,fieldData,field)
+    widg.create(WidgetParams(id,fieldData,field,metadata,data,children))
 
   }
 

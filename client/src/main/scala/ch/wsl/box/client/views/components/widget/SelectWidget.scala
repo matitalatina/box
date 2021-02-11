@@ -6,6 +6,7 @@ import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
 import ch.wsl.box.client.services.ClientConf
+import ch.wsl.box.shared.utils.JSONUtils.EnhancedJson
 import io.circe
 import scalatags.JsDom.all._
 import scalatags.JsDom.all.{label => lab}
@@ -16,23 +17,20 @@ import scribe.Logging
 
 import scala.concurrent.Future
 
-case class SelectWidgetFactory(allData:Property[Json]) extends ComponentWidgetFactory  {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = new SelectWidget(field, prop, allData)
+object SelectWidgetFactory extends ComponentWidgetFactory  {
+  override def name: String = WidgetsNames.select
+
+  override def create(params: WidgetParams): Widget = new SelectWidget(params.field, params.prop, params.allData)
+
 }
 
-case class SelectWidgetFullWidthFactory(allData:Property[Json]) extends ComponentWidgetFactory  {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = new SelectWidgetFullWidth(field, prop, allData)
-}
 
-class SelectWidget(val field:JSONField, data: Property[Json], val allData:Property[Json]) extends  LookupWidget with Logging {
+class SelectWidget(val field:JSONField, val data: Property[Json], val allData:Property[Json]) extends  LookupWidget with Logging {
 
+  val fullWidth = field.params.flatMap(_.js("fullWidth").asBoolean).contains(true)
 
-  val modifiers:Seq[Modifier] = Seq()
+  val modifiers:Seq[Modifier] = if(fullWidth) Seq(width := 100.pct) else Seq()
 
-
-
-
-  val selectModel = data.bitransform(value2Label)(label2Value)
 
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
@@ -61,23 +59,6 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
   override def edit() = {
 
 
-    val model:Property[JSONLookup] = field.`type` match {
-      case "number" =>  data.bitransform[JSONLookup](
-        {json:Json =>
-          val id = jsonToString(json)
-          lookup.get.find(_.id == jsonToString(json)).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-        })(
-        {jsonLookup:JSONLookup => strToNumericJson(jsonLookup.id)}
-      )
-      case _ => data.bitransform[JSONLookup](
-        {json:Json =>
-          val id = jsonToString(json)
-          lookup.get.find(_.id == id).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-        })(
-        {jsonLookup:JSONLookup => strToJson(field.nullable)(jsonLookup.id)}
-      )
-    }
-
 
     val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.Float.right())++modifiers++WidgetUtils.toNullable(field.nullable)
 
@@ -89,9 +70,4 @@ class SelectWidget(val field:JSONField, data: Property[Json], val allData:Proper
       div(BootstrapStyles.Visibility.clearfix)
     )
   }
-}
-
-class SelectWidgetFullWidth(field:JSONField, prop: Property[Json],allData:Property[Json]) extends SelectWidget(field,prop,allData) {
-
-  override val modifiers: Seq[JsDom.all.Modifier] = Seq(width := 100.pct)
 }

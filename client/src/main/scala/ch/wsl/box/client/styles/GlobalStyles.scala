@@ -41,6 +41,10 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       Font.clearSans
     ),
 
+    unsafeRoot("h3") (
+      marginTop(18 px)
+    ),
+
     unsafeRoot("select")(
       inputDefaultWidth,
       borderStyle.solid,
@@ -194,7 +198,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
 
     unsafeRoot(".ql-editor p")(
-      marginBottom(10 px)
+      marginBottom.`0`
     )
 
 
@@ -465,7 +469,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val fullWidth = style(
-    width(100 %%)
+    width(100 %%).important
   )
 
   val maxFullWidth = style(
@@ -555,11 +559,13 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val editor = style(
-    width(100.%%),
+    width(50.%%),
+    float.right,
     borderStyle.solid,
     borderWidth(1 px),
     borderRadius.`0`,
     borderColor(rgb(169, 169, 169)),
+    marginBottom(10 px)
   )
 
   val controlButtons = style(

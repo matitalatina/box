@@ -1,8 +1,11 @@
 package ch.wsl.box.client.services
 
+import ch.wsl.box.client.viewmodel.BoxDef.BoxDefinitionMerge
+import ch.wsl.box.client.viewmodel.{BoxDefinition}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import org.scalajs.dom.File
+
 import scala.concurrent.Future
 
 
@@ -59,5 +62,8 @@ trait REST{
 
   //admin
   def generateStub(entity:String):Future[Boolean]
+  def definition():Future[BoxDefinition]
+  def definitionDiff(definition:BoxDefinition):Future[BoxDefinitionMerge]
+  def definitionCommit(merge:BoxDefinitionMerge):Future[Boolean]
 }
 

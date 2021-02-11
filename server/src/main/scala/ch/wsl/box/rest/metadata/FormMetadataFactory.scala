@@ -2,7 +2,7 @@ package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
 import ch.wsl.box.information_schema.{PgColumn, PgColumns, PgInformationSchema}
-import ch.wsl.box.jdbc.{FullDatabase, UserDatabase}
+import ch.wsl.box.jdbc.{Connection, FullDatabase, Managed, UserDatabase}
 import ch.wsl.box.model.boxentities.BoxField.{BoxFieldFile_row, BoxField_i18n_row, BoxField_row}
 import ch.wsl.box.model.boxentities.BoxForm.{BoxFormTable, BoxForm_i18nTable, BoxForm_row}
 import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
@@ -137,7 +137,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
 
   private def keys(form:BoxForm_row):DBIO[Seq[String]] = form.edit_key_field.map{x =>
     DBIO.successful(x.split(",").toSeq.map(_.trim))
-  }.getOrElse(EntityMetadataFactory.keysOf(Auth.dbSchema,form.entity))
+  }.getOrElse(EntityMetadataFactory.keysOf(Connection.dbSchema,form.entity))
 
   private def getForm(formQuery: Query[BoxForm.BoxForm,BoxForm_row,Seq], lang:String) = {
 
@@ -158,7 +158,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
       })
       actions <- BoxForm.BoxForm_actions.filter(_.form_id === form.form_id.get).result
 
-      cols <- new PgInformationSchema(Auth.dbSchema,form.entity)(ec).columns
+      cols <- new PgInformationSchema(Connection.dbSchema,form.entity)(ec).columns
       columns = fields.map(f => cols.find(_.column_name == f._1.name))
       keys <- keys(form)
       jsonFieldsPartial <- fieldsToJsonFields(fields.zip(fieldsFile).zip(columns), lang)
@@ -214,6 +214,8 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         )
       }
 
+      val keyStrategy = if(Managed(form.entity)) SurrugateKey else NaturalKey
+
       val result = JSONMetadata(
         form.form_id.get,
         form.name,
@@ -225,9 +227,10 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         tableFields,
         form.tabularFields.toSeq.flatMap(_.split(",")),
         keys,
+        keyStrategy,
         defaultQuery,
         form.exportFields.map(_.split(",").toSeq).getOrElse(tableFields),
-        formI18n.flatMap(_.viewTable),
+        formI18n.flatMap(_.view_table),
         formActions
       )//, form.entity)
       //println(s"resulting form: $result")
@@ -323,7 +326,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
     //implicit def fDb = FullDatabase(up.db,adminDb)
 
     for{
-      keys <- EntityMetadataFactory.keysOf(Auth.dbSchema,refEntity)
+      keys <- EntityMetadataFactory.keysOf(Connection.dbSchema,refEntity)
       filter = { for{
         queryString <- field.lookupQuery
         queryJson <- parse(queryString).right.toOption
@@ -356,7 +359,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
           `type` = field.`type`,
           name = field.name,
           nullable = pgColumn.map(_.nullable).getOrElse(true),
-          readOnly = field.read_only,
+          readOnly = field.read_only.getOrElse(false),
           label = Some(lab),
           lookup = look,
           placeholder = fieldI18n.flatMap(_.placeholder),

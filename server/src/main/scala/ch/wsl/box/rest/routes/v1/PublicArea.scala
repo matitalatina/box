@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import ch.wsl.box.jdbc.Connection
 import ch.wsl.box.model.boxentities.BoxPublicEntities
 import ch.wsl.box.rest.utils.{Auth, UserProfile}
 import ch.wsl.box.jdbc.PostgresProfile.api._
@@ -17,7 +18,7 @@ import scala.util.{Failure, Success}
 
 case class PublicArea(implicit ec:ExecutionContext, mat:Materializer, system:ActorSystem) {
 
-  lazy val publicEntities:Future[Seq[BoxPublicEntities.Row]] = Auth.adminDB.run(BoxPublicEntities.table.result)
+  lazy val publicEntities:Future[Seq[BoxPublicEntities.Row]] = Connection.adminDB.run(BoxPublicEntities.table.result)
 
   import akka.http.scaladsl.server.Directives._
 
@@ -26,7 +27,7 @@ case class PublicArea(implicit ec:ExecutionContext, mat:Materializer, system:Act
   def form = pathPrefix("form") {
     pathPrefix(Segment) { lang =>
       pathPrefix(Segment) { name =>
-        val route: Future[Route] = Auth.adminDB.run(FormMetadataFactory.hasGuestAccess(name)).map {
+        val route: Future[Route] = Connection.adminDB.run(FormMetadataFactory.hasGuestAccess(name)).map {
           _ match {
             case Some(userProfile) => {
               implicit val up = userProfile

@@ -2,6 +2,8 @@ package ch.wsl.box.client.services.impl
 
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.{HttpClient, REST}
+import ch.wsl.box.client.viewmodel.BoxDef.BoxDefinitionMerge
+import ch.wsl.box.client.viewmodel.{BoxDefinition}
 import ch.wsl.box.model.shared.{EntityKind, ExportDef, IDs, JSONCount, JSONFieldMap, JSONID, JSONLookup, JSONMetadata, JSONQuery, LoginRequest, NewsEntry, TableAccess}
 import io.circe.{Decoder, Encoder, Json}
 import kantan.csv.rfc
@@ -94,5 +96,7 @@ class RestImpl(httpClient:HttpClient) extends REST with Logging {
 
   //admin
   def generateStub(entity:String) = httpClient.get[Boolean](Routes.apiV1(s"/create-stub/$entity"))
-
+  override def definition(): Future[BoxDefinition] = httpClient.get[BoxDefinition](Routes.apiV1(s"/box-definition"))
+  override def definitionDiff(definition: BoxDefinition): Future[BoxDefinitionMerge] = httpClient.post[BoxDefinition,BoxDefinitionMerge](Routes.apiV1(s"/box-definition/diff"),definition)
+  override def definitionCommit(merge: BoxDefinitionMerge): Future[Boolean] = httpClient.post[BoxDefinitionMerge,Boolean](Routes.apiV1(s"/box-definition/commit"),merge)
 }

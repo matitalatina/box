@@ -213,7 +213,10 @@ object DateTimeWidget {
   }
 
   object Date extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = Date(id,field,prop)
+    
+    override def name: String = WidgetsNames.datepicker
+
+    override def create(params: WidgetParams): Widget = Date(params.id,params.field,params.prop)
   }
 
   case class DateTime(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWdg {
@@ -222,7 +225,10 @@ object DateTimeWidget {
   }
 
   object DateTime extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = DateTime(id,field,prop)
+
+    override def name: String = WidgetsNames.datetimePicker
+    
+    override def create(params: WidgetParams): Widget = DateTime(params.id,params.field,params.prop)
   }
 
   case class Time(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends TimeWdg {
@@ -231,7 +237,10 @@ object DateTimeWidget {
   }
 
   object Time extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = Time(id,field,prop)
+
+    override def name: String = WidgetsNames.timepicker
+    
+    override def create(params: WidgetParams): Widget = Time(params.id,params.field,params.prop)
   }
 
   case class DateFullWidth(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateWdg {
@@ -240,7 +249,8 @@ object DateTimeWidget {
   }
 
   object DateFullWidth extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = DateFullWidth(id,field,prop)
+    override def name: String = WidgetsNames.datepickerFullWidth
+    override def create(params: WidgetParams): Widget = DateFullWidth(params.id,params.field,params.prop)
   }
 
   case class DateTimeFullWidth(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWdg {
@@ -249,7 +259,8 @@ object DateTimeWidget {
   }
 
   object DateTimeFullWidth extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = DateTimeFullWidth(id,field,prop)
+    override def name: String = WidgetsNames.datepickerFullWidth
+    override def create(params: WidgetParams): Widget = DateTimeFullWidth(params.id,params.field,params.prop)
   }
 
   case class TimeFullWidth(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends TimeWdg {
@@ -258,7 +269,8 @@ object DateTimeWidget {
   }
 
   object TimeFullWidth extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = TimeFullWidth(id,field,prop)
+    override def name: String = WidgetsNames.timepickerFullWidth
+    override def create(params: WidgetParams): Widget = TimeFullWidth(params.id,params.field,params.prop)
   }
 
 

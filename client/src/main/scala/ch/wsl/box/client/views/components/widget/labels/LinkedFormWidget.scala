@@ -3,8 +3,8 @@ package ch.wsl.box.client.views.components.widget.labels
 import ch.wsl.box.client.RoutingState
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.Navigate
-import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget}
-import ch.wsl.box.model.shared.{Child, EntityKind, JSONField, JSONFieldLookup, JSONID, JSONKeyValue, JSONMetadata, LinkedForm}
+import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget, WidgetParams}
+import ch.wsl.box.model.shared.{Child, EntityKind, JSONField, JSONFieldLookup, JSONID, JSONKeyValue, JSONMetadata, LinkedForm, WidgetsNames}
 import io.circe.Json
 import io.udash._
 import scalatags.JsDom.all._
@@ -12,12 +12,16 @@ import ch.wsl.box.shared.utils.JSONUtils._
 import org.scalajs.dom.Event
 import scribe.Logging
 
-case class LinkedFormWidget(linked:LinkedForm, parentData:Property[Json]) extends ComponentWidgetFactory {
-  override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = LinkedFormWidgetImpl(field)
+object LinkedFormWidget extends ComponentWidgetFactory {
 
 
-  case class LinkedFormWidgetImpl(field:JSONField) extends Widget with Logging {
+  override def name: String = WidgetsNames.linkedForm
 
+  override def create(params: WidgetParams): Widget = LinkedFormWidgetImpl(params.field,params.allData)
+
+  case class LinkedFormWidgetImpl(field:JSONField,parentData:Property[Json]) extends Widget with Logging {
+
+    val linked:LinkedForm = field.linked.get
 
     val linkedData = parentData.transform{js =>
 

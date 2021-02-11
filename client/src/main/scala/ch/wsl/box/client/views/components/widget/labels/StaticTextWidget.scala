@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views.components.widget.labels
 
-import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget}
-import ch.wsl.box.model.shared.JSONField
+import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget, WidgetParams}
+import ch.wsl.box.model.shared.{JSONField, WidgetsNames}
 import io.circe.Json
 import scalatags.JsDom
 import scalatags.JsDom.all._
@@ -10,7 +10,11 @@ import io.udash.css.CssView._
 
 
 object StaticTextWidget extends ComponentWidgetFactory {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = StaticTextWidgetImpl(field)
+
+  override def name: String = WidgetsNames.staticText
+
+
+  override def create(params: WidgetParams): Widget = StaticTextWidgetImpl(params.field)
 
   case class StaticTextWidgetImpl(field:JSONField) extends Widget {
 

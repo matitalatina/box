@@ -3,8 +3,8 @@ package ch.wsl.box.model
 import java.io.PrintWriter
 import java.sql.{DriverManager, SQLException, SQLFeatureNotSupportedException}
 
+import ch.wsl.box.jdbc.Connection
 import ch.wsl.box.model.boxentities.BoxSchema
-import ch.wsl.box.rest.utils.Auth
 import org.flywaydb.core.Flyway
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import javax.sql.DataSource
@@ -39,7 +39,7 @@ object Migrate {
       .defaultSchema(BoxSchema.schema.get)
       .table("flyway_schema_history_box")
       .locations("migrations")
-      .dataSource(new DatabaseDatasource(Auth.dbConnection))
+      .dataSource(new DatabaseDatasource(Connection.dbConnection))
       .load()
 
     flyway.migrate()
@@ -48,11 +48,11 @@ object Migrate {
   def app() = {
     val flyway = Flyway.configure()
       .baselineOnMigrate(true)
-      .schemas(Auth.dbSchema)
-      .defaultSchema(Auth.dbSchema)
+      .schemas(Connection.dbSchema)
+      .defaultSchema(Connection.dbSchema)
       .table("flyway_schema_history")
       .locations("migrations")
-      .dataSource(new DatabaseDatasource(Auth.dbConnection))
+      .dataSource(new DatabaseDatasource(Connection.dbConnection))
       .load()
 
     flyway.migrate()

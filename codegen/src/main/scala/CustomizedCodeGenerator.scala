@@ -26,7 +26,7 @@ object CustomizedCodeGenerator extends BaseCodeGenerator {
     val calculatedTables = enabledTables.map(_.name.name).distinct
 
     GeneratedFiles(
-      entities = EntitiesGenerator(dbModel,dbConf),
+      entities = EntitiesGenerator(dbModel),
       generatedRoutes = RoutesGenerator(calculatedViews,calculatedTables,dbModel),
       entityActionsRegistry = EntityActionsRegistryGenerator(calculatedViews ++ calculatedTables,dbModel),
       fileAccessGenerator = FileAccessGenerator(dbModel,dbConf),

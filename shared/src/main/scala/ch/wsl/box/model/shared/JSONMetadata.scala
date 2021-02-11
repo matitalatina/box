@@ -11,6 +11,10 @@ import scribe.Logging
 
 import scala.util.Try
 
+sealed trait KeyStrategy
+case object NaturalKey extends KeyStrategy
+case object SurrugateKey extends KeyStrategy
+
 /**
   * Created by andre on 5/16/2017.
   */
@@ -25,6 +29,7 @@ case class JSONMetadata(
                          tabularFields:Seq[String],
                          rawTabularFields:Seq[String], //without keys
                          keys:Seq[String],
+                         keyStrategy: KeyStrategy,
                          query:Option[JSONQuery],
                          exportFields:Seq[String],
                          view:Option[String],

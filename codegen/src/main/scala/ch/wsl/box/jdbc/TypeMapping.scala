@@ -32,7 +32,7 @@ object TypeMapping {
     }
   }
 
-  val typesMapping =  Map(
+  val jsonTypesMapping =  Map(
     "numeric" -> JSONFieldTypes.NUMBER,
     "integer" -> JSONFieldTypes.NUMBER,
     "bigint" -> JSONFieldTypes.NUMBER,

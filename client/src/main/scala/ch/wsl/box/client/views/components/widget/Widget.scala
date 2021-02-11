@@ -17,6 +17,7 @@ import io.udash._
 import io.udash.bindings.Bindings
 import io.udash.bindings.modifiers.Binding
 import io.udash.bootstrap.tooltip.UdashTooltip
+import io.udash.properties.single.Property
 import org.scalajs.dom.Element
 import org.scalajs.dom
 
@@ -97,34 +98,66 @@ trait Widget extends Logging {
 
 }
 
+trait HasData {
+  def data:Property[Json]
+}
+
+
+case class WidgetParams(
+                         id:Property[Option[String]],
+                         prop:Property[Json],
+                         field:JSONField,
+                         metadata: JSONMetadata,
+                         allData:Property[Json],
+                         children:Seq[JSONMetadata]
+                       )
+
 trait ComponentWidgetFactory{
 
-  def create(id:Property[Option[String]], prop:Property[Json], field:JSONField):Widget
+  def name:String
+
+  def create(params:WidgetParams):Widget
 }
 
 object ChildWidget {
   final val childTag = "$child-element"
 }
 
-trait ChildWidget extends Widget with Logging {
+trait ChildWidget extends Widget with HasData
 
 
-  def data:Property[Json]
-
-}
-
-
-trait LookupWidget extends Widget  {
+trait LookupWidget extends Widget with HasData {
 
   import ch.wsl.box.client.Context._
 
   def allData:Property[Json]
 
 
+
+  val model:Property[JSONLookup] = field.`type` match {
+    case "number" =>  data.bitransform[JSONLookup](
+      {json:Json =>
+        val id = jsonToString(json)
+        lookup.get.find(_.id == jsonToString(json)).getOrElse(JSONLookup(id,id + " NOT FOUND"))
+      })(
+      {jsonLookup:JSONLookup => strToNumericJson(jsonLookup.id)}
+    )
+    case _ => data.bitransform[JSONLookup](
+      {json:Json =>
+        val id = jsonToString(json)
+        lookup.get.find(_.id == id).getOrElse(JSONLookup(id,id + " NOT FOUND"))
+      })(
+      {jsonLookup:JSONLookup => strToJson(field.nullable)(jsonLookup.id)}
+    )
+  }
+
+  val selectModel = data.bitransform(value2Label)(label2Value)
+
   def field:JSONField
   val lookup:SeqProperty[JSONLookup] = {
     SeqProperty(toSeq(field.lookup.get.lookup))
   }
+
 
   private def toSeq(s:Seq[JSONLookup]):Seq[JSONLookup] = if(field.nullable) {
     Seq(JSONLookup("","")) ++ s
@@ -132,6 +165,29 @@ trait LookupWidget extends Widget  {
     s
   }
 
+  private def setNewLookup(newLookup:Seq[JSONLookup]) = {
+    logger.info(newLookup.toString())
+    if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
+      logger.info("Lookup list changed")
+      lookup.set(newLookup, true)
+      if(!newLookup.exists(_.id == data.get.string)) {
+        logger.info("Old value not exists")
+        newLookup.headOption.foreach{x =>
+          logger.info(s"Setting model to $x")
+          model.set(x,true)
+        }
+      }
+
+    }
+  }
+
+  field.lookup.get.lookupExtractor.foreach{case extractor =>
+    allData.listen({ all =>
+      logger.debug(all.toString())
+      val newLookup = toSeq(extractor.map.getOrElse(all.js(extractor.key), Seq()))
+      setNewLookup(newLookup)
+    },true)
+  }
 
 
   for{
@@ -158,10 +214,7 @@ trait LookupWidget extends Widget  {
         }
 
         services.rest.lookup(services.clientSession.lang(),look.lookupEntity, look.map, jsonQuery).map { lookups =>
-          val newLookup = toSeq(lookups)
-          if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
-            lookup.set(newLookup, true)
-          }
+          setNewLookup(toSeq(lookups))
         }
 
       }, true)
@@ -177,7 +230,7 @@ trait LookupWidget extends Widget  {
 
 
 
-  def value2Label(org:Json):String = {
+  private def value2Label(org:Json):String = {
 
     val lookupValue = allData.get.get(field.lookup.get.map.localValueProperty)
 
@@ -185,5 +238,5 @@ trait LookupWidget extends Widget  {
       .orElse(field.lookup.get.lookup.find(_.id == org.string).map(_.value))
       .getOrElse(Labels.lookup.not_found)
   }
-  def label2Value(v:String):Json = lookup.get.find(_.value == v).map(_.id.asJson).orElse(field.lookup.get.lookup.find(_.value == v).map(_.id.asJson)).getOrElse(Json.Null)
+  private def label2Value(v:String):Json = lookup.get.find(_.value == v).map(_.id.asJson).orElse(field.lookup.get.lookup.find(_.value == v).map(_.id.asJson)).getOrElse(Json.Null)
 }

@@ -1,12 +1,12 @@
 package ch.wsl.box.rest.metadata
 
 import akka.stream.Materializer
-import ch.wsl.box.jdbc.FullDatabase
+import ch.wsl.box.jdbc.{Connection, FullDatabase}
 import ch.wsl.box.model.boxentities.BoxField.{BoxField_i18n_row, BoxField_row}
 import ch.wsl.box.model.boxentities.{BoxField, BoxForm}
 import ch.wsl.box.model.boxentities.BoxForm.{BoxForm_i18n_row, BoxForm_row}
 import ch.wsl.box.model.shared.{Layout, LayoutBlock}
-import ch.wsl.box.rest.utils.{Auth, BoxConfig, UserProfile}
+import ch.wsl.box.rest.utils.{BoxConfig, UserProfile}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,11 +20,11 @@ object StubMetadataFactory {
 
   def forEntity(entity:String)(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext):Future[Boolean] = {
 
-    implicit val boxDb = FullDatabase(up.db,Auth.adminDB)
+    implicit val boxDb = FullDatabase(up.db,Connection.adminDB)
 
     for{
       langs <- Future.sequence(BoxConfig.langs.map{ lang =>
-        EntityMetadataFactory.of(Auth.dbSchema,entity,lang).map(x => (lang,x))
+        EntityMetadataFactory.of(Connection.dbSchema,entity,lang).map(x => (lang,x))
       })
       metadata = langs.head._2
       form <- {

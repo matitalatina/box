@@ -1,18 +1,13 @@
-package ch.wsl.box.client.views
+package ch.wsl.box.client.views.admin
 
-
-import io.udash._
 import ch.wsl.box.client._
-import ch.wsl.box.client.services.{ClientConf, Navigate, REST}
-import org.scalajs.dom.{Element, Event}
-import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.client.services.{ClientConf, Navigate}
+import ch.wsl.box.client.styles.BootstrapCol
 import ch.wsl.box.model.shared._
-import io.circe.Json
-import scalacss.ScalatagsCss._
-import ch.wsl.box.client.views.components.Debug
+import io.udash._
 import io.udash.bootstrap.BootstrapStyles
-
-import scala.concurrent.Future
+import org.scalajs.dom.Event
+import scalacss.ScalatagsCss._
 
 case class AdminViewModel(entities:Seq[String])
 object AdminViewModel extends HasModelPropertyCreator[AdminViewModel] {
@@ -48,13 +43,8 @@ class AdminPresenter(viewModel:ModelProperty[AdminViewModel]) extends Presenter[
 }
 
 class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresenter) extends View {
-  import scalatags.JsDom.all._
-  import io.circe.generic.auto._
-  import ch.wsl.box.shared.utils.JSONUtils._
   import io.udash.css.CssView._
-
-
-  import org.scalajs.dom.File
+  import scalatags.JsDom.all._
 
   private val entityForStub = Property("")
 
@@ -74,6 +64,9 @@ class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresente
     ),
     div(BootstrapCol.md(3),h3("News"),
       a("News editor", Navigate.click(EntityTableState(EntityKind.BOX.kind,"news")))
+    ),
+    div(BootstrapCol.md(3),h3("Import/Export"),
+      a("Definitions", Navigate.click(AdminBoxDefinitionState))
     )
   )
 

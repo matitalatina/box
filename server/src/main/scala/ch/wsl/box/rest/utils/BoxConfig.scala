@@ -96,6 +96,14 @@ object BoxConfig extends Logging {
     result
   }
 
+  def enableRedactor:Boolean = {
+    Try(conf("redactor.js")).toOption.exists(_.nonEmpty) &&
+    Try(conf("redactor.css")).toOption.exists(_.nonEmpty)
+  }
+
+  def redactorJs = Try(conf("redactor.js")).getOrElse("")
+  def redactorCSS = Try(conf("redactor.css")).getOrElse("")
+
 
   def dtFormatDatetime = Try(conf("dtformat.datetime")).getOrElse("yyyy-MM-dd HH:mm")
   def dtFormatDate = Try(conf("dtformat.date")).getOrElse("yyyy-MM-dd")

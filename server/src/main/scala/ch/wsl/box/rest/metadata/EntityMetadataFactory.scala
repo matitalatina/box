@@ -3,7 +3,7 @@ package ch.wsl.box.rest.metadata
 import akka.stream.Materializer
 import ch.wsl.box.information_schema.{PgColumn, PgInformationSchema}
 import ch.wsl.box.model.shared._
-import ch.wsl.box.rest.utils.{Auth, BoxConfig, UserProfile}
+import ch.wsl.box.rest.utils.{BoxConfig, UserProfile}
 import ch.wsl.box.shared.utils.JSONUtils
 import com.typesafe.config.Config
 import scribe.Logging
@@ -11,7 +11,7 @@ import net.ceedubs.ficus.Ficus._
 
 import scala.concurrent.duration._
 import ch.wsl.box.jdbc.PostgresProfile.api._
-import ch.wsl.box.jdbc.{FullDatabase, TypeMapping}
+import ch.wsl.box.jdbc.{FullDatabase, Managed, TypeMapping}
 import ch.wsl.box.model.BoxFieldAccessRegistry
 import ch.wsl.box.rest.runtime.{ColType, Registry}
 import com.avsystem.commons.Try
@@ -145,6 +145,9 @@ object EntityMetadataFactory extends Logging {
           fields <- DBIO.from(up.db.run(DBIO.sequence(c.map(field2form))))
           keys <- EntityMetadataFactory.keysOf(_schema,table)
         } yield {
+
+          val keyStrategy = if(Managed(table)) SurrugateKey else NaturalKey
+
           val fieldList = fields.map(_.name)
           JSONMetadata(
             1,
@@ -157,6 +160,7 @@ object EntityMetadataFactory extends Logging {
             fieldList,
             fieldList,
             keys,
+            keyStrategy,
             None,
             fieldList,
             None,

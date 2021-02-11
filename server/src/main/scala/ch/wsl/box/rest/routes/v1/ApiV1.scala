@@ -25,7 +25,7 @@ import ch.wsl.box.services.Services
 case class ApiV1(appVersion:String)(implicit ec:ExecutionContext, sessionManager: SessionManager[BoxSession], mat:Materializer, system:ActorSystem, services: Services) {
 
   import Directives._
-  import ch.wsl.box.rest.utils.Auth
+  import ch.wsl.box.jdbc.Connection
   import ch.wsl.box.rest.utils.JSONSupport._
   import io.circe.generic.auto._
 

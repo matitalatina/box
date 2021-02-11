@@ -2,7 +2,7 @@ package ch.wsl.box.rest.logic
 
 import ch.wsl.box.model.shared.NewsEntry
 import ch.wsl.box.model.boxentities.BoxNews
-import ch.wsl.box.rest.utils.{Auth, UserProfile}
+import ch.wsl.box.rest.utils.UserProfile
 import ch.wsl.box.shared.utils.DateTimeFormatters
 import ch.wsl.box.jdbc.PostgresProfile.api._
 

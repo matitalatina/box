@@ -8,8 +8,8 @@ import ch.wsl.box.model.boxentities._
 import scala.concurrent.{ExecutionContext, Future}
 
 case class BoxDefinition(
-                        access_levels:Seq[BoxAccessLevel.BoxAccessLevel_row],
-                        conf: Seq[BoxConf.BoxConf_row],
+                        //access_levels:Seq[BoxAccessLevel.BoxAccessLevel_row],
+                        //conf: Seq[BoxConf.BoxConf_row],
                         cron: Seq[BoxCron.BoxCron_row],
                         export: Seq[BoxExport.BoxExport_row],
                         export_i18n: Seq[BoxExport.BoxExport_i18n_row],
@@ -31,14 +31,14 @@ case class BoxDefinition(
                         news_i18n: Seq[BoxNews.BoxNews_i18n_row],
                         ui: Seq[BoxUITable.BoxUI_row],
                         ui_src: Seq[BoxUIsrcTable.BoxUIsrc_row],
-                        users: Seq[BoxUser.BoxUser_row]
+                        //users: Seq[BoxUser.BoxUser_row]
                         )
 
-case class MergeElement[T](insert:Seq[T],delete:Seq[T],update:Seq[T])
+case class MergeElement[T](insert:Seq[T],delete:Seq[T],update:Seq[T],toUpdate:Option[Seq[T]])
 
 case class BoxDefinitionMerge(
-                               access_levels:MergeElement[BoxAccessLevel.BoxAccessLevel_row],
-                               conf: MergeElement[BoxConf.BoxConf_row],
+                               //access_levels:MergeElement[BoxAccessLevel.BoxAccessLevel_row],
+                               //conf: MergeElement[BoxConf.BoxConf_row],
                                cron: MergeElement[BoxCron.BoxCron_row],
                                export: MergeElement[BoxExport.BoxExport_row],
                                export_i18n: MergeElement[BoxExport.BoxExport_i18n_row],
@@ -60,14 +60,14 @@ case class BoxDefinitionMerge(
                                news_i18n: MergeElement[BoxNews.BoxNews_i18n_row],
                                ui: MergeElement[BoxUITable.BoxUI_row],
                                ui_src: MergeElement[BoxUIsrcTable.BoxUIsrc_row],
-                               users: MergeElement[BoxUser.BoxUser_row]
+                               //users: MergeElement[BoxUser.BoxUser_row]
                              )
 
 object BoxDefinition {
   def export(db:UserDatabase)(implicit ec:ExecutionContext):Future[BoxDefinition] = {
     val boxDef = for {
-      access_levels <- BoxAccessLevel.BoxAccessLevelTable.result
-      conf <- BoxConf.BoxConfTable.result
+      //access_levels <- BoxAccessLevel.BoxAccessLevelTable.result
+      //conf <- BoxConf.BoxConfTable.result
       cron <- BoxCron.BoxCronTable.result
       export <- BoxExport.BoxExportTable.result
       export_i18n <- BoxExport.BoxExport_i18nTable.result
@@ -89,10 +89,10 @@ object BoxDefinition {
       news_i18n <- BoxNews.BoxNews_i18nTable.result
       ui <- BoxUITable.BoxUITable.result
       ui_src <- BoxUIsrcTable.BoxUIsrcTable.result
-      users <- BoxUser.BoxUserTable.result
+      //users <- BoxUser.BoxUserTable.result
     } yield BoxDefinition(
-      access_levels,
-      conf,
+      //access_levels,
+      //conf,
       cron,
       export,
       export_i18n,
@@ -114,7 +114,7 @@ object BoxDefinition {
       news_i18n,
       ui,
       ui_src,
-      users
+      //users
     )
 
     db.run(boxDef)
@@ -123,16 +123,20 @@ object BoxDefinition {
   def diff(o:BoxDefinition,n:BoxDefinition):BoxDefinitionMerge = {
     
     def merge[T](f:BoxDefinition => Seq[T],pkCompare:(T,T) => Boolean, allCompare:(T,T) => Boolean):MergeElement[T] = {
+
+      f(n).filter(x => f(o).find(y => pkCompare(x,y)).exists(y => !allCompare(x,y)) )
+
       MergeElement(
         insert = f(n).filterNot(x => f(o).find(y => pkCompare(x,y)).isDefined),
         delete = f(o).filterNot(x => f(n).find(y => pkCompare(x,y)).isDefined),
-        update = f(n).filter(x => f(o).find(y => pkCompare(x,y)).exists(y => !allCompare(x,y)) )
+        update = f(n).filter(x => f(o).find(y => pkCompare(x,y)).exists(y => !allCompare(x,y)) ),
+        toUpdate = Some(f(o).filter(x => f(n).find(y => pkCompare(x,y)).exists(y => !allCompare(x,y)) ))
       )
     }
 
     BoxDefinitionMerge(
-      merge(_.access_levels, _.access_level_id == _.access_level_id, _ == _),
-      merge(_.conf, _.id == _.id, _ == _),
+      //merge(_.access_levels, _.access_level_id == _.access_level_id, _ == _),
+      //merge(_.conf, _.id == _.id, _ == _),
       merge(_.cron, _.name == _.name, _ == _),
       merge(_.export, _.export_id == _.export_id, _ == _),
       merge(_.export_i18n, _.id == _.id, _ == _),
@@ -154,7 +158,7 @@ object BoxDefinition {
       merge(_.news_i18n, (a,b) => a.news_id == b.news_id && a.lang == b.lang , _ == _),
       merge(_.ui, _.id == _.id, _ == _),
       merge(_.ui_src, _.id == _.id, _ == _),
-      merge(_.users, _.username == _.username, _ == _)
+      //merge(_.users, _.username == _.username, _ == _)
     )
     
   }
@@ -183,11 +187,11 @@ object BoxDefinition {
 
     val actions = Seq(
 
-      commit[BoxConf.BoxConf_row,BoxConf.BoxConf](
-        _.conf,BoxConf.BoxConfTable,
-        x => BoxConf.BoxConfTable.filter(_.id === x.id),
-        sql"SELECT setval('box.conf_id_seq',(SELECT max(id) from box.conf))".as[Int]
-      ),
+//      commit[BoxConf.BoxConf_row,BoxConf.BoxConf](
+//        _.conf,BoxConf.BoxConfTable,
+//        x => BoxConf.BoxConfTable.filter(_.id === x.id),
+//        sql"SELECT setval('box.conf_id_seq',(SELECT max(id) from box.conf))".as[Int]
+//      ),
       commit[BoxCron.BoxCron_row,BoxCron.BoxCron](
         _.cron,BoxCron.BoxCronTable,
         x => BoxCron.BoxCronTable.filter(_.name === x.name)
@@ -290,14 +294,14 @@ object BoxDefinition {
         x => BoxUIsrcTable.BoxUIsrcTable.filter(_.id === x.id),
         sql"SELECT setval('box.ui_src_id_seq',(SELECT max(id) from box.ui_src))".as[Int]
       ),
-      commit[BoxAccessLevel.BoxAccessLevel_row,BoxAccessLevel.BoxAccessLevel](
-        _.access_levels,BoxAccessLevel.BoxAccessLevelTable,
-        x => BoxAccessLevel.BoxAccessLevelTable.filter(_.access_level_id === x.access_level_id)
-      ),
-      commit[BoxUser.BoxUser_row,BoxUser.BoxUser](
-        _.users,BoxUser.BoxUserTable,
-        x => BoxUser.BoxUserTable.filter(_.username === x.username)
-      )
+//      commit[BoxAccessLevel.BoxAccessLevel_row,BoxAccessLevel.BoxAccessLevel](
+//        _.access_levels,BoxAccessLevel.BoxAccessLevelTable,
+//        x => BoxAccessLevel.BoxAccessLevelTable.filter(_.access_level_id === x.access_level_id)
+//      ),
+//      commit[BoxUser.BoxUser_row,BoxUser.BoxUser](
+//        _.users,BoxUser.BoxUserTable,
+//        x => BoxUser.BoxUserTable.filter(_.username === x.username)
+//      )
     )
 
     val boxDef = for{

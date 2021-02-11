@@ -5,7 +5,7 @@ import java.util.UUID
 import ch.wsl.box.client.services.{ClientConf, ClientSession, Labels, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles, Icons}
 import ch.wsl.box.client.utils.TestHooks
-import ch.wsl.box.client.views.components.widget.{ChildWidget, ComponentWidgetFactory, Widget}
+import ch.wsl.box.client.views.components.widget.{ChildWidget, ComponentWidgetFactory, Widget, WidgetParams}
 import ch.wsl.box.model.shared._
 import io.circe.Json
 import io.udash.bootstrap.BootstrapStyles
@@ -30,11 +30,12 @@ case class ChildRow(widget:ChildWidget,id:String, data:ReadableProperty[Json], o
 
 trait ChildRendererFactory extends ComponentWidgetFactory {
 
-  def child:Child
-  def children:Seq[JSONMetadata]
-  def masterData:Property[Json]
 
   trait ChildRenderer extends Widget with Logging {
+
+    def child:Child
+    def children:Seq[JSONMetadata]
+    def masterData:Property[Json]
 
     import ch.wsl.box.client.Context._
     import scalatags.JsDom.all._
@@ -227,10 +228,17 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
 }
 
-case class SimpleChildFactory(child:Child, children:Seq[JSONMetadata], masterData:Property[Json]) extends ChildRendererFactory {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = SimpleChildRenderer(id,prop,field)
+object SimpleChildFactory extends ChildRendererFactory {
 
-  case class SimpleChildRenderer(row_id: Property[Option[String]], prop: Property[Json], field:JSONField) extends ChildRenderer {
+
+  override def name: String = WidgetsNames.simpleChild
+
+
+  override def create(params: WidgetParams): Widget = SimpleChildRenderer(params.id,params.prop,params.field,params.allData,params.children)
+
+  case class SimpleChildRenderer(row_id: Property[Option[String]], prop: Property[Json], field:JSONField,masterData:Property[Json],children:Seq[JSONMetadata]) extends ChildRenderer {
+
+    def child = field.child.get
 
     import scalatags.JsDom.all._
     import io.udash.css.CssView._
@@ -278,14 +286,24 @@ case class SimpleChildFactory(child:Child, children:Seq[JSONMetadata], masterDat
 }
 
 
-case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData:Property[Json]) extends ChildRendererFactory {
-  override def create(id: _root_.io.udash.Property[Option[String]], prop: _root_.io.udash.Property[Json], field: JSONField): Widget = TableChildRenderer(id,prop,field)
+object TableChildFactory extends ChildRendererFactory {
 
-  case class TableChildRenderer(row_id: Property[Option[String]], prop: Property[Json], field:JSONField) extends ChildRenderer {
+
+  override def name: String = WidgetsNames.tableChild
+
+
+  override def create(params: WidgetParams): Widget = TableChildRenderer(params.id,params.prop,params.field,params.allData,params.children)
+
+
+  case class TableChildRenderer(row_id: Property[Option[String]], prop: Property[Json], field:JSONField,masterData:Property[Json],children:Seq[JSONMetadata]) extends ChildRenderer {
+
+
 
     import scalatags.JsDom.all._
     import io.udash.css.CssView._
     import ch.wsl.box.shared.utils.JSONUtils._
+
+    override def child: Child = field.child.get
 
     override protected def render(write: Boolean): JsDom.all.Modifier = {
 
@@ -312,6 +330,7 @@ case class TableChildFactory(child:Child, children:Seq[JSONMetadata], masterData
                       open.set(!open.get)
                       if (open.get) {
                         services.clientSession.setTableChildOpen(tableChildElement)
+                        logger.debug("Opening child")
                         widget.get.widget.afterRender()
                       } else {
                         services.clientSession.setTableChildClose(tableChildElement)

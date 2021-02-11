@@ -30,13 +30,13 @@ object BoxField {
                            conditionFieldId:Option[String] = None,
                            conditionValues:Option[String] = None,
                            params:Option[Json] = None,
-                           read_only:Boolean = false,
+                           read_only:Option[Boolean] = Some(false),
                            linked_key_fields:Option[String] = None,
                            linked_label_fields:Option[String] = None
                          )
 
   class BoxField(_tableTag: Tag) extends Table[BoxField_row](_tableTag,BoxSchema.schema, "field") {
-    def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues,params,read_only,linked_key_fields,linked_label_fields) <> (BoxField_row.tupled, BoxField_row.unapply)
+    def * = (Rep.Some(field_id), form_id, `type`, name, widget, lookupEntity, lookupValueField,lookupQuery, child_form_id,masterFields,childFields,childQuery,default,conditionFieldId,conditionValues,params,Rep.Some(read_only),linked_key_fields,linked_label_fields) <> (BoxField_row.tupled, BoxField_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val field_id: Rep[Int] = column[Int]("field_id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
@@ -63,7 +63,7 @@ object BoxField {
     val conditionFieldId: Rep[Option[String]] = column[Option[String]]("conditionFieldId", O.Default(None))
     val conditionValues: Rep[Option[String]] = column[Option[String]]("conditionValues", O.Default(None))
     val params: Rep[Option[Json]] = column[Option[Json]]("params", O.Default(None))
-    val read_only: Rep[Boolean] = column[Boolean]("read_only")
+    val read_only: Rep[Boolean] = column[Boolean]("read_only", O.AutoInc)
     val linked_key_fields: Rep[Option[String]] = column[Option[String]]("linked_key_fields", O.Default(None))
     val linked_label_fields: Rep[Option[String]] = column[Option[String]]("linked_label_fields", O.Default(None))
 

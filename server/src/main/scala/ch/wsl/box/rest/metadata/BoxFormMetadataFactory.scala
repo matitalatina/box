@@ -21,7 +21,7 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
   import ch.wsl.box.rest.metadata.box._
 
 
-  val viewsOnly = Registry().fields.tables.toSeq.sorted
+  val viewsOnly = Registry().fields.views.sorted
   val tablesAndViews = (viewsOnly ++ Registry().fields.tables).sorted
 
 
@@ -31,12 +31,14 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
     users <- getUsers()
   } yield Seq(
     FormUIDef.main(tablesAndViews,users.sortBy(_.username)),
-    FormUIDef.field(forms,tablesAndViews),
+    FormUIDef.field(tablesAndViews),
+    FormUIDef.field_childs(forms),
+    FormUIDef.field_static(tablesAndViews),
     FormUIDef.fieldI18n,
     FormUIDef.formI18n(viewsOnly),
     FormUIDef.fieldFile,
     FunctionUIDef.main,
-    FunctionUIDef.field,
+    FunctionUIDef.field(tablesAndViews),
     FunctionUIDef.fieldI18n,
     FunctionUIDef.functionI18n,
     NewsUIDef.main,
@@ -51,6 +53,10 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
       BoxUser.BoxUserTable.result
   }
 
+  def fieldTypes = Registry().fields.tableFields.mapValues(_.mapValues{col =>
+    col.jsonType
+  })
+
   val visibleAdmin = Seq(FUNCTION,FORM,NEWS)
 
   override def list: DBIO[Seq[String]] = registry.map(_.filter(f => visibleAdmin.contains(f.objId)).map(_.name))
@@ -61,9 +67,11 @@ case class BoxFormMetadataFactory(implicit mat:Materializer, ec:ExecutionContext
 
   override def children(form: JSONMetadata): DBIO[Seq[JSONMetadata]] = getForms().map{ forms =>
     form match {
-      case f if f.objId == FORM => Seq(FormUIDef.field(forms,tablesAndViews),FormUIDef.fieldI18n,FormUIDef.formI18n(viewsOnly),FormUIDef.fieldFile)
+      case f if f.objId == FORM => Seq(FormUIDef.field(tablesAndViews),FormUIDef.field_static(tablesAndViews),FormUIDef.field_childs(forms),FormUIDef.fieldI18n,FormUIDef.formI18n(viewsOnly),FormUIDef.fieldFile)
       case f if f.objId == FORM_FIELD => Seq(FormUIDef.fieldI18n,FormUIDef.fieldFile)
-      case f if f.objId == FUNCTION => Seq(FunctionUIDef.field,FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
+      case f if f.objId == FORM_FIELD_STATIC => Seq(FormUIDef.fieldI18n)
+      case f if f.objId == FORM_FIELD_CHILDS => Seq(FormUIDef.fieldI18n)
+      case f if f.objId == FUNCTION => Seq(FunctionUIDef.field(tablesAndViews),FunctionUIDef.fieldI18n,FunctionUIDef.functionI18n)
       case f if f.objId == FUNCTION_FIELD => Seq(FunctionUIDef.fieldI18n)
       case f if f.objId == NEWS => Seq(NewsUIDef.newsI18n)
       case _ => Seq()

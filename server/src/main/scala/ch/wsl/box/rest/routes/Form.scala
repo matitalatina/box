@@ -7,14 +7,15 @@ import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
-import ch.wsl.box.jdbc.{FullDatabase, UserDatabase}
+import ch.wsl.box.jdbc.{Connection, FullDatabase, UserDatabase}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.utils.{Auth, JSONSupport, UserProfile, XLSExport, XLSTable}
+import ch.wsl.box.rest.utils.{Cache, JSONSupport, UserProfile, XLSExport, XLSTable}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.model.boxentities.BoxSchema
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, MetadataFactory}
 import ch.wsl.box.rest.runtime.Registry
 
@@ -47,7 +48,7 @@ case class Form(
 
 
     implicit val implicitDB = db
-    implicit val boxDb = FullDatabase(db,Auth.adminDB)
+    implicit val boxDb = FullDatabase(db,Connection.adminDB)
 
     val metadata: DBIO[JSONMetadata] = metadataFactory.of(name,lang)
 
@@ -98,14 +99,22 @@ case class Form(
           case Some(fields) => m.fields.filter(field => fields.contains(field.name))
           case None => m.fields.filter(field => m.tabularFields.contains(field.name))
         }
-
     }
+
+  private def viewTableMetadata(fields:Seq[String],tableMetadata:JSONMetadata,viewMetadata:JSONMetadata): Seq[JSONField] = {
+    val tableFields = _tabMetadata(Some(fields),tableMetadata)
+    val viewFields = _tabMetadata(Some(fields),viewMetadata)
+    fields.flatMap{ field =>
+      tableFields.find(_.name == field).orElse(viewFields.find(_.name == field))
+    }
+
+  }
 
     def tabularMetadata(fields:Option[Seq[String]] = None) = metadata.flatMap{ m =>
       val filteredFields = m.view match {
         case None => DBIO.successful(_tabMetadata(fields,m))
-        case Some(view) => DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Auth.dbSchema),view,lang).map{ em =>
-          _tabMetadata(Some(fields.getOrElse(m.tabularFields)),em)
+        case Some(view) => DBIO.from(EntityMetadataFactory.of(schema.getOrElse(Connection.dbSchema),view,lang).map{ vm =>
+          viewTableMetadata(fields.getOrElse(m.tabularFields),m,vm)
         })
       }
 
@@ -141,8 +150,13 @@ case class Form(
                     complete {
                       actions { fs =>
                         for {
-                          rowsChanged <- db.run(fs.upsertIfNeeded(Some(id), e).transactionally)
-                        } yield rowsChanged
+                          jsonId <- db.run(fs.upsertIfNeeded(Some(id), e).transactionally)
+                        } yield {
+                          if(schema == BoxSchema.schema) {
+                              Cache.reset()
+                          }
+                          jsonId
+                        }
                       }
                     }
                   }
@@ -199,7 +213,7 @@ case class Form(
     path("keys") {
       get {
         complete {
-          boxDb.adminDb.run(metadata.flatMap(f => EntityMetadataFactory.keysOf(schema.getOrElse(Auth.dbSchema),f.entity)))
+          boxDb.adminDb.run(metadata.flatMap(f => EntityMetadataFactory.keysOf(schema.getOrElse(Connection.dbSchema),f.entity)))
         }
       }
     } ~

@@ -20,40 +20,41 @@ import scribe.Logging
 object InputWidgetFactory {
 
   object Text extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.Text(field, prop)
+    override def name: String = WidgetsNames.textinput
+    override def create(params: WidgetParams): Widget = new InputWidget.Text(params.field, params.prop)
   }
 
   object TextDisabled extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.TextDisabled(field, prop)
+    override def name: String = WidgetsNames.inputDisabled
+    override def create(params: WidgetParams): Widget = new InputWidget.TextDisabled(params.field, params.prop)
   }
 
   object TextNoLabel extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.TextNoLabel(field, prop)
+    override def name: String = WidgetsNames.nolabel
+    override def create(params: WidgetParams): Widget = new InputWidget.TextNoLabel(params.field, params.prop)
   }
 
   object TextArea extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.Textarea(field, prop)
+    override def name: String = WidgetsNames.textarea
+    override def create(params: WidgetParams): Widget = new InputWidget.Textarea(params.field, params.prop)
 
   }
 
   object TwoLines extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.TwoLines(field, prop)
+    override def name: String = WidgetsNames.twoLines
+    override def create(params: WidgetParams): Widget = new InputWidget.TwoLines(params.field, params.prop)
 
   }
 
   object Number extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.Number(field, prop)
-
-  }
-
-
-  object NumberNoLabel extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.NumberNoLabel(field, prop)
+    override def name: String = WidgetsNames.inputNumber
+    override def create(params: WidgetParams): Widget = new InputWidget.Number(params.field, params.prop)
 
   }
 
   object NumberArray extends ComponentWidgetFactory {
-    override def create(id: Property[Option[String]], prop: Property[Json], field: JSONField): Widget = new InputWidget.NumberArray(field, prop)
+    override def name: String = WidgetsNames.inputArrayNumber
+    override def create(params: WidgetParams): Widget = new InputWidget.NumberArray(params.field, params.prop)
 
   }
 
@@ -188,15 +189,6 @@ object InputWidget extends Logging {
       NumberInput(stringModel)(y:_*).render
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, true))
-  }
-
-  case class NumberNoLabel(field:JSONField, prop: Property[Json]) extends Widget {
-
-    override def edit():JsDom.all.Modifier = (editMe(field,false, false){ case y =>
-      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericJson _)
-      NumberInput(stringModel)(y:_*).render
-    })
-    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, false,Seq()))
   }
 
   case class NumberArray(field:JSONField, prop: Property[Json]) extends Widget {

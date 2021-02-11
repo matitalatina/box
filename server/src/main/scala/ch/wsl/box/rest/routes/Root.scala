@@ -10,7 +10,7 @@ import akka.stream.Materializer
 import ch.wsl.box.model.BoxActionsRegistry
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.model.boxentities.{BoxConf, BoxUITable, Schema}
-import ch.wsl.box.rest.utils.{BoxConfig, BoxSession}
+import ch.wsl.box.rest.utils.{BoxConfig, BoxSession, Cache}
 import ch.wsl.box.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -36,6 +36,8 @@ import scala.util.{Failure, Success}
   */
 case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:Seq[String])(implicit materializer:Materializer,executionContext:ExecutionContext,system: ActorSystem,services: Services) extends Logging {
 
+  import ch.wsl.box.jdbc.Connection
+
 
   lazy val sessionConfig = SessionConfig.fromConfig(akkaConf)
 
@@ -47,7 +49,6 @@ case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:
 
   import Directives._
   import ch.wsl.box.rest.utils.JSONSupport._
-  import ch.wsl.box.rest.utils.Auth
   import io.circe.generic.auto._
   import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
@@ -85,10 +86,7 @@ case class Root(appVersion:String,akkaConf:Config, restart: () => Unit, origins:
 
   def resetCache = pathPrefix("cache") {
     path("reset") {
-      FormMetadataFactory.resetCache()
-      EntityMetadataFactory.resetCache()
-      RuntimeFunction.resetCache()
-      BoxConfig.load(Auth.adminDB)
+      Cache.reset()
       complete(
         HttpResponse(entity = HttpEntity(ContentTypes.`text/plain(UTF-8)`,"reset cache"))
       )
