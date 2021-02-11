@@ -37,9 +37,6 @@ case class FieldAccessGenerator(tabs:Seq[String], views:Seq[String], model:Model
 
       val jsonType = pgColumns.find(_.boxName == c.model.name).map(_.jsonType).getOrElse(JSONFieldTypes.STRING)
 
-      println(c.actualType)
-      println(jsonType)
-
       val hasDefault:Boolean = {
         Await.result(
           Connection.dbConnection.run(
