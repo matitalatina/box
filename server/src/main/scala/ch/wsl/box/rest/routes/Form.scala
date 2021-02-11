@@ -10,11 +10,12 @@ import akka.util.ByteString
 import ch.wsl.box.jdbc.{Connection, FullDatabase, UserDatabase}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.logic._
-import ch.wsl.box.rest.utils.{JSONSupport, UserProfile, XLSExport, XLSTable}
+import ch.wsl.box.rest.utils.{Cache, JSONSupport, UserProfile, XLSExport, XLSTable}
 import io.circe.Json
 import io.circe.parser.parse
 import scribe.Logging
 import ch.wsl.box.jdbc.PostgresProfile.api._
+import ch.wsl.box.model.boxentities.BoxSchema
 import ch.wsl.box.rest.metadata.{EntityMetadataFactory, MetadataFactory}
 import ch.wsl.box.rest.runtime.Registry
 
@@ -149,8 +150,13 @@ case class Form(
                     complete {
                       actions { fs =>
                         for {
-                          rowsChanged <- db.run(fs.upsertIfNeeded(Some(id), e).transactionally)
-                        } yield rowsChanged
+                          jsonId <- db.run(fs.upsertIfNeeded(Some(id), e).transactionally)
+                        } yield {
+                          if(schema == BoxSchema.schema) {
+                              Cache.reset()
+                          }
+                          jsonId
+                        }
                       }
                     }
                   }

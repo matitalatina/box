@@ -183,6 +183,7 @@ trait LookupWidget extends Widget with HasData {
 
   field.lookup.get.lookupExtractor.foreach{case extractor =>
     allData.listen { all =>
+      logger.debug(all.toString())
       val newLookup = toSeq(extractor.map.getOrElse(all.js(extractor.key), Seq()))
       setNewLookup(newLookup)
     }

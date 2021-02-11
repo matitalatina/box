@@ -110,12 +110,12 @@ object FormUIDef {
       JSONField(JSONFieldTypes.NUMBER,"form_id",false,widget = Some(WidgetsNames.hidden)),
       CommonField.name,
       CommonField.widget,
-      CommonField.typ,
+      CommonField.typ(false,false),
       JSONField(JSONFieldTypes.CHILD,"field_i18n",true,child = Some(Child(FORM_FIELD_I18N,"field_i18n","field_id","field_id",Some(JSONQuery.sortByKeys(Seq("field_id"))))), widget = Some(WidgetsNames.tableChild)),
       JSONField(JSONFieldTypes.CHILD,"field_file",true,
         child = Some(Child(FORM_FIELD_FILE,"field_file","field_id","field_id",None)),
         condition = Some(ConditionalField("type",Seq(JSONFieldTypes.FILE.asJson))),
-        params = Some(Map("max" -> 1, "min" -> 1).asJson),
+        params = Some(Map("max" -> 1, "min" -> 0).asJson),
         widget = Some(WidgetsNames.simpleChild)
       ),
       CommonField.lookupEntity(tables),
@@ -215,6 +215,9 @@ object FormUIDef {
       CommonField.conditionValues,
       JSONField(JSONFieldTypes.JSON,"params",true,widget = Some(WidgetsNames.code)),
       JSONField(JSONFieldTypes.BOOLEAN,"read_only",false,default = Some("false"),widget = Some(WidgetsNames.checkbox)),
+      JSONField(JSONFieldTypes.CHILD,"field_file",true,
+        child = Some(Child(FORM_FIELD_FILE,"field_file","field_id","field_id",None))
+      )
     ),
     layout = Layout(
       blocks = Seq(
@@ -274,7 +277,10 @@ object FormUIDef {
       CommonField.lookupQuery(tables),
       CommonField.conditionFieldId,
       CommonField.conditionValues,
-      JSONField(JSONFieldTypes.JSON,"params",true,widget = Some(WidgetsNames.code))
+      JSONField(JSONFieldTypes.JSON,"params",true,widget = Some(WidgetsNames.code)),
+      JSONField(JSONFieldTypes.CHILD,"field_file",true,
+        child = Some(Child(FORM_FIELD_FILE,"field_file","field_id","field_id",None))
+      )
     ),
     layout = Layout(
       blocks = Seq(

@@ -19,10 +19,13 @@ object CommonField {
     )
   ))
 
-  val typ = JSONField(JSONFieldTypes.STRING,"type",false,
+  def typ(child:Boolean = true, static:Boolean = true) = JSONField(JSONFieldTypes.STRING,"type",false,
     widget = Some(WidgetsNames.select),
     lookup = Some(JSONFieldLookup.prefilled(
-      JSONFieldTypes.ALL.sorted.map(x => JSONLookup(x,x))
+      JSONFieldTypes.ALL
+        .filter(x => child || x != JSONFieldTypes.CHILD)
+        .filter(x => static || x != JSONFieldTypes.STATIC)
+        .sorted.map(x => JSONLookup(x,x))
     )
   ))
 

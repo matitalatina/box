@@ -88,7 +88,7 @@ object FunctionUIDef {
       JSONField(JSONFieldTypes.NUMBER,"function_id",false,widget = Some(WidgetsNames.hidden)),
       CommonField.name,
       CommonField.widget,
-      CommonField.typ,
+      CommonField.typ(child = false),
       JSONField(JSONFieldTypes.CHILD,"function_field_i18n",true,child = Some(Child(FUNCTION_FIELD_I18N,"function_field_i18n","field_id","field_id",None))),
       CommonField.lookupEntity(tables),
       CommonField.lookupValueField(tables),

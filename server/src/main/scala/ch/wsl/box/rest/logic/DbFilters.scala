@@ -84,25 +84,25 @@ trait DBFiltersImpl extends DbFilters with Logging {
   //"USER-DEFINED" -> JSONFieldTypes.STRING
 
   def typ(myType:ColType):Int = myType match{
-    case ColType("Short",true) => typOptSHORT
-    case ColType("Double",true) => typOptDOUBLE
+    case ColType("Short",_,true) => typOptSHORT
+    case ColType("Double",_,true) => typOptDOUBLE
     //case "BigDecimal" | "scala.math.BigDecimal" => typBIGDECIMAL //when it's used?
-    case ColType("Int",true) => typOptINT
-    case ColType("Long",true) => typOptLONG
-    case ColType("String",true) => typOptSTRING
-    case ColType("Boolean",true) => typOptBOOLEAN
-    case ColType("java.time.LocalDateTime",true) => typOptTIMESTAMP
-    case ColType("java.time.LocalDate",true) => typOptDATE
-    case ColType("java.time.LocalTime",true) => typOptTIME
-    case ColType("Short",false) => typSHORT
-    case ColType("Double",false) => typDOUBLE
-    case ColType("Int",false) => typINT
-    case ColType("Long",false) => typLONG
-    case ColType("String",false) => typSTRING
-    case ColType("Boolean",false) => typBOOLEAN
-    case ColType("java.time.LocalDateTime",false) => typTIMESTAMP
-    case ColType("java.time.LocalDate",false) => typDATE
-    case ColType("java.time.LocalTime",false) => typTIME
+    case ColType("Int",_,true) => typOptINT
+    case ColType("Long",_,true) => typOptLONG
+    case ColType("String",_,true) => typOptSTRING
+    case ColType("Boolean",_,true) => typOptBOOLEAN
+    case ColType("java.time.LocalDateTime",_,true) => typOptTIMESTAMP
+    case ColType("java.time.LocalDate",_,true) => typOptDATE
+    case ColType("java.time.LocalTime",_,true) => typOptTIME
+    case ColType("Short",_,false) => typSHORT
+    case ColType("Double",_,false) => typDOUBLE
+    case ColType("Int",_,false) => typINT
+    case ColType("Long",_,false) => typLONG
+    case ColType("String",_,false) => typSTRING
+    case ColType("Boolean",_,false) => typBOOLEAN
+    case ColType("java.time.LocalDateTime",_,false) => typTIMESTAMP
+    case ColType("java.time.LocalDate",_,false) => typDATE
+    case ColType("java.time.LocalTime",_,false) => typTIME
     case _ => {
       logger.error("Type mapping for: " + myType + " not found")
       typError
