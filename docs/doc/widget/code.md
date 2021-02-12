@@ -1,6 +1,7 @@
 ---
 title: Code
 parent: Widgets
+grand_parent: Documentation
 nav_order: 2
 ---
 
@@ -11,8 +12,8 @@ The widget is implemented with [Monaco Editor](https://microsoft.github.io/monac
 
 
 #### Supported types
-- String
-- JSON
+- **String**
+- **JSON**
 
 #### Params
 

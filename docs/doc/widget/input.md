@@ -1,6 +1,7 @@
 ---
 title: Input
 parent: Widgets
+grand_parent: Documentation
 nav_order: 7
 ---
 
@@ -9,14 +10,14 @@ nav_order: 7
 Use standard [HTML Input element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input)
 
 #### Supported types
-- Number
-- String
-- Date (rendered as text)
-- Timestamp (rendered as text)
-- Time (rendered as text)
-- Interval (rendered as text)
-- Number Array (rendered as number)
-- String Array (rendered as text)
+- **Number**
+- **String**
+- **Date** (rendered as text)
+- **Timestamp** (rendered as text)
+- **Time** (rendered as text)
+- **Interval** (rendered as text)
+- **Number Array** (rendered as number)
+- **String Array** (rendered as text)
 
 #### Params
 

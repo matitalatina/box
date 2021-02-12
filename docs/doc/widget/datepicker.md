@@ -1,6 +1,7 @@
 ---
 title: Date Picker
 parent: Widgets
+grand_parent: Documentation
 nav_order: 3
 ---
 
@@ -10,7 +11,7 @@ Calendar popup widget for date object, based on [Flatpickr](https://flatpickr.js
 
 
 #### Supported types
-- Date
+- **Date**
 
 #### Params
 

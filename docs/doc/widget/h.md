@@ -1,6 +1,7 @@
 ---
 title: H1-H5 Titles
 parent: Widgets
+grand_parent: Documentation
 nav_order: 5
 ---
 
@@ -10,5 +11,5 @@ Render static titles, using standard [html elements](https://developer.mozilla.o
 H means header and the number indicates the level.
 
 #### Supported types
-- Static
+- **Static**
 

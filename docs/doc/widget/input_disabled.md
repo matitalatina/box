@@ -1,6 +1,7 @@
 ---
 title: Input Disabled
 parent: Widgets
+grand_parent: Documentation
 nav_order: 8
 ---
 
@@ -10,5 +11,5 @@ Use standard [HTML Input element](https://developer.mozilla.org/en-US/docs/Web/H
 
 
 #### Supported types
-- String
+- **String**
 

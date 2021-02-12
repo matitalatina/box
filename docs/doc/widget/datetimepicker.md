@@ -1,6 +1,7 @@
 ---
 title: DateTime Picker
 parent: Widgets
+grand_parent: Documentation
 nav_order: 4
 ---
 
@@ -10,7 +11,7 @@ Calendar popup widget for timestamp object, based on [Flatpickr](https://flatpic
 
 
 #### Supported types
-- Timestamp
+- **Timestamp**
 
 #### Params
 

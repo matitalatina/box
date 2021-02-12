@@ -1,6 +1,7 @@
 ---
 title: Hidden
 parent: Widgets
+grand_parent: Documentation
 nav_order: 6
 ---
 
@@ -9,5 +10,5 @@ nav_order: 6
 Hides the field
 
 #### Supported types
-- All
+- **All**
 
