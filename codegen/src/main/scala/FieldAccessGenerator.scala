@@ -35,22 +35,11 @@ case class FieldAccessGenerator(tabs:Seq[String], views:Seq[String], model:Model
     table.columns.map{ c =>
       val scalaType = TypeMapping(c.model).getOrElse(c.model.tpe)
 
-      val jsonType = pgColumns.find(_.boxName == c.model.name).map(_.jsonType).getOrElse(JSONFieldTypes.STRING)
+      val pgCol = pgColumns.find(_.boxName == c.model.name)
 
-      val hasDefault:Boolean = {
-        Await.result(
-          Connection.dbConnection.run(
-            PgInformationSchema.hasDefault(
-              table.model.name.schema.getOrElse("public"),
-              table.model.name.table,
-              c.model.name
-            )
-          ),
-          10.seconds
-        )
-      }
+      val jsonType = pgCol.map(_.jsonType).getOrElse(JSONFieldTypes.STRING)
 
-      val nullable = c.model.nullable || hasDefault
+      val nullable = !pgCol.exists(_.required)
       s"""      "${c.model.name}" -> ColType("$scalaType","$jsonType",$nullable)"""
     }
   }
