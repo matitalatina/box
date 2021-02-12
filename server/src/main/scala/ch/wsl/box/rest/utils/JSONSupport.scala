@@ -49,7 +49,7 @@ object JSONSupport extends GeoJsonSupport {
   implicit val LocalDateTimeFormat : Encoder[LocalDateTime] with Decoder[LocalDateTime] = new Encoder[LocalDateTime] with Decoder[LocalDateTime] {
 
     override def apply(a: LocalDateTime): Json = Try {
-        Encoder.encodeString.apply(DateTimeFormatters.timestamp.format(a, BoxConfig.dtFormatDatetime))
+        Encoder.encodeString.apply(DateTimeFormatters.timestamp.format(a))
       }.getOrElse(Json.Null)
 
 
@@ -61,7 +61,7 @@ object JSONSupport extends GeoJsonSupport {
   implicit val DateFormat : Encoder[LocalDate] with Decoder[LocalDate] = new Encoder[LocalDate] with Decoder[LocalDate] {
 
     override def apply(a: LocalDate): Json = Try {
-      Encoder.encodeString.apply(DateTimeFormatters.date.format(a, BoxConfig.dtFormatDate))
+      Encoder.encodeString.apply(DateTimeFormatters.date.format(a))
     }.getOrElse(Json.Null)
 
     override def apply(c: HCursor): Result[LocalDate] = Decoder.decodeString.map{s =>
@@ -73,7 +73,7 @@ object JSONSupport extends GeoJsonSupport {
   implicit val LocalTimeFormat : Encoder[LocalTime] with Decoder[LocalTime] = new Encoder[LocalTime] with Decoder[LocalTime] {
 
     override def apply(a: LocalTime): Json = Try {
-      Encoder.encodeString.apply(DateTimeFormatters.time.format(a, BoxConfig.dtFormatTime))
+      Encoder.encodeString.apply(DateTimeFormatters.time.format(a))
     }.getOrElse(Json.Null)
 
 

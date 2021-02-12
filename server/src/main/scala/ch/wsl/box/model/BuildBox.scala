@@ -434,7 +434,8 @@ ALTER TABLE ONLY box.function_field
         BoxConf.BoxConf_row(key = "color.main", value = Some("#343C4B")),
         BoxConf.BoxConf_row(key = "color.link", value = Some("#7C8277")),
         BoxConf.BoxConf_row(key = "color.danger", value = Some("#C54E13")),
-        BoxConf.BoxConf_row(key = "color.warning", value = Some("#EB883E"))
+        BoxConf.BoxConf_row(key = "color.warning", value = Some("#EB883E")),
+        BoxConf.BoxConf_row(key = "logger.level", value = Some("warn"))
       ))
       _ <- boxDb.run(BoxUIsrcTable.BoxUIsrcTable += BoxUIsrcTable.BoxUIsrc_row(file = Some(Base64.getDecoder.decode(logo)),mime = Some("image/png"),name = Some("logo"),accessLevel = -1))
       _ <- boxDb.run(BoxUITable.BoxUITable ++= Seq(

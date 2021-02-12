@@ -47,7 +47,7 @@ object BoxConfig extends Logging {
          ).contains(k)}
 
 
-  def langs = Try(conf("langs")).getOrElse("en").split(",").toSeq
+  def langs = Try(conf("langs")).getOrElse("en").split(",").map(_.trim).toSeq
 
   def fksLookupLabels = ConfigFactory.parseString( Try(conf("fks.lookup.labels")).getOrElse("default=firstNoPKField"))
 

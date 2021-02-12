@@ -90,7 +90,7 @@ object EntityMetadataFactory extends Logging {
                   if (constraints.contains(fk.constraintName)) {
                     logger.info("error: " + fk.constraintName)
                     logger.info(field.column_name)
-                    DBIO.successful(JSONField(field.jsonType, name = field.boxName, nullable = field.nullable))
+                    DBIO.successful(JSONField(field.jsonType, name = field.boxName, nullable = !field.required))
                   } else {
                     constraints = fk.constraintName :: constraints //add fk constraint to contraint list
 
@@ -112,9 +112,9 @@ object EntityMetadataFactory extends Logging {
                       JSONField(
                         field.jsonType,
                         name = field.boxName,
-                        nullable = field.nullable,
+                        nullable = !field.required,
                         placeholder = Some(fk.referencingTable + " Lookup"),
-                        //widget = Some(WidgetsNames.select),
+                        widget = Some(WidgetsNames.select),
                         lookup = Some(JSONFieldLookup(model, JSONFieldMap(value, text, field.boxName), options))
                       )
                     }
@@ -124,16 +124,16 @@ object EntityMetadataFactory extends Logging {
                   DBIO.successful(JSONField(
                     field.jsonType,
                     name = field.boxName,
-                    nullable = field.nullable,
-                    widget = TypeMapping.defaultWidgetMapping(field.data_type)
+                    nullable = !field.required,
+                    widget = WidgetsNames.defaults.get(field.jsonType)
                   ))
                 }
               }
               case _ => DBIO.successful(JSONField(
                 field.jsonType,
                 name = field.boxName,
-                nullable = field.nullable,
-                widget = TypeMapping.defaultWidgetMapping(field.data_type)
+                nullable = !field.required,
+                widget = WidgetsNames.defaults.get(field.jsonType)
               ))
             }
           }

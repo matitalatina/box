@@ -20,17 +20,20 @@ case class JSONField(
                       condition: Option[ConditionalField] = None,
                       tooltip: Option[String] = None,
                       params: Option[Json] = None,
-                      linked: Option[LinkedForm] = None
+                      linked: Option[LinkedForm] = None,
+                      lookupLabel: Option[LookupLabel] = None
                     ) {
   def title = label.getOrElse(name)
 }
 
 object JSONField{
   val empty = JSONField("","",true,true)
+  val fullWidth = empty.copy(params = Some(Json.obj("fullWidth" -> Json.True)))
 }
 
 case class LinkedForm(name:String,parentValueFields:Seq[String], childValueFields:Seq[String], parentLabelFields:Seq[String])
 
+case class LookupLabel(localIds:Seq[String],remoteIds:Seq[String],remoteField:String,remoteEntity:String,widget:String)
 /**
   *
   * @param lookupEntity
@@ -54,7 +57,7 @@ object JSONFieldLookup {
 
     val options = lookupData.map{ lookupRow =>
 
-      val label = mapping.textProperty.split(",").map(k => lookupRow.get(k)).mkString(" - ")
+      val label = mapping.textProperty.split(",").map(_.trim).map(k => lookupRow.get(k)).mkString(" - ")
 
       JSONLookup(lookupRow.get(mapping.valueProperty),label)
     }

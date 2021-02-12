@@ -54,28 +54,4 @@ object TypeMapping {
     "jsonb" -> JSONFieldTypes.JSON
   )
 
-
-  val defaultWidgetMapping = Map(
-    "integer" -> None,
-    "bigint" -> None,
-    "smallint" -> None,
-    "double precision" -> None,
-    "real" -> None,
-    "text" -> Some(WidgetsNames.textinput),
-    "character varying" -> Some(WidgetsNames.textinput),
-    "character" -> Some(WidgetsNames.textinput),
-    "boolean" -> None,
-    "bytea" -> Some(WidgetsNames.simpleFile),
-    "numeric" -> None,
-    "timestamp without time zone" -> Some(WidgetsNames.datetimePicker),
-    "time without time zone" -> Some(WidgetsNames.timepicker),
-    "date" -> Some(WidgetsNames.datepicker),
-    "interval" -> Some(WidgetsNames.datepicker),
-    "ARRAY" -> Some(WidgetsNames.textinput),                          //todo: works only for visualisation -> provide widget
-    "USER-DEFINED" -> None,
-    "geometry" -> Some(WidgetsNames.map),
-    "jsonb" -> Some(WidgetsNames.code)
-  )
-
-
 }

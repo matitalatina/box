@@ -11,6 +11,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Auth, BoxConfig, UserProfile}
+import ch.wsl.box.shared.utils.JSONUtils.EnhancedJson
 import io.circe._
 import io.circe.parser._
 import scribe.Logging
@@ -174,7 +175,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
 
       if(formI18n.isEmpty) logger.warn(s"Form ${form.name} (form_id: ${form.form_id}) has no translation to $lang")
 
-      val definedTableFields = form.tabularFields.toSeq.flatMap(_.split(","))
+      val definedTableFields = form.tabularFields.toSeq.flatMap(_.split(",").map(_.trim))
       val missingKeyTableFields = keys.filterNot(k => definedTableFields.contains(k))
       val tableFields = missingKeyTableFields ++ definedTableFields
 
@@ -225,11 +226,11 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         form.entity,
         lang,
         tableFields,
-        form.tabularFields.toSeq.flatMap(_.split(",")),
+        form.tabularFields.toSeq.flatMap(_.split(",").map(_.trim)),
         keys,
         keyStrategy,
         defaultQuery,
-        form.exportFields.map(_.split(",").toSeq).getOrElse(tableFields),
+        form.exportFields.map(_.split(",").map(_.trim).toSeq).getOrElse(tableFields),
         formI18n.flatMap(_.view_table),
         formActions
       )//, form.entity)
@@ -263,6 +264,29 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
     }
 
     DBIO.sequence(linkedFormOpt.toSeq).map(_.flatten.headOption) // fix types
+  }
+
+  private def lookupLabel(field:BoxField_row,field_i18n_row: Option[BoxField_i18n_row]):Option[LookupLabel] = {
+    for{
+      localIds <- field.masterFields
+      remoteIds <- field.lookupValueField
+      remoteField <- field_i18n_row.flatMap(_.lookupTextField)
+      remoteEntity <- field.lookupEntity
+    } yield {
+
+      val widget = field.params.flatMap(_.getOpt("widget")).getOrElse{
+        val jsonType = Registry().fields.field(remoteEntity,remoteField).jsonType
+        WidgetsNames.defaults.getOrElse(jsonType,WidgetsNames.input)
+      }
+
+      LookupLabel(
+        localIds = localIds.split(",").map(_.trim),
+        remoteIds = remoteIds.split(",").map(_.trim),
+        remoteField = remoteField,
+        remoteEntity = remoteEntity,
+        widget = widget
+      )
+    }
   }
 
   private def condition(field:BoxField_row) = for{
@@ -358,7 +382,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         JSONField(
           `type` = field.`type`,
           name = field.name,
-          nullable = pgColumn.map(_.nullable).getOrElse(true),
+          nullable = !pgColumn.exists(_.required),
           readOnly = field.read_only.getOrElse(false),
           label = Some(lab),
           lookup = look,
@@ -370,7 +394,8 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
           condition = condition(field),
           tooltip = fieldI18n.flatMap(_.tooltip),
           params = field.params,
-          linked = linked
+          linked = linked,
+          lookupLabel = lookupLabel(field,fieldI18n)
         )
       }
 

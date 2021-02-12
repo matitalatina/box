@@ -11,12 +11,22 @@ import io.udash.bootstrap.tooltip.UdashTooltip
 
 case class CheckboxWidget(field:JSONField, prop: Property[Json]) extends Widget {
 
-  val name = WidgetsNames.checkbox
-  val supportedTypes = Seq(JSONFieldTypes.BOOLEAN)
+  def jsToBool(json:Json):Boolean = field.`type` match {
+    case JSONFieldTypes.BOOLEAN => json.asBoolean.getOrElse(false)
+    case JSONFieldTypes.NUMBER => json.asNumber.flatMap(_.toInt).exists(_ == 1)
+    case _ => false
+  }
+
+  def boolToJson(v:Boolean):Json = field.`type` match {
+    case JSONFieldTypes.BOOLEAN => v.asJson
+    case JSONFieldTypes.NUMBER => v match {
+        case true => 1.asJson
+        case false => 0.asJson
+    }
+    case _ => Json.Null
+  }
 
   override def edit() = {
-    def jsToBool(json:Json):Boolean = json.asBoolean.getOrElse(false)
-    def boolToJson(v:Boolean):Json = v.asJson
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip,UdashTooltip.Placement.Right) _
 

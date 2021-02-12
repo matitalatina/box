@@ -20,7 +20,7 @@ object NewsUIDef {
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"news_id",false),
       JSONField(JSONFieldTypes.DATETIME,"datetime",false, widget = Some(WidgetsNames.datetimePicker)),
-      JSONField(JSONFieldTypes.STRING,"author",true, widget = Some(WidgetsNames.textinput)),
+      JSONField(JSONFieldTypes.STRING,"author",true, widget = Some(WidgetsNames.input)),
       JSONField(JSONFieldTypes.CHILD,"news_i18n",true,child = Some(Child(NEWS_I18N,"news_i18n","news_id","news_id",None)), widget = Some(WidgetsNames.tableChild))
     ),
     layout = Layout(
@@ -51,7 +51,7 @@ object NewsUIDef {
       JSONField(JSONFieldTypes.NUMBER,"news_id",false),
       CommonField.lang,
       JSONField(JSONFieldTypes.STRING,"text",true, widget = Some(WidgetsNames.richTextEditor)),
-      JSONField(JSONFieldTypes.STRING,"title",true, widget = Some(WidgetsNames.textinput))
+      JSONField(JSONFieldTypes.STRING,"title",true, widget = Some(WidgetsNames.input))
     ),
     layout = Layout(
       blocks = Seq(

@@ -14,7 +14,7 @@ import io.udash.bindings.Bindings
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLAnchorElement
-import org.scalajs.dom.{Event, File}
+import org.scalajs.dom.{Event, File, FileReader}
 import scalatags.JsDom
 import scribe.Logging
 
@@ -38,45 +38,95 @@ case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], fi
   import ch.wsl.box.shared.utils.JSONUtils._
   import io.circe.syntax._
 
-  private def downloadFile(): Unit = {
+  val mime:Property[String] = Property("application/octet-stream")
+  val source:Property[Option[String]] = Property(None)
+
+  prop.listen({js =>
     val file = prop.get.string
-    val mime = file.take(1) match {
-      case "/" => "image/jpeg"
-      case "i" => "image/png"
-      case "R" => "image/gif"
-      case "J" => "application/pdf"
-      case _ => "application/octet-stream"
+    if(file.length > 0) {
+      val mime = file.take(1) match {
+        case "/" => "image/jpeg"
+        case "i" => "image/png"
+        case "R" => "image/gif"
+        case "J" => "application/pdf"
+        case _ => "application/octet-stream"
+      }
+      this.mime.set(mime)
+      this.source.set(Some(s"data:$mime;base64,$file"))
+    } else {
+      source.set(None)
+      this.mime.set("application/octet-stream")
     }
-    val source = s"data:$mime;base64,$file"
+  }, true)
+
+  private def downloadFile(): Unit = {
+
     val link = dom.document.createElement("a").asInstanceOf[HTMLAnchorElement]
-    val extension = mime.split("/")(1) match {
+    val extension = mime.get.split("/")(1) match {
       case "octet-strem" => "bin"
       case s:String => s
     }
     val filename = s"download.$extension"
-    link.href = source
+    link.href = source.get.get
     link.asInstanceOf[js.Dynamic].download = filename
     link.click()
   }
 
-  private def display = {
-
+  private def showFile = showIf(source.transform(_.isDefined)){
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       WidgetUtils.toLabel(field),
-      button("Download",ClientConf.style.boxButton,BootstrapStyles.Float.right(), onclick :+= ((e:Event) => downloadFile()) ),
+      produce(mime) { mime =>
+        if(mime.startsWith("image")) {
+          div(
+            produce(source){
+              case None => Seq()
+              case Some(image) => img(src := image, ClientConf.style.maxFullWidth, BootstrapStyles.Float.right()).render
+
+            }
+          ).render
+        } else {
+          button("Download", ClientConf.style.boxButton, BootstrapStyles.Float.right(), onclick :+= ((e: Event) => downloadFile())).render
+        }
+      },
+      div(BootstrapStyles.Visibility.clearfix)
+    ).render
+  }
+
+
+
+  val acceptMultipleFiles = Property(false)
+  val selectedFiles = SeqProperty.blank[File]
+  val fileInput = FileInput(selectedFiles, acceptMultipleFiles)("files",display.none).render
+
+  selectedFiles.listen{ _.headOption.map{ file =>
+    val reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (e) => {
+      val result = reader.result.asInstanceOf[String]
+      val token = "base64,"
+      val index = result.indexOf(token)
+      val base64 = result.substring(index+token.length)
+      prop.set(base64.asJson)
+    }
+  }}
+
+  private def upload = {
+
+    div(BootstrapCol.md(12),ClientConf.style.noPadding)(
+      button("Upload",ClientConf.style.boxButton,BootstrapStyles.Float.right(), onclick :+= ((e:Event) => fileInput.click()) ),
       div(BootstrapStyles.Visibility.clearfix)
     )
   }
 
   override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),ClientConf.style.noPadding,
-
-    display,
+    showFile,
     div(BootstrapStyles.Visibility.clearfix),
   ).render
 
   override def edit() = {
     div(BootstrapCol.md(12),ClientConf.style.noPadding,
-      display,
+      showFile,
+      upload,
       //autoRelease(produce(id) { _ => div(FileInput(selectedFile, Property(false))("file")).render }),
       div(BootstrapStyles.Visibility.clearfix)
     ).render

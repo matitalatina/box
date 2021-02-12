@@ -88,11 +88,19 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
   private def widgetSelector(field: JSONField, id:Property[Option[String]], fieldData:Property[Json]): Widget = {
 
-    val isKeyNotEditable:Boolean = metadata.keys.contains(field.name) && metadata.keyStrategy == SurrugateKey && !( ClientConf.manualEditKeyFields || ClientConf.manualEditSingleKeyFields.contains(metadata.entity + "." + field.name))
-
+    val isKeyNotEditable:Boolean = {
+      metadata.keys.contains(field.name) &&  //check if field is a key
+        (
+          id.get.isDefined ||                //if it's an existing record the key cannot be changed, it would be a new record
+          (
+            metadata.keyStrategy == SurrugateKey &&
+            !( ClientConf.manualEditKeyFields || ClientConf.manualEditSingleKeyFields.contains(metadata.entity + "." + field.name))
+          )
+        )
+    }
 
     val widg:ComponentWidgetFactory = isKeyNotEditable match {
-      case true => InputWidgetFactory.TextDisabled
+      case true => InputWidgetFactory.InputDisabled
       case false => field.widget match {
         case Some(value) => WidgetRegistry.forName(value)
         case None => WidgetRegistry.forType(field.`type`)

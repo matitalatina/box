@@ -288,7 +288,7 @@ case class Form(
           privateOnly {
             parameters('q, 'fk.?, 'fields.?) { (q, fk, fields) =>
               val query = parse(q).right.get.as[JSONQuery].right.get
-              val tabMetadata = tabularMetadata(fields.map(_.split(",").toSeq))
+              val tabMetadata = tabularMetadata(fields.map(_.split(",").map(_.trim).toSeq))
               complete {
                 val io = for {
                   metadata <- DBIO.from(boxDb.adminDb.run(tabMetadata))

@@ -187,7 +187,7 @@ case class FormActions(metadata:JSONMetadata,
         rows = attachArrayIndex(e.seq(field.name),metadata)
         //attach parent id
         rowsWithId = rows.map{ row =>
-          val masterChild: Seq[(String, String)] = field.child.get.masterFields.split(",").zip(field.child.get.childFields.split(",")).toSeq
+          val masterChild: Seq[(String, String)] = field.child.get.masterFields.split(",").map(_.trim).zip(field.child.get.childFields.split(",").map(_.trim)).toSeq
           masterChild.foldLeft(row){ case (acc,(master,child)) => acc.deepMerge(Json.obj(child -> inserted.js(master)))}
         }
         result <- DBIO.sequence(rowsWithId.map(row => FormActions(metadata,jsonActions,metadataFactory).insert(row)))
@@ -224,7 +224,7 @@ case class FormActions(metadata:JSONMetadata,
 
   private def createQuery(entity:Json, child: Child):JSONQuery = {
     val parentFilter = for{
-      (local,remote) <- child.masterFields.split(",").zip(child.childFields.split(","))
+      (local,remote) <- child.masterFields.split(",").map(_.trim).zip(child.childFields.split(",").map(_.trim))
     } yield {
       JSONQueryFilter(remote,Some(Filter.EQUALS),entity.get(local))
     }

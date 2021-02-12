@@ -6,25 +6,16 @@ import JSONFieldTypes._
   */
 object WidgetsNames {
   val inputDisabled = "inputDisabled"
-  val inputNumber = "inputNumber"
-  val inputArrayNumber = "inputArrayNumber"
-  val textinput = "textinput"
+  val input = "input"
   val textarea = "textarea"
   val datepicker = "datepicker"
   val timepicker = "timepicker"
   val datetimePicker = "datetimePicker"
-  val datepickerFullWidth = "datepickerFullWidth"
-  val timepickerFullWidth = "timepickerFullWidth"
-  val datetimePickerFullWidth = "datetimePickerFullWidth"
   val select = "selectWidget"
   val checkbox = "checkbox"
-  val checkboxNumber = "checkboxNumber"
   val hidden = "hidden"
-  val nolabel = "nolabel"
   val twoLines = "twoLines"
   val popup = "popup"
-  val fullWidth = "fullWidth"
-  val mapPoint = "mapPoint"
   val map = "map"
   val code = "code"
   val richTextEditor = "richTextEditor"
@@ -45,15 +36,15 @@ object WidgetsNames {
 
   val mapping= Map(
     NUMBER -> Seq(
-      inputNumber,
+      input,
       select,
       popup,
-      checkboxNumber,
+      checkbox,
       inputDisabled,
       hidden,
     ),
     STRING -> Seq(
-      textinput,
+      input,
       twoLines,
       textarea,
       richTextEditor,
@@ -70,26 +61,26 @@ object WidgetsNames {
       linkedForm
     ),
     FILE -> Seq(
+      simpleFile,
       fileWithPreview,
-      simpleFile
     ),
     DATE -> Seq(
       datepicker,
-      textinput,
+      input,
       hidden
     ),
     DATETIME -> Seq(
       datetimePicker,
-      textinput,
+      input,
       hidden
     ),
     TIME -> Seq(
       timepicker,
-      textinput,
+      input,
       hidden
     ),
     INTERVAL -> Seq(
-      textinput,
+      input,
       hidden
     ),
     BOOLEAN -> Seq(
@@ -97,11 +88,11 @@ object WidgetsNames {
       hidden
     ),
     ARRAY_NUMBER -> Seq(
-      inputArrayNumber,
+      input,
       hidden
     ),
     ARRAY_STRING -> Seq(
-      textinput,
+      input,
       hidden
     ),
     GEOMETRY -> Seq(

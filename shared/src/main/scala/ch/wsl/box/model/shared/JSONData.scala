@@ -28,7 +28,7 @@ object JSONData{
   }
 
   def customToStringIfDateTime(v: Any) = v match {                          //here we can set the timestamp format for the generated tables' forms
-    case x:java.time.LocalDateTime =>  DateTimeFormatters.timestamp.format(x).replace('T', ' ')  //todo: solve how to specify if the timestamp should be rendered as date, time or datetime and to which resolution
+    case x:java.time.LocalDateTime =>  DateTimeFormatters.timestamp.format(x)
     case x:java.time.LocalDate =>  DateTimeFormatters.date.format(x)
     case x:java.time.LocalTime =>  DateTimeFormatters.time.format(x)
     case _ => v.toString

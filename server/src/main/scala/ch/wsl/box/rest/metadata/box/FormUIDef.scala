@@ -17,7 +17,7 @@ object FormUIDef {
     label = "Interface builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"form_id",false,widget = Some(WidgetsNames.inputDisabled)),
-      JSONField(JSONFieldTypes.STRING,"name",false,widget = Some(WidgetsNames.textinput)),
+      JSONField(JSONFieldTypes.STRING,"name",false,widget = Some(WidgetsNames.input)),
       JSONField(JSONFieldTypes.STRING,"description",true,widget = Some(WidgetsNames.twoLines)),
       JSONField(JSONFieldTypes.STRING,"layout",true, widget = Some(WidgetsNames.code),label = Some(""),
         params = Some(Json.obj("language" -> "json".asJson, "height" -> 600.asJson))
@@ -28,7 +28,7 @@ object FormUIDef {
           tables.map(x => JSONLookup(x,x))
         ))
       ),
-      JSONField(JSONFieldTypes.STRING,"tabularFields",false,widget = Some(WidgetsNames.textinput)),
+      JSONField(JSONFieldTypes.STRING,"tabularFields",false,widget = Some(WidgetsNames.input)),
       JSONField(JSONFieldTypes.STRING,"query",true,
         widget = Some(WidgetsNames.code),
         params = Some(Json.obj("language" -> "json".asJson, "height" -> 100.asJson, "fullWidth" -> false.asJson))
@@ -40,12 +40,12 @@ object FormUIDef {
         ))
       ),
       JSONField(JSONFieldTypes.STRING,"edit_key_field",true,
-        widget = Some(WidgetsNames.textinput),
+        widget = Some(WidgetsNames.input),
         label = Some("Key fields"),
         placeholder = Some("by default primary key is used"),
         tooltip = Some("Manually enter the fields that should be used as primary key. This is useful mainly for updatable views where the primary key of the entity cannot be calculated. Fields are separated with comma")
       ),
-      JSONField(JSONFieldTypes.STRING,"exportFields",true,widget = Some(WidgetsNames.textinput)),
+      JSONField(JSONFieldTypes.STRING,"exportFields",true,widget = Some(WidgetsNames.input)),
       JSONField(JSONFieldTypes.CHILD,"fields",true,
         child = Some(Child(FORM_FIELD,"fields","form_id","form_id",
           Some(JSONQuery.sortByKeys(Seq("field_id")).filterWith(JSONQueryFilter("type",Some("notin"),JSONFieldTypes.STATIC+","+JSONFieldTypes.CHILD)))
@@ -84,7 +84,7 @@ object FormUIDef {
         ).map(Right(_))),
         LayoutBlock(Some("I18n"),4,Seq("form_i18n").map(Left(_))),
         LayoutBlock(Some("Fields"),12,Seq("fields").map(Left(_))),
-        LayoutBlock(Some("Childs"),12,Seq("fields_child").map(Left(_))),
+        LayoutBlock(Some("Linked forms"),12,Seq("fields_child").map(Left(_))),
         LayoutBlock(Some("Static elements"),12,Seq("fields_static").map(Left(_))),
         LayoutBlock(Some("Layout"),12,Seq("layout").map(Left(_))),
       )
@@ -123,11 +123,11 @@ object FormUIDef {
       CommonField.lookupQuery(tables),
       CommonField.default,
       JSONField(JSONFieldTypes.NUMBER,"min",true,
-        widget = Some(WidgetsNames.inputNumber),
+        widget = Some(WidgetsNames.input),
         condition = Some(ConditionalField("type",Seq(JSONFieldTypes.NUMBER.asJson)))
       ),
       JSONField(JSONFieldTypes.NUMBER,"max",true,
-        widget = Some(WidgetsNames.inputNumber),
+        widget = Some(WidgetsNames.input),
         condition = Some(ConditionalField("type",Seq(JSONFieldTypes.NUMBER.asJson)))
       ),
       CommonField.conditionFieldId,
@@ -194,18 +194,18 @@ object FormUIDef {
         ))
       ),
       JSONField(JSONFieldTypes.STRING,"masterFields",true,label=Some("Parent field"),
-        widget = Some(WidgetsNames.textinput)
+        widget = Some(WidgetsNames.input)
       ),
       JSONField(JSONFieldTypes.STRING,"linked_key_fields",true,
-        widget = Some(WidgetsNames.textinput),
+        widget = Some(WidgetsNames.input),
         condition = Some(ConditionalField("widget",Seq(WidgetsNames.linkedForm.asJson)))
       ),
       JSONField(JSONFieldTypes.STRING,"linked_label_fields",true,
-        widget = Some(WidgetsNames.textinput),
+        widget = Some(WidgetsNames.input),
         condition = Some(ConditionalField("widget",Seq(WidgetsNames.linkedForm.asJson)))
       ),
       JSONField(JSONFieldTypes.STRING,"childFields",true,
-        widget = Some(WidgetsNames.textinput)
+        widget = Some(WidgetsNames.input)
       ),
       JSONField(JSONFieldTypes.STRING,"childQuery",true,
         widget = Some(WidgetsNames.code),
@@ -274,7 +274,10 @@ object FormUIDef {
       JSONField(JSONFieldTypes.CHILD,"field_i18n",true,child = Some(Child(FORM_FIELD_I18N,"field_i18n","field_id","field_id",Some(JSONQuery.sortByKeys(Seq("field_id"))))), widget = Some(WidgetsNames.tableChild)),
       CommonField.lookupEntity(tables),
       CommonField.lookupValueField(tables),
-      CommonField.lookupQuery(tables),
+      JSONField(JSONFieldTypes.STRING,"masterFields",true,label=Some("Parent field"),
+        widget = Some(WidgetsNames.input),
+        condition = Some(ConditionalField("widget",Seq(WidgetsNames.lookupLabel.asJson)))
+      ),
       CommonField.conditionFieldId,
       CommonField.conditionValues,
       JSONField(JSONFieldTypes.JSON,"params",true,widget = Some(WidgetsNames.code)),
@@ -289,6 +292,7 @@ object FormUIDef {
           "type",
           "widget",
           "lookupEntity",
+          "masterFields",
           "lookupValueField",
           "lookupQuery",
           "conditionFieldId",
@@ -380,9 +384,9 @@ object FormUIDef {
     label = "FieldFile builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"field_id",false,widget = Some(WidgetsNames.hidden)),
-      JSONField(JSONFieldTypes.STRING,"file_field",false,widget = Some(WidgetsNames.textinput)),
-      JSONField(JSONFieldTypes.STRING,"thumbnail_field",false,widget = Some(WidgetsNames.textinput)),
-      JSONField(JSONFieldTypes.STRING,"name_field",false,widget = Some(WidgetsNames.textinput)),
+      JSONField(JSONFieldTypes.STRING,"file_field",false,widget = Some(WidgetsNames.input)),
+      JSONField(JSONFieldTypes.STRING,"thumbnail_field",false,widget = Some(WidgetsNames.input)),
+      JSONField(JSONFieldTypes.STRING,"name_field",false,widget = Some(WidgetsNames.input)),
     ),
     layout = Layout(
       blocks = Seq(

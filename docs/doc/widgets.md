@@ -2,7 +2,9 @@
 title: Widgets
 parent: Documentation
 nav_order: 4
+has_children: true
 ---
+
 
 
 ## Dynamic select fields

@@ -9,7 +9,7 @@ import io.circe.syntax._
 object CommonField {
 
 
-  val name = JSONField(JSONFieldTypes.STRING,"name",false,widget = Some(WidgetsNames.textinput))
+  val name = JSONField(JSONFieldTypes.STRING,"name",false,widget = Some(WidgetsNames.input))
 
   val widget = JSONField(JSONFieldTypes.STRING,"widget",false,
     widget = Some(WidgetsNames.select),
@@ -34,12 +34,12 @@ object CommonField {
     lookup = Some(JSONFieldLookup.prefilled(
       tables.map(x => JSONLookup(x,x))
     )),
-    condition = Some(ConditionalField("widget",Seq(WidgetsNames.select.asJson,WidgetsNames.popup.asJson)))
+    condition = Some(ConditionalField("widget",Seq(WidgetsNames.select.asJson,WidgetsNames.popup.asJson,WidgetsNames.lookupLabel.asJson)))
   )
 
   def lookupValueField(tables:Seq[String]) =  JSONField(JSONFieldTypes.STRING,"lookupValueField",true,
     condition = Some(ConditionalField("lookupEntity",tables.map(_.asJson))),
-    widget = Some(WidgetsNames.textinput)
+    widget = Some(WidgetsNames.input)
   )
 
   def lookupQuery(tables:Seq[String]) = JSONField(JSONFieldTypes.STRING,"lookupQuery",true,
@@ -48,9 +48,9 @@ object CommonField {
     params = Some(Json.obj("language" -> "json".asJson, "height" -> 100.asJson, "fullWidth" -> false.asJson))
   )
 
-  val default = JSONField(JSONFieldTypes.STRING,"default",true,widget = Some(WidgetsNames.textinput))
+  val default = JSONField(JSONFieldTypes.STRING,"default",true,widget = Some(WidgetsNames.input))
 
-  val conditionFieldId = JSONField(JSONFieldTypes.STRING,"conditionFieldId",true,widget = Some(WidgetsNames.textinput))
+  val conditionFieldId = JSONField(JSONFieldTypes.STRING,"conditionFieldId",true,widget = Some(WidgetsNames.input))
   val conditionValues = JSONField(JSONFieldTypes.STRING,"conditionValues",true,
     widget = Some(WidgetsNames.code),
     placeholder = Some("[1,2,3]"),
@@ -67,10 +67,10 @@ object CommonField {
   )
 
 
-  val label = JSONField(JSONFieldTypes.STRING,"label",true, widget = Some(WidgetsNames.textinput))
-  val tooltip = JSONField(JSONFieldTypes.STRING,"tooltip",true, widget = Some(WidgetsNames.textinput))
-  val hint = JSONField(JSONFieldTypes.STRING,"hint",true, widget = Some(WidgetsNames.textinput))
-  val placeholder = JSONField(JSONFieldTypes.STRING,"placeholder",true, widget = Some(WidgetsNames.textinput))
-  val lookupTextField = JSONField(JSONFieldTypes.STRING,"lookupTextField",true, widget = Some(WidgetsNames.textinput))
+  val label = JSONField(JSONFieldTypes.STRING,"label",true, widget = Some(WidgetsNames.input))
+  val tooltip = JSONField(JSONFieldTypes.STRING,"tooltip",true, widget = Some(WidgetsNames.input))
+  val hint = JSONField(JSONFieldTypes.STRING,"hint",true, widget = Some(WidgetsNames.input))
+  val placeholder = JSONField(JSONFieldTypes.STRING,"placeholder",true, widget = Some(WidgetsNames.input))
+  val lookupTextField = JSONField(JSONFieldTypes.STRING,"lookupTextField",true, widget = Some(WidgetsNames.input))
 
 }

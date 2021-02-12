@@ -1,8 +1,8 @@
 package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.views.components.{SimpleChildFactory, TableChildFactory}
-import ch.wsl.box.client.views.components.widget.labels.{LinkedFormWidget, StaticTextWidget, TitleWidget}
-import ch.wsl.box.model.shared.WidgetsNames
+import ch.wsl.box.client.views.components.widget.labels.{LinkedFormWidget, LookupLabelWidget, StaticTextWidget, TitleWidget}
+import ch.wsl.box.model.shared.{WidgetsNames}
 import scribe.Logging
 
 object WidgetRegistry extends Logging {
@@ -20,22 +20,16 @@ object WidgetRegistry extends Logging {
     PopupWidgetFactory,
     SelectWidgetFactory,
 
-    InputWidgetFactory.TextDisabled,
-    InputWidgetFactory.Number,
-    InputWidgetFactory.NumberArray,
-    InputWidgetFactory.TextNoLabel,
+    LookupLabelWidget,
+
+    InputWidgetFactory.Input,
+    InputWidgetFactory.InputDisabled,
     InputWidgetFactory.TwoLines,
     InputWidgetFactory.TextArea,
-    InputWidgetFactory.Text,
+
     CheckboxWidget,
-    CheckboxNumberWidget,
 
     DateTimeWidget.Time,
-    DateTimeWidget.Date,
-    DateTimeWidget.DateTime,
-    DateTimeWidget.TimeFullWidth,
-    DateTimeWidget.DateFullWidth,
-    DateTimeWidget.DateTimeFullWidth,
     DateTimeWidget.Date,
     DateTimeWidget.DateTime,
 
@@ -59,7 +53,7 @@ object WidgetRegistry extends Logging {
     case Some(w) => w
     case None => {
       logger.warn(s"Widget: $widgetName not registred, using default")
-      InputWidgetFactory.Text
+      InputWidgetFactory.Input
     }
   }
 

@@ -14,7 +14,7 @@ import slick.lifted.{ColumnOrdered, TableQuery}
 import slick.sql.FixedSqlStreamingAction
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.UserProfile
@@ -121,15 +121,19 @@ class DbActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product](
 
   def getById(id:JSONID) = {
     logger.info(s"GET BY ID $id")
-    Try(filter(id)).toOption match {
-      case Some(f) => for {
+    Try(filter(id)) match {
+      case Success(f) => for {
         result <-  {
           val action = f.take(1).result
           logger.info(action.statements.toString)
           action
         }.transactionally
       } yield result.headOption
-      case None => DBIO.successful(None)
+      case Failure(exception) => {
+        logger.error(exception.getMessage)
+        exception.printStackTrace()
+        DBIO.successful(None)
+      }
     }
   }
 

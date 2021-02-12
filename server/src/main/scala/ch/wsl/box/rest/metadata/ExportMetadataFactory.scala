@@ -109,7 +109,7 @@ case class ExportMetadataFactory(implicit up:UserProfile, mat:Materializer, ec:E
 
       val layout = Layout.fromString(export.layout).getOrElse(Layout.fromFields(jsonFields))
 
-      val parameters = export.parameters.toSeq.flatMap(_.split(","))
+      val parameters = export.parameters.toSeq.flatMap(_.split(",").map(_.trim))
 
       JSONMetadata(
         export.export_id.get,

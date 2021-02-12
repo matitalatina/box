@@ -103,7 +103,7 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
 
       val keys = for {
-        (local, sub) <- child.masterFields.split(",").zip(child.childFields.split(","))
+        (local, sub) <- child.masterFields.split(",").map(_.trim).zip(child.childFields.split(",").map(_.trim))
       } yield {
         //      println(s"local:$local sub:$sub")
         sub -> masterData.get.js(local)
