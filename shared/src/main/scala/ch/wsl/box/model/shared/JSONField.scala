@@ -20,7 +20,8 @@ case class JSONField(
                       condition: Option[ConditionalField] = None,
                       tooltip: Option[String] = None,
                       params: Option[Json] = None,
-                      linked: Option[LinkedForm] = None
+                      linked: Option[LinkedForm] = None,
+                      lookupLabel: Option[LookupLabel] = None
                     ) {
   def title = label.getOrElse(name)
 }
@@ -31,6 +32,7 @@ object JSONField{
 
 case class LinkedForm(name:String,parentValueFields:Seq[String], childValueFields:Seq[String], parentLabelFields:Seq[String])
 
+case class LookupLabel(localIds:Seq[String],remoteIds:Seq[String],remoteField:String,remoteEntity:String,widget:String)
 /**
   *
   * @param lookupEntity

@@ -11,6 +11,7 @@ import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.rest.logic._
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.{Auth, BoxConfig, UserProfile}
+import ch.wsl.box.shared.utils.JSONUtils.EnhancedJson
 import io.circe._
 import io.circe.parser._
 import scribe.Logging
@@ -265,6 +266,29 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
     DBIO.sequence(linkedFormOpt.toSeq).map(_.flatten.headOption) // fix types
   }
 
+  private def lookupLabel(field:BoxField_row,field_i18n_row: Option[BoxField_i18n_row]):Option[LookupLabel] = {
+    for{
+      localIds <- field.masterFields
+      remoteIds <- field.lookupValueField
+      remoteField <- field_i18n_row.flatMap(_.lookupTextField)
+      remoteEntity <- field.lookupEntity
+    } yield {
+
+      val widget = field.params.flatMap(_.getOpt("widget")).getOrElse{
+        val jsonType = Registry().fields.field(remoteEntity,remoteField).jsonType
+        WidgetsNames.defaults.getOrElse(jsonType,WidgetsNames.textinput)
+      }
+
+      LookupLabel(
+        localIds = localIds.split(",").map(_.trim),
+        remoteIds = remoteIds.split(",").map(_.trim),
+        remoteField = remoteField,
+        remoteEntity = remoteEntity,
+        widget = widget
+      )
+    }
+  }
+
   private def condition(field:BoxField_row) = for{
     fieldId <- field.conditionFieldId
     values <- field.conditionValues
@@ -370,7 +394,8 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
           condition = condition(field),
           tooltip = fieldI18n.flatMap(_.tooltip),
           params = field.params,
-          linked = linked
+          linked = linked,
+          lookupLabel = lookupLabel(field,fieldI18n)
         )
       }
 

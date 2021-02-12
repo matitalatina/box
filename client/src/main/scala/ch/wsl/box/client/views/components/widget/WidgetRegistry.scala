@@ -1,8 +1,8 @@
 package ch.wsl.box.client.views.components.widget
 
 import ch.wsl.box.client.views.components.{SimpleChildFactory, TableChildFactory}
-import ch.wsl.box.client.views.components.widget.labels.{LinkedFormWidget, StaticTextWidget, TitleWidget}
-import ch.wsl.box.model.shared.WidgetsNames
+import ch.wsl.box.client.views.components.widget.labels.{LinkedFormWidget, LookupLabelWidget, StaticTextWidget, TitleWidget}
+import ch.wsl.box.model.shared.{WidgetsNames}
 import scribe.Logging
 
 object WidgetRegistry extends Logging {
@@ -19,6 +19,8 @@ object WidgetRegistry extends Logging {
 
     PopupWidgetFactory,
     SelectWidgetFactory,
+
+    LookupLabelWidget,
 
     InputWidgetFactory.TextDisabled,
     InputWidgetFactory.Number,
