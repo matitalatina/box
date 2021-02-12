@@ -1,0 +1,13 @@
+---
+title: Checkbox
+parent: Widgets
+nav_order: 1
+---
+
+# Checkbox
+
+Render the widget using a standard HTML [checkbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Input/checkbox)
+
+#### Supported types
+- Boolean
+- Number, (1 for checked and 0 unchecked)
