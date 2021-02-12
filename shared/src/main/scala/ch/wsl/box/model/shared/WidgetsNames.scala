@@ -70,8 +70,8 @@ object WidgetsNames {
       linkedForm
     ),
     FILE -> Seq(
+      simpleFile,
       fileWithPreview,
-      simpleFile
     ),
     DATE -> Seq(
       datepicker,

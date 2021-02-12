@@ -38,35 +38,58 @@ case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], fi
   import ch.wsl.box.shared.utils.JSONUtils._
   import io.circe.syntax._
 
+  val mime:Property[String] = Property("application/octet-stream")
+  val source:Property[Option[String]] = Property(None)
+
+  prop.listen({js =>
+    val file = prop.get.string
+    if(file.length > 0) {
+      val mime = file.take(1) match {
+        case "/" => "image/jpeg"
+        case "i" => "image/png"
+        case "R" => "image/gif"
+        case "J" => "application/pdf"
+        case _ => "application/octet-stream"
+      }
+      this.mime.set(mime)
+      this.source.set(Some(s"data:$mime;base64,$file"))
+    } else {
+      source.set(None)
+      this.mime.set("application/octet-stream")
+    }
+  }, true)
 
   private def downloadFile(): Unit = {
-    val file = prop.get.string
-    val mime = file.take(1) match {
-      case "/" => "image/jpeg"
-      case "i" => "image/png"
-      case "R" => "image/gif"
-      case "J" => "application/pdf"
-      case _ => "application/octet-stream"
-    }
-    val source = s"data:$mime;base64,$file"
+
     val link = dom.document.createElement("a").asInstanceOf[HTMLAnchorElement]
-    val extension = mime.split("/")(1) match {
+    val extension = mime.get.split("/")(1) match {
       case "octet-strem" => "bin"
       case s:String => s
     }
     val filename = s"download.$extension"
-    link.href = source
+    link.href = source.get.get
     link.asInstanceOf[js.Dynamic].download = filename
     link.click()
   }
 
-  private def download = {
-
+  private def showFile = showIf(source.transform(_.isDefined)){
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       WidgetUtils.toLabel(field),
-      button("Download",ClientConf.style.boxButton,BootstrapStyles.Float.right(), onclick :+= ((e:Event) => downloadFile()) ),
+      produce(mime) { mime =>
+        if(mime.startsWith("image")) {
+          div(
+            produce(source){
+              case None => Seq()
+              case Some(image) => img(src := image, ClientConf.style.maxFullWidth, BootstrapStyles.Float.right()).render
+
+            }
+          ).render
+        } else {
+          button("Download", ClientConf.style.boxButton, BootstrapStyles.Float.right(), onclick :+= ((e: Event) => downloadFile())).render
+        }
+      },
       div(BootstrapStyles.Visibility.clearfix)
-    )
+    ).render
   }
 
 
@@ -96,13 +119,13 @@ case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], fi
   }
 
   override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),ClientConf.style.noPadding,
-    download,
+    showFile,
     div(BootstrapStyles.Visibility.clearfix),
   ).render
 
   override def edit() = {
     div(BootstrapCol.md(12),ClientConf.style.noPadding,
-      download,
+      showFile,
       upload,
       //autoRelease(produce(id) { _ => div(FileInput(selectedFile, Property(false))("file")).render }),
       div(BootstrapStyles.Visibility.clearfix)
