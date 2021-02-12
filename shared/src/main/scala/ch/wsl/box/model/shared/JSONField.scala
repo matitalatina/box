@@ -56,7 +56,7 @@ object JSONFieldLookup {
 
     val options = lookupData.map{ lookupRow =>
 
-      val label = mapping.textProperty.split(",").map(k => lookupRow.get(k)).mkString(" - ")
+      val label = mapping.textProperty.split(",").map(_.trim).map(k => lookupRow.get(k)).mkString(" - ")
 
       JSONLookup(lookupRow.get(mapping.valueProperty),label)
     }

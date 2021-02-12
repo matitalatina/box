@@ -175,7 +175,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
 
       if(formI18n.isEmpty) logger.warn(s"Form ${form.name} (form_id: ${form.form_id}) has no translation to $lang")
 
-      val definedTableFields = form.tabularFields.toSeq.flatMap(_.split(","))
+      val definedTableFields = form.tabularFields.toSeq.flatMap(_.split(",").map(_.trim))
       val missingKeyTableFields = keys.filterNot(k => definedTableFields.contains(k))
       val tableFields = missingKeyTableFields ++ definedTableFields
 
@@ -226,11 +226,11 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         form.entity,
         lang,
         tableFields,
-        form.tabularFields.toSeq.flatMap(_.split(",")),
+        form.tabularFields.toSeq.flatMap(_.split(",").map(_.trim)),
         keys,
         keyStrategy,
         defaultQuery,
-        form.exportFields.map(_.split(",").toSeq).getOrElse(tableFields),
+        form.exportFields.map(_.split(",").map(_.trim).toSeq).getOrElse(tableFields),
         formI18n.flatMap(_.view_table),
         formActions
       )//, form.entity)

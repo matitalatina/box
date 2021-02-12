@@ -125,7 +125,7 @@ object EntityMetadataFactory extends Logging {
                     field.jsonType,
                     name = field.boxName,
                     nullable = !field.required,
-                    widget = TypeMapping.defaultWidgetMapping(field.data_type)
+                    widget = WidgetsNames.defaults.get(field.jsonType)
                   ))
                 }
               }
@@ -133,7 +133,7 @@ object EntityMetadataFactory extends Logging {
                 field.jsonType,
                 name = field.boxName,
                 nullable = !field.required,
-                widget = TypeMapping.defaultWidgetMapping(field.data_type)
+                widget = WidgetsNames.defaults.get(field.jsonType)
               ))
             }
           }

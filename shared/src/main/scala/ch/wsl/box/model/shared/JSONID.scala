@@ -23,7 +23,7 @@ object JSONID {
 
   def fromString(str:String): Option[JSONID] = Try{
     JSONID(
-      str.split(",").map{ k =>
+      str.split(",").map(_.trim).map{ k =>
         val c = k.split("::")
         if(c.length < 2) {
           throw new Exception(s"Invalid JSONID, $str")
