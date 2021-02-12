@@ -100,7 +100,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
     }
 
     val widg:ComponentWidgetFactory = isKeyNotEditable match {
-      case true => InputWidgetFactory.TextDisabled
+      case true => InputWidgetFactory.InputDisabled
       case false => field.widget match {
         case Some(value) => WidgetRegistry.forName(value)
         case None => WidgetRegistry.forType(field.`type`)

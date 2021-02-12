@@ -276,7 +276,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
 
       val widget = field.params.flatMap(_.getOpt("widget")).getOrElse{
         val jsonType = Registry().fields.field(remoteEntity,remoteField).jsonType
-        WidgetsNames.defaults.getOrElse(jsonType,WidgetsNames.textinput)
+        WidgetsNames.defaults.getOrElse(jsonType,WidgetsNames.input)
       }
 
       LookupLabel(

@@ -28,6 +28,7 @@ case class JSONField(
 
 object JSONField{
   val empty = JSONField("","",true,true)
+  val fullWidth = empty.copy(params = Some(Json.obj("fullWidth" -> Json.True)))
 }
 
 case class LinkedForm(name:String,parentValueFields:Seq[String], childValueFields:Seq[String], parentLabelFields:Seq[String])

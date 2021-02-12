@@ -22,22 +22,14 @@ object WidgetRegistry extends Logging {
 
     LookupLabelWidget,
 
-    InputWidgetFactory.TextDisabled,
-    InputWidgetFactory.Number,
-    InputWidgetFactory.NumberArray,
-    InputWidgetFactory.TextNoLabel,
+    InputWidgetFactory.Input,
+    InputWidgetFactory.InputDisabled,
     InputWidgetFactory.TwoLines,
     InputWidgetFactory.TextArea,
-    InputWidgetFactory.Text,
+
     CheckboxWidget,
-    CheckboxNumberWidget,
 
     DateTimeWidget.Time,
-    DateTimeWidget.Date,
-    DateTimeWidget.DateTime,
-    DateTimeWidget.TimeFullWidth,
-    DateTimeWidget.DateFullWidth,
-    DateTimeWidget.DateTimeFullWidth,
     DateTimeWidget.Date,
     DateTimeWidget.DateTime,
 
@@ -61,7 +53,7 @@ object WidgetRegistry extends Logging {
     case Some(w) => w
     case None => {
       logger.warn(s"Widget: $widgetName not registred, using default")
-      InputWidgetFactory.Text
+      InputWidgetFactory.Input
     }
   }
 

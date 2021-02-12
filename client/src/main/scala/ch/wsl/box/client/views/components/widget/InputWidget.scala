@@ -5,6 +5,7 @@ import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils.TestHooks
 import ch.wsl.box.model.shared.{JSONField, JSONFieldTypes, WidgetsNames}
 import io.circe.Json
+import io.circe.syntax._
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
 import io.udash.properties.single.Property
@@ -19,20 +20,16 @@ import scribe.Logging
 
 object InputWidgetFactory {
 
-  object Text extends ComponentWidgetFactory {
-    override def name: String = WidgetsNames.textinput
-    override def create(params: WidgetParams): Widget = new InputWidget.Text(params.field, params.prop)
+  object Input extends ComponentWidgetFactory {
+    override def name: String = WidgetsNames.input
+    override def create(params: WidgetParams): Widget = new InputWidget.Input(params.field, params.prop)
   }
 
-  object TextDisabled extends ComponentWidgetFactory {
+  object InputDisabled extends ComponentWidgetFactory {
     override def name: String = WidgetsNames.inputDisabled
     override def create(params: WidgetParams): Widget = new InputWidget.TextDisabled(params.field, params.prop)
   }
 
-  object TextNoLabel extends ComponentWidgetFactory {
-    override def name: String = WidgetsNames.nolabel
-    override def create(params: WidgetParams): Widget = new InputWidget.TextNoLabel(params.field, params.prop)
-  }
 
   object TextArea extends ComponentWidgetFactory {
     override def name: String = WidgetsNames.textarea
@@ -43,18 +40,6 @@ object InputWidgetFactory {
   object TwoLines extends ComponentWidgetFactory {
     override def name: String = WidgetsNames.twoLines
     override def create(params: WidgetParams): Widget = new InputWidget.TwoLines(params.field, params.prop)
-
-  }
-
-  object Number extends ComponentWidgetFactory {
-    override def name: String = WidgetsNames.inputNumber
-    override def create(params: WidgetParams): Widget = new InputWidget.Number(params.field, params.prop)
-
-  }
-
-  object NumberArray extends ComponentWidgetFactory {
-    override def name: String = WidgetsNames.inputArrayNumber
-    override def create(params: WidgetParams): Widget = new InputWidget.NumberArray(params.field, params.prop)
 
   }
 
@@ -120,49 +105,13 @@ object InputWidget extends Logging {
 
   }
 
-  class Text(val field:JSONField, prop: Property[Json]) extends Widget {
 
-    val modifiers:Seq[Modifier] = Seq()
-
-
-    override def edit() = editMe(field,true, false, modifiers){ case y =>
-
-      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
-      TextInput(stringModel)(y:_*).render
-    }
-    override protected def show(): JsDom.all.Modifier = {
-      autoRelease(showMe(prop,field,true, modifiers))
-    }
-  }
-
-  class TextDisabled(field:JSONField, prop: Property[Json]) extends Text(field,prop) {
-
-    override def edit() = ClientConf.manualEditKeyFields match{
-//      case false =>{    //todo : mimic an input with a label (otherwise it is not safe: can change dom and save new key!)
-//        show()
-//      }
-//      case true => {
-        case _ => {
-        editMe(field,true, !ClientConf.manualEditKeyFields, modifiers){ case y =>
-          val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
-          TextInput(stringModel)(y:_*).render
-        }
-      }
-
-    }
+  class TextDisabled(field:JSONField, prop: Property[Json]) extends Input(field,prop) {
 
     override val modifiers = Seq({if (!ClientConf.manualEditKeyFields) {disabled := true} else {}} , textAlign.right)
   }
 
-  case class TextNoLabel(field:JSONField, prop: Property[Json]) extends Widget {
 
-
-    override def edit() = editMe(field,false, false){ case y =>
-      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
-      TextInput(stringModel)(y:_*).render
-    }
-    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field, false))
-  }
 
   class Textarea(val field:JSONField, prop: Property[Json]) extends Widget {
 
@@ -181,23 +130,29 @@ object InputWidget extends Logging {
   }
 
 
+  case class Input(field:JSONField, prop: Property[Json]) extends Widget {
 
-  case class Number(field:JSONField, prop: Property[Json]) extends Widget {
+    val modifiers:Seq[Modifier] = Seq()
 
-    override def edit():JsDom.all.Modifier = (editMe(field, true, false){ case y =>
-      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericJson _)
+    val noLabel = field.params.exists(_.js("nolabel") == true.asJson)
+
+    def fromString(s:String) = field.`type` match {
+      case JSONFieldTypes.NUMBER => strToNumericJson(s)
+      case JSONFieldTypes.ARRAY_NUMBER => strToNumericArrayJson(s)
+      case _ => strToJson(field.nullable)(s)
+    }
+
+    override def edit():JsDom.all.Modifier = (editMe(field, !noLabel, false){ case y =>
+      val stringModel = prop.bitransform[String](jsonToString _)(fromString _)
+      field.`type` match {
+        case JSONFieldTypes.NUMBER => NumberInput(stringModel)(y:_*).render
+        case JSONFieldTypes.ARRAY_NUMBER => NumberInput(stringModel)(y++modifiers:_*).render
+        case _ => TextInput(stringModel)(y++modifiers:_*).render
+      }
       NumberInput(stringModel)(y:_*).render
     })
-    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, true))
+    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, !noLabel))
   }
 
-  case class NumberArray(field:JSONField, prop: Property[Json]) extends Widget {
-
-    override def edit():JsDom.all.Modifier = (editMe(field, true, false){ case y =>
-      val stringModel = prop.bitransform[String](jsonToString _)(strToNumericArrayJson _)
-      NumberInput(stringModel)(y:_*).render
-    })
-    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, true))
-  }
 }
 
