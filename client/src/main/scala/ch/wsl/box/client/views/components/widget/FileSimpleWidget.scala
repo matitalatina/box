@@ -14,7 +14,7 @@ import io.udash.bindings.Bindings
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLAnchorElement
-import org.scalajs.dom.{Event, File}
+import org.scalajs.dom.{Event, File, FileReader}
 import scalatags.JsDom
 import scribe.Logging
 
@@ -38,6 +38,7 @@ case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], fi
   import ch.wsl.box.shared.utils.JSONUtils._
   import io.circe.syntax._
 
+
   private def downloadFile(): Unit = {
     val file = prop.get.string
     val mime = file.take(1) match {
@@ -59,7 +60,7 @@ case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], fi
     link.click()
   }
 
-  private def display = {
+  private def download = {
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       WidgetUtils.toLabel(field),
@@ -68,15 +69,41 @@ case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], fi
     )
   }
 
-  override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),ClientConf.style.noPadding,
 
-    display,
+
+  val acceptMultipleFiles = Property(false)
+  val selectedFiles = SeqProperty.blank[File]
+  val fileInput = FileInput(selectedFiles, acceptMultipleFiles)("files",display.none).render
+
+  selectedFiles.listen{ _.headOption.map{ file =>
+    val reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (e) => {
+      val result = reader.result.asInstanceOf[String]
+      val token = "base64,"
+      val index = result.indexOf(token)
+      val base64 = result.substring(index+token.length)
+      prop.set(base64.asJson)
+    }
+  }}
+
+  private def upload = {
+
+    div(BootstrapCol.md(12),ClientConf.style.noPadding)(
+      button("Upload",ClientConf.style.boxButton,BootstrapStyles.Float.right(), onclick :+= ((e:Event) => fileInput.click()) ),
+      div(BootstrapStyles.Visibility.clearfix)
+    )
+  }
+
+  override protected def show(): JsDom.all.Modifier = div(BootstrapCol.md(12),ClientConf.style.noPadding,
+    download,
     div(BootstrapStyles.Visibility.clearfix),
   ).render
 
   override def edit() = {
     div(BootstrapCol.md(12),ClientConf.style.noPadding,
-      display,
+      download,
+      upload,
       //autoRelease(produce(id) { _ => div(FileInput(selectedFile, Property(false))("file")).render }),
       div(BootstrapStyles.Visibility.clearfix)
     ).render
