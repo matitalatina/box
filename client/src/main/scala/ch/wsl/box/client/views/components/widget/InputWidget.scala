@@ -130,7 +130,7 @@ object InputWidget extends Logging {
   }
 
 
-  case class Input(field:JSONField, prop: Property[Json]) extends Widget {
+  class Input(val field:JSONField, prop: Property[Json]) extends Widget {
 
     val modifiers:Seq[Modifier] = Seq()
 
@@ -149,7 +149,6 @@ object InputWidget extends Logging {
         case JSONFieldTypes.ARRAY_NUMBER => NumberInput(stringModel)(y++modifiers:_*).render
         case _ => TextInput(stringModel)(y++modifiers:_*).render
       }
-      NumberInput(stringModel)(y:_*).render
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, !noLabel))
   }
