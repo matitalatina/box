@@ -358,7 +358,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         JSONField(
           `type` = field.`type`,
           name = field.name,
-          nullable = pgColumn.map(_.nullable).getOrElse(true),
+          nullable = !pgColumn.exists(_.required),
           readOnly = field.read_only.getOrElse(false),
           label = Some(lab),
           lookup = look,

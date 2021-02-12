@@ -99,6 +99,7 @@ case class JSONTableActions[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M 
         insert(json)
       }
     } yield {
+      logger.info(s"Inserted $result")
       result
     }
   }

@@ -84,7 +84,7 @@ object FormUIDef {
         ).map(Right(_))),
         LayoutBlock(Some("I18n"),4,Seq("form_i18n").map(Left(_))),
         LayoutBlock(Some("Fields"),12,Seq("fields").map(Left(_))),
-        LayoutBlock(Some("Childs"),12,Seq("fields_child").map(Left(_))),
+        LayoutBlock(Some("Linked forms"),12,Seq("fields_child").map(Left(_))),
         LayoutBlock(Some("Static elements"),12,Seq("fields_static").map(Left(_))),
         LayoutBlock(Some("Layout"),12,Seq("layout").map(Left(_))),
       )

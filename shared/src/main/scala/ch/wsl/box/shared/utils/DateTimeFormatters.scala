@@ -12,13 +12,12 @@ import scala.util.{Failure, Try}
 trait DateTimeFormatters[T]{
 
   protected val parsers:Seq[String]
-  protected val stringFormatter:String
 
   def nextMonth(obj:T):T
   def nextYear(obj:T):T
 
 
-  def format(dt:T,format:String = stringFormatter):String
+  def format(dt:T,format:Option[String] = None):String
 
   def parse(str:String):Option[T] = toObject(str)
 
@@ -36,6 +35,8 @@ trait DateTimeFormatters[T]{
 
   lazy val dateTimeFormats = parsers.map(p => DateTimeFormatter.ofPattern(p))//.+:(dateOnlyFormatter)
 
+
+  protected def defaultParser(date:String):Option[T]
 
   protected def parser(str:String,pattern:DateTimeFormatter):T
 
@@ -57,7 +58,9 @@ trait DateTimeFormatters[T]{
     if(trimmedDate.isEmpty)
       None
     else {
-      normalize(dateTimeFormats).toOption
+      defaultParser(dateStr).orElse(
+        normalize(dateTimeFormats).toOption
+      )
     }
   }
 }
@@ -87,7 +90,8 @@ object DateTimeFormatters {
     )
 
 
-    override protected val stringFormatter: String = "yyyy-MM-dd HH:mm"
+    override protected def defaultParser(date: String): Option[LocalDateTime] = Try(LocalDateTime.parse(date)).toOption
+
 
 
     override protected def fromZonedTimeZone(i: ZonedDateTime): LocalDateTime = i.toLocalDateTime
@@ -107,7 +111,11 @@ object DateTimeFormatters {
       )
     }
 
-    override def format(dt: LocalDateTime, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
+    override def format(dt: LocalDateTime, format: Option[String]): String = format match {
+      case Some(value) => dt.format(DateTimeFormatter.ofPattern(value))
+      case None => dt.toString
+    }
+
   }
 
   object date extends DateTimeFormatters[LocalDate] {
@@ -118,7 +126,8 @@ object DateTimeFormatters {
     )
 
 
-    override protected val stringFormatter: String = "yyyy-MM-dd"
+    override protected def defaultParser(date: String): Option[LocalDate] = Try(LocalDate.parse(date)).toOption
+
 
 
     override protected def fromZonedTimeZone(i: ZonedDateTime): LocalDate = i.toLocalDate
@@ -135,8 +144,10 @@ object DateTimeFormatters {
       )
     }
 
-
-    override def format(dt: LocalDate, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
+    override def format(dt: LocalDate, format: Option[String]): String = format match {
+      case Some(value) => dt.format(DateTimeFormatter.ofPattern(value))
+      case None => dt.toString
+    }
 
   }
 
@@ -148,7 +159,8 @@ object DateTimeFormatters {
     )
 
 
-    override protected val stringFormatter: String = "HH:mm"
+    override protected def defaultParser(date: String): Option[LocalTime] = Try(LocalTime.parse(date)).toOption
+
 
 
     override def nextMonth(obj: LocalTime): LocalTime = obj //adding month to a time it stays the same
@@ -165,8 +177,10 @@ object DateTimeFormatters {
 
     override protected def fromZonedTimeZone(i: ZonedDateTime): LocalTime = i.toLocalTime
 
-    override def format(dt: LocalTime, format: String): String = dt.format(DateTimeFormatter.ofPattern(format))
-
+    override def format(dt: LocalTime, format: Option[String]): String = format match {
+      case Some(value) => dt.format(DateTimeFormatter.ofPattern(value))
+      case None => dt.toString
+    }
   }
 
 
