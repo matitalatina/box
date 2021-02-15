@@ -16,9 +16,17 @@ object Notification {
   private val _list:SeqProperty[String] = SeqProperty(Seq[String]())
   def list:ReadableSeqProperty[String] = _list
 
+  private var socket:WebSocket = null
+
   def setUpWebsocket(): Unit = {
-    val exampleSocket = new WebSocket(Routes.wsV1("box-client"))
-    exampleSocket.onmessage = (msg => {
+
+    if(socket != null) {
+      socket.close()
+    }
+
+    socket = new WebSocket(Routes.wsV1("box-client"))
+
+    socket.onmessage = (msg => {
 
       for{
         js <- parse(msg.data.toString).toOption
@@ -29,6 +37,12 @@ object Notification {
 
 
     })
+  }
+
+  def closeWebsocket(): Unit = {
+    if(socket != null) {
+      socket.close()
+    }
   }
 
   def add(notice:String) = {

@@ -39,7 +39,6 @@ object Main extends Logging {
 
     document.addEventListener("DOMContentLoaded", { (e: dom.Event) =>
       setupUI()
-      Notification.setUpWebsocket()
     })
   }
 
