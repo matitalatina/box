@@ -5,6 +5,16 @@ grand_parent: Documentation
 nav_order: 10
 ---
 
+# Map
+
+Draw a map using [openlayers](https://openlayers.org/) 
+
+
+#### Supported types
+- **Geometry**
+
+[PostGIS](https://postgis.net/) enabled database is required
+
 
 ## Map Widget customization
 Map widget can be very complex and it's hard to cover all use cases with a generic configuration,
