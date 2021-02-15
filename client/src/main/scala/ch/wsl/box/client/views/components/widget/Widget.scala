@@ -47,6 +47,9 @@ trait Widget extends Logging {
   protected def show():Modifier
   protected def edit():Modifier
 
+  def showOnTable():Modifier = frag("Not implemented")
+  def editOnTable():Modifier = frag("Not implemented")
+
   def render(write:Boolean,conditional:ReadableProperty[Boolean]):Modifier = showIf(conditional) {
     if(write && !field.readOnly) {
       div(edit()).render
@@ -101,6 +104,7 @@ trait Widget extends Logging {
 trait HasData {
   def data:Property[Json]
 }
+
 
 
 case class WidgetParams(

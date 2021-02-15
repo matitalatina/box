@@ -11,7 +11,7 @@ import io.circe._
 import io.circe.syntax._
 import ch.wsl.box.model.shared._
 import ch.wsl.box.rest.routes.enablers.CSVDownload
-import ch.wsl.box.rest.utils.{FutureUtils, Timer, UserProfile}
+import ch.wsl.box.rest.utils.{Timer, UserProfile}
 import io.circe.Json
 import scribe.Logging
 import slick.basic.DatabasePublisher

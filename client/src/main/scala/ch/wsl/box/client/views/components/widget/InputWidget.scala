@@ -151,6 +151,13 @@ object InputWidget extends Logging {
       }
     })
     override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, !noLabel))
+
+    override def showOnTable(): JsDom.all.Modifier = autoRelease(bind(prop.transform(_.string)))
+
+    override def editOnTable(): JsDom.all.Modifier = {
+      val stringModel = prop.bitransform[String](jsonToString _)(fromString _)
+      TextInput(stringModel)(ClientConf.style.simpleInput).render
+    }
   }
 
 }

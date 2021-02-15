@@ -603,6 +603,15 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     )
   )
 
+  val simpleInput = style(
+    margin.`0`,
+    padding.`0`,
+    width(100.%%),
+    height(100.%%),
+    float.none.important,
+    borderWidth.`0`
+  )
+
 //  val fixedHeader = style(
 //    unsafeRoot("tbody")(
 ////    display.block,
