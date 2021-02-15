@@ -14,6 +14,8 @@ import io.circe.generic.auto._
 import scribe.Logging
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class WebsocketNotifications(implicit mat:Materializer,up:UserProfile) {
 
@@ -52,6 +54,7 @@ class NotificationChannel(user:String,topic:String)(implicit mat: Materializer) 
 }
 
 object NotificationChannels extends Logging {
+
   private var notificationChannels: ListBuffer[NotificationChannel] = ListBuffer.empty[NotificationChannel]
   def add(user:String,topic: String)(implicit mat: Materializer) = {
     logger.info(s"Added notification channel for $user on topic $topic")
@@ -62,17 +65,18 @@ object NotificationChannels extends Logging {
 
   final val ALL_USERS = "ALL_USERS"
 
-  private def handleNotification(str:String): Unit = {
+  private def handleNotification(str:String): Future[Boolean] = {
     parse(str) match {
-      case Left(err) => logger.warn(err.message)
+      case Left(err) => Future.failed(new Exception(err.message))
       case Right(js) => js.as[UiNotification] match {
-        case Left(err) => logger.warn(err.message + err.history)
+        case Left(err) => Future.failed(new Exception(err.message + err.history))
         case Right(notification) => {
           logger.info(s"Send notification: $notification")
           notification.allowed_users.contains(ALL_USERS) match {
             case true => notificationChannels.foreach(_.sendBroadcast(notification))
             case false => notificationChannels.foreach(_.sendNotification(notification))
           }
+          Future.successful(true)
         }
       }
     }

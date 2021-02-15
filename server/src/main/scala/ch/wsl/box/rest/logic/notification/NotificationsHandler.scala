@@ -6,13 +6,16 @@ import ch.wsl.box.jdbc.Connection
 import org.postgresql.PGConnection
 import scribe.Logging
 
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
+
 trait PgNotifier{
   def stop()
 }
 
 object NotificationsHandler {
 
-  def create(channel:String,callback: (String) => Unit):PgNotifier = new PgNotifier {
+  def create(channel:String,callback: (String) => Future[Boolean])(implicit ec:ExecutionContext):PgNotifier = new PgNotifier {
     val listener = new Listener(Connection.dbConnection.source.createConnection(),channel,callback)
     listener.start()
     override def stop(): Unit = listener.stopRunning()
@@ -22,7 +25,7 @@ object NotificationsHandler {
 
 import java.sql.SQLException
 
-class Listener(conn: java.sql.Connection,channel:String,callback: (String) => Unit) extends Thread with Logging {
+class Listener(conn: java.sql.Connection,channel:String,callback: (String) => Future[Boolean])(implicit ec:ExecutionContext) extends Thread with Logging {
   private var running = true
   def stopRunning() = {
     running = false
@@ -54,7 +57,13 @@ class Listener(conn: java.sql.Connection,channel:String,callback: (String) => Un
                  |name: ${n.getName}
                  |parameter: ${n.getParameter}
                  |""".stripMargin)
-              callback(n.getParameter)
+              callback(n.getParameter).onComplete {
+                case Success(ok) => true
+                case Failure(exception) => {
+                  logger.error(exception.getMessage)
+                  false
+                }
+              }
             }
           }
           // wait a while before checking again for new

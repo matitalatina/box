@@ -115,12 +115,14 @@ class ClientSession(rest:REST,httpClient: HttpClient) extends Logging {
       ui <- rest.ui()
     } yield {
       UI.load(ui)
+      Notification.setUpWebsocket()
       logged.set(true)
       true
     }
 
     fut.recover{ case t =>
       dom.window.sessionStorage.removeItem(USER)
+      Notification.closeWebsocket()
       logged.set(false)
       t.printStackTrace()
       false
@@ -138,6 +140,8 @@ class ClientSession(rest:REST,httpClient: HttpClient) extends Logging {
       } yield {
         UI.load(ui)
         logged.set(false)
+
+        Notification.closeWebsocket()
 
         val oldState = Context.applicationInstance.currentState
         Navigate.to(LoginState(""))
