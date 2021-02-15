@@ -24,6 +24,7 @@ object WidgetsNames {
   val simpleFile = "simpleFile"
   val simpleChild = "simpleChild"
   val tableChild = "tableChild"
+  val editableTable = "editableTable"
   val h1 = "title_h1"
   val h2 = "title_h2"
   val h3 = "title_h3"
@@ -58,6 +59,7 @@ object WidgetsNames {
     CHILD -> Seq(
       simpleChild,
       tableChild,
+      editableTable,
       linkedForm
     ),
     FILE -> Seq(

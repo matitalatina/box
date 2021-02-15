@@ -34,7 +34,6 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val global = style(
-
     unsafeRoot("body") (
       StyleConstants.defaultFontSize,
       backgroundColor.white,

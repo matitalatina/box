@@ -6,6 +6,8 @@ import akka.http.scaladsl.server.directives.ContentTypeResolver.Default
 import boxInfo.BoxBuildInfo
 import ch.wsl.box.rest.routes.enablers.twirl.Implicits._
 import ch.wsl.box.rest.utils.BoxConfig
+import com.typesafe.config.{Config, ConfigFactory}
+import net.ceedubs.ficus.Ficus._
 
 /**
   *
@@ -17,13 +19,13 @@ object UI {
 
   import Directives._
 
-
+  val devServer: Boolean = ConfigFactory.load().as[Option[Boolean]]("devServer").getOrElse(false)
 
   val clientFiles:Route =
     pathSingleSlash {
       get {
         complete {
-          ch.wsl.box.templates.html.index.render(BoxBuildInfo.version,BoxConfig.enableRedactor)
+          ch.wsl.box.templates.html.index.render(BoxBuildInfo.version,BoxConfig.enableRedactor,devServer)
         }
       }
     } ~

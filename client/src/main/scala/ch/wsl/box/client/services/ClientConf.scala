@@ -58,10 +58,13 @@ object ClientConf {
   def childMarginTopSize = Try(conf("child.marginTop.size").toInt).getOrElse(-1)
   def childBackgroundColor = Try(conf("child.backgroundColor")).getOrElse(StyleConstants.Colors.GreyExtra.value)
 
-  lazy val style = GlobalStyles(StyleConf(colors = Colors(colorMain,colorMainText,colorMainLink,colorLink,colorDanger,colorWarning),
-                                          tableFontSize,
-                                          ChildProperties(childBorderSize, childBorderColor, childPaddingSize,
-                                            childMarginTopSize, childBackgroundColor)  ))
+  val styleConf = StyleConf(
+    colors = Colors(colorMain,colorMainText,colorMainLink,colorLink,colorDanger,colorWarning),
+    tableFontSize,
+    ChildProperties(childBorderSize, childBorderColor, childPaddingSize, childMarginTopSize, childBackgroundColor)
+  )
+
+  lazy val style = GlobalStyles(styleConf)
 
   def filterPrecisionDatetime = Try(conf("filter.precision.datetime").toUpperCase).toOption match {
       case Some("DATE") => JSONFieldTypes.DATE

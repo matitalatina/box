@@ -150,7 +150,8 @@ lazy val client: Project = (project in file("client"))
       "monaco-editor-webpack-plugin" -> "2.0.0",
       "file-loader" -> "6.1.0",
     ),
-    webpackDevServerPort := 7357,
+    // https://scalacenter.github.io/scalajs-bundler/cookbook.html#webpack-dev-server
+    webpackDevServerPort := 8888,
     version in webpack := "4.43.0",
     version in installJsdom := "16.4.0",
     version in startWebpackDevServer := "3.11.0",
