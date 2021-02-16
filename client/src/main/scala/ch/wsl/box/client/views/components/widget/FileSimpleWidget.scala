@@ -30,7 +30,7 @@ import scala.util.Random
   * @param field
   * @param entity
   */
-case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
+case class FileSimpleWidget(id:Property[Option[String]], data:Property[Json], field:JSONField, entity:String) extends Widget with HasData with Logging {
 
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
@@ -41,8 +41,8 @@ case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], fi
   val mime:Property[String] = Property("application/octet-stream")
   val source:Property[Option[String]] = Property(None)
 
-  prop.listen({js =>
-    val file = prop.get.string
+  data.listen({js =>
+    val file = data.get.string
     if(file.length > 0) {
       val mime = file.take(1) match {
         case "/" => "image/jpeg"
@@ -106,7 +106,7 @@ case class FileSimpleWidget(id:Property[Option[String]], prop:Property[Json], fi
       val token = "base64,"
       val index = result.indexOf(token)
       val base64 = result.substring(index+token.length)
-      prop.set(base64.asJson)
+      data.set(base64.asJson)
     }
   }}
 

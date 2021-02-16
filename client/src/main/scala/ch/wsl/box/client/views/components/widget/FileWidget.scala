@@ -27,7 +27,7 @@ import scala.util.Random
   * @param field
   * @param entity
   */
-case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JSONField, entity:String) extends Widget with Logging {
+case class FileWidget(id:Property[Option[String]], data:Property[Json], field:JSONField, entity:String) extends Widget with HasData with Logging {
 
   import ch.wsl.box.client.Context._
   import scalatags.JsDom.all._
@@ -53,7 +53,7 @@ case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JS
 
   autoRelease(id.listen({ idString =>
     selectedFile.set(Seq())
-    fileName.set(prop.get.string)
+    fileName.set(data.get.string)
     val newUrl = idString.flatMap(url)
     if(urlProp.get != newUrl) {
       urlProp.set(newUrl)
@@ -62,7 +62,7 @@ case class FileWidget(id:Property[Option[String]], prop:Property[Json], field:JS
 
   autoRelease(selectedFile.listen{ files =>
     logger.info(s"selected file changed ${files.map(_.name)}")
-    prop.set(files.headOption.map(_.name).asJson)
+    data.set(files.headOption.map(_.name).asJson)
   })
 
 

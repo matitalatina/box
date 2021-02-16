@@ -14,7 +14,7 @@ import io.udash.bootstrap.BootstrapStyles
 import io.udash.bootstrap.table.UdashTable
 import io.udash._
 import org.scalajs.dom._
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 import scalacss.internal.mutable.StyleSheet
 import scalacss.ScalatagsCss._
 import scalacss.ProdDefaults._
@@ -112,30 +112,40 @@ object EditableTable extends ChildRendererFactory {
 
     private val selectedCellClass = "_et_selected"
 
-    case class Cell(id:String,widget:Widget,onChange: () => Unit)
+    case class Cell(td: HTMLElement, id:String,widget:Widget,onChange: () => Unit) {
+      def exec(f:HTMLElement => Unit) = {
+        val inputToFocus = td.querySelector("input")
+        if(inputToFocus != null) {
+          f(inputToFocus.asInstanceOf[HTMLElement])
+        }
+      }
+    }
 
     private var cell:Option[Cell] = None
 
     def resetTable() = {
       val editingElements = document.getElementsByClassName(selectedCellClass)
       for(i <- 0 until editingElements.length) {
-        cell.foreach(_.widget.killWidget())
+        cell.foreach{c =>
+          c.exec(_.dispatchEvent(new org.scalajs.dom.Event("change")))
+          c.widget.killWidget()
+        }
         editingElements.item(i).innerHTML = div(cell.toSeq.map(_.widget.showOnTable())).render.innerHTML
         editingElements.item(i).classList.remove(selectedCellClass)
       }
     }
 
-    def selectCell(td: HTMLElement,cell:Cell): Unit = {
+    def selectCell(cell:Cell): Unit = {
 
       if(this.cell.isEmpty) {
         this.cell = Some(cell)
-        td.classList.add(selectedCellClass)
+        cell.td.classList.add(selectedCellClass)
       }
 
       if(this.cell.forall(_.id != cell.id)) {
         resetTable()
         this.cell.get.onChange()
-        td.classList.add(selectedCellClass)
+        cell.td.classList.add(selectedCellClass)
         this.cell = Some(cell)
       }
 
@@ -143,19 +153,19 @@ object EditableTable extends ChildRendererFactory {
 
       val el = div(
         tableStyle.selectedWrapper,
-        height := td.clientHeight,
-        width := td.clientWidth,
+        height := cell.td.clientHeight,
+        width := cell.td.clientWidth,
         div(
           tableStyle.selectedContent,
-          height := td.clientHeight-(tableStyle.selectedBorder*2),
-          width := td.clientWidth-(tableStyle.selectedBorder*2),
+          height := cell.td.clientHeight-(tableStyle.selectedBorder*2),
+          width := cell.td.clientWidth-(tableStyle.selectedBorder*2),
           cell.widget.editOnTable()
         )
       ).render
-      td.innerHTML = ""
-      td.appendChild(el)
+      cell.td.innerHTML = ""
+      cell.td.appendChild(el)
 
-      td.querySelector("input").asInstanceOf[HTMLElement].focus()
+      cell.exec(_.focus())
 
     }
 
@@ -203,7 +213,7 @@ object EditableTable extends ChildRendererFactory {
                             listener = childWidget.widget.data.listen(d => data.set(d.js(field.name)))
                           }
                           td(widget.showOnTable(), tableStyle.td,
-                            onclick :+= ((e:Event) => selectCell(e.target.asInstanceOf[HTMLElement],Cell(row+field.name,widget,change)))
+                            onclick :+= ((e:Event) => selectCell(Cell(e.target.asInstanceOf[HTMLElement],row+field.name,widget,change)))
                           )
                         }
                       ).render

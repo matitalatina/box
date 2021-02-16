@@ -40,8 +40,6 @@ case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Js
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
 
-
-
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding,ClientConf.style.smallBottomMargin)(

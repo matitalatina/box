@@ -101,8 +101,11 @@ trait Widget extends Logging {
 
 }
 
-trait HasData {
+trait HasData extends Widget {
   def data:Property[Json]
+
+  override def showOnTable(): JsDom.all.Modifier = autoRelease(bind(data.transform(_.string)))
+
 }
 
 
@@ -136,31 +139,46 @@ trait LookupWidget extends Widget with HasData {
 
   def allData:Property[Json]
 
-
-
-  val model:Property[JSONLookup] = field.`type` match {
-    case "number" =>  data.bitransform[JSONLookup](
-      {json:Json =>
-        val id = jsonToString(json)
-        lookup.get.find(_.id == jsonToString(json)).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-      })(
-      {jsonLookup:JSONLookup => strToNumericJson(jsonLookup.id)}
-    )
-    case _ => data.bitransform[JSONLookup](
-      {json:Json =>
-        val id = jsonToString(json)
-        lookup.get.find(_.id == id).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-      })(
-      {jsonLookup:JSONLookup => strToJson(field.nullable)(jsonLookup.id)}
-    )
-  }
-
-  val selectModel = data.bitransform(value2Label)(label2Value)
-
   def field:JSONField
   val lookup:SeqProperty[JSONLookup] = {
-    SeqProperty(toSeq(field.lookup.get.lookup))
+    SeqProperty(toSeq(field.lookup.toSeq.flatMap(_.lookup)))
   }
+
+  val model:Property[JSONLookup] = Property(JSONLookup("",""))
+
+  autoRelease(field.`type` match {
+    case "number" =>  data.sync[JSONLookup](model)(
+      {json:Json =>
+        logger.debug(json.toString())
+        val id = jsonToString(json)
+        lookup.get.find(_.id == jsonToString(json)).getOrElse(JSONLookup(id,id + " NOT FOUND"))
+      },
+      {jsonLookup:JSONLookup => strToNumericJson(jsonLookup.id)}
+    )
+    case _ => data.sync[JSONLookup](model)(
+      {json:Json =>
+        logger.debug(json.toString())
+        val id = jsonToString(json)
+        logger.debug(id.toString())
+        logger.debug(lookup.toString())
+        logger.debug(lookup.get.toString())
+        val result = lookup.get.find(_.id == id).getOrElse(JSONLookup(id,id + " NOT FOUND"))
+        logger.debug(result.toString)
+        result
+      },
+      {jsonLookup:JSONLookup => strToJson(field.nullable)(jsonLookup.id)}
+    )
+  })
+
+
+
+  val selectModel = Property("")
+  autoRelease(data.sync(selectModel)(value2Label,label2Value))
+
+
+  override def showOnTable(): JsDom.all.Modifier = autoRelease(bind(selectModel))
+
+
 
 
   private def toSeq(s:Seq[JSONLookup]):Seq[JSONLookup] = if(field.nullable) {

@@ -44,7 +44,7 @@ import org.scalajs.dom
 
 
 
-case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging {
+case class OlMapWidget(id: Property[Option[String]], field: JSONField, data: Property[Json]) extends Widget with HasData with Logging {
 
   import ch.wsl.box.client.Context._
 
@@ -168,10 +168,10 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
         map.addLayer(featuresLayer)
         map.updateSize()
         map.renderSync()
-        prop.touch()
+        data.touch()
       }
     } else {
-      prop.touch()
+      data.touch()
     }
 
   }
@@ -328,7 +328,7 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
     var onAddFeature: js.Function1[VectorSourceEvent[typings.ol.geometryMod.default], Unit] = null
 
     def registerListener(immediate: Boolean) = {
-      listener = prop.listen({ geoData =>
+      listener = data.listen({ geoData =>
         vectorSource.removeEventListener("addfeature", onAddFeature.asInstanceOf[eventsMod.Listener])
         vectorSource.getFeatures().foreach(f => vectorSource.removeFeature(f))
 
@@ -354,8 +354,8 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
         val geometries = collection.features.map(_.geometry)
         logger.info(s"$geometries")
         geometries.length match {
-          case 0 => prop.set(Json.Null)
-          case 1 => prop.set(geometries.head.asJson)
+          case 0 => data.set(Json.Null)
+          case 1 => data.set(geometries.head.asJson)
           case _ => {
             val multiPoint = geometries.map {
               case g: Point => Some(Seq(g.coordinates))
@@ -384,7 +384,7 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
             } else {
               None
             }
-            prop.set(collection.asJson)
+            data.set(collection.asJson)
 
 
           }
@@ -597,7 +597,7 @@ case class OlMapWidget(id: Property[Option[String]], field: JSONField, prop: Pro
 
     div(
       label(field.title),
-      produce(prop) { geo =>
+      produce(data) { geo =>
         import ch.wsl.box.client.utils.GeoJson.Geometry._
         import ch.wsl.box.client.utils.GeoJson._
         val geometry = geo.as[ch.wsl.box.client.utils.GeoJson.Geometry].toOption

@@ -106,22 +106,23 @@ object InputWidget extends Logging {
   }
 
 
-  class TextDisabled(field:JSONField, prop: Property[Json]) extends Input(field,prop) {
+  class TextDisabled(field:JSONField, data: Property[Json]) extends Input(field,data) {
 
     override val modifiers = Seq({if (!ClientConf.manualEditKeyFields) {disabled := true} else {}} , textAlign.right)
   }
 
 
 
-  class Textarea(val field:JSONField, prop: Property[Json]) extends Widget {
+  class Textarea(val field:JSONField, val data: Property[Json]) extends Widget with HasData {
 
     val modifiers:Seq[Modifier] = Seq()
 
     override def edit() = editMe(field,true, false, modifiers){ case y =>
-      val stringModel = prop.bitransform[String](jsonToString _)( strToJson(field.nullable) _)
+      val stringModel = Property("")
+      autoRelease(data.sync[String](stringModel)(jsonToString _,strToJson(field.nullable) _))
       TextArea(stringModel)(y:_*).render
     }
-    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop,field,true,modifiers))
+    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(data,field,true,modifiers))
   }
 
   class TwoLines(field:JSONField, prop: Property[Json]) extends Textarea(field,prop) {
@@ -130,7 +131,7 @@ object InputWidget extends Logging {
   }
 
 
-  class Input(val field:JSONField, prop: Property[Json]) extends Widget {
+  class Input(val field:JSONField, val data: Property[Json]) extends Widget with HasData {
 
     val modifiers:Seq[Modifier] = Seq()
 
@@ -143,19 +144,20 @@ object InputWidget extends Logging {
     }
 
     override def edit():JsDom.all.Modifier = (editMe(field, !noLabel, false){ case y =>
-      val stringModel = prop.bitransform[String](jsonToString _)(fromString _)
+      val stringModel = Property("")
+      autoRelease(data.sync[String](stringModel)(jsonToString _,fromString _))
       field.`type` match {
         case JSONFieldTypes.NUMBER => NumberInput(stringModel)(y:_*).render
         case JSONFieldTypes.ARRAY_NUMBER => NumberInput(stringModel)(y++modifiers:_*).render
         case _ => TextInput(stringModel)(y++modifiers:_*).render
       }
     })
-    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(prop, field, !noLabel))
+    override protected def show(): JsDom.all.Modifier = autoRelease(showMe(data, field, !noLabel))
 
-    override def showOnTable(): JsDom.all.Modifier = autoRelease(bind(prop.transform(_.string)))
 
     override def editOnTable(): JsDom.all.Modifier = {
-      val stringModel = prop.bitransform[String](jsonToString _)(fromString _)
+      val stringModel = Property("")
+      autoRelease(data.sync[String](stringModel)(jsonToString _,fromString _))
       TextInput(stringModel)(ClientConf.style.simpleInput).render
     }
   }

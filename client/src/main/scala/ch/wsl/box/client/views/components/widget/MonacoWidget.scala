@@ -19,12 +19,12 @@ import typings.monacoEditor.mod.editor.{IStandaloneCodeEditor, IStandaloneEditor
 import scala.concurrent.Future
 import scala.util.Try
 
-case class MonacoWidget(_id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging {
+case class MonacoWidget(_id: Property[Option[String]], field: JSONField, data: Property[Json]) extends Widget with HasData with Logging {
   import scalatags.JsDom.all._
   import scalacss.ScalatagsCss._
   import io.udash.css.CssView._
 
-  override protected def show(): JsDom.all.Modifier = autoRelease(produce(prop){ p =>
+  override protected def show(): JsDom.all.Modifier = autoRelease(produce(data){ p =>
     div(p.string).render
   })
 
@@ -46,12 +46,12 @@ case class MonacoWidget(_id: Property[Option[String]], field: JSONField, prop: P
 
       val editor = typings.monacoEditor.mod.editor.create(container,IStandaloneEditorConstructionOptions()
         .setLanguage(language)
-        .setValue(prop.get.string)
+        .setValue(data.get.string)
 
       )
       editor.onDidChangeModelContent{e =>
 
-        prop.set(editor.getValue().asJson)
+        data.set(editor.getValue().asJson)
 
       }
     }

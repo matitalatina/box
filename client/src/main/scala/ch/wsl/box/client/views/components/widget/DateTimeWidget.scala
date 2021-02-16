@@ -34,7 +34,7 @@ object FieldTypes {
   case object Time extends FieldType
 }
 
-trait DateTimeWidget[T] extends Widget  with Logging{
+trait DateTimeWidget[T] extends Widget with HasData with Logging{
 
   import scalatags.JsDom.all._
   import io.udash.css.CssView._
@@ -43,7 +43,7 @@ trait DateTimeWidget[T] extends Widget  with Logging{
 
   val fieldType:FieldTypes.FieldType
   val dateTimeFormatters:DateTimeFormatters[T]
-  val prop:Property[Json]
+  val data:Property[Json]
   val id:Property[Option[String]]
   val range:Boolean
 
@@ -52,8 +52,8 @@ trait DateTimeWidget[T] extends Widget  with Logging{
     case true => ClientConf.style.dateTimePickerFullWidth
     case false => ClientConf.style.dateTimePicker
   }
-  override def edit() = editMe(id,field,prop,style,range)
-  override protected def show(): JsDom.all.Modifier = showMe(field.title,prop)
+  override def edit() = editMe(id,field,data,style,range)
+  override protected def show(): JsDom.all.Modifier = showMe(field.title,data)
 
 
   private def strToTime(s:String,r:Boolean): Array[String] = {
@@ -202,7 +202,7 @@ trait DateTimeWidget[T] extends Widget  with Logging{
 object DateTimeWidget {
 
 
-  case class Date(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget[LocalDate] {
+  case class Date(id: Property[Option[String]], field: JSONField, data: Property[Json], range:Boolean = false) extends DateTimeWidget[LocalDate] {
     override val fieldType = FieldTypes.Date
     override val dateTimeFormatters: DateTimeFormatters[LocalDate] = DateTimeFormatters.date
   }
@@ -214,7 +214,7 @@ object DateTimeWidget {
 
 
 
-  case class DateTime(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget[LocalDateTime] {
+  case class DateTime(id: Property[Option[String]], field: JSONField, data: Property[Json], range:Boolean = false) extends DateTimeWidget[LocalDateTime] {
     override val fieldType = FieldTypes.DateTime
     override val dateTimeFormatters: DateTimeFormatters[LocalDateTime] = DateTimeFormatters.timestamp
   }
@@ -230,7 +230,7 @@ object DateTimeWidget {
     override def create(params: WidgetParams): Widget = Time(params.id,params.field,params.prop)
   }
 
-  case class Time(id: Property[Option[String]], field: JSONField, prop: Property[Json], range:Boolean = false) extends DateTimeWidget[LocalTime] {
+  case class Time(id: Property[Option[String]], field: JSONField, data: Property[Json], range:Boolean = false) extends DateTimeWidget[LocalTime] {
     override val fieldType = FieldTypes.Time
     override val dateTimeFormatters: DateTimeFormatters[LocalTime] = DateTimeFormatters.time
   }

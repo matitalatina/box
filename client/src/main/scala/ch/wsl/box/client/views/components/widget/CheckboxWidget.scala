@@ -9,7 +9,7 @@ import io.udash.css.CssView._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.udash.bootstrap.tooltip.UdashTooltip
 
-case class CheckboxWidget(field:JSONField, prop: Property[Json]) extends Widget {
+case class CheckboxWidget(field:JSONField, data: Property[Json]) extends Widget with HasData {
 
   def jsToBool(json:Json):Boolean = field.`type` match {
     case JSONFieldTypes.BOOLEAN => json.asBoolean.getOrElse(false)
@@ -30,13 +30,16 @@ case class CheckboxWidget(field:JSONField, prop: Property[Json]) extends Widget 
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip,UdashTooltip.Placement.Right) _
 
-    val booleanModel = prop.bitransform[Boolean](jsToBool _)(boolToJson _)
+    val booleanModel = Property(false)
+
+    autoRelease(data.sync[Boolean](booleanModel)(js => jsToBool(js),bool => boolToJson(bool)))
+
     div(
       tooltip(Checkbox(booleanModel)().render), " ", WidgetUtils.toLabel(field)
     )
   }
 
-  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(prop) { p =>
+  override protected def show(): JsDom.all.Modifier = WidgetUtils.showNotNull(data) { p =>
     div(
         if(
           p.as[Boolean].right.toOption.contains(true) ||

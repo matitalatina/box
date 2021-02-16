@@ -64,19 +64,19 @@ case class Redactor(editorId:String){
 
 }
 
-case class RedactorWidget(_id: Property[Option[String]], field: JSONField, prop: Property[Json]) extends Widget with Logging {
+case class RedactorWidget(_id: Property[Option[String]], field: JSONField, data: Property[Json]) extends Widget with HasData with Logging {
   import scalacss.ScalatagsCss._
   import scalatags.JsDom.all._
 
 
-  override protected def show(): JsDom.all.Modifier = autoRelease(produce(prop){ p =>
+  override protected def show(): JsDom.all.Modifier = autoRelease(produce(data){ p =>
     div(raw(p.string)).render
   })
 
-  _id.listen { x =>
+  autoRelease(_id.listen { x =>
     logger.info(s"Rich text widget load with ID: $x")
-    redactor.setHTML(prop.get.string)
-  }
+    redactor.setHTML(data.get.string)
+  })
 
   val ph = field.placeholder match{
     case Some(p) if p.nonEmpty => Seq(placeholder := p)
@@ -95,8 +95,8 @@ case class RedactorWidget(_id: Property[Option[String]], field: JSONField, prop:
     logger.debug(s"started: $started, redactor isStarted: ${redactor.isStarted()}")
     if(!started || !redactor.isStarted()) {
       started = true;
-      redactor.init(opts, html => prop.set(html.asJson))
-      redactor.setHTML(prop.get.string)
+      redactor.init(opts, html => data.set(html.asJson))
+      redactor.setHTML(data.get.string)
     } else {
       redactor.redraw() // need to call it when toggling the table
     }
@@ -104,7 +104,7 @@ case class RedactorWidget(_id: Property[Option[String]], field: JSONField, prop:
 
   override protected def edit(): JsDom.all.Modifier = {
     logger.debug(s"field: ${field.name}")
-    logger.debug(s"data: ${prop.get.toString()}")
+    logger.debug(s"data: ${data.get.toString()}")
 
     div(
       container

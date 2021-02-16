@@ -19,7 +19,7 @@ import scala.collection.mutable
 import scala.scalajs.js
 import scala.util.Try
 
-case class RichTextEditorWidget(_id: Property[Option[String]], field: JSONField, prop: Property[Json], mode:Mode) extends Widget with Logging {
+case class RichTextEditorWidget(_id: Property[Option[String]], field: JSONField, data: Property[Json], mode:Mode) extends Widget with HasData with Logging {
   import scalacss.ScalatagsCss._
   import scalatags.JsDom.all._
 
@@ -44,7 +44,7 @@ case class RichTextEditorWidget(_id: Property[Option[String]], field: JSONField,
   }
 
 
-  override protected def show(): JsDom.all.Modifier = autoRelease(produce(prop){ p =>
+  override protected def show(): JsDom.all.Modifier = autoRelease(produce(data){ p =>
     div(p.string).render
   })
 
@@ -52,7 +52,7 @@ case class RichTextEditorWidget(_id: Property[Option[String]], field: JSONField,
 
   override protected def edit(): JsDom.all.Modifier = {
     logger.debug(s"field: ${field.name} widget mode $mode")
-    logger.debug(s"data: ${prop.get.toString().take(50)}")
+    logger.debug(s"data: ${data.get.toString().take(50)}")
     produce(_id) { _ =>
       val container = div( height := 300.px).render
       val parent = div(container).render
@@ -73,10 +73,10 @@ case class RichTextEditorWidget(_id: Property[Option[String]], field: JSONField,
 
       val editor = new typings.quill.mod.default(container,options)
 
-      editor.root.innerHTML = prop.get.string
+      editor.root.innerHTML = data.get.string
 
       editor.on_textchange(typings.quill.quillStrings.`text-change`,
-        (delta:DeltaStatic,oldContent:DeltaStatic,source:Sources) => prop.set(editor.root.innerHTML.asJson)
+        (delta:DeltaStatic,oldContent:DeltaStatic,source:Sources) => data.set(editor.root.innerHTML.asJson)
       )
 
       div(
