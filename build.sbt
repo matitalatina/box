@@ -64,7 +64,7 @@ lazy val server: Project  = project
     //Comment this to avoid errors in importing project, i.e. when changing libraries
     pipelineStages in Assets := Seq(scalaJSPipeline),
     scalaJSProjects := Seq(client),
-    Seq("jquery","ol","bootstrap","flatpickr","quill").map{ p =>
+    Seq("jquery","ol","bootstrap","flatpickr","quill","@fontsource/open-sans").map{ p =>
       npmAssets ++= NpmAssets.ofProject(client) { nodeModules =>
         (nodeModules / p).allPaths
       }.value
@@ -128,11 +128,11 @@ lazy val client: Project = (project in file("client"))
       "monaco-editor" -> "0.21.1",
       "quill" -> "1.3.7",
       "@types/quill" -> "1.3.10",
-      "typeface-clear-sans" -> "0.0.44",
+      "@fontsource/open-sans" -> "4.2.1",
       "file-saver" -> "2.0.5",
       "@types/file-saver" -> "2.0.1",
     ),
-    stIgnore += "typeface-clear-sans",
+    stIgnore += "@fontsource/open-sans",
     stIgnore += "ol-ext",
     // Use library mode for fastOptJS
     webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),

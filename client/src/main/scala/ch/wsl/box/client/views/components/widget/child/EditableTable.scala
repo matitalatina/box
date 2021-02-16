@@ -3,6 +3,7 @@ package ch.wsl.box.client.views.components.widget.child
 import ch.wsl.box.client.Context.services
 import ch.wsl.box.client.services.{BrowserConsole, ClientConf, ClientSession, Labels}
 import ch.wsl.box.client.styles.constants.StyleConstants.Colors
+import ch.wsl.box.client.styles.fonts.Font
 import ch.wsl.box.client.styles.utils.ColorUtils
 import ch.wsl.box.client.styles.{BootstrapCol, Icons, StyleConf}
 import ch.wsl.box.client.utils.TestHooks
@@ -33,7 +34,6 @@ case class TableStyle(conf:StyleConf,columns:Int) extends StyleSheet.Inline {
   )
 
   val table = style(
-    margin(2 px),
     borderColor(Colors.GreySemi),
     borderCollapse.collapse,
     minWidth(100.%%)
@@ -83,7 +83,7 @@ case class TableStyle(conf:StyleConf,columns:Int) extends StyleSheet.Inline {
     backgroundColor(conf.colors.main),
     color(conf.colors.mainText),
     fontSize(14 px),
-    fontWeight.bold
+    Font.bold
   )
 
 }
@@ -100,7 +100,7 @@ object EditableTable extends ChildRendererFactory {
   case class EditableTableRenderer(row_id: Property[Option[String]], prop: Property[Json], field:JSONField,masterData:Property[Json],children:Seq[JSONMetadata]) extends ChildRenderer {
 
 
-    val tableStyle = TableStyle(ClientConf.styleConf,metadata.map(_.fields.length).getOrElse(1))
+    val tableStyle = TableStyle(ClientConf.styleConf,metadata.map(_.fields.length + 1).getOrElse(1))
     val tableStyleElement = document.createElement("style")
     tableStyleElement.innerText = tableStyle.render(cssStringRenderer,cssEnv)
 
@@ -110,7 +110,6 @@ object EditableTable extends ChildRendererFactory {
 
     override def child: Child = field.child.get
 
-    private val selectedCellClass = "_et_selected"
 
     case class Cell(td: HTMLElement, id:String,widget:Widget,onChange: () => Unit) {
       def exec(f:HTMLElement => Unit) = {
@@ -123,33 +122,26 @@ object EditableTable extends ChildRendererFactory {
 
     private var cell:Option[Cell] = None
 
-    def resetTable() = {
-      val editingElements = document.getElementsByClassName(selectedCellClass)
-      for(i <- 0 until editingElements.length) {
-        cell.foreach{c =>
-          c.exec(_.dispatchEvent(new org.scalajs.dom.Event("change")))
-          c.widget.killWidget()
-        }
-        editingElements.item(i).innerHTML = div(cell.toSeq.map(_.widget.showOnTable())).render.innerHTML
-        editingElements.item(i).classList.remove(selectedCellClass)
+    def resetCell() = {
+      cell.foreach{c =>
+        c.widget.killWidget()
+        c.exec(_.dispatchEvent(new org.scalajs.dom.Event("change")))
+        c.onChange()
+        c.td.innerHTML = div(cell.toSeq.map(_.widget.showOnTable())).render.innerHTML
+        c.td.onclick = (e) => selectCell(c)
       }
     }
 
     def selectCell(cell:Cell): Unit = {
 
-      if(this.cell.isEmpty) {
+      if(this.cell.forall(_.id != cell.id)) {
+        this.resetCell()
         this.cell = Some(cell)
-        cell.td.classList.add(selectedCellClass)
       }
 
-      if(this.cell.forall(_.id != cell.id)) {
-        resetTable()
-        this.cell.get.onChange()
-        cell.td.classList.add(selectedCellClass)
-        this.cell = Some(cell)
-      }
 
       cell.widget.killWidget()
+      cell.td.onclick = (e) => {}
 
       val el = div(
         tableStyle.selectedWrapper,
@@ -166,17 +158,15 @@ object EditableTable extends ChildRendererFactory {
       cell.td.appendChild(el)
 
       cell.exec(_.focus())
+      cell.exec(_.onfocusout = (e) => {
+        resetCell()
+        this.cell = None
+      })
 
     }
 
 
     override protected def render(write: Boolean): Modifier = {
-
-
-      val columns = 10
-      val rows = 100
-
-
 
       metadata match {
         case None => p("child not found")
@@ -190,10 +180,12 @@ object EditableTable extends ChildRendererFactory {
                   for(field <- f.fields) yield {
                     val name = field.label.getOrElse(field.name)
                     th(name, tableStyle.th)
-                  }
+                  },
+                  th("", tableStyle.th)
                 ),
-                tbody(
-                  produce(entity) { ent =>
+
+                produce(entity) { ent =>
+                  tbody(
                     for(row <- ent) yield {
                       val childWidget = childWidgets.find(_.id == row).get
                       tr(tableStyle.tr,
@@ -215,11 +207,24 @@ object EditableTable extends ChildRendererFactory {
                           td(widget.showOnTable(), tableStyle.td,
                             onclick :+= ((e:Event) => selectCell(Cell(e.target.asInstanceOf[HTMLElement],row+field.name,widget,change)))
                           )
-                        }
-                      ).render
-                    }
-                  }
-                )
+                        },
+                        td( tableStyle.td,
+                          if (write) a(onclick :+= ((_: Event) => removeItem(row)), Labels.subform.remove) else frag()
+                        )
+                      )
+                    },
+                    tr(tableStyle.tr,
+                      td(tableStyle.td,colspan := f.fields.length),
+                      td(tableStyle.td,
+                        if (write) a(id := TestHooks.addChildId(f.objId),onclick :+= ((e: Event) => {
+                          addItem(child, f)
+                          true
+                        }), Labels.subform.add) else frag()
+                      ),
+                    )
+                  ).render
+                }
+
               )
             )
           )

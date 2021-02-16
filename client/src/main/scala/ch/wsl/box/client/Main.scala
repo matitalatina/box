@@ -58,8 +58,6 @@ object Main extends Logging {
         //loads datetime picker
         typings.bootstrap.bootstrapRequire
 
-        //require font
-        styles.fonts.ClearSans
 
 
 

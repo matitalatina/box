@@ -34,10 +34,15 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val global = style(
+
+    unsafeRoot("b") (
+      Font.bold
+    ),
+
     unsafeRoot("body") (
       StyleConstants.defaultFontSize,
       backgroundColor.white,
-      Font.clearSans
+      Font.regular
     ),
 
     unsafeRoot("h3") (
@@ -52,6 +57,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       borderColor(rgb(169, 169, 169)),
       height(23 px),
       backgroundColor.transparent,
+      Font.regular,
       &.focus(
         inputHighlight
       ),
@@ -68,6 +74,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
       backgroundColor.white,
       borderColor(rgb(169, 169, 169)),
       height(23 px),
+      Font.regular,
       paddingLeft(5 px),
       paddingRight(5 px),
       backgroundColor.transparent,
@@ -81,7 +88,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
 
     unsafeRoot("label")(
-      fontWeight.bold
+      Font.bold
     ),
 
     unsafeRoot("input[type='checkbox']")(
@@ -256,8 +263,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
 
   val tableHeader = style(
     fontSize(14 px),
-    Font.clearSans,
-    fontWeight.bold
+    Font.bold
   )
 
 
@@ -327,8 +333,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     ),
     color(conf.colors.link),
     textTransform.uppercase,
-    Font.clearSans,
-    fontWeight.bold,
+    Font.bold,
     cursor.pointer,
     padding.horizontal(2.px)
   )
@@ -374,8 +379,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val childTableHeader = style(
-    Font.clearSans,
-    fontWeight.bold
+    Font.bold
   )
 
   val childTableAction = style(
@@ -537,8 +541,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val labelRequired = style(
-    fontWeight.bolder,
-    Font.clearSans
+    Font.bold
   )
 
   val notNullable = style(
@@ -553,8 +556,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val labelNonRequred = style(
-    Font.clearSans,
-    fontWeight.bold
+    Font.bold
   )
 
   val editor = style(
