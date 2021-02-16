@@ -395,6 +395,7 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
   )
 
   val boxButton = style(
+    Font.regular,
     whiteSpace.nowrap,
     height(22 px),
     padding(3 px, 7 px),
