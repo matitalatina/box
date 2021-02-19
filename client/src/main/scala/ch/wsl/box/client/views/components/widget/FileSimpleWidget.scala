@@ -4,7 +4,7 @@ package ch.wsl.box.client.views.components.widget
 import java.util.UUID
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.services.{ClientConf, REST}
+import ch.wsl.box.client.services.{ClientConf, Labels, REST}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.views.components.Debug
 import ch.wsl.box.model.shared._
@@ -14,7 +14,7 @@ import io.udash.bindings.Bindings
 import io.udash.bootstrap.BootstrapStyles
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLAnchorElement
-import org.scalajs.dom.{Event, File, FileReader}
+import org.scalajs.dom.{Event, File, FileReader, window}
 import scalatags.JsDom
 import scribe.Logging
 
@@ -114,6 +114,9 @@ case class FileSimpleWidget(id:Property[Option[String]], data:Property[Json], fi
 
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
       button("Upload",ClientConf.style.boxButton,BootstrapStyles.Float.right(), onclick :+= ((e:Event) => fileInput.click()) ),
+      showIf(source.transform(_.isDefined)){
+        button("Delete",ClientConf.style.boxButtonDanger,BootstrapStyles.Float.right(), onclick :+= ((e:Event) => if(window.confirm(Labels.form.removeMap)) data.set(Json.Null)) ).render
+      },
       div(BootstrapStyles.Visibility.clearfix)
     )
   }
