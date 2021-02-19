@@ -16,7 +16,7 @@ import slick.lifted.MappedProjection
 
 trait ViewActions[T] {
 
-  def find(query: JSONQuery=JSONQuery.empty): StreamingDBIO[Seq[T],T] //enable streaming
+  def find(query: JSONQuery=JSONQuery.empty): DBIO[Seq[T]] //enable streaming
 
   def getById(id: JSONID=JSONID.empty):DBIO[Option[T]]
 

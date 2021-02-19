@@ -3,6 +3,7 @@ package ch.wsl.box.rest.metadata.box
 import ch.wsl.box.model.boxentities.BoxForm
 import ch.wsl.box.model.boxentities.BoxUser.BoxUser_row
 import ch.wsl.box.model.shared._
+import ch.wsl.box.rest.metadata.FormMetadataFactory
 import ch.wsl.box.rest.utils.BoxConfig
 
 object FormUIDef {
@@ -17,11 +18,9 @@ object FormUIDef {
     label = "Interface builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"form_id",false,widget = Some(WidgetsNames.inputDisabled)),
-      JSONField(JSONFieldTypes.STRING,"name",false,widget = Some(WidgetsNames.input)),
-      JSONField(JSONFieldTypes.STRING,"description",true,widget = Some(WidgetsNames.twoLines)),
-      JSONField(JSONFieldTypes.STRING,"layout",true, widget = Some(WidgetsNames.code),label = Some(""),
-        params = Some(Json.obj("language" -> "json".asJson, "height" -> 600.asJson))
-      ),
+      CommonField.formName,
+      CommonField.formDescription,
+      CommonField.formLayout,
       JSONField(JSONFieldTypes.STRING,"entity",false,
         widget = Some(WidgetsNames.select),
         lookup = Some(JSONFieldLookup.prefilled(
@@ -52,22 +51,9 @@ object FormUIDef {
         )),
         widget = Some(WidgetsNames.tableChild)
       ),
-      JSONField(JSONFieldTypes.CHILD,"fields_child",true,
-        child = Some(Child(FORM_FIELD_CHILDS,"fields_child","form_id","form_id",
-          Some(JSONQuery.sortByKeys(Seq("field_id")).filterWith(JSONQueryFilter.WHERE.eq("type",JSONFieldTypes.CHILD)))
-        )),
-        widget = Some(WidgetsNames.tableChild)
-      ),
-      JSONField(JSONFieldTypes.CHILD,"fields_static",true,
-        child = Some(Child(FORM_FIELD_STATIC,"fields_static","form_id","form_id",
-          Some(JSONQuery.sortByKeys(Seq("field_id")).filterWith(JSONQueryFilter.WHERE.eq("type",JSONFieldTypes.STATIC)))
-        )),
-        widget = Some(WidgetsNames.tableChild)
-      ),
-      JSONField(JSONFieldTypes.CHILD,"form_i18n",true,
-        child = Some(Child(FORM_I18N,"form_i18n","form_id","form_id",Some(JSONQuery.sortByKeys(Seq("lang"))))),
-        widget = Some(WidgetsNames.tableChild)
-      )
+      CommonField.formFieldChild,
+      CommonField.formFieldStatic,
+      CommonField.formi18n,
     ),
     layout = Layout(
       blocks = Seq(
@@ -100,6 +86,52 @@ object FormUIDef {
     view = None,
     action = FormActionsMetadata.default
   )
+
+
+  val page = JSONMetadata(
+    objId = PAGE,
+    name = "page",
+    label = "Interface builder",
+    fields = Seq(
+      JSONField(JSONFieldTypes.NUMBER,"form_id",false,widget = Some(WidgetsNames.inputDisabled)),
+      CommonField.formName,
+      CommonField.formDescription,
+      CommonField.formLayout,
+      JSONField(JSONFieldTypes.STRING,"entity",false,
+        widget = Some(WidgetsNames.inputDisabled),
+        default = Some(FormMetadataFactory.STATIC_PAGE)
+      ),
+      CommonField.formFieldChild,
+      CommonField.formFieldStatic,
+      CommonField.formi18n,
+    ),
+    layout = Layout(
+      blocks = Seq(
+        LayoutBlock(None,8,Seq(
+          SubLayoutBlock(None,Seq(12,12,12),Seq(
+            Right(
+              SubLayoutBlock(Some("Base Info"),Seq(12),Seq("name","description").map(Left(_)))
+            ),
+          ))
+        ).map(Right(_))),
+        LayoutBlock(Some("I18n"),4,Seq("form_i18n").map(Left(_))),
+        LayoutBlock(Some("Linked forms"),12,Seq("fields_child").map(Left(_))),
+        LayoutBlock(Some("Static elements"),12,Seq("fields_static").map(Left(_))),
+        LayoutBlock(Some("Layout"),12,Seq("layout").map(Left(_))),
+      )
+    ),
+    entity = "form",
+    lang = "en",
+    tabularFields = Seq("form_id","name","description"),
+    rawTabularFields = Seq("form_id","name","description"),
+    keys = Seq("form_id"),
+    keyStrategy = SurrugateKey,
+    query = None,
+    exportFields = Seq(),
+    view = None,
+    action = FormActionsMetadata.default
+  )
+
 
   def field(tables:Seq[String]) = JSONMetadata(
     objId = FORM_FIELD,

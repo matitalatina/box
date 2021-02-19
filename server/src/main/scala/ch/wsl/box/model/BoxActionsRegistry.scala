@@ -3,8 +3,9 @@ package ch.wsl.box.model
 
 
 import scala.concurrent.ExecutionContext
-import ch.wsl.box.rest.logic.{JSONTableActions, JSONViewActions, TableActions}
+import ch.wsl.box.rest.logic.{JSONPageActions, JSONTableActions, JSONViewActions, TableActions}
 import ch.wsl.box.model.boxentities._
+import ch.wsl.box.rest.metadata.FormMetadataFactory
 import ch.wsl.box.rest.runtime.Registry
 
 class BoxActionsRegistry(implicit ec:ExecutionContext)  {
@@ -14,6 +15,7 @@ class BoxActionsRegistry(implicit ec:ExecutionContext)  {
   import ch.wsl.box.rest.utils.JSONSupport._
 
   def tableActions:String => TableActions[Json] = {
+    case FormMetadataFactory.STATIC_PAGE => JSONPageActions
     case "access_level" => JSONTableActions[BoxAccessLevel.BoxAccessLevel,BoxAccessLevel.BoxAccessLevel_row](BoxAccessLevel.BoxAccessLevelTable)
     case "conf" => JSONTableActions[BoxConf.BoxConf,BoxConf.BoxConf_row](BoxConf.BoxConfTable)
     case "cron" => JSONTableActions[BoxCron.BoxCron,BoxCron.BoxCron_row](BoxCron.BoxCronTable)

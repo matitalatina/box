@@ -94,10 +94,10 @@ trait ChildRendererFactory extends ComponentWidgetFactory {
 
 
       val keys = for {
-        (local, sub) <- child.masterFields.split(",").map(_.trim).zip(child.childFields.split(",").map(_.trim))
+        m <- child.mapping
       } yield {
         //      println(s"local:$local sub:$sub")
-        sub -> masterData.get.js(local)
+        m.child -> masterData.get.js(m.parent)
       }
       keys.toMap
       val placeholder: Map[String, Json] = JSONMetadata.jsonPlaceholder(metadata, children) ++ keys.toMap

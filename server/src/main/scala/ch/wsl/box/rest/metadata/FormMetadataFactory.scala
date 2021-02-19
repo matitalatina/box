@@ -34,7 +34,9 @@ object FormMetadataFactory{
    * cache should be resetted when an external field changes
    */
   private val cacheFormName = scala.collection.mutable.Map[(String, String, String),JSONMetadata]()   //(up.name, form id, lang)
-  private val cacheFormId = scala.collection.mutable.Map[(String, Int, String),JSONMetadata]()        //(up.name, from name, lang)
+  private val cacheFormId = scala.collection.mutable.Map[(String, Int, String),JSONMetadata]()//(up.name, from name, lang)
+
+  final val STATIC_PAGE = "box_static_page"
 
   def resetCache() = {
     cacheFormName.clear()
@@ -196,7 +198,11 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
       val layout = Layout.fromString(form.layout).getOrElse(defaultLayout)
 
       val formActions = if(actions.isEmpty) {
-        FormActionsMetadata.default
+        if(form.entity == FormMetadataFactory.STATIC_PAGE) {
+          FormActionsMetadata.defaultForPages
+        } else {
+          FormActionsMetadata.default
+        }
       } else {
         FormActionsMetadata(
           actions = actions.map{a =>
@@ -217,6 +223,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
 
       val keyStrategy = if(Managed(form.entity)) SurrugateKey else NaturalKey
 
+
       val result = JSONMetadata(
         form.form_id.get,
         form.name,
@@ -232,7 +239,8 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
         defaultQuery,
         form.exportFields.map(_.split(",").map(_.trim).toSeq).getOrElse(tableFields),
         formI18n.flatMap(_.view_table),
-        formActions
+        formActions,
+        static = form.entity == FormMetadataFactory.STATIC_PAGE
       )//, form.entity)
       //println(s"resulting form: $result")
       result

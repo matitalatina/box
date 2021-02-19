@@ -422,6 +422,12 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     fontSize(12 px)
   )
 
+  val spacedList = style(
+    unsafeChild("li") (
+      marginTop(10 px),
+      marginBottom(10 px)
+    )
+  )
 
   val boxButtonImportant = style(
     whiteSpace.nowrap,

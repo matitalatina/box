@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{Context, EntityFormState}
+import ch.wsl.box.client.{Context, FormState}
 import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Navigator, Notification}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.utils._
@@ -39,22 +39,22 @@ object EntityFormModel extends HasModelPropertyCreator[EntityFormModel] {
     Blank.Simple(EntityFormModel("","",None,None,Json.Null,"",Seq(), Navigation.empty0,true,false, true, false))
 }
 
-object EntityFormViewPresenter extends ViewFactory[EntityFormState] {
+object EntityFormViewPresenter extends ViewFactory[FormState] {
 
-  override def create(): (View, Presenter[EntityFormState]) = {
+  override def create(): (View, Presenter[FormState]) = {
     val model = ModelProperty.blank[EntityFormModel]
     val presenter = EntityFormPresenter(model)
     (EntityFormView(model,presenter),presenter)
   }
 }
 
-case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[EntityFormState] with Logging {
+case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Presenter[FormState] with Logging {
   import ch.wsl.box.shared.utils.JSONUtils._
   import ch.wsl.box.client.Context._
 
   private var currentData:Json = Json.Null
 
-  override def handleState(state: EntityFormState): Unit = {
+  override def handleState(state: FormState): Unit = {
 
 
     val reloadMetadata = {

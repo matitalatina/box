@@ -81,7 +81,16 @@ case class FileReference(name_field:String, file_field:String, thumbnail_field:O
 
 case class JSONFieldMap(valueProperty:String, textProperty:String, localValueProperty:String)
 
-case class Child(objId:Int, key:String, masterFields:String, childFields:String, childQuery:Option[JSONQuery])
+case class ChildMapping(parent:String,child:String)
+
+case class Child(objId:Int, key:String, mapping:Seq[ChildMapping], childQuery:Option[JSONQuery])
+
+object Child{
+  def apply(objId: Int, key: String, masterFields: String, childFields: String, childQuery: Option[JSONQuery]): Child = {
+    val mapping = masterFields.split(",").map(_.trim).zip(childFields.split(",").map(_.trim)).map{ case (p,c) => ChildMapping(p,c)}
+    new Child(objId, key, mapping, childQuery)
+  }
+}
 
 case class ConditionalField(conditionFieldId:String,conditionValues:Seq[Json])
 

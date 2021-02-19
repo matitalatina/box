@@ -50,23 +50,42 @@ class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresente
 
   private val content = div(BootstrapStyles.Grid.row)(
     div(BootstrapCol.md(12),h2("Admin")),
-    div(BootstrapCol.md(3),h3("Forms"),
-      a("Interface builder", Navigate.click(EntityTableState(EntityKind.BOX.kind,"form"))),
-      div(BootstrapStyles.Card.card,
-        label("Generate STUB for"),br,
-        Select( entityForStub, viewModel.subSeq(_.entities))(Select.defaultLabel).render,
-        br,
-        button(ClientConf.style.boxButtonImportant,"Generate", onclick :+= ((e:Event) => presenter.generateStub(entityForStub.get)))
+    div(BootstrapCol.md(3),h3("Box Set-up"),
+      ul(ClientConf.style.spacedList,
+        li(
+          a("Forms", Navigate.click(EntityTableState(EntityKind.BOX.kind,"form"))),
+        ),
+        li(
+          a("Pages", Navigate.click(EntityTableState(EntityKind.BOX.kind,"page"))),
+        ),
+        li(
+          a("Function builder", Navigate.click(EntityTableState(EntityKind.BOX.kind,"function")))
+        ),
+        li(
+          div(
+            p("Generate Form template for"),
+            Select( entityForStub, viewModel.subSeq(_.entities))(Select.defaultLabel).render," ",
+            button(ClientConf.style.boxButtonImportant,"Generate", onclick :+= ((e:Event) => presenter.generateStub(entityForStub.get)))
+          )
+        )
       )
     ),
-    div(BootstrapCol.md(3),h3("Functions"),
-      a("Function builder", Navigate.click(EntityTableState(EntityKind.BOX.kind,"function")))
-    ),
     div(BootstrapCol.md(3),h3("News"),
-      a("News editor", Navigate.click(EntityTableState(EntityKind.BOX.kind,"news")))
+      ul(ClientConf.style.spacedList,
+        li(
+          a("News editor", Navigate.click(EntityTableState(EntityKind.BOX.kind,"news")))
+        )
+      )
     ),
-    div(BootstrapCol.md(3),h3("Import/Export"),
-      a("Definitions", Navigate.click(AdminBoxDefinitionState))
+    div(BootstrapCol.md(3),h3("Conf"),
+      ul(ClientConf.style.spacedList,
+        li(
+          a("Import/Export Definitions", Navigate.click(AdminBoxDefinitionState))
+        ),
+        li(
+          a("Labels", Navigate.click(EntityTableState(EntityKind.BOX.kind,"label")))
+        )
+      )
     )
   )
 

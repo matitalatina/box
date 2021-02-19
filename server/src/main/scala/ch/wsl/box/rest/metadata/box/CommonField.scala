@@ -1,7 +1,7 @@
 package ch.wsl.box.rest.metadata.box
 
-import ch.wsl.box.model.shared.{Child, ConditionalField, JSONField, JSONFieldLookup, JSONFieldTypes, JSONLookup, JSONQuery, WidgetsNames}
-import ch.wsl.box.rest.metadata.box.Constants.{FORM_FIELD_FILE, FORM_FIELD_I18N}
+import ch.wsl.box.model.shared.{Child, ConditionalField, JSONField, JSONFieldLookup, JSONFieldTypes, JSONLookup, JSONQuery, JSONQueryFilter, WidgetsNames}
+import ch.wsl.box.rest.metadata.box.Constants.{FORM_FIELD_CHILDS, FORM_FIELD_FILE, FORM_FIELD_I18N, FORM_FIELD_STATIC, FORM_I18N}
 import ch.wsl.box.rest.utils.BoxConfig
 import io.circe.Json
 import io.circe.syntax._
@@ -72,5 +72,32 @@ object CommonField {
   val hint = JSONField(JSONFieldTypes.STRING,"hint",true, widget = Some(WidgetsNames.input))
   val placeholder = JSONField(JSONFieldTypes.STRING,"placeholder",true, widget = Some(WidgetsNames.input))
   val lookupTextField = JSONField(JSONFieldTypes.STRING,"lookupTextField",true, widget = Some(WidgetsNames.input))
+
+
+  val formName = JSONField(JSONFieldTypes.STRING,"name",false,widget = Some(WidgetsNames.input))
+  val formDescription =JSONField(JSONFieldTypes.STRING,"description",true,widget = Some(WidgetsNames.twoLines))
+  val formLayout = JSONField(JSONFieldTypes.STRING,"layout",true, widget = Some(WidgetsNames.code),label = Some(""),
+    params = Some(Json.obj("language" -> "json".asJson, "height" -> 600.asJson))
+  )
+
+  val formFieldChild = JSONField(JSONFieldTypes.CHILD,"fields_child",true,
+    child = Some(Child(FORM_FIELD_CHILDS,"fields_child","form_id","form_id",
+      Some(JSONQuery.sortByKeys(Seq("field_id")).filterWith(JSONQueryFilter.WHERE.eq("type",JSONFieldTypes.CHILD)))
+    )),
+    widget = Some(WidgetsNames.tableChild)
+  )
+  val formFieldStatic = JSONField(JSONFieldTypes.CHILD,"fields_static",true,
+    child = Some(Child(FORM_FIELD_STATIC,"fields_static","form_id","form_id",
+      Some(JSONQuery.sortByKeys(Seq("field_id")).filterWith(JSONQueryFilter.WHERE.eq("type",JSONFieldTypes.STATIC)))
+    )),
+    widget = Some(WidgetsNames.tableChild)
+  )
+
+  val formi18n = JSONField(JSONFieldTypes.CHILD,"form_i18n",true,
+    child = Some(Child(FORM_I18N,"form_i18n","form_id","form_id",Some(JSONQuery.sortByKeys(Seq("lang"))))),
+    widget = Some(WidgetsNames.tableChild)
+  )
+
+
 
 }

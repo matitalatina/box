@@ -19,7 +19,7 @@ object UI {
 
   def logo = ui.lift("logo")
   def title = ui.lift("title")
-  def indexTitle = Labels(ui.lift("index.title").getOrElse("ui.index.title"))
+  def indexTitle = Labels.home.title(ui.get("index.title"))
   def indexHtml = Labels(ui.lift("index.html").getOrElse(""))
   def newsTable = ui.lift("newsTable")
   def footerCopyright = ui.lift("footerCopyright")

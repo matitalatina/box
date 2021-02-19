@@ -41,20 +41,38 @@ case class EntitiesState(kind:String, currentEntity:String) extends ContainerRou
 
 case class EntityTableState(kind:String, entity:String) extends FinalRoutingState(Some(EntitiesState(kind,entity)))
 
+abstract class FormState(
+                          val kind:String,
+                          val entity:String,
+                          val write:String,
+                          _id:Option[String],
+                          val public:Boolean
+                        ) extends FinalRoutingState(Some(EntitiesState(kind,entity))) {
+  def id:Option[String] = _id
+  def writeable:Boolean = write == "true"
+}
+
 case class EntityFormState(
-                            kind:String,
-                            entity:String,
-                            write:String,
+                            override val kind:String,
+                            override val entity:String,
+                            override val write:String,
                             _id:Option[String],
-                            public:Boolean
-                          ) extends FinalRoutingState(Some(EntitiesState(kind,entity))) {
-  def id = {
+                            override val public:Boolean
+                          ) extends FormState(kind, entity, write, _id, public) {
+  override def id = {
     val t = _id.map(URIUtils.decodeURI)
     t
   }
 
-  def writeable:Boolean = write == "true"
+
 }
+
+case class FormPageState(
+                          override val kind:String,
+                          override val entity:String,
+                          override val write:String,
+                          override val public:Boolean
+                          ) extends FormState(kind,entity,write,Some("static::page"),public)
 
 case class MasterChildState(kind:String,
                             masterEntity:String,

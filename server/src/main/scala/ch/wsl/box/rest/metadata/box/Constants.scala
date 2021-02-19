@@ -19,5 +19,11 @@ object Constants {
   final val NEWS = 21
   final val NEWS_I18N = 22
 
+  final val PAGE = 31
+
+
+  final val LABEL = 41
+  final val LABEL_CONTAINER = 42
+
 
 }
