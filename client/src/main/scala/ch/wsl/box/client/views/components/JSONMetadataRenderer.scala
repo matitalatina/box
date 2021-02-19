@@ -39,7 +39,9 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   override def field: JSONField = JSONField("metadataRenderer","metadataRenderer",false)
 
   private def getId(data:Json): Option[String] = {
-    data.ID(metadata.keys).map(_.asString)
+    if(metadata.static) id.get
+    else
+      data.ID(metadata.keys).map(_.asString)
   }
 
 

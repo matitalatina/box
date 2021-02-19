@@ -18,14 +18,12 @@ object BoxLabels {
   import profile._
 
 
-  case class BoxLabels_row(id: Option[Int] = None, lang: String, key:String, label: Option[String] = None)
+  case class BoxLabels_row(lang: String, key:String, label: Option[String] = None)
 
   class BoxLabels(_tableTag: Tag) extends profile.api.Table[BoxLabels_row](_tableTag,BoxSchema.schema, "labels") {
-    def * = (Rep.Some(id), lang, key, label) <> (BoxLabels_row.tupled, BoxLabels_row.unapply)
+    def * = (lang, key, label) <> (BoxLabels_row.tupled, BoxLabels_row.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), lang, key, label).shaped.<>({r=>import r._; _1.map(_=> BoxLabels_row.tupled((_1, _2, _3, _4)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
-    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
     val lang: Rep[String] = column[String]("lang")
     val key: Rep[String] = column[String]("key")
     val label: Rep[Option[String]] = column[Option[String]]("label", O.Default(None))

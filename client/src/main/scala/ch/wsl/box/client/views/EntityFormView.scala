@@ -56,7 +56,6 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
   override def handleState(state: FormState): Unit = {
 
-
     val reloadMetadata = {
       val currentModel = model.get
 
@@ -131,7 +130,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
       val data:Json = m.data
 
       def saveAction(data:Json) = {
-        logger.debug("saveAction")
+        logger.debug(s"saveAction id:${m.id} ${JSONID.fromString(m.id.getOrElse(""))}")
         for {
           id <- JSONID.fromString(m.id.getOrElse("")) match {
             case Some (id) => services.rest.update (m.kind, services.clientSession.lang(), m.name, id, data)
@@ -378,41 +377,44 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
 
   override def getTemplate: scalatags.generic.Modifier[Element] = {
 
-    val recordNavigation = showIf(model.subProp(_.public).transform(x => !x)){
-
-
-
-      def navigation = model.subModel(_.navigation)
-
+    val recordNavigation = showIf(model.subProp(_.public).transform(x => !x)) {
       div(
-        div(ClientConf.style.boxNavigationLabel,
-          Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.firstPage,Labels.navigation.firstPage,_.Float.left()),
-          Navigation.button(navigation.subProp(_.hasPreviousPage),presenter.prevPage,Labels.navigation.previousPage,_.Float.left()),
-          span(
-            ClientConf.style.boxNavigationLabel,
-            " " + Labels.navigation.page + " ",
-            bind(model.subProp(_.navigation.currentPage)),
-            " " + Labels.navigation.of + " ",
-            bind(model.subProp(_.navigation.pages)),
-            " "
-          ),
-          Navigation.button(navigation.subProp(_.hasNextPage),presenter.lastPage,Labels.navigation.lastPage,_.Float.right()),
-          Navigation.button(navigation.subProp(_.hasNextPage),presenter.nextPage,Labels.navigation.nextPage,_.Float.right())
-        ),
-        div(BootstrapStyles.Visibility.clearfix),
-        div(ClientConf.style.boxNavigationLabel,
-          Navigation.button(navigation.subProp(_.hasPrevious),presenter.first,Labels.navigation.first,_.Float.left()),
-          Navigation.button(navigation.subProp(_.hasPrevious),presenter.prev,Labels.navigation.previous,_.Float.left()),
-          span(
-            " " + Labels.navigation.record + " ",
-            bind(model.subModel(_.navigation).subProp(_.currentIndex)),
-            " " + Labels.navigation.of + " ",
-            bind(model.subModel(_.navigation).subProp(_.count)),
-            " "
-          ),
-          Navigation.button(navigation.subProp(_.hasNext),presenter.last,Labels.navigation.last,_.Float.right()),
-          Navigation.button(navigation.subProp(_.hasNext),presenter.next,Labels.navigation.next,_.Float.right())
-        )
+        showIf(model.subProp(_.metadata).transform(x => !x.exists(_.static))) {
+
+
+          def navigation = model.subModel(_.navigation)
+
+          div(
+            div(ClientConf.style.boxNavigationLabel,
+              Navigation.button(navigation.subProp(_.hasPreviousPage), presenter.firstPage, Labels.navigation.firstPage, _.Float.left()),
+              Navigation.button(navigation.subProp(_.hasPreviousPage), presenter.prevPage, Labels.navigation.previousPage, _.Float.left()),
+              span(
+                ClientConf.style.boxNavigationLabel,
+                " " + Labels.navigation.page + " ",
+                bind(model.subProp(_.navigation.currentPage)),
+                " " + Labels.navigation.of + " ",
+                bind(model.subProp(_.navigation.pages)),
+                " "
+              ),
+              Navigation.button(navigation.subProp(_.hasNextPage), presenter.lastPage, Labels.navigation.lastPage, _.Float.right()),
+              Navigation.button(navigation.subProp(_.hasNextPage), presenter.nextPage, Labels.navigation.nextPage, _.Float.right())
+            ),
+            div(BootstrapStyles.Visibility.clearfix),
+            div(ClientConf.style.boxNavigationLabel,
+              Navigation.button(navigation.subProp(_.hasPrevious), presenter.first, Labels.navigation.first, _.Float.left()),
+              Navigation.button(navigation.subProp(_.hasPrevious), presenter.prev, Labels.navigation.previous, _.Float.left()),
+              span(
+                " " + Labels.navigation.record + " ",
+                bind(model.subModel(_.navigation).subProp(_.currentIndex)),
+                " " + Labels.navigation.of + " ",
+                bind(model.subModel(_.navigation).subProp(_.count)),
+                " "
+              ),
+              Navigation.button(navigation.subProp(_.hasNext), presenter.last, Labels.navigation.last, _.Float.right()),
+              Navigation.button(navigation.subProp(_.hasNext), presenter.next, Labels.navigation.next, _.Float.right())
+            )
+          ).render
+        }
       ).render
     }
 
@@ -422,9 +424,11 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
         h3(
           ClientConf.style.noMargin,
           labelTitle,
-          produce(model.subProp(_.id)){ id =>
-            val subTitle = id.map(" - " + _).getOrElse("")
-            small(subTitle).render
+          showIf(model.subProp(_.metadata).transform(!_.exists(_.static))) {
+            small(produce(model.subProp(_.id)) { id =>
+              val subTitle = id.map(" - " + _).getOrElse("")
+              span(subTitle).render
+            }).render
           },
           showIf(model.subProp(_.loading)) {
             small(" - " + Labels.navigation.loading).render
@@ -438,7 +442,7 @@ case class EntityFormView(model:ModelProperty[EntityFormModel], presenter:Entity
       div(BootstrapStyles.Float.right(),ClientConf.style.navigatorArea) (
         recordNavigation
       ),
-      showIf(model.subProp(_.public).transform(x => !x)) {
+      showIf(model.subProp(_.public).transform(x => !x).combine(model.subProp(_.metadata).transform(!_.exists(_.static)))((p,s) => p && s)) {
         div(BootstrapStyles.Float.right(), ClientConf.style.navigatorArea)(
           produceWithNested(model.subProp(_.name)) { (m, release) =>
             div(

@@ -83,7 +83,7 @@ class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresente
           a("Import/Export Definitions", Navigate.click(AdminBoxDefinitionState))
         ),
         li(
-          a("Labels", Navigate.click(EntityTableState(EntityKind.BOX.kind,"label")))
+          a("Labels", Navigate.click(FormPageState(EntityKind.BOX.kind,"labels","true",false)))
         )
       )
     )

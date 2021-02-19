@@ -6,7 +6,9 @@ import io.circe.Json
 import slick.dbio.DBIO
 
 object JSONPageActions extends TableActions[Json] {
-  override def insert(obj: Json): PostgresProfile.api.DBIO[JSONID] = DBIO.successful(JSONID(Vector(JSONKeyValue("",""))))
+  private val responseId = JSONID(Vector(JSONKeyValue("static","page")))
+
+  override def insert(obj: Json): PostgresProfile.api.DBIO[JSONID] = DBIO.successful(responseId)
 
   override def delete(id: JSONID): PostgresProfile.api.DBIO[Int] = DBIO.successful(0)
 
@@ -14,7 +16,7 @@ object JSONPageActions extends TableActions[Json] {
 
   override def updateIfNeeded(id: JSONID, obj: Json): PostgresProfile.api.DBIO[Int] = DBIO.successful(0)
 
-  override def upsertIfNeeded(id: Option[JSONID], obj: Json): PostgresProfile.api.DBIO[JSONID] = DBIO.successful(JSONID(Vector(JSONKeyValue("",""))))
+  override def upsertIfNeeded(id: Option[JSONID], obj: Json): PostgresProfile.api.DBIO[JSONID] = DBIO.successful(responseId)
 
   override def find(query: JSONQuery) = DBIO.successful(Seq())
 

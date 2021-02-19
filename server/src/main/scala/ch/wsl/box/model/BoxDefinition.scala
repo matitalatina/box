@@ -153,7 +153,7 @@ object BoxDefinition {
       merge(_.function_i18n, _.id == _.id, _ == _),
       merge(_.function_field, _.field_id == _.field_id, _ == _),
       merge(_.function_field_i18n, _.id == _.id, _ == _),
-      merge(_.labels, _.id == _.id, _ == _),
+      merge(_.labels,(o,n) => o.lang == n.lang && o.key == n.key, _ == _),
       merge(_.news, _.news_id == _.news_id, _ == _),
       merge(_.news_i18n, (a,b) => a.news_id == b.news_id && a.lang == b.lang , _ == _),
       merge(_.ui, _.id == _.id, _ == _),
@@ -272,8 +272,7 @@ object BoxDefinition {
       ),
       commit[BoxLabels.BoxLabels_row,BoxLabels.BoxLabels](
         _.labels,BoxLabels.BoxLabelsTable,
-        x => BoxLabels.BoxLabelsTable.filter(_.id === x.id),
-        sql"SELECT setval('box.labels_id_seq',(SELECT max(id) from box.labels))".as[Int]
+        x => BoxLabels.BoxLabelsTable.filter(db => db.key === x.key && db.lang === x.lang),
       ),
       commit[BoxNews.BoxNews_i18n_row,BoxNews.BoxNews_i18n](
         _.news_i18n,BoxNews.BoxNews_i18nTable,
