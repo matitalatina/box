@@ -142,7 +142,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
           }
         } yield {
           logger.debug("saveAction::Result")
-          result
+          (id,result)
         }
 
       }
@@ -151,9 +151,8 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
       {for{
         updatedData <- widget.beforeSave(data,metadata)
-        resultBeforeAfterSave <- saveAction(updatedData)
+        (newId,resultBeforeAfterSave) <- saveAction(updatedData)
         afterSaveResult <- widget.afterSave(resultBeforeAfterSave,metadata)
-        newId = JSONID.fromData(resultBeforeAfterSave,metadata)
 
 
       } yield {
@@ -162,7 +161,7 @@ case class EntityFormPresenter(model:ModelProperty[EntityFormModel]) extends Pre
 
         enableGoAway
 
-        action(newId.get)
+        action(newId)
 
 
       }}.recover{ case e =>
