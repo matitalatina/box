@@ -8,6 +8,9 @@ import ch.wsl.box.model.boxentities.BoxSchema
 import org.flywaydb.core.Flyway
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import javax.sql.DataSource
+import schemagen.SchemaGenerator
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 
@@ -61,6 +64,8 @@ object Migrate {
   def all() = {
     box()
     app()
+    SchemaGenerator.run()
+    LabelsUpdate.run(Connection.dbConnection)
   }
 
   def main(args: Array[String]): Unit = {

@@ -2,6 +2,7 @@ package ch.wsl.box.jdbc
 
 import java.security.MessageDigest
 
+import ch.wsl.box.jdbc
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import net.ceedubs.ficus.Ficus._
 import scribe.Logging

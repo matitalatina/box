@@ -6,13 +6,18 @@ import scala.concurrent.ExecutionContext
 import ch.wsl.box.rest.logic.{JSONPageActions, JSONTableActions, JSONViewActions, TableActions}
 import ch.wsl.box.model.boxentities._
 import ch.wsl.box.rest.metadata.FormMetadataFactory
-import ch.wsl.box.rest.runtime.Registry
+import ch.wsl.box.rest.runtime.{Registry, RegistryInstance}
+import ch.wsl.box.rest.runtime.Registry._registry
+
+import scala.util.Try
 
 class BoxActionsRegistry(implicit ec:ExecutionContext)  {
 
   import io.circe._
   import io.circe.generic.auto._
   import ch.wsl.box.rest.utils.JSONSupport._
+
+
 
   def tableActions:String => TableActions[Json] = {
     case FormMetadataFactory.STATIC_PAGE => JSONPageActions
@@ -39,7 +44,16 @@ class BoxActionsRegistry(implicit ec:ExecutionContext)  {
     case "function_field_i18n" => JSONTableActions[BoxFunction.BoxFunctionField_i18n,BoxFunction.BoxFunctionField_i18n_row](BoxFunction.BoxFunctionField_i18nTable)
     case "news" => JSONTableActions[BoxNews.BoxNews,BoxNews.BoxNews_row](BoxNews.BoxNewsTable)
     case "news_i18n" => JSONTableActions[BoxNews.BoxNews_i18n,BoxNews.BoxNews_i18n_row](BoxNews.BoxNews_i18nTable)
-    case s:String => Registry().actions(s)
+    case s:String => {
+      Try{
+        Registry().actions(s)
+      }.toOption.orElse{
+        BoxRegistry.generated.flatMap(x => Try(x.actions(s)).toOption)
+      } match {
+        case Some(v) => v
+        case None => throw new Exception(s"Table $s not found in registry")
+      }
+    }
   }
 
 }

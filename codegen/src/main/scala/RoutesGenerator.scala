@@ -12,8 +12,8 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
 
   def composeRoutes():String = {
     (
-      tableList.flatMap(t => singleRoute("Table",t)) ++
-        viewList.flatMap(v => singleRoute("View",v))
+      tableList.flatMap(t => singleRoute("ch.wsl.box.rest.routes.Table",t)) ++
+        viewList.flatMap(v => singleRoute("ch.wsl.box.rest.routes.View",v))
       ).mkString(" ~ \n    ")
   }
 
@@ -30,7 +30,6 @@ case class RoutesGenerator(viewList:Seq[String],tableList:Seq[String],model:Mode
              |object $name extends GeneratedRoutes {
              |
              |  import $modelPackages._
-             |  import ch.wsl.box.rest.routes._
        |  import ch.wsl.box.rest.utils.JSONSupport._
        |  import Directives._
        |  import io.circe.generic.auto._

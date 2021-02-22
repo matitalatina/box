@@ -13,6 +13,7 @@ import scala.concurrent.duration._
 import scala.util.Try
 import ch.wsl.box.jdbc.PostgresProfile.api._
 import ch.wsl.box.jdbc.UserDatabase
+import schemagen.ViewLabels
 
 
 
@@ -47,7 +48,7 @@ object BoxConfig extends Logging {
          ).contains(k)}
 
 
-  def langs = Try(conf("langs")).getOrElse("en").split(",").map(_.trim).toSeq
+  def langs = ViewLabels.langs
 
   def fksLookupLabels = ConfigFactory.parseString( Try(conf("fks.lookup.labels")).getOrElse("default=firstNoPKField"))
 

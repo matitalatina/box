@@ -1,7 +1,9 @@
 package ch.wsl.box.rest.runtime
 
-import ch.wsl.box.codegen.CustomizedCodeGenerator
-import scribe.{Logging}
+import ch.wsl.box.codegen.{CodeGenerator, CustomizedCodeGenerator}
+import com.typesafe.config.ConfigFactory
+import net.ceedubs.ficus.Ficus._
+import scribe.Logging
 
 import scala.reflect.runtime.currentMirror
 
@@ -43,7 +45,8 @@ object Registry extends Logging {
     //logger.warn("Using generated registry, use only in development!")
   } catch { case t:Throwable =>
 
-      val files = CustomizedCodeGenerator.generatedFiles()
+      val schema = ConfigFactory.load().as[Option[String]]("db.schema").getOrElse("public")
+      val files = CodeGenerator(schema).generatedFiles()
 
       val entitiesCode =  files.entities.packageCode(
         profile = "ch.wsl.box.jdbc.PostgresProfile",

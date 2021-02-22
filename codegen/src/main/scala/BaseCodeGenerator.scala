@@ -13,7 +13,9 @@ import scala.concurrent.duration._
 trait BaseCodeGenerator {
   val dbConf: Config = com.typesafe.config.ConfigFactory.load().as[com.typesafe.config.Config]("db")
   private val dbPath = dbConf.as[String]("url")
-  private val dbSchema = dbConf.as[String]("schema")
+  def dbSchema:String
+
+  def exclude:Seq[String]
 
   private def db = PostgresProfile.api.Database.forURL(s"$dbPath?currentSchema=$dbSchema",
     driver="org.postgresql.Driver",
@@ -23,7 +25,7 @@ trait BaseCodeGenerator {
   private val tables:Seq[String] = dbConf.as[Seq[String]]("generator.tables")
   private val views:Seq[String] = dbConf.as[Seq[String]]("generator.views")
 
-  private val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes")
+  private val excludes:Seq[String] = dbConf.as[Seq[String]]("generator.excludes") ++ exclude
   private val excludeFields:Seq[String] = dbConf.as[Seq[String]]("generator.excludeFields")
 
   private val tablesAndViews = tables ++ views

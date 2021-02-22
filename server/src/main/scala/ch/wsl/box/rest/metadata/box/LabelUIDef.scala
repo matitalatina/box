@@ -1,8 +1,9 @@
 package ch.wsl.box.rest.metadata.box
 
-import ch.wsl.box.model.shared.{Child, FormActionsMetadata, JSONField, JSONFieldTypes, JSONMetadata, Layout, LayoutBlock, NaturalKey, SubLayoutBlock, SurrugateKey, WidgetsNames}
+import ch.wsl.box.model.shared.{Child, FormActionsMetadata, JSONField, JSONFieldTypes, JSONMetadata, JSONQuery, JSONSort, Layout, LayoutBlock, NaturalKey, Sort, SubLayoutBlock, SurrugateKey, WidgetsNames}
 import ch.wsl.box.rest.metadata.FormMetadataFactory
 import ch.wsl.box.rest.metadata.box.Constants.{LABEL, LABEL_CONTAINER, PAGE}
+import ch.wsl.box.rest.utils.BoxConfig
 
 object LabelUIDef {
 
@@ -44,22 +45,24 @@ object LabelUIDef {
     name = "label",
     label = "Labels",
     fields = Seq(
-      CommonField.lang,
       JSONField(JSONFieldTypes.STRING,"key",false,widget = Some(WidgetsNames.input)),
-      JSONField(JSONFieldTypes.STRING,"label",true,widget = Some(WidgetsNames.input))
-    ),
+    ) ++ BoxConfig.langs.map{l =>
+      JSONField(JSONFieldTypes.STRING,l,true,widget = Some(WidgetsNames.input))
+    },
     Layout(
       blocks = Seq(
-        LayoutBlock(None,12,Seq("lang","key","label").map(Left(_))),
+        LayoutBlock(None,12,(Seq("key")++BoxConfig.langs).map(Left(_))),
       )
     ),
-    entity = "labels",
+    entity = "v_labels",
     lang = "en",
-    tabularFields = Seq("lang","key","label"),
-    rawTabularFields = Seq("lang","key","label"),
-    keys = Seq("lang","key"),
+    tabularFields = Seq("key")++BoxConfig.langs,
+    rawTabularFields = Seq("key")++BoxConfig.langs,
+    keys = Seq("key"),
     keyStrategy = NaturalKey,
-    query = None,
+    query = Some(
+      JSONQuery.limit(5000).sortWith(JSONSort("key",Sort.ASC))
+    ),
     exportFields = Seq(),
     view = None,
     action = FormActionsMetadata.default

@@ -45,13 +45,15 @@ object TypeMapping {
     "boolean" -> JSONFieldTypes.BOOLEAN,
     "bytea" -> JSONFieldTypes.FILE,
     "timestamp without time zone" -> JSONFieldTypes.DATETIME,
+    "timestamp with time zone" -> JSONFieldTypes.DATETIME,
     "time without time zone" -> JSONFieldTypes.TIME,
     "date" -> JSONFieldTypes.DATE,
     "interval" -> JSONFieldTypes.INTERVAL,
     "ARRAY" -> JSONFieldTypes.STRING,                              //todo: works only for visualisation
     "USER-DEFINED" -> JSONFieldTypes.STRING,
     "geometry" -> JSONFieldTypes.GEOMETRY,
-    "jsonb" -> JSONFieldTypes.JSON
+    "jsonb" -> JSONFieldTypes.JSON,
+    "name" -> JSONFieldTypes.STRING
   )
 
 }
