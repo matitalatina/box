@@ -2,7 +2,7 @@
 title: Popup
 parent: Widgets
 grand_parent: Documentation
-nav_order:12
+nav_order: 12
 ---
 
 # Popup
