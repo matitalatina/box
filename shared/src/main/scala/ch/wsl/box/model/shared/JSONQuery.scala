@@ -48,6 +48,8 @@ object JSONQueryFilter{
   object WHERE {
     def eq(column: String, value: String) = JSONQueryFilter(column, Some(Filter.EQUALS), value)
 
+    def not(column: String, value: String) = JSONQueryFilter(column, Some(Filter.NOT), value)
+
     def like(column: String, value: String) = JSONQueryFilter(column, Some(Filter.LIKE), value)
 
     def gt(column: String, value: String) = JSONQueryFilter(column, Some(Filter.>), value)

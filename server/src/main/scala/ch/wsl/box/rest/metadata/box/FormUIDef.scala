@@ -15,7 +15,7 @@ object FormUIDef {
   def main(tables:Seq[String], users:Seq[BoxUser_row]) = JSONMetadata(
     objId = FORM,
     name = "form",
-    label = "Interface builder",
+    label = "Form - Interface builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"form_id",false,widget = Some(WidgetsNames.inputDisabled)),
       CommonField.formName,
@@ -81,7 +81,9 @@ object FormUIDef {
     rawTabularFields = Seq("form_id","name","entity","description"),
     keys = Seq("form_id"),
     keyStrategy = SurrugateKey,
-    query = None,
+    query = Some(
+      JSONQuery.filterWith(JSONQueryFilter.WHERE.eq("entity",FormMetadataFactory.STATIC_PAGE))
+    ),
     exportFields = Seq(),
     view = None,
     action = FormActionsMetadata.default
@@ -91,7 +93,7 @@ object FormUIDef {
   val page = JSONMetadata(
     objId = PAGE,
     name = "page",
-    label = "Interface builder",
+    label = "Pages - Interface builder",
     fields = Seq(
       JSONField(JSONFieldTypes.NUMBER,"form_id",false,widget = Some(WidgetsNames.inputDisabled)),
       CommonField.formName,
@@ -126,7 +128,9 @@ object FormUIDef {
     rawTabularFields = Seq("form_id","name","description"),
     keys = Seq("form_id"),
     keyStrategy = SurrugateKey,
-    query = None,
+    query = Some(
+      JSONQuery.filterWith(JSONQueryFilter.WHERE.eq("entity",FormMetadataFactory.STATIC_PAGE))
+    ),
     exportFields = Seq(),
     view = None,
     action = FormActionsMetadata.default

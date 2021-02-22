@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{EntityFormState, EntityTableState}
+import ch.wsl.box.client.{EntityFormState, EntityTableState, FormPageState}
 import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Notification, SessionQuery}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.views.components.widget.{DateTimeWidget, SelectWidget}
@@ -103,8 +103,16 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
   }
 
 
-
   override def handleState(state: EntityTableState): Unit = {
+    services.rest.tabularMetadata(state.kind,services.clientSession.lang(),state.entity).map{ metadata =>
+      metadata.static match {
+        case false => _handleState(state,metadata)
+        case true => Navigate.to(FormPageState(state.kind,state.entity,"true",false))
+      }
+    }
+  }
+
+  private def _handleState(state: EntityTableState,emptyFieldsForm:JSONMetadata): Unit = {
 
     logger.info(s"handling Entity table state name=${state.entity} and kind=${state.kind}")
 
@@ -114,29 +122,23 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
 
     val emptyJsonQuery = JSONQuery.empty.limit(ClientConf.pageLength)
 
+    val fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
+    val form = emptyFieldsForm.copy(fields = fields)
+
+    val defaultQuery:JSONQuery = form.query match {
+      case None => emptyJsonQuery
+      case Some(jsonquery) => jsonquery.copy(paging = emptyJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
+    }
+
+    val query:JSONQuery = services.clientSession.getQuery() match {
+      case Some(SessionQuery(jsonquery,name)) if name == model.get.name => jsonquery      //in case a query is already stored in Session
+      case _ => defaultQuery
+    }
+
+    val qEncoded = encodeFk(fields,query)
 
     {for{
-      emptyFieldsForm <- services.rest.tabularMetadata(state.kind,services.clientSession.lang(),state.entity)
-      fields = emptyFieldsForm.fields.filter(field => emptyFieldsForm.tabularFields.contains(field.name))
-      form = emptyFieldsForm.copy(fields = fields)
-
-      defaultQuery:JSONQuery = form.query match {
-        case None => emptyJsonQuery
-        case Some(jsonquery) => jsonquery.copy(paging = emptyJsonQuery.paging)   //in case a specific sorting or filtering is specified in box.form
-      }
-
-      query:JSONQuery = services.clientSession.getQuery() match {
-        case Some(SessionQuery(jsonquery,name)) if name == model.get.name => jsonquery      //in case a query is already stored in Session
-        case _ => defaultQuery
-      }
-
-      qEncoded = encodeFk(fields,query)
-
       access <- services.rest.tableAccess(form.entity,state.kind)
-//      csv <- REST.csv(state.kind, Session.lang(), state.entity, qEncoded)
-//      ids <- REST.ids(state.kind, Session.lang(), state.entity, qEncoded)
-//      ids <- REST.ids(model.get.kind,Session.lang(),model.get.name,query)
-//      all_ids <- REST.ids(model.get.kind,Session.lang(),model.get.name, JSONQuery.empty.limit(100000))
       specificKind <- services.rest.specificKind(state.kind, services.clientSession.lang(), state.entity)
     } yield {
 
