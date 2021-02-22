@@ -17,10 +17,25 @@ sbt server/run
 ```
 Serve task compiles both client (with fastOptJS) and server then starts the server
 
-In order to continuously reload the changes in the code `sbt-revolver` plugin is set-up so you may use:
+In order to continuously reload the UI changes and take advandage of webpack fast reloading devServer, enable `devServer` on the application.conf
 ```
-sbt ~server/reStart
+devServer = true
 ```
+be careful enable it only in dev environment.
+
+Enable the dev server with
+```
+sbt client/fastOptJS::startWebpackDevServer
+``` 
+doing so the compiled ui javascript are served throug webpack devServer on port 8888.
+
+Then set up the autocompile of the UI
+```
+~client/fastOptJS
+```
+that way every time a file is saved it get compilated and served on 8888.
+
+Please not that there is no autoreload set up so you must reload the page manually on the browser.
 
 ### Pre generation of Table entities
 running `sbt server/slick` tables files are generated so they are compiled only once, modification on database are ignored.
