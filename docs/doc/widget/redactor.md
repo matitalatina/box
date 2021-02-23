@@ -15,6 +15,7 @@ Using this widget the resulting string is in HTML, it may be useful if you plan 
 
 
 #### Params
+
 | Key          | Value             |
 |:-------------|:------------------|
 | editorOptions  | You may use the redactor object |
