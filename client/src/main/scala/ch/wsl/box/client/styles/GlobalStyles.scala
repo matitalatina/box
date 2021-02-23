@@ -621,6 +621,14 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     borderWidth.`0`
   )
 
+  val centredContent = style(
+    maxWidth(900.px),
+    marginTop(20 px),
+    marginLeft.auto,
+    marginTop(20 px),
+    marginRight.auto,
+  )
+
 //  val fixedHeader = style(
 //    unsafeRoot("tbody")(
 ////    display.block,

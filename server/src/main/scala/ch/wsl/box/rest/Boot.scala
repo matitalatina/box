@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import ch.wsl.box.jdbc.Connection
-import ch.wsl.box.rest.routes.{BoxExceptionHandler, BoxRoutes, Preloading, Root}
+import ch.wsl.box.rest.routes.{BoxExceptionHandler, Preloading, Root}
 import ch.wsl.box.rest.runtime.Registry
 import ch.wsl.box.rest.utils.log.DbWriter
 import ch.wsl.box.rest.utils.BoxConfig

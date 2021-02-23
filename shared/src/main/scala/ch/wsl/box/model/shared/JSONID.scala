@@ -21,6 +21,9 @@ case class JSONID(id:Vector[JSONKeyValue]) {    //multiple key-value pairs
 object JSONID {
   def empty = JSONID(Vector())
 
+  def toMultiString(ids:Seq[JSONID]) = ids.map(_.asString).mkString("&&")
+  def fromMultiString(str:String):Seq[JSONID] = str.split("&&").toSeq.flatMap(fromString)
+
   def fromString(str:String): Option[JSONID] = Try{
     JSONID(
       str.split(",").map(_.trim).map{ k =>

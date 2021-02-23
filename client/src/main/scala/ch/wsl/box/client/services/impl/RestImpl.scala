@@ -65,6 +65,7 @@ class RestImpl(httpClient:HttpClient) extends REST with Logging {
   //for entities and forms
   def get(kind:String, lang:String, entity:String, id:JSONID):Future[Json] = httpClient.get[Json](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"))
   def update(kind:String, lang:String, entity:String, id:JSONID, data:Json):Future[JSONID] = httpClient.put[Json,JSONID](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"),data)
+  def updateMany(kind:String, lang:String, entity:String, ids:Seq[JSONID], data:Seq[Json]):Future[Seq[JSONID]] = httpClient.put[Seq[Json],Seq[JSONID]](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${JSONID.toMultiString(ids)}"),data)
   def insert(kind:String, lang:String, entity:String, data:Json, public:Boolean): Future[JSONID] = {
     val prefix = if(public) "/public" else ""
     httpClient.post[Json,JSONID](Routes.apiV1(s"$prefix/${EntityKind(kind).entityOrForm}/$lang/$entity"),data)

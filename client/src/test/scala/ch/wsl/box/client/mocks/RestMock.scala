@@ -102,6 +102,8 @@ class RestMock(values:Values) extends REST with Logging {
     Future.successful(values.update(id,data))
   }
 
+  override def updateMany(kind: String, lang: String, entity: String, ids: Seq[JSONID], data: Seq[Json]): Future[Seq[JSONID]] = ???
+
   override def insert(kind: String, lang: String, entity: String, data: Json, public:Boolean): Future[JSONID] = Future.successful{
     JSONID(id = Vector(JSONKeyValue("id","1")))
   }

@@ -27,11 +27,13 @@ object BoxConfig extends Logging {
       row <- ch.wsl.box.model.boxentities.BoxConf.BoxConfTable
     } yield row
 
-    conf = Await.result(boxDb.run(query.result).map {
+    val tempConf = Await.result(boxDb.run(query.result).map {
       _.map { row =>
         row.key -> row.value.getOrElse("")
       }.toMap
     }, 200 seconds)
+
+    conf = tempConf.filterNot(_._1 == "langs") ++ Map("langs" -> langs.mkString(","))
 
   }
 
@@ -44,7 +46,9 @@ object BoxConfig extends Logging {
               "max-age",
               "logger.level",
               "fks.lookup.labels",
-              "fks.lookup.rowsLimit"
+              "fks.lookup.rowsLimit",
+              "redactor.js",
+              "redactor.css"
          ).contains(k)}
 
 
@@ -105,11 +109,6 @@ object BoxConfig extends Logging {
   def redactorJs = Try(conf("redactor.js")).getOrElse("")
   def redactorCSS = Try(conf("redactor.css")).getOrElse("")
 
-
-  def dtFormatDatetime = Try(conf("dtformat.datetime")).getOrElse("yyyy-MM-dd HH:mm")
-  def dtFormatDate = Try(conf("dtformat.date")).getOrElse("yyyy-MM-dd")
-  def dtFormatTime = Try(conf("dtformat.time")).getOrElse("HH:mm:ss.S")
-
   def filterPrecisionDatetime = Try(conf("filter.precision.datetime").toUpperCase).toOption match {
     case Some("DATE") => JSONFieldTypes.DATE
     case Some("DATETIME") => JSONFieldTypes.DATETIME
@@ -121,7 +120,5 @@ object BoxConfig extends Logging {
     case JSONFieldTypes.DATETIME => ((x: LocalDateTime) => x)
     case _ => ((x: LocalDateTime) => x)
   }
-
-  def filterPrecisionDouble: Option[Int] = Try(conf("filter.precision.double").toInt).toOption
 
 }

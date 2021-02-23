@@ -219,10 +219,13 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
     }
   }
 
-  def update(id:JSONID):Route = put {
-    entity(as[M]) { e =>
-      onComplete(db.run(dbActions.upsertIfNeeded(Some(id), e).transactionally)) {
-        case Success(entity) => complete(entity)
+  def update(ids:Seq[JSONID]):Route = put {
+    entity(as[Json]) { e =>
+      val rows = e.as[M].toOption.map(Seq(_)).orElse(e.as[Seq[M]].toOption).get
+      onComplete(db.run(DBIO.sequence(rows.zip(ids).map{case (x,id) => dbActions.upsertIfNeeded(Some(id), x)}).transactionally)) {
+        case Success(entities) => complete{
+          if(entities.length == 1) entities.head.asJson else entities.asJson
+        }
         case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
       }
     }
@@ -238,12 +241,12 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
   def route:Route = pathPrefix(name) {
         pathPrefix("id") {
           path(Segment) { strId =>
-            JSONID.fromString(strId) match {
-              case Some(id) =>
-                  getById(id) ~
-                  update(id) ~
-                  deleteById(id)
-              case None => complete(StatusCodes.BadRequest, s"JSONID $strId not valid")
+            JSONID.fromMultiString(strId) match {
+              case ids if ids.nonEmpty =>
+                  getById(ids.head) ~
+                  update(ids) ~
+                  deleteById(ids.head)
+              case Nil => complete(StatusCodes.BadRequest, s"JSONID $strId not valid")
             }
         }
       } ~

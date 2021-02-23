@@ -3,7 +3,7 @@ package ch.wsl.box.client
 import ch.wsl.box.client.routes.Routes
 import io.udash._
 import ch.wsl.box.client.views._
-import ch.wsl.box.client.views.admin.{AdminViewPresenter, BoxDefinitionViewPresenter}
+import ch.wsl.box.client.views.admin.{AdminViewPresenter, BoxDefinitionViewPresenter, ConfViewPresenter}
 
 class StatesToViewPresenterDef extends ViewFactoryRegistry[RoutingState] {
   def matchStateToResolver(state: RoutingState): ViewFactory[_ <: RoutingState] = state match {
@@ -19,6 +19,7 @@ class StatesToViewPresenterDef extends ViewFactoryRegistry[RoutingState] {
     case DataListState(_,currentExport) => DataListViewPresenter(currentExport)
     case AdminState => AdminViewPresenter
     case AdminBoxDefinitionState => BoxDefinitionViewPresenter
+    case AdminConfState => ConfViewPresenter
     case _ => ErrorViewPresenter
   }
 }

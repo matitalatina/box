@@ -72,17 +72,10 @@ object ClientConf {
       case _ => JSONFieldTypes.DATETIME     //for None or wrong values
     }
 
-  def prepareDatetime = filterPrecisionDatetime match{
-    case JSONFieldTypes.DATE => ((x: Timestamp) => Timestamp.valueOf(x.toLocalDateTime.truncatedTo(ChronoUnit.DAYS)))
-    case JSONFieldTypes.DATETIME => ((x:Timestamp) => x)
-    case _ => ((x:Timestamp) => x)
-  }
 
   def langs = Try(conf("langs")).getOrElse("en").split(",").toSeq.map(_.trim)
 
   def notificationTimeOut = Try(conf("notification.timeout").toInt).getOrElse(6)
-
-  def mapBoxAccessToken = Try(conf("mapbox.accesstoken")).getOrElse("no token provided")
 
   def mapOptions = Try(parse(conf("map.options")).right.get).getOrElse(Json.Null)
 

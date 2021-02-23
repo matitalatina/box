@@ -9,6 +9,7 @@ case class EntityKind(kind:String){
   }
   def plural:String = kind match {
     case "entity" => "entities"
+    case "boxentity" => "boxentities"
     case _ => s"${kind}s"            //for tables, views and forms
   }
 }
@@ -19,6 +20,7 @@ object EntityKind {
   final val TABLE = EntityKind("table")
   final val VIEW =  EntityKind("view")
   final val FORM =  EntityKind("form")
+  final val BOXENTITY =  EntityKind("boxentity")
   final val BOX =  EntityKind("box-admin")
 
 }

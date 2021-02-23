@@ -132,12 +132,12 @@ case class Form(
 
     def route = pathPrefix("id") {
       path(Segment) { strId =>
-        JSONID.fromString(strId) match {
-          case Some(id) =>
+        JSONID.fromMultiString(strId) match {
+          case ids if ids.nonEmpty =>
             get {
               privateOnly {
                 complete(actions { fs =>
-                  db.run(fs.getById(id).transactionally).map { record =>
+                  db.run(fs.getById(ids.head).transactionally).map { record =>
                     logger.info(record.toString)
                     HttpEntity(ContentTypes.`application/json`, record.asJson)
                   }
@@ -149,13 +149,16 @@ case class Form(
                   entity(as[Json]) { e =>
                     complete {
                       actions { fs =>
+                        val values = e.as[Seq[Json]].getOrElse(Seq(e))
                         for {
-                          jsonId <- db.run(fs.upsertIfNeeded(Some(id), e).transactionally)
+                          jsonId <- db.run{
+                            DBIO.sequence(values.zip(ids).map{ case (x,id) => fs.upsertIfNeeded(Some(id), x)}).transactionally
+                          }
                         } yield {
                           if(schema == BoxSchema.schema) {
                               Cache.reset()
                           }
-                          jsonId
+                          if(jsonId.length == 1) jsonId.head.asJson else jsonId.asJson
                         }
                       }
                     }
@@ -167,13 +170,13 @@ case class Form(
                   complete {
                     actions { fs =>
                       for {
-                        count <- db.run(fs.delete(id).transactionally)
+                        count <- db.run(fs.delete(ids.head).transactionally)
                       } yield JSONCount(count)
                     }
                   }
                 }
               }
-          case None => complete(StatusCodes.BadRequest,s"JSONID $strId not valid")
+          case _ => complete(StatusCodes.BadRequest,s"JSONID $strId not valid")
         }
       }
     } ~
