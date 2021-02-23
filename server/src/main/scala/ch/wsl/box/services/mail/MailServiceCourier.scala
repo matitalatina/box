@@ -30,7 +30,7 @@ class MailServiceCourier extends MailService {
 
 
     val content = mail.html match {
-      case Some(html) => Multipart().text(mail.text).html(html)
+      case Some(html) => Multipart(subtype = "alternative").text(mail.text).html(html)
       case None => Text(mail.text)
     }
 
