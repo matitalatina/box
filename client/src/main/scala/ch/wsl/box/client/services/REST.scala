@@ -40,6 +40,7 @@ trait REST{
   def updateMany(kind:String, lang:String, entity:String, ids:Seq[JSONID], data:Seq[Json]):Future[Seq[JSONID]]
   def insert(kind:String, lang:String, entity:String, data:Json, public:Boolean): Future[JSONID]
   def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount]
+  def deleteMany(kind:String, lang:String, entity:String, ids:Seq[JSONID]):Future[JSONCount]
 
   //files
   def sendFile(file:File, id:JSONID, entity:String): Future[Int]

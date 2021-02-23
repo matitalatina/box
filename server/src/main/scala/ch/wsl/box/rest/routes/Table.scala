@@ -231,9 +231,9 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
     }
   }
 
-  def deleteById(id:JSONID):Route = delete {
-    onComplete(db.run(dbActions.delete(id))) {
-      case Success(affectedRow) => complete(JSONCount(affectedRow))
+  def deleteById(ids:Seq[JSONID]):Route = delete {
+    onComplete(db.run(DBIO.sequence(ids.map( id => dbActions.delete(id))).transactionally)) {
+      case Success(affectedRow) => complete(JSONCount(affectedRow.sum))
       case Failure(ex) => complete(StatusCodes.InternalServerError, s"An error occurred: ${ex.getMessage}")
     }
   }
@@ -245,7 +245,7 @@ case class Table[T <: ch.wsl.box.jdbc.PostgresProfile.api.Table[M],M <: Product]
               case ids if ids.nonEmpty =>
                   getById(ids.head) ~
                   update(ids) ~
-                  deleteById(ids.head)
+                  deleteById(ids)
               case Nil => complete(StatusCodes.BadRequest, s"JSONID $strId not valid")
             }
         }

@@ -113,6 +113,9 @@ class RestMock(values:Values) extends REST with Logging {
     ???
   }
 
+
+  override def deleteMany(kind: String, lang: String, entity: String, ids: Seq[JSONID]): Future[JSONCount] = ???
+
   override def sendFile(file: File, id: JSONID, entity: String): Future[Int] = {
     println("sendFile not implemented")
     ???

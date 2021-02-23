@@ -170,8 +170,8 @@ case class Form(
                   complete {
                     actions { fs =>
                       for {
-                        count <- db.run(fs.delete(ids.head).transactionally)
-                      } yield JSONCount(count)
+                        count <- db.run(DBIO.sequence(ids.map(id => fs.delete(id))).transactionally)
+                      } yield JSONCount(count.sum)
                     }
                   }
                 }

@@ -80,6 +80,12 @@ class AdminView(viewModel:ModelProperty[AdminViewModel], presenter:AdminPresente
     div(BootstrapCol.md(3),h3("Conf"),
       ul(ClientConf.style.spacedList,
         li(
+          a("Conf", Navigate.click(AdminConfState))
+        ),
+        li(
+          a("UI Conf", Navigate.click(AdminUiConfState))
+        ),
+        li(
           a("Import/Export Definitions", Navigate.click(AdminBoxDefinitionState))
         ),
         li(

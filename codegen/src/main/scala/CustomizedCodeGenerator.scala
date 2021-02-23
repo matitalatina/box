@@ -51,7 +51,6 @@ object CustomizedCodeGenerator  {
 
     val files = CodeGenerator(schema).generatedFiles()
     val boxFiles = CodeGenerator(boxSchema,Seq(
-      "access_level",
       "export",
       "export_field",
       "export_field_i18n",

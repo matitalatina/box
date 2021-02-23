@@ -61,8 +61,6 @@ class ConfView(viewModel:ModelProperty[ConfViewModel], presenter:ConfPresenter) 
   import io.udash.css.CssView._
   import scalatags.JsDom.all._
 
-  private val entityForStub = Property("")
-
   sealed trait Type
   case object String extends Type
   case object Integer extends Type

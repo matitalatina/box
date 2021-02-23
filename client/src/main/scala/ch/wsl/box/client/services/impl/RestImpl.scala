@@ -71,6 +71,7 @@ class RestImpl(httpClient:HttpClient) extends REST with Logging {
     httpClient.post[Json,JSONID](Routes.apiV1(s"$prefix/${EntityKind(kind).entityOrForm}/$lang/$entity"),data)
   }
   def delete(kind:String, lang:String, entity:String, id:JSONID):Future[JSONCount] = httpClient.delete[JSONCount](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${id.asString}"))
+  def deleteMany(kind:String, lang:String, entity:String, ids:Seq[JSONID]):Future[JSONCount] = httpClient.delete[JSONCount](Routes.apiV1(s"/${EntityKind(kind).entityOrForm}/$lang/$entity/id/${JSONID.toMultiString(ids)}"))
 
   //files
   def sendFile(file:File, id:JSONID, entity:String): Future[Int] = httpClient.sendFile[Int](Routes.apiV1(s"/file/$entity/${id.asString}"),file)

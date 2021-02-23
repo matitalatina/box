@@ -48,6 +48,7 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {
     case "/admin"  => AdminState
     case "/admin" / "box-definition"  => AdminBoxDefinitionState
     case "/admin" / "conf"  => AdminConfState
+    case "/admin" / "ui-conf"  => AdminUiConfState
   }
 
   private val (loggedOutUrl2State, loggedOutState2Url) = bidirectional {
@@ -70,5 +71,6 @@ class RoutingRegistryDef extends RoutingRegistry[RoutingState] with Logging {
     case "/admin"  => LoginState("/admin")
     case "/admin" / "box-definition"  => LoginState("/admin/box-definition")
     case "/admin" / "conf"  => LoginState("/admin/conf")
+    case "/admin" / "ui-conf"  => LoginState("/admin/ui-conf")
   }
 }
