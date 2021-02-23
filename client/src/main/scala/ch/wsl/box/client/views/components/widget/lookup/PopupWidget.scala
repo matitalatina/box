@@ -1,26 +1,23 @@
-package ch.wsl.box.client.views.components.widget
+package ch.wsl.box.client.views.components.widget.lookup
+
 import ch.wsl.box.client.services.{ClientConf, Labels}
-import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
+import ch.wsl.box.client.styles.BootstrapCol
+import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget, WidgetParams, WidgetUtils}
 import ch.wsl.box.model.shared._
 import io.circe._
-import io.circe.syntax._
 import io.udash._
-import io.udash.properties.single.Property
-import org.scalajs.dom.Event
-import ch.wsl.box.shared.utils.JSONUtils._
 import io.udash.bindings.modifiers.Binding.NestedInterceptor
 import io.udash.bootstrap.BootstrapStyles
-import io.udash.bootstrap.button.{UdashButton, UdashButtonGroup}
-import io.udash.bootstrap.datepicker.UdashDatePicker.DatePickerEvent.Hide
+import io.udash.bootstrap.button.UdashButton
 import io.udash.bootstrap.modal.UdashModal
 import io.udash.bootstrap.modal.UdashModal.ModalEvent
 import io.udash.bootstrap.utils.BootstrapStyles.Size
-import org.scalajs.dom
+import io.udash.properties.single.Property
+import org.scalajs.dom.Event
 import scalatags.JsDom
 import scribe.Logging
 
 import scala.concurrent.duration._
-import scala.scalajs.js
 
 
 
@@ -34,11 +31,9 @@ object PopupWidgetFactory extends ComponentWidgetFactory  {
 
 case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Json]) extends LookupWidget with Logging {
 
-  import scalacss.ScalatagsCss._
-
-  import scalatags.JsDom.all.{label => lab}
-  import scalatags.JsDom.all._
   import io.udash.css.CssView._
+  import scalacss.ScalatagsCss._
+  import scalatags.JsDom.all._
 
   override protected def show(): JsDom.all.Modifier = autoRelease(WidgetUtils.showNotNull(data){ _ =>
 
@@ -64,7 +59,7 @@ case class PopupWidget(field:JSONField, data: Property[Json],allData:Property[Js
 
 
     def optionList(nested:NestedInterceptor):Modifier = div(
-      lab(Labels.popup.search),br,
+      label(Labels.popup.search),br,
       TextInput(searchProp,500.milliseconds)(),br,br,
       nested(showIf(modalStatus.transform(_ == Status.Open)) {
         div(nested(produce(searchProp) { searchTerm =>

@@ -5,7 +5,7 @@ import ch.wsl.box.client.services.{ClientConf, Labels}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.views.components
 import ch.wsl.box.client.views.components.widget._
-import ch.wsl.box.client.views.components.widget.labels.{LinkedFormWidget, StaticTextWidget, TitleWidget}
+import ch.wsl.box.client.views.components.widget.labels.{StaticTextWidget, TitleWidget}
 import ch.wsl.box.model.shared._
 import ch.wsl.box.shared.utils.JSONUtils._
 import io.circe.Json

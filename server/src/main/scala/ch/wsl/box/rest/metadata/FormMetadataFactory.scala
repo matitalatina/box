@@ -65,8 +65,6 @@ object FormMetadataFactory{
 
 case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:ExecutionContext) extends Logging with MetadataFactory {
 
-
-
   def list: DBIO[Seq[String]] = {
     BoxForm.BoxFormTable.result
   }.map{_.map(_.name)}
@@ -250,29 +248,46 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
 
   }
 
-  private def linkedForms(field:BoxField_row):DBIO[Option[LinkedForm]] = {
+  private def widget(field:BoxField_row,remoteEntity:String,remoteField:String) = field.params.flatMap(_.getOpt("widget")).getOrElse{
+    val jsonType = Registry().fields.field(remoteEntity,remoteField).jsonType
+    WidgetsNames.defaults.getOrElse(jsonType,WidgetsNames.input)
+  }
+
+  private def linkedForms(field:BoxField_row,field_i18n_row:Option[BoxField_i18n_row]):DBIO[Option[LinkedForm]] = {
     val linkedFormOpt = for{
       formId <- field.child_form_id
-      parentFields <- field.linked_key_fields
-      childFields <- field.childFields
-      parentLabel <- field.linked_label_fields
     } yield {
-      {
-        BoxForm.BoxFormTable.filter(_.form_id === formId).result
-      }.map{ lForm =>
+      for{
+        lForm <- BoxForm.BoxFormTable.filter(_.form_id === formId).result
+        keys <- keys(lForm(0))
+      } yield {
         lForm.map{ value =>
+          val parentFields = field.masterFields.toSeq.flatMap(_.split(",").map(_.trim))
+
           LinkedForm(
             value.name,
-            parentFields.split(",").map(_.trim),
-            childFields.split(",").map(_.trim),
-            parentLabel.split(",").map(_.trim),
+            parentFields,
+            keys,
+            lookup = field_i18n_row.flatMap(_.lookupTextField).map{ remoteField =>
+              LookupLabel(
+                localIds = parentFields,
+                remoteIds = keys,
+                remoteField = remoteField,
+                remoteEntity = value.entity,
+                widget = widget(field,value.entity,remoteField)
+              )
+            },
+            label = field_i18n_row.flatMap(_.static_content)
           )
+
         }
       }
     }
 
     DBIO.sequence(linkedFormOpt.toSeq).map(_.flatten.headOption) // fix types
   }
+
+
 
   private def lookupLabel(field:BoxField_row,field_i18n_row: Option[BoxField_i18n_row]):Option[LookupLabel] = {
     for{
@@ -282,17 +297,14 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
       remoteEntity <- field.lookupEntity
     } yield {
 
-      val widget = field.params.flatMap(_.getOpt("widget")).getOrElse{
-        val jsonType = Registry().fields.field(remoteEntity,remoteField).jsonType
-        WidgetsNames.defaults.getOrElse(jsonType,WidgetsNames.input)
-      }
+
 
       LookupLabel(
         localIds = localIds.split(",").map(_.trim),
         remoteIds = remoteIds.split(",").map(_.trim),
         remoteField = remoteField,
         remoteEntity = remoteEntity,
-        widget = widget
+        widget = widget(field,remoteEntity,remoteField)
       )
     }
   }
@@ -385,7 +397,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
       for{
         look <- lookup(field, fieldI18n, lang)
         lab <- label(field, fieldI18n, lang)
-        linked <- linkedForms(field)
+        linked <- linkedForms(field, fieldI18n)
       } yield {
         JSONField(
           `type` = field.`type`,

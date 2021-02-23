@@ -32,6 +32,7 @@ object WidgetsNames {
   val h5 = "title_h5"
   val staticText = "static_text"
   val linkedForm = "linked_form"
+  val lookupForm = "lookup_form"
   val fileWithPreview = "fileWithPreview"
   val lookupLabel = "lookupLabel"
 
@@ -60,7 +61,8 @@ object WidgetsNames {
       simpleChild,
       tableChild,
       editableTable,
-      linkedForm
+      linkedForm,
+      lookupForm
     ),
     FILE -> Seq(
       simpleFile,

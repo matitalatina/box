@@ -82,7 +82,7 @@ object FormUIDef {
     keys = Seq("form_id"),
     keyStrategy = SurrugateKey,
     query = Some(
-      JSONQuery.filterWith(JSONQueryFilter.WHERE.eq("entity",FormMetadataFactory.STATIC_PAGE))
+      JSONQuery.filterWith(JSONQueryFilter.WHERE.not("entity",FormMetadataFactory.STATIC_PAGE))
     ),
     exportFields = Seq(),
     view = None,
@@ -224,28 +224,26 @@ object FormUIDef {
       ),
       JSONField(JSONFieldTypes.CHILD,"field_i18n",true,child = Some(Child(FORM_FIELD_I18N,"field_i18n","field_id","field_id",Some(JSONQuery.sortByKeys(Seq("field_id"))))), widget = Some(WidgetsNames.tableChild)),
       JSONField(JSONFieldTypes.NUMBER,"child_form_id",true,
+        label = Some("Child form"),
         widget = Some(WidgetsNames.select),
         lookup = Some(JSONFieldLookup.prefilled(
           forms.map{ form => JSONLookup(form.form_id.get.toString,form.name) }
         ))
       ),
-      JSONField(JSONFieldTypes.STRING,"masterFields",true,label=Some("Parent field"),
-        widget = Some(WidgetsNames.input)
-      ),
-      JSONField(JSONFieldTypes.STRING,"linked_key_fields",true,
+      JSONField(JSONFieldTypes.STRING,"masterFields",true,
+        label = Some("Parent key fields"),
         widget = Some(WidgetsNames.input),
-        condition = Some(ConditionalField("widget",Seq(WidgetsNames.linkedForm.asJson)))
-      ),
-      JSONField(JSONFieldTypes.STRING,"linked_label_fields",true,
-        widget = Some(WidgetsNames.input),
-        condition = Some(ConditionalField("widget",Seq(WidgetsNames.linkedForm.asJson)))
+        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson,WidgetsNames.lookupForm.asJson)))
       ),
       JSONField(JSONFieldTypes.STRING,"childFields",true,
-        widget = Some(WidgetsNames.input)
+        label = Some("Child key fields"),
+        widget = Some(WidgetsNames.input),
+        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson)))
       ),
       JSONField(JSONFieldTypes.STRING,"childQuery",true,
         widget = Some(WidgetsNames.code),
-        params = Some(Json.obj("language" -> "json".asJson, "height" -> 200.asJson))
+        params = Some(Json.obj("language" -> "json".asJson, "height" -> 200.asJson)),
+        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson)))
       ),
       CommonField.conditionFieldId,
       CommonField.conditionValues,
@@ -264,8 +262,6 @@ object FormUIDef {
           "read_only",
           "child_form_id",
           "masterFields",
-          "linked_key_fields",
-          "linked_label_fields",
           "childFields",
           "childQuery",
           "default",
@@ -363,10 +359,11 @@ object FormUIDef {
       CommonField.hint,
       CommonField.placeholder,
       CommonField.lookupTextField,
+      JSONField(JSONFieldTypes.STRING,"static_content",true, widget = Some(WidgetsNames.input))
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,12,Seq("lang","label","placeholder","tooltip","hint","lookupTextField").map(Left(_))),
+        LayoutBlock(None,12,Seq("lang","label","placeholder","tooltip","hint","lookupTextField","static_content").map(Left(_))),
       )
     ),
     entity = "field_i18n",

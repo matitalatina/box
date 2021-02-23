@@ -1,18 +1,18 @@
-package ch.wsl.box.client.views.components.widget
-import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.model.shared.{JSONField, JSONFieldLookup, JSONFieldTypes, JSONLookup, JSONMetadata, WidgetsNames}
+package ch.wsl.box.client.views.components.widget.lookup
+
+import ch.wsl.box.client.services.ClientConf
+import ch.wsl.box.client.styles.BootstrapCol
+import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget, WidgetParams, WidgetUtils}
+import ch.wsl.box.model.shared.{JSONField, JSONLookup, JSONMetadata, WidgetsNames}
+import ch.wsl.box.shared.utils.JSONUtils.EnhancedJson
 import io.circe.Json
 import io.udash._
 import io.udash.bootstrap.BootstrapStyles
-import io.udash.properties.single.Property
-import ch.wsl.box.client.services.ClientConf
-import ch.wsl.box.shared.utils.JSONUtils.EnhancedJson
-import io.circe
-import scalatags.JsDom.all._
-import scalatags.JsDom.all.{label => lab}
-import scalacss.ScalatagsCss._
 import io.udash.css.CssView._
+import io.udash.properties.single.Property
+import scalacss.ScalatagsCss._
 import scalatags.JsDom
+import scalatags.JsDom.all.{label => lab, _}
 import scribe.Logging
 
 import scala.concurrent.Future
@@ -32,8 +32,8 @@ class SelectWidget(val field:JSONField, val data: Property[Json], val allData:Pr
   val modifiers:Seq[Modifier] = if(fullWidth) Seq(width := 100.pct) else Seq()
 
 
-  import io.circe.syntax._
   import ch.wsl.box.shared.utils.JSONUtils._
+  import io.circe.syntax._
 
   override def beforeSave(data: Json, metadata: JSONMetadata) = Future.successful{
     val jsField = data.js(field.name)

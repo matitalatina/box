@@ -31,7 +31,7 @@ object JSONField{
   val fullWidth = empty.copy(params = Some(Json.obj("fullWidth" -> Json.True)))
 }
 
-case class LinkedForm(name:String,parentValueFields:Seq[String], childValueFields:Seq[String], parentLabelFields:Seq[String])
+case class LinkedForm(name:String,parentValueFields:Seq[String], childValueFields:Seq[String], lookup:Option[LookupLabel],label:Option[String])
 
 case class LookupLabel(localIds:Seq[String],remoteIds:Seq[String],remoteField:String,remoteEntity:String,widget:String)
 /**
