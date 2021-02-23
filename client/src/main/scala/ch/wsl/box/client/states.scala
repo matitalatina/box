@@ -33,6 +33,7 @@ case object RootState extends ContainerRoutingState(None)
 case object ErrorState extends FinalRoutingState(Some(RootState))
 
 case object AdminState extends FinalRoutingState(Some(RootState))
+case object ConfState extends FinalRoutingState(Some(RootState))
 case object AdminBoxDefinitionState extends FinalRoutingState(Some(RootState))
 
 case object IndexState extends FinalRoutingState(Some(RootState))

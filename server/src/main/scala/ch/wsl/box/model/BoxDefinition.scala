@@ -156,7 +156,7 @@ object BoxDefinition {
       merge(_.labels,(o,n) => o.lang == n.lang && o.key == n.key, _ == _),
       merge(_.news, _.news_id == _.news_id, _ == _),
       merge(_.news_i18n, (a,b) => a.news_id == b.news_id && a.lang == b.lang , _ == _),
-      merge(_.ui, _.id == _.id, _ == _),
+      merge(_.ui, (a,b) => a.key == b.key && a.accessLevel == b.accessLevel, _ == _),
       merge(_.ui_src, _.id == _.id, _ == _),
       //merge(_.users, _.username == _.username, _ == _)
     )
@@ -187,11 +187,6 @@ object BoxDefinition {
 
     val actions = Seq(
 
-//      commit[BoxConf.BoxConf_row,BoxConf.BoxConf](
-//        _.conf,BoxConf.BoxConfTable,
-//        x => BoxConf.BoxConfTable.filter(_.id === x.id),
-//        sql"SELECT setval('box.conf_id_seq',(SELECT max(id) from box.conf))".as[Int]
-//      ),
       commit[BoxCron.BoxCron_row,BoxCron.BoxCron](
         _.cron,BoxCron.BoxCronTable,
         x => BoxCron.BoxCronTable.filter(_.name === x.name)
@@ -285,8 +280,7 @@ object BoxDefinition {
       ),
       commit[BoxUITable.BoxUI_row,BoxUITable.BoxUI](
         _.ui,BoxUITable.BoxUITable,
-        x => BoxUITable.BoxUITable.filter(_.id === x.id),
-        sql"SELECT setval('box.ui_id_seq',(SELECT max(id) from box.ui))".as[Int]
+        x => BoxUITable.BoxUITable.filter(db => db.key === x.key && db.accessLevel === x.accessLevel)
       ),
       commit[BoxUIsrcTable.BoxUIsrc_row,BoxUIsrcTable.BoxUIsrc](
         _.ui_src,BoxUIsrcTable.BoxUIsrcTable,

@@ -86,18 +86,4 @@ object ClientConf {
 
   def mapOptions = Try(parse(conf("map.options")).right.get).getOrElse(Json.Null)
 
-//  def filterEqualityPrecisionDouble:Option[Int] = Try(conf("filterEqualityPrecision.double").toInt).toOption
-//
-//  def prepareDouble = filterEqualityPrecisionDouble match{
-//    case None => ((x:Double) => x)
-//    case Some(p) => ((x:Double) => roundAt(p)(x))
-////    case Some(p) if p<0 => ((x:Double) => roundAt(-p)(x))
-//  }
-//
-//
-//
-//  def roundAt(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.round(n) * s) / s }
-//  def truncateAt(p: Int)(n: Double): Double = { val s = math.pow (10, p); (math.floor(n) * s) / s }
-
-
 }
