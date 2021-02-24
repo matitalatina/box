@@ -50,7 +50,7 @@ object FunctionUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,8,Seq(
+        LayoutBlock(None,8,None,Seq(
           SubLayoutBlock(None,Seq(5,1,6),Seq(
             Right(
               SubLayoutBlock(Some("Base Info"),Seq(12),Seq("function_id","name","order","description","mode").map(Left(_)))
@@ -63,8 +63,8 @@ object FunctionUIDef {
           SubLayoutBlock(Some("Function"),Seq(12),Seq("function").map(Left(_))),
           SubLayoutBlock(Some("Presenter"),Seq(12),Seq("presenter").map(Left(_))),
         ).map(Right(_))),
-        LayoutBlock(Some("I18n"),4,Seq("function_i18n").map(Left(_))),
-        LayoutBlock(Some("Fields"),12,Seq("function_field").map(Left(_))),
+        LayoutBlock(Some("I18n"),4,None,Seq("function_i18n").map(Left(_))),
+        LayoutBlock(Some("Fields"),12,None,Seq("function_field").map(Left(_))),
       )
     ),
     entity = "function",
@@ -99,7 +99,7 @@ object FunctionUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,4,Seq(
+        LayoutBlock(None,4,None,Seq(
           "field_id",
           "function_id",
           "name",
@@ -112,7 +112,7 @@ object FunctionUIDef {
           "conditionFieldId",
           "conditionValues"
         ).map(Left(_))),
-        LayoutBlock(None,8,Seq("function_field_i18n").map(Left(_))),
+        LayoutBlock(None,8,None,Seq("function_field_i18n").map(Left(_))),
       )
     ),
     entity = "function_field",
@@ -143,8 +143,8 @@ object FunctionUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,3,Seq("field_id","id","lang").map(Left(_))),
-        LayoutBlock(None,9,Seq("label","placeholder","tooltip","hint","lookupTextField").map(Left(_))),
+        LayoutBlock(None,3,None,Seq("field_id","id","lang").map(Left(_))),
+        LayoutBlock(None,9,None,Seq("label","placeholder","tooltip","hint","lookupTextField").map(Left(_))),
       )
     ),
     entity = "function_field_i18n",
@@ -173,7 +173,7 @@ object FunctionUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,12,Seq("lang","label","tooltip","hint").map(Left(_)))
+        LayoutBlock(None,12,None,Seq("lang","label","tooltip","hint").map(Left(_)))
       )
     ),
     entity = "function_i18n",

@@ -24,7 +24,7 @@ object LabelUIDef {
     ),
     Layout(
       blocks = Seq(
-        LayoutBlock(None,12,Seq("labels").map(Left(_))),
+        LayoutBlock(None,12,None,Seq("labels").map(Left(_))),
       )
     ),
     entity = FormMetadataFactory.STATIC_PAGE,
@@ -51,7 +51,7 @@ object LabelUIDef {
     },
     Layout(
       blocks = Seq(
-        LayoutBlock(None,12,(Seq("key")++BoxConfig.langs).map(Left(_))),
+        LayoutBlock(None,12,None,(Seq("key")++BoxConfig.langs).map(Left(_))),
       )
     ),
     entity = "v_labels",

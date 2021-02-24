@@ -47,7 +47,7 @@ object Layout extends Logging {
   }
 
   def fromFields(fields:Seq[JSONField]) = Layout(Seq(
-    LayoutBlock(None,6,fields.map(x => Left(x.name)))
+    LayoutBlock(None,6,None,fields.map(x => Left(x.name)))
   ))
 }
 
@@ -60,6 +60,7 @@ object Layout extends Logging {
 case class LayoutBlock(
                    title: Option[String],
                    width:Int,
+                   distribute: Option[Boolean],
                    fields:Seq[Either[String,SubLayoutBlock]]
                  )
 

@@ -58,7 +58,7 @@ object ClientConf {
   def childMarginTopSize = Try(conf("child.marginTop.size").toInt).getOrElse(-1)
   def childBackgroundColor = Try(conf("child.backgroundColor")).getOrElse(StyleConstants.Colors.GreyExtra.value)
 
-  val styleConf = StyleConf(
+  lazy val styleConf = StyleConf(
     colors = Colors(colorMain,colorMainText,colorMainLink,colorLink,colorDanger,colorWarning),
     tableFontSize,
     ChildProperties(childBorderSize, childBorderColor, childPaddingSize, childMarginTopSize, childBackgroundColor)

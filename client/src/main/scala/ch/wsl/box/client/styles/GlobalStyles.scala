@@ -304,6 +304,23 @@ case class GlobalStyles(conf:StyleConf) extends StyleSheet.Inline {
     padding.`0`
   )
 
+  val distributionContrainer = style(
+    display.flex,
+    flexDirection.row,
+    flexWrap.wrap,
+    justifyContent.spaceEvenly,
+    alignItems.center,
+    alignContent.spaceAround
+  )
+
+  val boxedLink = style(
+    Font.bold,
+    width(120 px),
+    height(120 px),
+    padding(20 px),
+    margin(20 px)
+  )
+
 
   val notificationArea = style(
     position.fixed,

@@ -57,7 +57,7 @@ object FormUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,8,Seq(
+        LayoutBlock(None,8,None,Seq(
           SubLayoutBlock(None,Seq(12,12,12),Seq(
             Right(
               SubLayoutBlock(Some("Base Info"),Seq(12),Seq("name","entity","query","description","guest_user","edit_key_field").map(Left(_)))
@@ -68,11 +68,11 @@ object FormUIDef {
             )
           ))
         ).map(Right(_))),
-        LayoutBlock(Some("I18n"),4,Seq("form_i18n").map(Left(_))),
-        LayoutBlock(Some("Fields"),12,Seq("fields").map(Left(_))),
-        LayoutBlock(Some("Linked forms"),12,Seq("fields_child").map(Left(_))),
-        LayoutBlock(Some("Static elements"),12,Seq("fields_static").map(Left(_))),
-        LayoutBlock(Some("Layout"),12,Seq("layout").map(Left(_))),
+        LayoutBlock(Some("I18n"),4,None,Seq("form_i18n").map(Left(_))),
+        LayoutBlock(Some("Fields"),12,None,Seq("fields").map(Left(_))),
+        LayoutBlock(Some("Linked forms"),12,None,Seq("fields_child").map(Left(_))),
+        LayoutBlock(Some("Static elements"),12,None,Seq("fields_static").map(Left(_))),
+        LayoutBlock(Some("Layout"),12,None,Seq("layout").map(Left(_))),
       )
     ),
     entity = "form",
@@ -109,17 +109,17 @@ object FormUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,8,Seq(
+        LayoutBlock(None,8,None,Seq(
           SubLayoutBlock(None,Seq(12,12,12),Seq(
             Right(
               SubLayoutBlock(Some("Base Info"),Seq(12),Seq("name","description").map(Left(_)))
             ),
           ))
         ).map(Right(_))),
-        LayoutBlock(Some("I18n"),4,Seq("form_i18n").map(Left(_))),
-        LayoutBlock(Some("Linked forms"),12,Seq("fields_child").map(Left(_))),
-        LayoutBlock(Some("Static elements"),12,Seq("fields_static").map(Left(_))),
-        LayoutBlock(Some("Layout"),12,Seq("layout").map(Left(_))),
+        LayoutBlock(Some("I18n"),4,None,Seq("form_i18n").map(Left(_))),
+        LayoutBlock(Some("Linked forms"),12,None,Seq("fields_child").map(Left(_))),
+        LayoutBlock(Some("Static elements"),12,None,Seq("fields_static").map(Left(_))),
+        LayoutBlock(Some("Layout"),12,None,Seq("layout").map(Left(_))),
       )
     ),
     entity = "form",
@@ -173,7 +173,7 @@ object FormUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,6,Seq(
+        LayoutBlock(None,6,None,Seq(
           "name",
           "type",
           "widget",
@@ -189,7 +189,7 @@ object FormUIDef {
           "params",
           "field_file"
         ).map(Left(_))),
-        LayoutBlock(None,6,Seq("field_i18n").map(Left(_))),
+        LayoutBlock(None,6,None,Seq("field_i18n").map(Left(_))),
       )
     ),
     entity = "field",
@@ -255,7 +255,7 @@ object FormUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,6,Seq(
+        LayoutBlock(None,6,None,Seq(
           "name",
           "type",
           "widget",
@@ -270,7 +270,7 @@ object FormUIDef {
           "params",
           "field_file"
         ).map(Left(_))),
-        LayoutBlock(None,6,Seq("field_i18n").map(Left(_))),
+        LayoutBlock(None,6,None,Seq("field_i18n").map(Left(_))),
       )
     ),
     entity = "field",
@@ -319,7 +319,7 @@ object FormUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,6,Seq(
+        LayoutBlock(None,6,None,Seq(
           "name",
           "type",
           "widget",
@@ -331,7 +331,7 @@ object FormUIDef {
           "conditionValues",
           "params"
         ).map(Left(_))),
-        LayoutBlock(None,6,Seq("field_i18n").map(Left(_))),
+        LayoutBlock(None,6,None,Seq("field_i18n").map(Left(_))),
       )
     ),
     entity = "field",
@@ -363,7 +363,7 @@ object FormUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,12,Seq("lang","label","placeholder","tooltip","hint","lookupTextField","static_content").map(Left(_))),
+        LayoutBlock(None,12,None,Seq("lang","label","placeholder","tooltip","hint","lookupTextField","static_content").map(Left(_))),
       )
     ),
     entity = "field_i18n",
@@ -396,7 +396,7 @@ object FormUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,12,Seq("lang","label","view_table").map(Left(_))),
+        LayoutBlock(None,12,None,Seq("lang","label","view_table").map(Left(_))),
       )
     ),
     entity = "form_i18n",
@@ -423,7 +423,7 @@ object FormUIDef {
     ),
     layout = Layout(
       blocks = Seq(
-        LayoutBlock(None,12,Seq("file_field","thumbnail_field","name_field").map(Left(_))),
+        LayoutBlock(None,12,None,Seq("file_field","thumbnail_field","name_field").map(Left(_))),
       )
     ),
     entity = "field_file",

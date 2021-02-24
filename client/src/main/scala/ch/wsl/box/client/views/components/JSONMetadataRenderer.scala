@@ -129,7 +129,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
   private def subBlock(block: SubLayoutBlock):WidgetVisibility = WidgetVisibility(new Widget {
 
-    val widget = fieldsRenderer(block.fields, Stream.continually(block.fieldsWidth.toStream).flatten)
+    val widget = fieldsRenderer(block.fields, Left(Stream.continually(block.fieldsWidth.toStream).flatten))
 
     override def afterSave(data:Json,form:JSONMetadata): Future[Json] = widget.afterSave(data,form)
     override def beforeSave(data:Json,form:JSONMetadata) = widget.beforeSave(data,form)
@@ -175,7 +175,7 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
   }}.getOrElse(WidgetVisibility(HiddenWidget.HiddenWidgetImpl(JSONField.empty)))
 
 
-  private def fieldsRenderer(fields: Seq[Either[String, SubLayoutBlock]], widths: Stream[Int] = Stream.continually(12)):Widget = new Widget {
+  private def fieldsRenderer(fields: Seq[Either[String, SubLayoutBlock]], horizontal: Either[Stream[Int],Boolean]):Widget = new Widget {
 
     val widgets:Seq[WidgetVisibility] = fields.map{
       case Left(fieldName) => simpleField(fieldName)
@@ -197,23 +197,42 @@ case class JSONMetadataRenderer(metadata: JSONMetadata, data: Property[Json], ch
 
     override protected def edit(): JsDom.all.Modifier = render(true)
 
-    private def render(write:Boolean): JsDom.all.Modifier = div(
+
+
+    def fixedWidth(widths:Stream[Int],write:Boolean) : JsDom.all.Modifier = div(
       widgets.zip(widths).map { case (widget, width) =>
         div(BootstrapCol.md(width), ClientConf.style.field,
           widget.widget.render(write,widget.visibility)
         )
       }
-
     )
+
+    def distribute(write:Boolean) : JsDom.all.Modifier = div(ClientConf.style.distributionContrainer,
+      widgets.map { case widget =>
+        div(ClientConf.style.field,
+          widget.widget.render(write,widget.visibility)
+        )
+      }
+    )
+
+    private def render(write:Boolean): JsDom.all.Modifier = {
+      horizontal match {
+        case Left(widths) => fixedWidth(widths,write)
+        case Right(_) => distribute(write)
+      }
+    }
   }
 
 
 
-
     val blocks = metadata.layout.blocks.map { block =>
+      val hLayout = block.distribute.contains(true) match {
+        case true => Right(true)
+        case false => Left(Stream.continually(12))
+      }
       (
         block,
-        fieldsRenderer(block.fields)
+        fieldsRenderer(block.fields,hLayout)
       )
     }
 
