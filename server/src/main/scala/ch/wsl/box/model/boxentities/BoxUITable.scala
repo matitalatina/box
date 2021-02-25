@@ -19,6 +19,8 @@ object BoxUITable {
     val value: Rep[String] = column[String]("value")
     val accessLevel: Rep[Int] = column[Int]("access_level_id")
 
+    lazy val pk = primaryKey("conf_pk",(accessLevel,key))
+
   }
   /** Collection-like TableQuery object for table Form */
   lazy val BoxUITable = new TableQuery(tag => new BoxUI(tag))

@@ -28,6 +28,8 @@ object BoxLabels {
     val key: Rep[String] = column[String]("key")
     val label: Rep[Option[String]] = column[Option[String]]("label", O.Default(None))
 
+    lazy val pk = primaryKey("labels_pk",(lang,key))
+
   }
   /** Collection-like TableQuery object for table Form */
   lazy val BoxLabelsTable = new TableQuery(tag => new BoxLabels(tag))

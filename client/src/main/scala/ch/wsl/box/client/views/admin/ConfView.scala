@@ -204,8 +204,8 @@ class ConfView(viewModel:ModelProperty[ConfViewModel], presenter:ConfPresenter) 
       editConf("color.main.text","Main text color","#ffffff","",String),
       editConf("color.main.link","Main link color","#ffffff","",String),
       editConf("color.link","Link color","#fbf0b2","",String),
-      editConf("color.danger","Main color","#4c1c24","",String),
-      editConf("color.warning","Main color","#ffa500","",String),
+      editConf("color.danger","Danger color","#4c1c24","",String),
+      editConf("color.warning","Warning color","#ffa500","",String),
 
       h5("Table"),
       editConf("page_length","Table page length","30","Define the length of page in tabular view",Integer),

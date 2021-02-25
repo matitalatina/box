@@ -19,6 +19,8 @@ object BoxConf {
     val key: Rep[String] = column[String]("key")
     val value: Rep[Option[String]] = column[Option[String]]("value", O.Default(None))
 
+    lazy val pk = primaryKey("conf_pk",(key,value))
+
   }
   /** Collection-like TableQuery object for table Conf  */
   lazy val BoxConfTable = new TableQuery(tag => new BoxConf(tag))
