@@ -14,7 +14,12 @@ trait LookupWidget extends Widget with HasData {
 
   import ch.wsl.box.client.Context._
 
+  data.listen(js => if(field.name == "widget"  && allData.get.get("name") == "canton") { logger.debug(s"AAAAAAAAAAA $js") },true)
+
   def allData:Property[Json]
+  if(field.name == "widget"  && allData.get.get("name") == "canton") {
+    logger.debug(allData.toString)
+  }
 
   def field:JSONField
   val lookup:SeqProperty[JSONLookup] = {
@@ -23,10 +28,16 @@ trait LookupWidget extends Widget with HasData {
 
   val model:Property[JSONLookup] = Property(JSONLookup("",""))
 
+  field.lookup.get.lookupExtractor.foreach{case extractor =>
+    allData.listen({ all =>
+      val newLookup = toSeq(extractor.map.getOrElse(all.js(extractor.key), Seq()))
+      setNewLookup(newLookup)
+    },true)
+  }
+
   autoRelease(field.`type` match {
     case "number" =>  data.sync[JSONLookup](model)(
       {json:Json =>
-        logger.debug(json.toString())
         val id = jsonToString(json)
         lookup.get.find(_.id == jsonToString(json)).getOrElse(JSONLookup(id,id + " NOT FOUND"))
       },
@@ -34,13 +45,8 @@ trait LookupWidget extends Widget with HasData {
     )
     case _ => data.sync[JSONLookup](model)(
       {json:Json =>
-        logger.debug(json.toString())
         val id = jsonToString(json)
-        logger.debug(id.toString())
-        logger.debug(lookup.toString())
-        logger.debug(lookup.get.toString())
         val result = lookup.get.find(_.id == id).getOrElse(JSONLookup(id,id + " NOT FOUND"))
-        logger.debug(result.toString)
         result
       },
       {jsonLookup:JSONLookup => strToJson(field.nullable)(jsonLookup.id)}
@@ -49,8 +55,7 @@ trait LookupWidget extends Widget with HasData {
 
 
 
-  val selectModel = Property("")
-  autoRelease(data.sync(selectModel)(value2Label,label2Value))
+  val selectModel = data.transform(value2Label)
 
 
   override def showOnTable(): JsDom.all.Modifier = autoRelease(bind(selectModel))
@@ -65,9 +70,7 @@ trait LookupWidget extends Widget with HasData {
   }
 
   private def setNewLookup(newLookup:Seq[JSONLookup]) = {
-    logger.info(newLookup.toString())
-    if (newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
-      logger.info("Lookup list changed")
+    if (newLookup.exists(_.id.nonEmpty) && newLookup.length != lookup.get.length || newLookup.exists(lu => lookup.get.exists(_.id != lu.id))) {
       lookup.set(newLookup, true)
       if(!newLookup.exists(_.id == data.get.string)) {
         logger.info("Old value not exists")
@@ -80,13 +83,7 @@ trait LookupWidget extends Widget with HasData {
     }
   }
 
-  field.lookup.get.lookupExtractor.foreach{case extractor =>
-    allData.listen({ all =>
-      logger.debug(all.toString())
-      val newLookup = toSeq(extractor.map.getOrElse(all.js(extractor.key), Seq()))
-      setNewLookup(newLookup)
-    },true)
-  }
+
 
 
   for{
@@ -137,5 +134,4 @@ trait LookupWidget extends Widget with HasData {
       .orElse(field.lookup.get.lookup.find(_.id == org.string).map(_.value))
       .getOrElse(Labels.lookup.not_found)
   }
-  private def label2Value(v:String):Json = lookup.get.find(_.value == v).map(_.id.asJson).orElse(field.lookup.get.lookup.find(_.value == v).map(_.id.asJson)).getOrElse(Json.Null)
 }
