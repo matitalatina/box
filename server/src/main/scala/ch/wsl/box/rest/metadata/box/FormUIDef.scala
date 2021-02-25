@@ -233,17 +233,17 @@ object FormUIDef {
       JSONField(JSONFieldTypes.STRING,"masterFields",true,
         label = Some("Parent key fields"),
         widget = Some(WidgetsNames.input),
-        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson,WidgetsNames.lookupForm.asJson)))
+        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson,WidgetsNames.lookupForm.asJson,WidgetsNames.editableTable.asJson)))
       ),
       JSONField(JSONFieldTypes.STRING,"childFields",true,
         label = Some("Child key fields"),
         widget = Some(WidgetsNames.input),
-        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson)))
+        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson,WidgetsNames.editableTable.asJson)))
       ),
       JSONField(JSONFieldTypes.STRING,"childQuery",true,
         widget = Some(WidgetsNames.code),
         params = Some(Json.obj("language" -> "json".asJson, "height" -> 200.asJson)),
-        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson)))
+        condition = Some(ConditionalField("widget",Seq(WidgetsNames.simpleChild.asJson,WidgetsNames.tableChild.asJson,WidgetsNames.editableTable.asJson)))
       ),
       CommonField.conditionFieldId,
       CommonField.conditionValues,
@@ -359,7 +359,6 @@ object FormUIDef {
       CommonField.hint,
       CommonField.placeholder,
       CommonField.lookupTextField,
-      JSONField(JSONFieldTypes.STRING,"static_content",true, widget = Some(WidgetsNames.input))
     ),
     layout = Layout(
       blocks = Seq(

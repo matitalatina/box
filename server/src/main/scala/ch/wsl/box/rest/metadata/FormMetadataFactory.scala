@@ -277,7 +277,7 @@ case class FormMetadataFactory()(implicit up:UserProfile, mat:Materializer, ec:E
                 widget = widget(field,value.entity,remoteField)
               )
             },
-            label = field_i18n_row.flatMap(_.static_content)
+            label = field_i18n_row.flatMap(_.label)
           )
 
         }

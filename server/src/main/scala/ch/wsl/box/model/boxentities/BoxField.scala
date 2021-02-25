@@ -80,13 +80,12 @@ object BoxField {
     *  @param lookupTextField Database column refTextProperty SqlType(text), Default(None) */
   case class BoxField_i18n_row(id: Option[Int] = None, field_id: Option[Int] = None, lang: Option[String] = None, label: Option[String] = None,
                                placeholder: Option[String] = None, tooltip: Option[String] = None, hint: Option[String] = None,
-                               lookupTextField: Option[String] = None,
-                               static_content: Option[String] = None)
+                               lookupTextField: Option[String] = None)
   /** GetResult implicit for fetching Field_i18n_row objects using plain SQL queries */
 
   /** Table description of table field_i18n. Objects of this class serve as prototypes for rows in queries. */
   class BoxField_i18n(_tableTag: Tag) extends Table[BoxField_i18n_row](_tableTag,BoxSchema.schema, "field_i18n") {
-    def * = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField,static_content) <> (BoxField_i18n_row.tupled, BoxField_i18n_row.unapply)
+    def * = (Rep.Some(id), field_id, lang, label, placeholder, tooltip, hint, lookupTextField) <> (BoxField_i18n_row.tupled, BoxField_i18n_row.unapply)
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey, O.SqlType("serial"))
@@ -104,7 +103,6 @@ object BoxField {
     val hint: Rep[Option[String]] = column[Option[String]]("hint", O.Default(None))
     /** Database column refTextProperty SqlType(text), Default(None) */
     val lookupTextField: Rep[Option[String]] = column[Option[String]]("lookupTextField", O.Default(None))
-    val static_content: Rep[Option[String]] = column[Option[String]]("static_content", O.Default(None))
 
 
     /** Foreign key referencing Field (database name fkey_field) */
