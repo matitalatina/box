@@ -17,7 +17,7 @@ object Labels {
 
   def apply(key:String):String = get(key)
 
-  private def get(key:String):String = labels.lift(key).getOrElse(key)
+  private def get(key:String):String = labels.lift(key).filterNot(_.trim == "").getOrElse(key)
 
   object messages {
     def confirm = get(SharedLabels.messages.confirm)
