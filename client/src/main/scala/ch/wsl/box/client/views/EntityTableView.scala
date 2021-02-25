@@ -1,7 +1,7 @@
 package ch.wsl.box.client.views
 
 import ch.wsl.box.client.routes.Routes
-import ch.wsl.box.client.{EntityFormState, EntityTableState, FormPageState}
+import ch.wsl.box.client.{Context, EntityFormState, EntityTableState, FormPageState}
 import ch.wsl.box.client.services.{ClientConf, Labels, Navigate, Navigation, Notification, SessionQuery}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
 import ch.wsl.box.client.views.components.widget.DateTimeWidget
@@ -107,7 +107,12 @@ case class EntityTablePresenter(model:ModelProperty[EntityTableModel], onSelect:
     services.rest.tabularMetadata(state.kind,services.clientSession.lang(),state.entity).map{ metadata =>
       metadata.static match {
         case false => _handleState(state,metadata)
-        case true => Navigate.to(FormPageState(state.kind,state.entity,"true",false))
+        case true => {
+          Context.applicationInstance.goTo(
+            FormPageState(state.kind,state.entity,"true",false),
+            true
+          )
+        }
       }
     }
   }

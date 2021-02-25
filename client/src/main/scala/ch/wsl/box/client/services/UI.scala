@@ -21,6 +21,7 @@ object UI {
   def title = ui.lift("title")
   def indexTitle = Labels.home.title(ui.get("index.title"))
   def indexHtml = Labels(ui.lift("index.html").getOrElse(""))
+  def indexPage = ui.lift("index.page").filterNot(_.trim == "")
   def footerCopyright = ui.lift("footerCopyright")
   def debug = ui.lift("debug").contains("true")
   def enableAllTables = ui.lift("enableAllTables").contains("true")

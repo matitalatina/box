@@ -29,12 +29,13 @@ case class UiConfViewModel(
                             currentEntries:Seq[UiConfEntryCurrent],
                             calculatedParent:Seq[UiConfEntry],
                             accessLevel:Int,
-                            accessLevels:Seq[AccessLevel]
+                            accessLevels:Seq[AccessLevel],
+                            pages:Seq[String]
                           )
 
 object UiConfViewModel extends HasModelPropertyCreator[UiConfViewModel] {
   implicit val blank: Blank[UiConfViewModel] =
-    Blank.Simple(UiConfViewModel(Seq(),Seq(),Seq(),-1,Seq()))
+    Blank.Simple(UiConfViewModel(Seq(),Seq(),Seq(),-1,Seq(),Seq()))
 }
 
 object UiConfViewPresenter extends ViewFactory[AdminUiConfState.type]{
@@ -75,9 +76,11 @@ class UiConfPresenter(viewModel:ModelProperty[UiConfViewModel]) extends Presente
     for{
       entries <- loadEntries()
       levels <- loadAccessLevels()
+      pages <- services.rest.entities(EntityKind.FORM.kind)
     } yield {
       viewModel.subProp(_.accessLevels).set(levels)
       viewModel.subProp(_.entries).set(entries)
+      viewModel.subProp(_.pages).set(pages)
 
       viewModel.subProp(_.accessLevel).listen({id =>
 
@@ -239,6 +242,9 @@ class UiConfView(viewModel:ModelProperty[UiConfViewModel], presenter:UiConfPrese
           editConf("footerCopyright", "Footer copyright", placeholder("footerCopyright"), "Copyright on footer", String),
           editConf("logo", "Logo", placeholder("logo"), "Logo on footer", String),
           editConf("index.title", "Title on home", placeholder("index.title"), "", String),
+          produce(viewModel.subProp(_.pages)) { pages =>
+            editConf("index.page", "Index page", placeholder("index.page"), "Redirect the home to a custom page", Dropdown((Seq("") ++ pages).map(x => x -> x).toMap)).render
+          },
           editBoolean("debug", "Enable debug", "Show debug info on UI"),
           editBoolean("enableAllTables", "All tables", "Show all tables on the header"),
           editBoolean("showEntitiesSidebar", "Entities sidebar", "Show list of entities on the sidebar"),

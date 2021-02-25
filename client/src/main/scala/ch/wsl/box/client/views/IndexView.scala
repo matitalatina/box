@@ -5,7 +5,7 @@ import ch.wsl.box.client._
 import ch.wsl.box.client.services.{ClientConf, REST, ServiceModule, UI}
 import org.scalajs.dom.{Element, Event}
 import ch.wsl.box.client.styles.{BootstrapCol, GlobalStyles}
-import ch.wsl.box.model.shared.{JSONQuery, JSONSort, NewsEntry, Sort}
+import ch.wsl.box.model.shared.{EntityKind, JSONQuery, JSONSort, NewsEntry, Sort}
 import io.circe.Json
 import scalacss.ScalatagsCss._
 import ch.wsl.box.client.views.components.Debug
@@ -30,7 +30,18 @@ class IndexPresenter(viewModel:ModelProperty[IndexViewModel]) extends Presenter[
 
   import Context._
 
+
   override def handleState(state: IndexState.type): Unit = {
+    UI.indexPage match {
+      case Some(value) => Context.applicationInstance.goTo(
+        FormPageState(EntityKind.FORM.kind,value,"true",false),
+        true
+      )
+      case None => _handleState()
+    }
+  }
+
+  def _handleState(): Unit = {
     for{
       news <- if(ClientConf.displayIndexNews)
           services.rest.news(services.clientSession.lang())
