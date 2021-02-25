@@ -20,4 +20,9 @@ Renders the link to the form/page, if it's a form it links to the table
 | field translations | Static content    | Label form the link      | `false`           | Form name           |
 
 
+#### Params
+
+| Key          | Value                   | Default           |
+|:-------------|:------------------------|:------------------|
+| `style`      | `box`: for boxed style  | `none` |
 
