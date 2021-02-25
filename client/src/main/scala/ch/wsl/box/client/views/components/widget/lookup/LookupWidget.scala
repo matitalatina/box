@@ -14,12 +14,9 @@ trait LookupWidget extends Widget with HasData {
 
   import ch.wsl.box.client.Context._
 
-  data.listen(js => if(field.name == "widget"  && allData.get.get("name") == "canton") { logger.debug(s"AAAAAAAAAAA $js") },true)
 
   def allData:Property[Json]
-  if(field.name == "widget"  && allData.get.get("name") == "canton") {
-    logger.debug(allData.toString)
-  }
+
 
   def field:JSONField
   val lookup:SeqProperty[JSONLookup] = {
@@ -35,7 +32,7 @@ trait LookupWidget extends Widget with HasData {
     },true)
   }
 
-  autoRelease(field.`type` match {
+  field.`type` match {
     case "number" =>  data.sync[JSONLookup](model)(
       {json:Json =>
         val id = jsonToString(json)
@@ -51,8 +48,7 @@ trait LookupWidget extends Widget with HasData {
       },
       {jsonLookup:JSONLookup => strToJson(field.nullable)(jsonLookup.id)}
     )
-  })
-
+  }
 
 
   val selectModel = data.transform(value2Label)

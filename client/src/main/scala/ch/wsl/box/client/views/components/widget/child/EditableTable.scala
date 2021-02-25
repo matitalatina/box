@@ -99,6 +99,8 @@ object EditableTable extends ChildRendererFactory {
 
   case class EditableTableRenderer(row_id: Property[Option[String]], prop: Property[Json], field:JSONField,masterData:Property[Json],children:Seq[JSONMetadata]) extends ChildRenderer {
 
+    import ch.wsl.box.client.Context._
+
 
     val tableStyle = TableStyle(ClientConf.styleConf,metadata.map(_.fields.length + 1).getOrElse(1))
     val tableStyleElement = document.createElement("style")
@@ -116,6 +118,10 @@ object EditableTable extends ChildRendererFactory {
         val inputToFocus = td.querySelector("input")
         if(inputToFocus != null) {
           f(inputToFocus.asInstanceOf[HTMLElement])
+        }
+        val selectToFocus = td.querySelector("select")
+        if(selectToFocus != null) {
+          f(selectToFocus.asInstanceOf[HTMLElement])
         }
       }
     }

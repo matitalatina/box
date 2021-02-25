@@ -44,9 +44,7 @@ class SelectWidget(val field:JSONField, val data: Property[Json], val allData:Pr
       }
     } else jsField
     Map(field.name -> result).asJson
-
   }
-
 
   override protected def show(): JsDom.all.Modifier = autoRelease(showIf(selectModel.transform(_.nonEmpty)){
     div(BootstrapCol.md(12),ClientConf.style.noPadding)(
@@ -57,9 +55,6 @@ class SelectWidget(val field:JSONField, val data: Property[Json], val allData:Pr
   })
 
   override def edit() = {
-
-
-
     val m:Seq[Modifier] = Seq[Modifier](BootstrapStyles.Float.right())++modifiers++WidgetUtils.toNullable(field.nullable)
 
     val tooltip = WidgetUtils.addTooltip(field.tooltip) _
@@ -69,5 +64,9 @@ class SelectWidget(val field:JSONField, val data: Property[Json], val allData:Pr
       tooltip(Select[JSONLookup](model,lookup)((s:JSONLookup) => StringFrag(s.value),m:_*).render),
       div(BootstrapStyles.Visibility.clearfix)
     )
+  }
+
+  override def editOnTable(): JsDom.all.Modifier = {
+    Select[JSONLookup](model,lookup)((s:JSONLookup) => StringFrag(s.value),ClientConf.style.simpleInput).render
   }
 }

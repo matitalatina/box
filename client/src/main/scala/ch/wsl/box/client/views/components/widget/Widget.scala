@@ -62,6 +62,8 @@ trait Widget extends Logging {
   def afterSave(data:Json, metadata:JSONMetadata):Future[Json] = Future.successful(data)
   def afterRender():Unit = {}
 
+  def reload() = {} //recover autoreleased resources
+
   def killWidget() = {
     bindings.foreach(_.kill())
     registrations.foreach(_.cancel())
