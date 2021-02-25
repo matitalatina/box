@@ -3,6 +3,7 @@ package ch.wsl.box.client.views.components.widget.child
 import ch.wsl.box.client.RoutingState
 import ch.wsl.box.client.routes.Routes
 import ch.wsl.box.client.services.Navigate
+import ch.wsl.box.client.views.components.widget.helpers.Link
 import ch.wsl.box.client.views.components.widget.lookup.DynamicLookupWidget
 import ch.wsl.box.client.views.components.widget.{ComponentWidgetFactory, Widget, WidgetParams}
 import ch.wsl.box.model.shared._
@@ -21,7 +22,7 @@ object LookupFormWidget extends ComponentWidgetFactory {
 
   override def create(params: WidgetParams): Widget = LookupFormWidgetImpl(params)
 
-  case class LookupFormWidgetImpl(params: WidgetParams) extends Widget with Logging {
+  case class LookupFormWidgetImpl(params: WidgetParams) extends Widget with Logging with Link {
 
     val field: JSONField = params.field
 
@@ -49,9 +50,13 @@ object LookupFormWidget extends ComponentWidgetFactory {
 
     def navigate(goTo: Routes => RoutingState) = (e: Event) => Navigate.to(goTo(Routes(EntityKind.FORM.kind, linked.name)))
 
-    override protected def show(): Modifier = produce(linkedData) { case id => a(lab.render(false,Property(true)), onclick :+= navigate(_.show(id.asString))).render }
+    override protected def show(): Modifier = produce(linkedData) { case id =>
+      linkRenderer(lab.render(false,Property(true)),field.params,navigate(_.show(id.asString))).render
+    }
 
-    override protected def edit(): Modifier = produce(linkedData) { case id => a(lab.render(false,Property(true)), onclick :+= navigate(_.edit(id.asString))).render }
+    override protected def edit(): Modifier = produce(linkedData) { case id =>
+      linkRenderer(lab.render(false,Property(true)),field.params,navigate(_.edit(id.asString))).render
+    }
   }
 
 }
