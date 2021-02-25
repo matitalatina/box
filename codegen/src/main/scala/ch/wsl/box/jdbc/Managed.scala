@@ -9,6 +9,12 @@ object Managed {
   val dbKeys = conf.getStringList("generator.keys.db")
   val appKeys = conf.getStringList("generator.keys.app")
   val keyStrategy = conf.getString("generator.keys.default.strategy")
+  private val triggerDefault = conf.as[Option[Seq[String]]]("generator.hasTriggerDefault")
+
+  def hasTriggerDefault(table:String,field:String) = {
+    val key = s"$table.$field"
+    triggerDefault.toSeq.flatten.contains(key)
+  }
 
   /**
     *

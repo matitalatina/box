@@ -126,7 +126,7 @@ case class EntitiesGenerator(model:Model) extends slick.codegen.SourceCodeGenera
     override def Column = new Column(_){
 
       private val hasDefault:Boolean = {
-        Await.result(
+        val dbDefault = Await.result(
           Connection.dbConnection.run(
             PgInformationSchema.hasDefault(
               model.table.schema.getOrElse("public"),
@@ -136,6 +136,8 @@ case class EntitiesGenerator(model:Model) extends slick.codegen.SourceCodeGenera
           ),
           10.seconds
         )
+        val explicitDefault = Managed.hasTriggerDefault(model.table.table,model.name)
+        explicitDefault || dbDefault
       }
 
       // customize Scala column names
